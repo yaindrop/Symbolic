@@ -25,7 +25,7 @@ struct SymbolicApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CanvasView()
         }
         .modelContainer(sharedModelContainer)
     }

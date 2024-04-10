@@ -15,6 +15,12 @@
 		5723BF8D2BC39846002209F2 /* SymbolicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF8C2BC39846002209F2 /* SymbolicTests.swift */; };
 		5723BF972BC39846002209F2 /* SymbolicUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF962BC39846002209F2 /* SymbolicUITests.swift */; };
 		5723BF992BC39846002209F2 /* SymbolicUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */; };
+		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
+		57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */; };
+		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
+		57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */; };
+		57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* PressDetector.swift */; };
+		57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11B2BC639B2001E1B2E /* Viewport.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +52,12 @@
 		5723BF922BC39846002209F2 /* SymbolicUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SymbolicUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5723BF962BC39846002209F2 /* SymbolicUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITests.swift; sourceTree = "<group>"; };
 		5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
+		57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CG+Arithmetics.swift"; sourceTree = "<group>"; };
+		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
+		57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTouchHandler.swift; sourceTree = "<group>"; };
+		57B5F1192BC62FA3001E1B2E /* PressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressDetector.swift; sourceTree = "<group>"; };
+		57B5F11B2BC639B2001E1B2E /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,11 +108,17 @@
 		5723BF782BC39844002209F2 /* Symbolic */ = {
 			isa = PBXGroup;
 			children = (
-				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
+				5723BFA52BC39865002209F2 /* CanvasView.swift */,
+				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
+				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
 				5723BF7D2BC39844002209F2 /* Item.swift */,
+				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
+				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
+				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
 				5723BF812BC39846002209F2 /* Preview Content */,
+				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -262,6 +280,12 @@
 			files = (
 				5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */,
 				5723BF7E2BC39844002209F2 /* Item.swift in Sources */,
+				57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */,
+				57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */,
+				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
+				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
+				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
+				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -434,6 +458,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -463,6 +488,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

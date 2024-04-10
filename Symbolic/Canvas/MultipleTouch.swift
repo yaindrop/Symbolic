@@ -25,30 +25,13 @@ struct MultipleTouchable: ViewModifier {
         func updateUIView(_ uiView: UIView, context: Context) {}
     }
 
-    @StateObject var context: MultipleTouchContext
-    @StateObject var pressDetector: PressDetector
-
-    init() {
-        let context = MultipleTouchContext()
-        _context = StateObject(wrappedValue: context)
-        _pressDetector = StateObject(wrappedValue: PressDetector(context: context))
-    }
+    @ObservedObject var context: MultipleTouchContext
 
     func body(content: Content) -> some View {
-        return GeometryReader { _ in
-            content
-                .overlay {
-                    MultipleTouchRepresentable(context: context)
-                }
-            VStack(alignment: HorizontalAlignment.leading) {
-                Text("panInfo \(context.panInfo)")
-                Text("pinchInfo \(context.pinchInfo)")
-                Text("press \(pressDetector.isPress) \(pressDetector.pressLocation)")
+        return content
+            .overlay {
+                MultipleTouchRepresentable(context: context)
             }
-        }.onAppear {
-            pressDetector.onTap { loc in print("onTap \(loc)") }
-            pressDetector.onDoubleTap { loc in print("onDoubleTap \(loc)") }
-        }
     }
 }
 

@@ -21,23 +21,16 @@ class PressDetector: ObservableObject {
     var doubleTapSubject = PassthroughSubject<CGPoint, Never>()
 
     func onTap(_ callback: @escaping (CGPoint) -> Void) {
-        tapSubject.sink(receiveValue: { value in callback(value) }).store(in: &subscriptions)
+        tapSubject.sink { value in callback(value) }.store(in: &subscriptions)
     }
 
     func onDoubleTap(_ callback: @escaping (CGPoint) -> Void) {
-        doubleTapSubject.sink(receiveValue: { value in callback(value) }).store(in: &subscriptions)
+        doubleTapSubject.sink { value in callback(value) }.store(in: &subscriptions)
     }
 
     init(context: MultipleTouchContext) {
         self.context = context
-        context.$active.sink(
-            receiveValue: { active in
-                if !active {
-                    self.onTouchEnded()
-                }
-            }
-        )
-        .store(in: &subscriptions)
+        context.$active.sink { active in if !active { self.onTouchEnded() }}.store(in: &subscriptions)
     }
 
     // MARK: private

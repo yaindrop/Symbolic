@@ -108,17 +108,12 @@
 		5723BF782BC39844002209F2 /* Symbolic */ = {
 			isa = PBXGroup;
 			children = (
-				5723BFA52BC39865002209F2 /* CanvasView.swift */,
-				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
+				57B5F11D2BC68620001E1B2E /* Canvas */,
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
-				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
 				5723BF7D2BC39844002209F2 /* Item.swift */,
-				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
 				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
-				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
 				5723BF812BC39846002209F2 /* Preview Content */,
-				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -146,6 +141,19 @@
 				5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */,
 			);
 			path = SymbolicUITests;
+			sourceTree = "<group>";
+		};
+		57B5F11D2BC68620001E1B2E /* Canvas */ = {
+			isa = PBXGroup;
+			children = (
+				5723BFA52BC39865002209F2 /* CanvasView.swift */,
+				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
+				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
+				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
+				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
+				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
+			);
+			path = Canvas;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

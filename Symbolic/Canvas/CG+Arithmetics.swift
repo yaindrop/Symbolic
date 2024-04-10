@@ -68,6 +68,13 @@ extension CGVector: AdditiveArithmetic {
     func length() -> CGFloat {
         return hypot(dx, dy)
     }
+
+    func applying(_ t: CGAffineTransform) -> CGVector {
+        var translationCancelled = t
+        translationCancelled.tx = 0
+        translationCancelled.ty = 0
+        return CGVector(from: CGPoint(from: self).applying(translationCancelled))
+    }
 }
 
 // MARK: CGPoint
@@ -109,9 +116,11 @@ extension CGPoint {
 // MARK: CGRect
 
 extension CGRect {
-    var center: CGPoint {
-        return CGPoint(x: midX, y: midY)
+    init(from size: CGSize) {
+        self.init(x: 0, y: 0, width: size.width, height: size.height)
     }
+
+    var center: CGPoint { CGPoint(x: midX, y: midY) }
 }
 
 // MARK: CGAffineTransform
@@ -121,7 +130,23 @@ extension CGAffineTransform {
         self.init(translationX: vector.dx, y: vector.dy)
     }
 
-    public func scaledBy(xy scale: CGFloat) -> CGAffineTransform {
+    init(scale: CGFloat) {
+        self.init(scaleX: scale, y: scale)
+    }
+
+    var translation: CGVector { CGVector(dx: tx, dy: ty) }
+
+    public func translatedBy(translation vector: CGVector) -> CGAffineTransform {
+        return translatedBy(x: vector.dx, y: vector.dy)
+    }
+
+    public func scaledBy(scale: CGFloat) -> CGAffineTransform {
         return scaledBy(x: scale, y: scale)
+    }
+
+    public func scaledBy(scale: CGFloat, around anchor: CGPoint) -> CGAffineTransform {
+        return translatedBy(x: anchor.x, y: anchor.y)
+            .scaledBy(scale: scale)
+            .translatedBy(x: -anchor.x, y: -anchor.y)
     }
 }

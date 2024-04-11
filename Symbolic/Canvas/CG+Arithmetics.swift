@@ -10,6 +10,10 @@ import Foundation
 
 // MARK: CGVector
 
+extension CGFloat {
+    var shortDescription: String { String(format: "%.3f", self) }
+}
+
 extension CGVector: AdditiveArithmetic {
     // MARK: AdditiveArithmetic
 
@@ -75,6 +79,8 @@ extension CGVector: AdditiveArithmetic {
         translationCancelled.ty = 0
         return CGVector(from: CGPoint(from: self).applying(translationCancelled))
     }
+
+    var shortDescription: String { String(format: "(%.3f, %.3f)", dx, dy) }
 }
 
 // MARK: CGPoint
@@ -111,6 +117,8 @@ extension CGPoint {
     func distance(to point: CGPoint) -> CGFloat {
         return deltaVector(to: point).length()
     }
+
+    var shortDescription: String { String(format: "(%.3f, %.3f)", x, y) }
 }
 
 // MARK: CGRect
@@ -118,6 +126,10 @@ extension CGPoint {
 extension CGRect {
     init(from size: CGSize) {
         self.init(x: 0, y: 0, width: size.width, height: size.height)
+    }
+
+    public init(center: CGPoint, size: CGSize) {
+        self.init(origin: center - CGVector(from: size) / 2, size: size)
     }
 
     var center: CGPoint { CGPoint(x: midX, y: midY) }

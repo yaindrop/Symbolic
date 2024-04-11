@@ -21,6 +21,7 @@
 		57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */; };
 		57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* PressDetector.swift */; };
 		57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11B2BC639B2001E1B2E /* Viewport.swift */; };
+		57B5F11F2BC777F0001E1B2E /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11E2BC777F0001E1B2E /* PathModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 		57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTouchHandler.swift; sourceTree = "<group>"; };
 		57B5F1192BC62FA3001E1B2E /* PressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressDetector.swift; sourceTree = "<group>"; };
 		57B5F11B2BC639B2001E1B2E /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
+		57B5F11E2BC777F0001E1B2E /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +154,7 @@
 				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
 				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
+				57B5F11E2BC777F0001E1B2E /* PathModel.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -172,6 +175,8 @@
 			dependencies = (
 			);
 			name = Symbolic;
+			packageProductDependencies = (
+			);
 			productName = Symbolic;
 			productReference = 5723BF762BC39844002209F2 /* Symbolic.app */;
 			productType = "com.apple.product-type.application";
@@ -244,6 +249,8 @@
 				Base,
 			);
 			mainGroup = 5723BF6D2BC39844002209F2;
+			packageReferences = (
+			);
 			productRefGroup = 5723BF772BC39844002209F2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -288,6 +295,7 @@
 			files = (
 				5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */,
 				5723BF7E2BC39844002209F2 /* Item.swift in Sources */,
+				57B5F11F2BC777F0001E1B2E /* PathModel.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,

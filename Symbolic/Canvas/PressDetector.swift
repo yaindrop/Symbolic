@@ -8,38 +8,39 @@
 import Combine
 import Foundation
 
+struct TapInfo {
+    var location: CGPoint
+    var isDoubleTap: Bool = false
+}
+
 class PressDetector: ObservableObject {
     static let pressOffsetThreshold: CGFloat = 10
     static let tapDurationThreshold: TimeInterval = 1
     static let doubleTapIntervalThreshold: TimeInterval = 0.5
     static let doubleTapOffsetThreshold: CGFloat = 20
 
-    var isPress: Bool { return context.maxTouchesCount == 1 && context.maxPanOffset < PressDetector.pressOffsetThreshold }
-    var pressLocation: CGPoint? { isPress ? context.panInfo?.origin : nil }
+    var pressLocation: CGPoint? { isPress ? touchContext.panInfo?.origin : nil }
 
-    var tapSubject = PassthroughSubject<CGPoint, Never>()
-    var doubleTapSubject = PassthroughSubject<CGPoint, Never>()
+    var tapSubject = PassthroughSubject<TapInfo, Never>()
 
-    func onTap(_ callback: @escaping (CGPoint) -> Void) {
+    func onTap(_ callback: @escaping (TapInfo) -> Void) {
         tapSubject.sink { value in callback(value) }.store(in: &subscriptions)
     }
 
-    func onDoubleTap(_ callback: @escaping (CGPoint) -> Void) {
-        doubleTapSubject.sink { value in callback(value) }.store(in: &subscriptions)
-    }
-
-    init(context: MultipleTouchContext) {
-        self.context = context
-        context.$active.sink { active in if !active { self.onTouchEnded() }}.store(in: &subscriptions)
+    init(touchContext: MultipleTouchContext) {
+        self.touchContext = touchContext
+        touchContext.$active.sink { active in if !active { self.onTouchEnded() }}.store(in: &subscriptions)
     }
 
     // MARK: private
 
-    private let context: MultipleTouchContext
+    private let touchContext: MultipleTouchContext
     private var subscriptions = Set<AnyCancellable>()
 
+    private var isPress: Bool { return touchContext.maxTouchesCount == 1 && touchContext.maxPanOffset < PressDetector.pressOffsetThreshold }
+
     private var canEndAsTap: Bool {
-        guard let beganTime = context.firstTouchBeganTime else { return false }
+        guard let beganTime = touchContext.firstTouchBeganTime else { return false }
         return Date().timeIntervalSince(beganTime) < PressDetector.doubleTapIntervalThreshold
     }
 
@@ -55,11 +56,9 @@ class PressDetector: ObservableObject {
     private func onTouchEnded() {
         var isSingleTap = canEndAsTap
         if isSingleTap, let location = pressLocation {
-            tapSubject.send(location)
-            if canEndAsDoubleTap {
-                doubleTapSubject.send(location)
-                isSingleTap = false
-            }
+            let isDoubleTap = canEndAsDoubleTap
+            tapSubject.send(TapInfo(location: location, isDoubleTap: isDoubleTap))
+            isSingleTap = !isDoubleTap
         }
         if isSingleTap {
             pendingDoubleTapTime = Date()

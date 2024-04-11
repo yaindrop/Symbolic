@@ -36,13 +36,13 @@ class DebugTouchHandler: UIGestureRecognizer {
         override init(frame: CGRect) {
             super.init(frame: frame)
             backgroundColor = UIColor.lightGray
+            alpha = 0.5
         }
 
         required init?(coder aDecoder: NSCoder) {
             super.init(coder: aDecoder)
         }
 
-        // Update the corner radius when the bounds change.
         override var bounds: CGRect {
             get { return super.bounds }
             set(newBounds) {
@@ -57,11 +57,11 @@ class DebugTouchHandler: UIGestureRecognizer {
     private func createTouchSpotView(for touch: UITouch) {
         guard let view = view else { return }
         let touchSpotView = TouchSpotView()
-        touchSpotView.bounds = CGRect(x: 0, y: 0, width: 50, height: 50)
+        touchSpotView.bounds = CGRect(x: 0, y: 0, width: 40, height: 40)
         touchSpotView.center = touch.location(in: self.view)
 
         view.addSubview(touchSpotView)
-        UIView.animate(withDuration: 0.2) { touchSpotView.bounds.size = CGSize(width: 100, height: 100) }
+        UIView.animate(withDuration: 0.1) { touchSpotView.bounds.size = CGSize(width: 80, height: 80) }
 
         touchSpotViews[touch] = touchSpotView
     }

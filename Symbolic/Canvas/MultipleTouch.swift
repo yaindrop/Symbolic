@@ -8,10 +8,10 @@
 import SwiftUI
 import UIKit
 
-// MARK: MultipleTouchable
+// MARK: MultipleTouchModifier
 
-struct MultipleTouchable: ViewModifier {
-    private struct MultipleTouchRepresentable: UIViewRepresentable {
+struct MultipleTouchModifier: ViewModifier {
+    private struct Representable: UIViewRepresentable {
         @ObservedObject var context: MultipleTouchContext
 
         func makeUIView(context: Context) -> UIView {
@@ -28,10 +28,7 @@ struct MultipleTouchable: ViewModifier {
     @ObservedObject var context: MultipleTouchContext
 
     func body(content: Content) -> some View {
-        return content
-            .overlay {
-                MultipleTouchRepresentable(context: context)
-            }
+        return content.overlay { Representable(context: context) }
     }
 }
 
@@ -44,6 +41,8 @@ struct PanInfo {
     var current: CGPoint {
         return origin + offset
     }
+
+    public var description: String { return "PanInfo(\(origin.shortDescription), \(offset.shortDescription))" }
 }
 
 struct PinchInfo {
@@ -73,6 +72,8 @@ struct PinchInfo {
     var scale: CGFloat {
         return currentDistance / originDistance
     }
+
+    public var description: String { return "PinchInfo((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))" }
 }
 
 // MARK: MultipleTouchContext

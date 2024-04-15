@@ -21,8 +21,10 @@
 		57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */; };
 		57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* PressDetector.swift */; };
 		57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11B2BC639B2001E1B2E /* Viewport.swift */; };
-		57B5F11F2BC777F0001E1B2E /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11E2BC777F0001E1B2E /* PathModel.swift */; };
+		57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11E2BC777F0001E1B2E /* Path.swift */; };
 		57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */; };
+		57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */; };
+		57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,8 +62,10 @@
 		57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTouchHandler.swift; sourceTree = "<group>"; };
 		57B5F1192BC62FA3001E1B2E /* PressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressDetector.swift; sourceTree = "<group>"; };
 		57B5F11B2BC639B2001E1B2E /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
-		57B5F11E2BC777F0001E1B2E /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
+		57B5F11E2BC777F0001E1B2E /* Path.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
 		57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
+		57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGParser.swift; sourceTree = "<group>"; };
+		57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+SVG.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,10 +158,12 @@
 				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
 				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
 				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
-				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
+				57B5F11E2BC777F0001E1B2E /* Path.swift */,
+				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
-				57B5F11E2BC777F0001E1B2E /* PathModel.swift */,
+				57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */,
 				57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */,
+				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -298,15 +304,17 @@
 			files = (
 				5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */,
 				5723BF7E2BC39844002209F2 /* Item.swift in Sources */,
-				57B5F11F2BC777F0001E1B2E /* PathModel.swift in Sources */,
+				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */,
+				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
+				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

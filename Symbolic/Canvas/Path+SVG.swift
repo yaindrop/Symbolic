@@ -26,8 +26,8 @@ extension PathAction {
             self = .Arc(PathArc(from: c))
         case let .BezierTo(c):
             self = .Bezier(PathBezier(from: c))
-        case let .LineTo(c):
-            self = .Line
+        case .LineTo:
+            self = .Line(PathLine())
         case let .QuadraticBezierTo(c):
             self = .Bezier(PathBezier(from: c.toCubic(current: current)))
         }
@@ -39,6 +39,7 @@ extension Path {
         var current = svgPath.initial
         for command in svgPath.commands {
             pairs.append((PathVertex(position: current), PathAction(from: command, at: current)))
+            current = command.position
         }
     }
 }

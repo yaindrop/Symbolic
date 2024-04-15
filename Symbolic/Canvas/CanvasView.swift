@@ -49,6 +49,8 @@ struct CanvasView: View {
     @StateObject var viewport: Viewport
     @StateObject var viewportUpdater: ViewportUpdater
 
+    @State var paths = foo()
+
     init() {
         let viewport = Viewport()
         let touchContext = MultipleTouchContext()
@@ -56,7 +58,6 @@ struct CanvasView: View {
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
-        foo()
     }
 
     var debugView: some View {
@@ -90,11 +91,16 @@ struct CanvasView: View {
 //            .frame(width: 200, height: 200)
 //            .position(x: 300, y: 300)
 //            .transformEffect(viewport.info.worldToView)
-        SwiftUI.Path { path in
-            path.move(to: CGPoint(x: 400, y: 200))
-            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
-        }.stroke(lineWidth: 10)
-            .transformEffect(viewport.info.worldToView)
+//        SwiftUI.Path { path in
+//            path.move(to: CGPoint(x: 400, y: 200))
+//            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
+//        }.stroke(lineWidth: 10)
+//            .transformEffect(viewport.info.worldToView)
+        ForEach(paths) { p in
+            SwiftUI.Path { path in p.draw(path: &path) }
+                .stroke(.white, lineWidth: 1)
+        }
+        .transformEffect(viewport.info.worldToView)
     }
 
     var body: some View {

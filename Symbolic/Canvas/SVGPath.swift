@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: SVGPathCommand
 
@@ -20,7 +21,7 @@ struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathPosition {
 
 struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathPosition {
     var radius: CGSize
-    var rotation: CGFloat = 0
+    var rotation: Angle = .zero
     var largeArc: Bool = false
     var sweep: Bool = false
     var position: CGPoint
@@ -330,7 +331,7 @@ class SVGPathParser {
                 throw SVGPathParserError.invalidParameters("Invalid arc-to flags in \(group)")
             }
             let position = positionOf(x: group[5], y: group[6])
-            appendCommand(.ArcTo(SVGPathCommandArcTo(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep, position: position)))
+            appendCommand(.ArcTo(SVGPathCommandArcTo(radius: radius, rotation: Angle(degrees: rotation), largeArc: largeArc, sweep: sweep, position: position)))
         }
     }
 }

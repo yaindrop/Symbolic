@@ -126,6 +126,7 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if activeTouches.isEmpty {
+            state = .began
             context.onFirstTouchBegan()
         }
         for touch in touches {
@@ -142,6 +143,7 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
         activeTouches.subtract(touches)
         if activeTouches.isEmpty {
             context.onAllTouchesEnded()
+            state = .ended
         } else {
             onActiveTouchesChanged()
         }
@@ -151,6 +153,7 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
         activeTouches.subtract(touches)
         if activeTouches.isEmpty {
             context.onAllTouchesEnded()
+            state = .cancelled
         } else {
             onActiveTouchesChanged()
         }

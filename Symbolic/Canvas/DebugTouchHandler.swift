@@ -8,6 +8,11 @@
 import UIKit
 
 class DebugTouchHandler: UIGestureRecognizer {
+    override init(target: Any?, action: Selector?) {
+        super.init(target: target, action: action)
+        delegate = self
+    }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             createTouchSpotView(for: touch)
@@ -75,5 +80,11 @@ class DebugTouchHandler: UIGestureRecognizer {
         if let view = touchSpotViews.removeValue(forKey: touch) {
             view.removeFromSuperview()
         }
+    }
+}
+
+extension DebugTouchHandler: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }

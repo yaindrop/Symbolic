@@ -8,6 +8,8 @@
 import CoreGraphics
 import Foundation
 
+// MARK: Matrix2
+
 struct Matrix2 {
     var a: CGFloat
     var b: CGFloat
@@ -46,8 +48,6 @@ extension CGFloat {
 }
 
 extension CGVector: AdditiveArithmetic {
-    // MARK: AdditiveArithmetic
-
     public static func + (lhs: CGVector, rhs: CGVector) -> CGVector { CGVector(dx: lhs.dx + rhs.dx, dy: lhs.dy + rhs.dy) }
 
     public static func - (lhs: CGVector, rhs: CGVector) -> CGVector { CGVector(dx: lhs.dx - rhs.dx, dy: lhs.dy - rhs.dy) }
@@ -70,11 +70,13 @@ extension CGVector: AdditiveArithmetic {
 
     public static func /= (lhs: inout CGVector, rhs: CGFloat) { lhs = lhs / rhs }
 
-    public func dotProduct(_ rhs: CGVector) -> CGFloat { dx * rhs.dx + dy * rhs.dy }
+    // MARK: geometric operations
 
-    public func crossProduct(_ rhs: CGVector) -> CGFloat { dx * rhs.dy - dy * rhs.dx }
+    func dotProduct(_ rhs: CGVector) -> CGFloat { dx * rhs.dx + dy * rhs.dy }
 
-    public func radian(_ v: CGVector) -> CGFloat {
+    func crossProduct(_ rhs: CGVector) -> CGFloat { dx * rhs.dy - dy * rhs.dx }
+
+    func radian(_ v: CGVector) -> CGFloat {
         let dot = dotProduct(v)
         let mod = length() * v.length()
         var rad = acos(dot / mod)
@@ -149,15 +151,15 @@ extension CGAffineTransform {
 
     var translation: CGVector { CGVector(dx: tx, dy: ty) }
 
-    public func apply<T>(_ mapper: (Self) -> T) -> T { mapper(self) }
+    func apply<T>(_ mapper: (Self) -> T) -> T { mapper(self) }
 
-    public func centered(at anchor: CGPoint, mapper: (CGAffineTransform) -> CGAffineTransform) -> CGAffineTransform {
+    func centered(at anchor: CGPoint, mapper: (CGAffineTransform) -> CGAffineTransform) -> CGAffineTransform {
         translatedBy(x: anchor.x, y: anchor.y)
             .apply(mapper)
             .translatedBy(x: -anchor.x, y: -anchor.y)
     }
 
-    public func translatedBy(translation vector: CGVector) -> CGAffineTransform { translatedBy(x: vector.dx, y: vector.dy) }
+    func translatedBy(translation vector: CGVector) -> CGAffineTransform { translatedBy(x: vector.dx, y: vector.dy) }
 
-    public func scaledBy(scale: CGFloat) -> CGAffineTransform { scaledBy(x: scale, y: scale) }
+    func scaledBy(scale: CGFloat) -> CGAffineTransform { scaledBy(x: scale, y: scale) }
 }

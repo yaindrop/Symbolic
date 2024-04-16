@@ -76,7 +76,7 @@ struct CanvasView: View {
                 .cornerRadius(12)
                 Spacer()
             }
-            .padding(12)
+            .padding(24)
             Spacer()
         }
         .allowsHitTesting(false)
@@ -102,11 +102,12 @@ struct CanvasView: View {
         .transformEffect(viewport.info.worldToView)
     }
 
+    @State private var columnVisibility = NavigationSplitViewVisibility.detailOnly
+
     var body: some View {
-        NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
+        NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: .constant(.detail)) {
             Text("sidebar")
-        } content: {
-            Text("content")
+                .navigationTitle("Sidebar")
         } detail: {
             ZStack {
                 if !active {
@@ -164,7 +165,13 @@ struct CanvasView: View {
             }
             .overlay {
                 debugView
+                Button("Toggle sidebar", systemImage: "sidebar.left") {
+                    columnVisibility = columnVisibility == .detailOnly ? .doubleColumn : .detailOnly
+                }
             }
+            .toolbar(.hidden, for: .navigationBar)
+            .edgesIgnoringSafeArea(.all)
+            .navigationBarBackButtonHidden(true)
         }
     }
 }

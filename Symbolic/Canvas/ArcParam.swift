@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+// reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives
 struct ArcCenterParam {
     var center: CGPoint
     var radius: CGSize
@@ -44,7 +45,6 @@ struct ArcEndpointParam {
     var largeArc: Bool
     var sweep: Bool
 
-    // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcConversionEndpointToCenter
     func toCenterParam() -> ArcCenterParam? {
         let a = CGVector(from: from), b = CGVector(from: to)
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)

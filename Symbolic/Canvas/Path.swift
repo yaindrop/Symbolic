@@ -25,7 +25,11 @@ struct PathArc {
         var radius: CGSize
         var rotation: Angle
         var startAngle: Angle
-        var endAngle: Angle
+        var deltaAngle: Angle
+
+        var endAngle: Angle { startAngle + deltaAngle }
+
+        var clockwise: Bool { deltaAngle < Angle.zero }
 
         var transform: CGAffineTransform {
             CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) }
@@ -33,7 +37,8 @@ struct PathArc {
     }
 
     // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcConversionEndpointToCenter
-    func toCenterParam(from: CGVector, to: CGVector) -> CenterParam? {
+    func toCenterParam(from: CGPoint, to: CGPoint) -> CenterParam? {
+        let a = CGVector(from: from), b = CGVector(from: to)
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
         print("phi", phi)
 
@@ -44,7 +49,7 @@ struct PathArc {
         }
 
         // F.6.5.1
-        let xy1Prime = Matrix2D(a: cosPhi, b: sinPhi, c: -sinPhi, d: cosPhi) * (from - to) / 2
+        let xy1Prime = Matrix2D(a: cosPhi, b: sinPhi, c: -sinPhi, d: cosPhi) * (a - b) / 2
         let x1p = xy1Prime.dx, y1p = xy1Prime.dy
 
         // F.6.6 Correction of out-of-range radii
@@ -68,22 +73,28 @@ struct PathArc {
         let cxp = cPrime.dx, cyp = cPrime.dy
 
         // F.6.5.3
-        let c = Matrix2D(a: cosPhi, b: -sinPhi, c: sinPhi, d: cosPhi) * cPrime + (from + to) / 2
+        let c = Matrix2D(a: cosPhi, b: -sinPhi, c: sinPhi, d: cosPhi) * cPrime + (a + b) / 2
 
-        // F.6.5.5, F.6.5.6
+        // F.6.5.5
         let u = CGVector(dx: 1, dy: 0)
         let v = CGVector(dx: (x1p - cxp) / rx, dy: (y1p - cyp) / ry)
         let w = CGVector(dx: (-x1p - cxp) / rx, dy: (-y1p - cyp) / ry)
-
         let theta1 = u.radian(v)
-        let theta2 = u.radian(w)
-        return CenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), rotation: rotation, startAngle: Angle(radians: theta1), endAngle: Angle(radians: theta2))
+
+        // F.6.5.6
+        var deltaTheta = fmod(v.radian(w), 2 * CGFloat.pi)
+        if !sweep && deltaTheta > 0 {
+            deltaTheta -= 2 * CGFloat.pi
+        } else if sweep && deltaTheta < 0 {
+            deltaTheta += 2 * CGFloat.pi
+        }
+        return CenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
     }
 
     func draw(path: inout SwiftUI.Path, to: CGPoint) {
-        if let p = toCenterParam(from: CGVector(from: path.currentPoint!), to: CGVector(from: to)) {
+        if let from = path.currentPoint, let p = toCenterParam(from: from, to: to) {
             print(p)
-            path.addArc(center: p.center, radius: 1, startAngle: p.startAngle, endAngle: p.endAngle, clockwise: true, transform: p.transform)
+            path.addArc(center: p.center, radius: 1, startAngle: p.startAngle, endAngle: p.endAngle, clockwise: p.clockwise, transform: p.transform)
         }
     }
 }
@@ -145,7 +156,7 @@ func foo() -> Array<Path> {
                S 180 120, 150 100
                Q 160 180, 150 150
                T 200 150
-               A 50 70 40 0 1 250 150
+               A 50 70 40 0 0 250 150
                L 50 100
                Z" fill="none" stroke="black" stroke-width="2" />
     </svg>

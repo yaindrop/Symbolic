@@ -149,15 +149,15 @@ extension CGAffineTransform {
 
     var translation: CGVector { CGVector(dx: tx, dy: ty) }
 
+    public func apply<T>(_ mapper: (Self) -> T) -> T { mapper(self) }
+
+    public func centered(at anchor: CGPoint, mapper: (CGAffineTransform) -> CGAffineTransform) -> CGAffineTransform {
+        translatedBy(x: anchor.x, y: anchor.y)
+            .apply(mapper)
+            .translatedBy(x: -anchor.x, y: -anchor.y)
+    }
+
     public func translatedBy(translation vector: CGVector) -> CGAffineTransform { translatedBy(x: vector.dx, y: vector.dy) }
 
     public func scaledBy(scale: CGFloat) -> CGAffineTransform { scaledBy(x: scale, y: scale) }
-
-    public func scaledBy(scale: CGFloat, around anchor: CGPoint) -> CGAffineTransform { scaledBy(x: scale, y: scale, around: anchor) }
-
-    public func scaledBy(x: CGFloat, y: CGFloat, around anchor: CGPoint) -> CGAffineTransform {
-        translatedBy(x: anchor.x, y: anchor.y)
-            .scaledBy(x: x, y: y)
-            .translatedBy(x: -anchor.x, y: -anchor.y)
-    }
 }

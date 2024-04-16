@@ -23,13 +23,19 @@ struct PathArc {
     struct CenterParam {
         var center: CGPoint
         var radius: CGSize
+        var rotation: Angle
         var startAngle: Angle
         var endAngle: Angle
+
+        var transform: CGAffineTransform {
+            CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) }
+        }
     }
 
     // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcConversionEndpointToCenter
     func toCenterParam(from: CGVector, to: CGVector) -> CenterParam? {
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
+        print("phi", phi)
 
         var rx = abs(radius.width), ry = abs(radius.height)
         guard rx != 0 && ry != 0 else {
@@ -62,27 +68,22 @@ struct PathArc {
         let cxp = cPrime.dx, cyp = cPrime.dy
 
         // F.6.5.3
-        let c = Matrix2D(a: cosPhi, b: sinPhi, c: -sinPhi, d: cosPhi) * CGVector(dx: cxp, dy: cyp) + (from + to) / 2
+        let c = Matrix2D(a: cosPhi, b: -sinPhi, c: sinPhi, d: cosPhi) * cPrime + (from + to) / 2
 
+        // F.6.5.5, F.6.5.6
         let u = CGVector(dx: 1, dy: 0)
         let v = CGVector(dx: (x1p - cxp) / rx, dy: (y1p - cyp) / ry)
         let w = CGVector(dx: (-x1p - cxp) / rx, dy: (-y1p - cyp) / ry)
 
-        // F.6.5.5
         let theta1 = u.radian(v)
-
-        // F.6.5.6
-        let deltaTheta = fmod(v.radian(w), 2 * CGFloat.pi) - (sweep ? 0 : 2 * CGFloat.pi)
-        let theta2 = fmod(theta1 + deltaTheta, 2 * CGFloat.pi)
-
-        return CenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), startAngle: Angle(radians: theta1), endAngle: Angle(radians: theta2))
+        let theta2 = u.radian(w)
+        return CenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), rotation: rotation, startAngle: Angle(radians: theta1), endAngle: Angle(radians: theta2))
     }
 
     func draw(path: inout SwiftUI.Path, to: CGPoint) {
         if let p = toCenterParam(from: CGVector(from: path.currentPoint!), to: CGVector(from: to)) {
             print(p)
-            let t = CGAffineTransform.identity.scaledBy(x: p.radius.width, y: p.radius.height, around: p.center)
-            path.addArc(center: p.center, radius: 1, startAngle: p.startAngle, endAngle: p.endAngle, clockwise: true, transform: t)
+            path.addArc(center: p.center, radius: 1, startAngle: p.startAngle, endAngle: p.endAngle, clockwise: true, transform: p.transform)
         }
     }
 }
@@ -144,7 +145,7 @@ func foo() -> Array<Path> {
                S 180 120, 150 100
                Q 160 180, 150 150
                T 200 150
-               A 50 70 0 0 1 250 150
+               A 50 70 40 0 1 250 150
                L 50 100
                Z" fill="none" stroke="black" stroke-width="2" />
     </svg>

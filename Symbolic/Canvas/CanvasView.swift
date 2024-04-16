@@ -28,8 +28,7 @@ struct DebugLine: View {
                 .font(.headline)
             Spacer()
             Text(value)
-                .font(.headline)
-                .foregroundColor(.secondary)
+                .font(.body)
                 .padding(.vertical, 4)
         }
     }

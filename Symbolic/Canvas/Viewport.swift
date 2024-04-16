@@ -12,7 +12,7 @@ struct ViewportInfo: CustomStringConvertible {
     var origin: CGPoint = CGPoint.zero // world position of the view origin (top left corner)
     var scale: CGFloat = 1.0
 
-    var worldToView: CGAffineTransform { CGAffineTransform(translation: -CGVector(from: origin) * scale).scaledBy(scale: scale) }
+    var worldToView: CGAffineTransform { CGAffineTransform.identity.scaledBy(scale: scale).translatedBy(translation: -CGVector(from: origin)) }
     var viewToWorld: CGAffineTransform { worldToView.inverted() }
 
     func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
@@ -53,7 +53,7 @@ class ViewportUpdater: ObservableObject {
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
-        let pinchTransformInView = CGAffineTransform(translation: pinch.center.offset).scaledBy(scale: pinch.scale, around: pinch.center.origin)
+        let pinchTransformInView = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(scale: pinch.scale) }
         let previousOriginInView = CGPoint.zero.applying(pinchTransformInView)
         let newScale = previousInfo.scale * pinch.scale
         let newOrigin = previousInfo.origin - CGVector(from: previousOriginInView) / newScale

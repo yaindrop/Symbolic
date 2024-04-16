@@ -21,9 +21,9 @@ struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathPosition {
 
 struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathPosition {
     var radius: CGSize
-    var rotation: Angle = .zero
-    var largeArc: Bool = false
-    var sweep: Bool = false
+    var rotation: Angle
+    var largeArc: Bool
+    var sweep: Bool
     var position: CGPoint
     public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
 }

@@ -25,6 +25,7 @@
 		57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */; };
 		57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */; };
 		57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */; };
+		57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +67,7 @@
 		57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
 		57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGParser.swift; sourceTree = "<group>"; };
 		57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+SVG.swift"; sourceTree = "<group>"; };
+		57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcParam.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +162,7 @@
 				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
+				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
 				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
 				57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */,
 				57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */,
@@ -314,6 +317,7 @@
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
+				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

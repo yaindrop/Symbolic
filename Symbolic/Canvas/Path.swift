@@ -16,83 +16,16 @@ struct PathLine {
 
 struct PathArc {
     var radius: CGSize
-    var rotation: Angle = .zero
-    var largeArc: Bool = false
-    var sweep: Bool = false
+    var rotation: Angle
+    var largeArc: Bool
+    var sweep: Bool
 
-    struct CenterParam {
-        var center: CGPoint
-        var radius: CGSize
-        var rotation: Angle
-        var startAngle: Angle
-        var deltaAngle: Angle
-
-        var endAngle: Angle { startAngle + deltaAngle }
-
-        var clockwise: Bool { deltaAngle < Angle.zero }
-
-        var transform: CGAffineTransform {
-            CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) }
-        }
-    }
-
-    // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcConversionEndpointToCenter
-    func toCenterParam(from: CGPoint, to: CGPoint) -> CenterParam? {
-        let a = CGVector(from: from), b = CGVector(from: to)
-        let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
-        print("phi", phi)
-
-        var rx = abs(radius.width), ry = abs(radius.height)
-        guard rx != 0 && ry != 0 else {
-            print("Radius cannot be 0")
-            return nil
-        }
-
-        // F.6.5.1
-        let xy1Prime = Matrix2D(a: cosPhi, b: sinPhi, c: -sinPhi, d: cosPhi) * (a - b) / 2
-        let x1p = xy1Prime.dx, y1p = xy1Prime.dy
-
-        // F.6.6 Correction of out-of-range radii
-        let lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry)
-        if lambda > 1 {
-            rx = rx * sqrt(lambda)
-            ry = ry * sqrt(lambda)
-        }
-
-        // F.6.5.2
-        let sumOfSquare = rx * rx * y1p * y1p + ry * ry * x1p * x1p
-        guard sumOfSquare != 0 else {
-            print("Start point can not be same as end point")
-            return nil
-        }
-
-        let coefficientSign: CGFloat = largeArc == sweep ? -1 : 1
-        let coefficient = coefficientSign * sqrt(abs((rx * rx * ry * ry - sumOfSquare) / sumOfSquare))
-
-        let cPrime = coefficient * CGVector(dx: rx * y1p / ry, dy: -ry * x1p / rx)
-        let cxp = cPrime.dx, cyp = cPrime.dy
-
-        // F.6.5.3
-        let c = Matrix2D(a: cosPhi, b: -sinPhi, c: sinPhi, d: cosPhi) * cPrime + (a + b) / 2
-
-        // F.6.5.5
-        let u = CGVector(dx: 1, dy: 0)
-        let v = CGVector(dx: (x1p - cxp) / rx, dy: (y1p - cyp) / ry)
-        let w = CGVector(dx: (-x1p - cxp) / rx, dy: (-y1p - cyp) / ry)
-        let theta1 = u.radian(v)
-
-        // F.6.5.6
-        var deltaTheta = fmod(v.radian(w), 2 * CGFloat.pi)
-        if !sweep && deltaTheta > 0 {
-            deltaTheta -= 2 * CGFloat.pi
-        } else if sweep && deltaTheta < 0 {
-            deltaTheta += 2 * CGFloat.pi
-        }
-        return CenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
+    func toParam(from: CGPoint, to: CGPoint) -> ArcEndpointParam {
+        ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
     }
 
     func draw(path: inout SwiftUI.Path, to: CGPoint) {
-        if let from = path.currentPoint, let p = toCenterParam(from: from, to: to) {
+        if let from = path.currentPoint, let p = toParam(from: from, to: to).toCenterParam() {
             print(p)
             path.addArc(center: p.center, radius: 1, startAngle: p.startAngle, endAngle: p.endAngle, clockwise: p.clockwise, transform: p.transform)
         }

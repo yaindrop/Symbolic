@@ -8,7 +8,7 @@
 import CoreGraphics
 import Foundation
 
-struct Matrix2D {
+struct Matrix2 {
     var a: CGFloat
     var b: CGFloat
     var c: CGFloat
@@ -28,14 +28,14 @@ struct Matrix2D {
 
     init(col0: CGVector, col1: CGVector) { self.init(a: col0.dx, b: col1.dx, c: col0.dy, d: col1.dy) }
 
-    public static func * (lhs: Matrix2D, rhs: CGVector) -> CGVector {
+    public static func * (lhs: Matrix2, rhs: CGVector) -> CGVector {
         let rows = lhs.rows
         return CGVector(dx: rows.0.dotProduct(rhs), dy: rows.1.dotProduct(rhs))
     }
 
-    public static func * (lhs: Matrix2D, rhs: Matrix2D) -> Matrix2D {
+    public static func * (lhs: Matrix2, rhs: Matrix2) -> Matrix2 {
         let cols = rhs.cols
-        return Matrix2D(col0: lhs * cols.0, col1: lhs * cols.1)
+        return Matrix2(col0: lhs * cols.0, col1: lhs * cols.1)
     }
 }
 

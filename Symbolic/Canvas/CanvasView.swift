@@ -61,6 +61,7 @@ struct CanvasView: View {
 
     var debugView: some View {
         HStack {
+            Spacer()
             VStack {
                 VStack(alignment: HorizontalAlignment.leading) {
                     DebugTitle(title: "Debug")
@@ -69,6 +70,10 @@ struct CanvasView: View {
                     DebugLine(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
                     DebugDivider()
                     DebugLine(name: "Viewport", value: viewport.info.description)
+                    Button("Toggle sidebar", systemImage: "sidebar.left") {
+                        print("columnVisibility", columnVisibility)
+                        columnVisibility = columnVisibility == .detailOnly ? .doubleColumn : .detailOnly
+                    }
                 }
                 .padding(12)
                 .frame(maxWidth: 360)
@@ -77,9 +82,7 @@ struct CanvasView: View {
                 Spacer()
             }
             .padding(24)
-            Spacer()
         }
-        .allowsHitTesting(false)
     }
 
     @State var active: Bool = false
@@ -98,6 +101,8 @@ struct CanvasView: View {
         ForEach(paths) { p in
             SwiftUI.Path { path in p.draw(path: &path) }
                 .stroke(.white, lineWidth: 1)
+            p.vertexViews()
+            p.controlViews()
         }
         .transformEffect(viewport.info.worldToView)
     }
@@ -128,7 +133,7 @@ struct CanvasView: View {
                             }
                         }
                         context.concatenate(viewport.info.worldToView)
-                        context.stroke(path, with: .color(.red))
+                        context.stroke(path, with: .color(.red), lineWidth: 0.5)
                     }
                     //                Group {
                     //                    Path { path in
@@ -153,9 +158,8 @@ struct CanvasView: View {
                 .modifier(MultipleTouchModifier(context: touchContext))
                 .onAppear {
                     pressDetector.onTap { info in
-                        print("onTap \(info)")
                         let worldLocation = info.location.applying(viewport.info.viewToWorld)
-                        print("worldLocation \(worldLocation)")
+                        print("onTap \(info) worldLocation \(worldLocation)")
                         active = CGRect(center: CGPoint(x: 300, y: 300), size: CGSize(width: 200, height: 200)).contains(worldLocation)
                     }
                 }
@@ -165,13 +169,10 @@ struct CanvasView: View {
             }
             .overlay {
                 debugView
-                Button("Toggle sidebar", systemImage: "sidebar.left") {
-                    columnVisibility = columnVisibility == .detailOnly ? .doubleColumn : .detailOnly
-                }
             }
-            .toolbar(.hidden, for: .navigationBar)
+            .navigationTitle("Canvas")
+//            .toolbar(.hidden, for: .navigationBar)
             .edgesIgnoringSafeArea(.all)
-            .navigationBarBackButtonHidden(true)
         }
     }
 }

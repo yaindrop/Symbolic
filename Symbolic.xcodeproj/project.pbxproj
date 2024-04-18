@@ -156,13 +156,13 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
+				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
 				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
 				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
-				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
 				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
 				57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */,
 				57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */,

@@ -64,17 +64,96 @@ struct PathVertex: Identifiable {
 struct Path: Identifiable {
     let id = UUID()
     var pairs: Array<(PathVertex, PathAction)> = []
+    var isClosed: Bool = false
+
+    var vertices: Array<PathVertex> { pairs.map { $0.0 } }
+
+    var segments: Array<(PathVertex, PathAction, PathVertex)> {
+        pairs.enumerated().compactMap { i, pair in
+            let (vertex, action) = pair
+            let nextIndex = i + 1 == pairs.count ? 0 : i + 1
+            let nextVertex = pairs[nextIndex].0
+            if !isClosed && nextIndex == 0 {
+                return nil
+            }
+            return (vertex, action, nextVertex)
+        }
+    }
 
     func draw(path: inout SwiftUI.Path) {
         print(self)
         guard let first = pairs.first else { return }
         path.move(to: first.0.position)
-        for i in 0 ..< pairs.count {
-            let action = pairs[i].1
-            let nextIndex = i + 1 == pairs.count ? 0 : i + 1
-            let nextVertex = pairs[nextIndex].0
-            action.draw(path: &path, to: nextVertex.position)
+        for (_, a, next) in segments {
+            a.draw(path: &path, to: next.position)
         }
+        if isClosed {
+            path.closeSubpath()
+        }
+    }
+
+    func vertexViews() -> some View {
+        ForEach(vertices, id: \.id) { v in
+            Circle().fill(.blue.opacity(0.5)).frame(width: 4, height: 4).position(v.position)
+        }
+    }
+
+    func controlViews() -> some View {
+        let arcs = segments.compactMap { v, a, n in if case let .Arc(arc) = a { (v, arc, n) } else { nil } }
+        let beziers = segments.compactMap { v, a, n in if case let .Bezier(bezier) = a { (v, bezier, n) } else { nil } }
+        return Group {
+            ForEach(arcs, id: \.0.id) { v, arc, n in
+                let param = arc.toParam(from: v.position, to: n.position).toCenterParam()!
+                SwiftUI.Path { p in
+                    p.move(to: .zero)
+                    p.addLine(to: CGPoint(x: param.radius.width, y: 0))
+                    p.move(to: .zero)
+                    p.addLine(to: CGPoint(x: 0, y: param.radius.height))
+                }
+                .stroke(.yellow.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
+                .frame(width: param.radius.width, height: param.radius.height)
+                .rotationEffect(param.rotation, anchor: UnitPoint(x: 0, y: 0))
+                .position(param.center + CGVector(dx: param.radius.width / 2, dy: param.radius.height / 2))
+                Circle().fill(.yellow).frame(width: 4, height: 4).position(param.center)
+                Circle()
+                    .fill(.brown.opacity(0.5))
+                    .frame(width: 1, height: 1)
+                    .scaleEffect(x: param.radius.width * 2, y: param.radius.height * 2)
+                    .rotationEffect(param.rotation)
+                    .position(param.center)
+            }
+            ForEach(beziers, id: \.0.id) { v, bezier, n in
+                SwiftUI.Path { p in
+                    p.move(to: v.position)
+                    p.addLine(to: bezier.control0)
+                }.stroke(.green.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
+                SwiftUI.Path { p in
+                    p.move(to: n.position)
+                    p.addLine(to: bezier.control1)
+                }.stroke(.orange.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
+                Circle()
+                    .fill(.green)
+                    .frame(width: 4, height: 4)
+                    .position(bezier.control0)
+                Circle()
+                    .fill(.orange)
+                    .frame(width: 4, height: 4)
+                    .position(bezier.control1)
+            }
+        }
+
+//        ForEach(segments, id: \.0.id) { curr, a, next in
+//            if let arc = .Arc(a) {
+//                guard let p = arc.toParam(from: curr.position, to: next.position).toCenterParam() else { Circle() }
+//                Circle().fill(.yellow.opacity(0.5)).frame(width: 4, height: 4).position(p.center)
+//                Circle().fill(.white.opacity(0.5)).frame(width: 1, height: 1).position(p.center).transformEffect(p.transform)
+//            } else if let bezier = .Bezier(a) {
+//                Circle().fill(.green.opacity(0.5)).frame(width: 4, height: 4).position(bezier.control0)
+//                Circle().fill(.green.opacity(0.5)).frame(width: 4, height: 4).position(bezier.control1)
+//            } else {
+//                Circle()
+//            }
+//        }
     }
 }
 
@@ -90,7 +169,6 @@ func foo() -> Array<Path> {
                Q 160 180, 150 150
                T 200 150
                A 50 70 40 0 0 250 150
-               L 50 100
                Z" fill="none" stroke="black" stroke-width="2" />
     </svg>
     """.data(using: .utf8)!

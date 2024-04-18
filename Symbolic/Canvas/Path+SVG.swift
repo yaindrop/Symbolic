@@ -41,5 +41,9 @@ extension Path {
             pairs.append((PathVertex(position: current), PathAction(from: command, at: current)))
             current = command.position
         }
+        if svgPath.initial != svgPath.last {
+            pairs.append((PathVertex(position: svgPath.last), .Line(PathLine())))
+        }
+        isClosed = svgPath.isClosed
     }
 }

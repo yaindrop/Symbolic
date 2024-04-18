@@ -184,6 +184,7 @@ class SVGPathParser {
 
     private func appendPath(withClosed isClosed: Bool, moveTo: CGPoint = CGPoint.zero) {
         if !path.isEmpty {
+            path.isClosed = isClosed
             paths.append(path)
         }
         path = SVGPath(initial: moveTo)

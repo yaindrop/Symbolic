@@ -48,7 +48,6 @@ struct ArcEndpointParam {
     func toCenterParam() -> ArcCenterParam? {
         let a = CGVector(from: from), b = CGVector(from: to)
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
-        print("phi", phi)
 
         var rx = abs(radius.width), ry = abs(radius.height)
         guard rx != 0 && ry != 0 else {

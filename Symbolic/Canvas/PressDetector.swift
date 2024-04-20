@@ -9,8 +9,8 @@ import Combine
 import Foundation
 
 struct TapInfo {
-    var location: CGPoint
-    var isDoubleTap: Bool = false
+    let location: CGPoint
+    let isDoubleTap: Bool
 }
 
 class PressDetector: ObservableObject {

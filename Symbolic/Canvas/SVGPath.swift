@@ -15,23 +15,23 @@ protocol SVGPathPosition {
 }
 
 struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathPosition {
-    var position: CGPoint
+    let position: CGPoint
     public var description: String { return "L \(position.x) \(position.y)" }
 }
 
 struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathPosition {
-    var radius: CGSize
-    var rotation: Angle
-    var largeArc: Bool
-    var sweep: Bool
-    var position: CGPoint
+    let radius: CGSize
+    let rotation: Angle
+    let largeArc: Bool
+    let sweep: Bool
+    let position: CGPoint
     public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
 }
 
 struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathPosition {
-    var control0: CGPoint
-    var control1: CGPoint
-    var position: CGPoint
+    let control0: CGPoint
+    let control1: CGPoint
+    let position: CGPoint
 
     func toQuadratic(current: CGPoint) -> SVGPathCommandQuadraticBezierTo? {
         let quadraticControl0 = current + current.deltaVector(to: control0) * 3 / 2
@@ -44,8 +44,8 @@ struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathPosition {
 }
 
 struct SVGPathCommandQuadraticBezierTo: CustomStringConvertible, SVGPathPosition {
-    var control: CGPoint
-    var position: CGPoint
+    let control: CGPoint
+    let position: CGPoint
 
     func toCubic(current: CGPoint) -> SVGPathCommandBezierTo {
         let control0 = current + (current.deltaVector(to: control)) * 2 / 3

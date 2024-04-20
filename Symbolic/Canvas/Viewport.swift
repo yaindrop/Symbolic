@@ -9,8 +9,17 @@ import Combine
 import Foundation
 
 struct ViewportInfo: CustomStringConvertible {
-    var origin: CGPoint = CGPoint.zero // world position of the view origin (top left corner)
-    var scale: CGFloat = 1.0
+    let origin: CGPoint // world position of the view origin (top left corner)
+    let scale: CGFloat
+
+    init(origin: CGPoint, scale: CGFloat) {
+        self.origin = origin
+        self.scale = scale
+    }
+
+    init() { self.init(origin: .zero, scale: 1) }
+
+    init(origin: CGPoint) { self.init(origin: origin, scale: 1) }
 
     var worldToView: CGAffineTransform { CGAffineTransform.identity.scaledBy(scale: scale).translatedBy(translation: -CGVector(from: origin)) }
     var viewToWorld: CGAffineTransform { worldToView.inverted() }

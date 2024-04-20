@@ -100,7 +100,7 @@ struct CanvasView: View {
 //            .transformEffect(viewport.info.worldToView)
         ForEach(paths) { p in
             SwiftUI.Path { path in p.draw(path: &path) }
-                .stroke(.white, lineWidth: 1)
+                .stroke(Color(UIColor.label), lineWidth: 1)
             p.vertexViews()
             p.controlViews()
         }

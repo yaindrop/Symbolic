@@ -36,6 +36,7 @@ extension PathAction {
 
 extension Path {
     init(from svgPath: SVGPath) {
+        var pairs: Array<(PathVertex, PathAction)> = []
         var current = svgPath.initial
         for command in svgPath.commands {
             pairs.append((PathVertex(position: current), PathAction(from: command, at: current)))
@@ -44,6 +45,7 @@ extension Path {
         if svgPath.initial != svgPath.last {
             pairs.append((PathVertex(position: svgPath.last), .Line(PathLine())))
         }
+        self.pairs = pairs
         isClosed = svgPath.isClosed
     }
 }

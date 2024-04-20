@@ -8,23 +8,27 @@
 import Foundation
 import SwiftUI
 
+class Box<T> {
+    var value: T
+
+    init(_ value: T) {
+        self.value = value
+    }
+}
+
 // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives
 struct ArcCenterParam {
-    var center: CGPoint
-    var radius: CGSize
-    var rotation: Angle
-    var startAngle: Angle
-    var deltaAngle: Angle
+    let center: CGPoint
+    let radius: CGSize
+    let rotation: Angle
+    let startAngle: Angle
+    let deltaAngle: Angle
 
     var endAngle: Angle { startAngle + deltaAngle }
-
     var clockwise: Bool { deltaAngle < Angle.zero }
+    var transform: CGAffineTransform { CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) } }
 
-    var transform: CGAffineTransform {
-        CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) }
-    }
-
-    func toEndpointParam() -> ArcEndpointParam {
+    lazy var endpointParam: Box<ArcEndpointParam> = {
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
         let theta1 = startAngle.radians, sinTheta1 = sin(theta1), cosTheta1 = cos(theta1)
         let theta2 = endAngle.radians, sinTheta2 = sin(theta2), cosTheta2 = cos(theta2)
@@ -33,19 +37,19 @@ struct ArcCenterParam {
         let to = center + mat * CGVector(dx: radius.width * cosTheta2, dy: radius.height * sinTheta2)
         let largeArc = abs(deltaAngle.radians) > CGFloat.pi
         let sweep = deltaAngle.radians > 0
-        return ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
-    }
+        return Box(ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep))
+    }()
 }
 
 struct ArcEndpointParam {
-    var from: CGPoint
-    var to: CGPoint
-    var radius: CGSize
-    var rotation: Angle
-    var largeArc: Bool
-    var sweep: Bool
+    let from: CGPoint
+    let to: CGPoint
+    let radius: CGSize
+    let rotation: Angle
+    let largeArc: Bool
+    let sweep: Bool
 
-    func toCenterParam() -> ArcCenterParam? {
+    lazy var centerParam: Box<ArcCenterParam>? = {
         let a = CGVector(from: from), b = CGVector(from: to)
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
 
@@ -95,6 +99,6 @@ struct ArcEndpointParam {
         } else if sweep && deltaTheta < 0 {
             deltaTheta += 2 * CGFloat.pi
         }
-        return ArcCenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
-    }
+        return Box(ArcCenterParam(center: CGPoint(from: c), radius: CGSize(width: rx, height: ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta)))
+    }()
 }

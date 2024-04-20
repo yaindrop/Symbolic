@@ -15,26 +15,27 @@ struct PathLine {
 }
 
 struct PathArc {
-    var radius: CGSize
-    var rotation: Angle
-    var largeArc: Bool
-    var sweep: Bool
+    let radius: CGSize
+    let rotation: Angle
+    let largeArc: Bool
+    let sweep: Bool
 
     func toParam(from: CGPoint, to: CGPoint) -> ArcEndpointParam {
         ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
     }
 
     func draw(path: inout SwiftUI.Path, to: CGPoint) {
-        if let from = path.currentPoint, let p = toParam(from: from, to: to).toCenterParam() {
-            print(p)
-            path.addArc(center: p.center, radius: 1, startAngle: p.startAngle, endAngle: p.endAngle, clockwise: p.clockwise, transform: p.transform)
-        }
+        guard let from = path.currentPoint else { return }
+        var endPointparam = toParam(from: from, to: to)
+        guard let param = endPointparam.centerParam?.value else { return }
+        print(param)
+        path.addArc(center: param.center, radius: 1, startAngle: param.startAngle, endAngle: param.endAngle, clockwise: param.clockwise, transform: param.transform)
     }
 }
 
 struct PathBezier {
-    var control0: CGPoint
-    var control1: CGPoint
+    let control0: CGPoint
+    let control1: CGPoint
     func draw(path: inout SwiftUI.Path, to: CGPoint) {
         path.addCurve(to: to, control1: control0, control2: control1)
     }
@@ -63,8 +64,8 @@ struct PathVertex: Identifiable {
 
 struct Path: Identifiable {
     let id = UUID()
-    var pairs: Array<(PathVertex, PathAction)> = []
-    var isClosed: Bool = false
+    let pairs: Array<(PathVertex, PathAction)>
+    let isClosed: Bool
 
     var vertices: Array<PathVertex> { pairs.map { $0.0 } }
 
@@ -103,7 +104,8 @@ struct Path: Identifiable {
         let beziers = segments.compactMap { v, a, n in if case let .Bezier(bezier) = a { (v, bezier, n) } else { nil } }
         return Group {
             ForEach(arcs, id: \.0.id) { v, arc, n in
-                let param = arc.toParam(from: v.position, to: n.position).toCenterParam()!
+                var endPointParam = arc.toParam(from: v.position, to: n.position)
+                let param = endPointParam.centerParam!.value
                 SwiftUI.Path { p in
                     p.move(to: .zero)
                     p.addLine(to: CGPoint(x: param.radius.width, y: 0))
@@ -155,6 +157,9 @@ struct Path: Identifiable {
 //            }
 //        }
     }
+}
+
+class PathModel: ObservableObject {
 }
 
 func foo() -> Array<Path> {

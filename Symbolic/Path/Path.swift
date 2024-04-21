@@ -59,6 +59,13 @@ struct PathSegment {
     let from: PathVertex
     let to: PathVertex
     let action: PathAction
+
+    var hitPath: SwiftUI.Path {
+        var p = SwiftUI.Path()
+        p.move(to: from.position)
+        action.draw(path: &p, to: to.position)
+        return p.strokedPath(StrokeStyle(lineWidth: 10, lineCap: .round))
+    }
 }
 
 typealias PathVertexActionPair = (PathVertex, PathAction)
@@ -98,6 +105,14 @@ class Path: Identifiable, ReflectedStringConvertible {
 
     lazy var boundingRect: CGRect = { path.boundingRect }()
 
+    lazy var hitPath: SwiftUI.Path = {
+        var p = SwiftUI.Path()
+        for s in segments {
+            p.addPath(s.hitPath)
+        }
+        return p
+    }()
+
     private init(id: UUID, pairs: [PathVertexActionPair], isClosed: Bool) {
         self.id = id
         self.pairs = pairs
@@ -120,6 +135,7 @@ class Path: Identifiable, ReflectedStringConvertible {
         let arcs = segments.compactMap { s in if case let .Arc(arc) = s.action { (s.from, s.to, arc) } else { nil } }
         let beziers = segments.compactMap { s in if case let .Bezier(bezier) = s.action { (s.from, s.to, bezier) } else { nil } }
         return Group {
+            ForEach(segments, id: \.from.id) { s in s.hitPath.fill(.blue.opacity(0.5)) }
             ForEach(arcs, id: \.0.id) { v, n, arc in
                 let param = arc.toParam(from: v.position, to: n.position).centerParam!
                 SwiftUI.Path { p in

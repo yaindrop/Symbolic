@@ -102,8 +102,6 @@ struct CanvasView: View {
         ForEach(pathModel.paths.filter { $0.id != active }) { p in
             SwiftUI.Path { path in p.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
-            p.vertexViews()
-            p.controlViews()
         }
         .transformEffect(viewport.info.worldToView)
     }
@@ -171,7 +169,7 @@ struct CanvasView: View {
                         print("onTap \(info) worldLocation \(worldLocation)")
                         active = nil
                         for p in pathModel.paths {
-                            if p.boundingRect.contains(worldLocation) {
+                            if p.hitPath.contains(worldLocation) {
                                 active = p.id
                                 break
                             }

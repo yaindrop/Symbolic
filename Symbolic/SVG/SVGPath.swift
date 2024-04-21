@@ -1,10 +1,3 @@
-//
-//  SVGPath.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/15.
-//
-
 import Foundation
 import SwiftUI
 

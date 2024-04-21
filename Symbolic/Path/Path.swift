@@ -36,6 +36,7 @@ struct PathArc {
 struct PathBezier {
     let control0: CGPoint
     let control1: CGPoint
+
     func draw(path: inout SwiftUI.Path, to: CGPoint) {
         path.addCurve(to: to, control1: control0, control2: control1)
     }
@@ -59,7 +60,13 @@ enum PathAction {
 
 struct PathVertex: Identifiable {
     let id = UUID()
-    var position: CGPoint
+    let position: CGPoint
+}
+
+struct PathSegment {
+    let from: PathVertex
+    let to: PathVertex
+    let action: PathAction
 }
 
 struct Path: Identifiable {
@@ -69,15 +76,15 @@ struct Path: Identifiable {
 
     var vertices: Array<PathVertex> { pairs.map { $0.0 } }
 
-    var segments: Array<(PathVertex, PathAction, PathVertex)> {
+    var segments: Array<PathSegment> {
         pairs.enumerated().compactMap { i, pair in
-            let (vertex, action) = pair
+            let (v, action) = pair
             let nextIndex = i + 1 == pairs.count ? 0 : i + 1
-            let nextVertex = pairs[nextIndex].0
+            let next = pairs[nextIndex].0
             if !isClosed && nextIndex == 0 {
                 return nil
             }
-            return (vertex, action, nextVertex)
+            return PathSegment(from: v, to: next, action: action)
         }
     }
 
@@ -85,8 +92,8 @@ struct Path: Identifiable {
         print(self)
         guard let first = pairs.first else { return }
         path.move(to: first.0.position)
-        for (_, a, next) in segments {
-            a.draw(path: &path, to: next.position)
+        for s in segments {
+            s.action.draw(path: &path, to: s.to.position)
         }
         if isClosed {
             path.closeSubpath()
@@ -100,10 +107,10 @@ struct Path: Identifiable {
     }
 
     func controlViews() -> some View {
-        let arcs = segments.compactMap { v, a, n in if case let .Arc(arc) = a { (v, arc, n) } else { nil } }
-        let beziers = segments.compactMap { v, a, n in if case let .Bezier(bezier) = a { (v, bezier, n) } else { nil } }
+        let arcs = segments.compactMap { s in if case let .Arc(arc) = s.action { (s.from, s.to, arc) } else { nil } }
+        let beziers = segments.compactMap { s in if case let .Bezier(bezier) = s.action { (s.from, s.to, bezier) } else { nil } }
         return Group {
-            ForEach(arcs, id: \.0.id) { v, arc, n in
+            ForEach(arcs, id: \.0.id) { v, n, arc in
                 var endPointParam = arc.toParam(from: v.position, to: n.position)
                 let param = endPointParam.centerParam!.value
                 SwiftUI.Path { p in
@@ -124,7 +131,7 @@ struct Path: Identifiable {
                     .rotationEffect(param.rotation)
                     .position(param.center)
             }
-            ForEach(beziers, id: \.0.id) { v, bezier, n in
+            ForEach(beziers, id: \.0.id) { v, n, bezier in
                 SwiftUI.Path { p in
                     p.move(to: v.position)
                     p.addLine(to: bezier.control0)
@@ -143,44 +150,5 @@ struct Path: Identifiable {
                     .position(bezier.control1)
             }
         }
-
-//        ForEach(segments, id: \.0.id) { curr, a, next in
-//            if let arc = .Arc(a) {
-//                guard let p = arc.toParam(from: curr.position, to: next.position).toCenterParam() else { Circle() }
-//                Circle().fill(.yellow.opacity(0.5)).frame(width: 4, height: 4).position(p.center)
-//                Circle().fill(.white.opacity(0.5)).frame(width: 1, height: 1).position(p.center).transformEffect(p.transform)
-//            } else if let bezier = .Bezier(a) {
-//                Circle().fill(.green.opacity(0.5)).frame(width: 4, height: 4).position(bezier.control0)
-//                Circle().fill(.green.opacity(0.5)).frame(width: 4, height: 4).position(bezier.control1)
-//            } else {
-//                Circle()
-//            }
-//        }
     }
-}
-
-class PathModel: ObservableObject {
-}
-
-func foo() -> Array<Path> {
-    var result: Array<Path> = []
-    let data = """
-    <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
-      <!-- Define the complex path with different commands -->
-      <path d="M 0 0 L 50 50 L 100 0 Z
-               M 50 100
-               C 60 110, 90 140, 100 150
-               S 180 120, 150 100
-               Q 160 180, 150 150
-               T 200 150
-               A 50 70 40 0 0 250 150
-               Z" fill="none" stroke="black" stroke-width="2" />
-    </svg>
-    """.data(using: .utf8)!
-    let parser = XMLParser(data: data)
-    let delegate = SVGParserDelegate()
-    parser.delegate = delegate
-    delegate.onPath { result.append(Path(from: $0)) }
-    parser.parse()
-    return result
 }

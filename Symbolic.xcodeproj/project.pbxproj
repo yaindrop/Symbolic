@@ -26,6 +26,9 @@
 		57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */; };
 		57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */; };
 		57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */; };
+		57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */; };
+		57B5F1422BD4A608001E1B2E /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1412BD4A608001E1B2E /* Matrix.swift */; };
+		57B5F1442BD4A621001E1B2E /* UUID+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* UUID+.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +71,9 @@
 		57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGParser.swift; sourceTree = "<group>"; };
 		57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+SVG.swift"; sourceTree = "<group>"; };
 		57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcParam.swift; sourceTree = "<group>"; };
+		57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
+		57B5F1412BD4A608001E1B2E /* Matrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
+		57B5F1432BD4A621001E1B2E /* UUID+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,12 +124,16 @@
 		5723BF782BC39844002209F2 /* Symbolic */ = {
 			isa = PBXGroup;
 			children = (
+				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
 				57B5F11D2BC68620001E1B2E /* Canvas */,
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
+				57B5F13D2BD4A314001E1B2E /* Gesture */,
 				5723BF7D2BC39844002209F2 /* Item.swift */,
-				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
-				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
+				57B5F13C2BD4A2EC001E1B2E /* Path */,
 				5723BF812BC39846002209F2 /* Preview Content */,
+				57B5F13B2BD4A2E2001E1B2E /* SVG */,
+				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
+				57B5F13E2BD4A32E001E1B2E /* Utils */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -156,19 +166,50 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
-				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
-				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
-				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
-				57B5F11E2BC777F0001E1B2E /* Path.swift */,
-				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
-				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
-				57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */,
-				57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */,
 				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 			);
 			path = Canvas;
+			sourceTree = "<group>";
+		};
+		57B5F13B2BD4A2E2001E1B2E /* SVG */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */,
+				57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */,
+			);
+			path = SVG;
+			sourceTree = "<group>";
+		};
+		57B5F13C2BD4A2EC001E1B2E /* Path */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
+				57B5F11E2BC777F0001E1B2E /* Path.swift */,
+				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
+				57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */,
+			);
+			path = Path;
+			sourceTree = "<group>";
+		};
+		57B5F13D2BD4A314001E1B2E /* Gesture */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */,
+				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
+				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
+			);
+			path = Gesture;
+			sourceTree = "<group>";
+		};
+		57B5F13E2BD4A32E001E1B2E /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
+				57B5F1412BD4A608001E1B2E /* Matrix.swift */,
+				57B5F1432BD4A621001E1B2E /* UUID+.swift */,
+			);
+			path = Utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -312,10 +353,13 @@
 				57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
+				57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
+				57B5F1442BD4A621001E1B2E /* UUID+.swift in Sources */,
+				57B5F1422BD4A608001E1B2E /* Matrix.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,

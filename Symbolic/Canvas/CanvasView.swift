@@ -48,15 +48,18 @@ struct CanvasView: View {
     @StateObject var viewport: Viewport
     @StateObject var viewportUpdater: ViewportUpdater
 
-    @State var paths = foo()
+    @StateObject var pathModel: PathModel
 
     init() {
         let viewport = Viewport()
         let touchContext = MultipleTouchContext()
+        let pathModel = PathModel()
+        foo(model: pathModel)
         _touchContext = StateObject(wrappedValue: touchContext)
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
+        _pathModel = StateObject(wrappedValue: pathModel)
     }
 
     var debugView: some View {
@@ -98,7 +101,8 @@ struct CanvasView: View {
 //            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
 //        }.stroke(lineWidth: 10)
 //            .transformEffect(viewport.info.worldToView)
-        ForEach(paths) { p in
+        ForEach(pathModel.pathIds) { pid in
+            let p = pathModel.pathIdToPath[pid]!
             SwiftUI.Path { path in p.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
             p.vertexViews()

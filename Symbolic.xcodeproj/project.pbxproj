@@ -29,6 +29,8 @@
 		57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */; };
 		57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* Utils.swift */; };
 		57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1452BD4DDC1001E1B2E /* Box.swift */; };
+		57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1482BD54279001E1B2E /* DocumentEvent.swift */; };
+		57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F14A2BD54AA5001E1B2E /* Document.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +76,8 @@
 		57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
 		57B5F1432BD4A621001E1B2E /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		57B5F1452BD4DDC1001E1B2E /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
+		57B5F1482BD54279001E1B2E /* DocumentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEvent.swift; sourceTree = "<group>"; };
+		57B5F14A2BD54AA5001E1B2E /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +131,7 @@
 				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
 				57B5F11D2BC68620001E1B2E /* Canvas */,
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
+				57B5F1472BD54260001E1B2E /* Document */,
 				57B5F13D2BD4A314001E1B2E /* Gesture */,
 				5723BF7D2BC39844002209F2 /* Item.swift */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
@@ -210,6 +215,15 @@
 				57B5F1432BD4A621001E1B2E /* Utils.swift */,
 			);
 			path = Utils;
+			sourceTree = "<group>";
+		};
+		57B5F1472BD54260001E1B2E /* Document */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F14A2BD54AA5001E1B2E /* Document.swift */,
+				57B5F1482BD54279001E1B2E /* DocumentEvent.swift */,
+			);
+			path = Document;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -360,8 +374,10 @@
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
+				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,
+				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -47,7 +47,9 @@ struct CanvasView: View {
         let viewport = Viewport()
         let touchContext = MultipleTouchContext()
         let pathModel = PathModel()
-        foo(model: pathModel)
+        for event in foo().events {
+            pathModel.loadEvent(event)
+        }
         _touchContext = StateObject(wrappedValue: touchContext)
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)

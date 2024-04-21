@@ -62,9 +62,11 @@ struct PathSegment {
     let action: PathAction
 }
 
+typealias PathVertexActionPair = (PathVertex, PathAction)
+
 struct Path: Identifiable {
-    let id = UUID()
-    let pairs: [(PathVertex, PathAction)]
+    let id: UUID
+    let pairs: [PathVertexActionPair]
     let isClosed: Bool
 
     var vertices: [PathVertex] { pairs.map { $0.0 } }
@@ -79,6 +81,18 @@ struct Path: Identifiable {
             }
             return PathSegment(from: v, to: next, action: action)
         }
+    }
+
+    init(pairs: [PathVertexActionPair], isClosed: Bool) {
+        id = UUID()
+        self.pairs = pairs
+        self.isClosed = isClosed
+    }
+
+    private init(id: UUID, pairs: [PathVertexActionPair], isClosed: Bool) {
+        self.id = id
+        self.pairs = pairs
+        self.isClosed = isClosed
     }
 
     func draw(path: inout SwiftUI.Path) {
@@ -143,5 +157,39 @@ struct Path: Identifiable {
                     .position(bezier.control1)
             }
         }
+    }
+}
+
+extension Path {
+    func actionUpdated(actionUpdate: PathActionUpdate) -> Path {
+        guard let i = (pairs.firstIndex { vertex, _ in vertex.id == actionUpdate.fromVertexId }) else { return self }
+        var pairs: [PathVertexActionPair] = pairs
+        pairs[i].1 = actionUpdate.action
+        return Path(id: id, pairs: pairs, isClosed: isClosed)
+    }
+
+    func vertexCreated(vertexCreate: PathVertexCreate) -> Path {
+        var i = 0
+        if let id = vertexCreate.prevVertexId {
+            guard let prevVertexIndex = (pairs.firstIndex { vertex, _ in vertex.id == id }) else { return self }
+            i = prevVertexIndex + 1
+        }
+        var pairs: [PathVertexActionPair] = pairs
+        pairs.insert((vertexCreate.vertex, .Line(PathLine())), at: i)
+        return Path(id: id, pairs: pairs, isClosed: isClosed)
+    }
+
+    func vertexDeleted(vertexDelete: PathVertexDelete) -> Path {
+        guard let i = (pairs.firstIndex { vertex, _ in vertex.id == vertexDelete.vertexId }) else { return self }
+        var pairs: [PathVertexActionPair] = pairs
+        pairs.remove(at: i)
+        return Path(id: id, pairs: pairs, isClosed: isClosed)
+    }
+
+    func vertexUpdated(vertexUpdate: PathVertexUpdate) -> Path {
+        guard let i = (pairs.firstIndex { vertex, _ in vertex.id == vertexUpdate.vertex.id }) else { return self }
+        var pairs: [PathVertexActionPair] = pairs
+        pairs[i].0 = vertexUpdate.vertex
+        return Path(id: id, pairs: pairs, isClosed: isClosed)
     }
 }

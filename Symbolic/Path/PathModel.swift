@@ -18,25 +18,86 @@ class PathModel: ObservableObject {
             vertexIdToVertex[v.id] = v
         }
     }
+
+    func removePath(_ pathId: UUID) {
+        guard let path = pathIdToPath[pathId] else { return }
+        // todo remove vertices
+        pathIds.removeAll { $0 == pathId }
+        pathIdToPath.removeValue(forKey: pathId)
+    }
+
+    func updatePath(_ path: Path) {
+        guard pathIdToPath[path.id] != nil else { return }
+        pathIdToPath[path.id] = path
+    }
 }
 
-func foo(model: PathModel) {
-    let data = """
-    <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
-      <!-- Define the complex path with different commands -->
-      <path d="M 0 0 L 50 50 L 100 0 Z
-               M 50 100
-               C 60 110, 90 140, 100 150
-               S 180 120, 150 100
-               Q 160 180, 150 150
-               T 200 150
-               A 50 70 40 0 0 250 150
-               Z" fill="none" stroke="black" stroke-width="2" />
-    </svg>
-    """.data(using: .utf8)!
-    let parser = XMLParser(data: data)
-    let delegate = SVGParserDelegate()
-    parser.delegate = delegate
-    delegate.onPath { model.addPath(Path(from: $0)) }
-    parser.parse()
+extension PathModel {
+    func loadDocument(_ document: Document) {
+        for event in document.events {
+            loadEvent(event)
+        }
+    }
+
+    func loadEvent(_ event: DocumentEvent) {
+        switch event.kind {
+        case let .pathEvent(pathEvent):
+            loadEvent(pathEvent)
+        }
+    }
+
+    func loadEvent(_ event: PathEvent) {
+        switch event {
+        case let .create(create):
+            loadEvent(create)
+        case let .delete(delete):
+            loadEvent(delete)
+        case let .update(update):
+            loadEvent(update)
+        }
+    }
+
+    func loadEvent(_ event: PathCreate) {
+        addPath(event.path)
+    }
+
+    func loadEvent(_ event: PathDelete) {
+        removePath(event.pathId)
+    }
+
+    func loadEvent(_ event: PathUpdate) {
+        switch event.kind {
+        case let .actionUpdate(actionUpdate):
+            loadPathUpdate(pathId: event.pathId, actionUpdate: actionUpdate)
+        case let .vertexCreate(vertexCreate):
+            loadPathUpdate(pathId: event.pathId, vertexCreate: vertexCreate)
+        case let .vertexDelete(vertexDelete):
+            loadPathUpdate(pathId: event.pathId, vertexDelete: vertexDelete)
+        case let .vertexUpdate(vertexUpdate):
+            loadPathUpdate(pathId: event.pathId, vertexUpdate: vertexUpdate)
+        }
+    }
+
+    func loadPathUpdate(pathId: UUID, actionUpdate: PathActionUpdate) {
+        guard let path = pathIdToPath[pathId] else { return }
+        updatePath(path.actionUpdated(actionUpdate: actionUpdate))
+    }
+
+    func loadPathUpdate(pathId: UUID, vertexCreate: PathVertexCreate) {
+        guard let path = pathIdToPath[pathId] else { return }
+        updatePath(path.vertexCreated(vertexCreate: vertexCreate))
+    }
+
+    func loadPathUpdate(pathId: UUID, vertexDelete: PathVertexDelete) {
+        guard let path = pathIdToPath[pathId] else { return }
+        updatePath(path.vertexDeleted(vertexDelete: vertexDelete))
+    }
+
+    func loadPathUpdate(pathId: UUID, vertexUpdate: PathVertexUpdate) {
+        guard let path = pathIdToPath[pathId] else { return }
+        updatePath(path.vertexUpdated(vertexUpdate: vertexUpdate))
+    }
+}
+
+class PathUpdater: ObservableObject {
 }

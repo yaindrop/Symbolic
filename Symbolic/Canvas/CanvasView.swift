@@ -83,9 +83,9 @@ struct CanvasView: View {
         }
     }
 
-    @State var active: Bool = false
+    @State var active: UUID?
 
-    var stuff: some View {
+//    var stuff: some View {
 //        RoundedRectangle(cornerRadius: 25)
 //            .fill(.blue)
 //            .frame(width: 200, height: 200)
@@ -96,7 +96,20 @@ struct CanvasView: View {
 //            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
 //        }.stroke(lineWidth: 10)
 //            .transformEffect(viewport.info.worldToView)
-        ForEach(pathModel.paths) { p in
+//    }
+
+    var inactivePaths: some View {
+        ForEach(pathModel.paths.filter { $0.id != active }) { p in
+            SwiftUI.Path { path in p.draw(path: &path) }
+                .stroke(Color(UIColor.label), lineWidth: 1)
+            p.vertexViews()
+            p.controlViews()
+        }
+        .transformEffect(viewport.info.worldToView)
+    }
+
+    var activePaths: some View {
+        ForEach(pathModel.paths.filter { $0.id == active }) { p in
             SwiftUI.Path { path in p.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
             p.vertexViews()
@@ -113,9 +126,7 @@ struct CanvasView: View {
                 .navigationTitle("Sidebar")
         } detail: {
             ZStack {
-                if !active {
-                    stuff
-                }
+                inactivePaths
                 GeometryReader { geometry in
                     Canvas { context, _ in
                         let path = SwiftUI.Path { path in
@@ -158,12 +169,16 @@ struct CanvasView: View {
                     pressDetector.onTap { info in
                         let worldLocation = info.location.applying(viewport.info.viewToWorld)
                         print("onTap \(info) worldLocation \(worldLocation)")
-                        active = CGRect(center: CGPoint(300, 300), size: CGSize(200, 200)).contains(worldLocation)
+                        active = nil
+                        for p in pathModel.paths {
+                            if p.boundingRect.contains(worldLocation) {
+                                active = p.id
+                                break
+                            }
+                        }
                     }
                 }
-                if active {
-                    stuff
-                }
+                activePaths
             }
             .overlay {
                 debugView

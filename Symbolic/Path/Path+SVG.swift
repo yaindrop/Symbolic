@@ -28,7 +28,7 @@ extension PathAction {
 }
 
 extension Path {
-    init(from svgPath: SVGPath) {
+    convenience init(from svgPath: SVGPath) {
         var pairs: [PathVertexActionPair] = []
         var current = svgPath.initial
         for command in svgPath.commands {
@@ -38,8 +38,6 @@ extension Path {
         if svgPath.initial != svgPath.last {
             pairs.append((PathVertex(position: svgPath.last), .Line(PathLine())))
         }
-        id = UUID()
-        self.pairs = pairs
-        isClosed = svgPath.isClosed
+        self.init(pairs: pairs, isClosed: svgPath.isClosed)
     }
 }

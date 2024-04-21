@@ -19,8 +19,7 @@ struct PathArc {
 
     func draw(path: inout SwiftUI.Path, to: Point2) {
         guard let from = path.currentPoint else { return }
-        var endPointparam = toParam(from: from, to: to)
-        guard let param = endPointparam.centerParam?.value else { return }
+        guard let param = toParam(from: from, to: to).centerParam else { return }
         print(param)
         path.addArc(center: param.center, radius: 1, startAngle: param.startAngle, endAngle: param.endAngle, clockwise: param.clockwise, transform: param.transform)
     }
@@ -64,7 +63,7 @@ struct PathSegment {
 
 typealias PathVertexActionPair = (PathVertex, PathAction)
 
-struct Path: Identifiable {
+class Path: Identifiable, ReflectedStringConvertible {
     let id: UUID
     let pairs: [PathVertexActionPair]
     let isClosed: Bool
@@ -83,11 +82,21 @@ struct Path: Identifiable {
         }
     }
 
-    init(pairs: [PathVertexActionPair], isClosed: Bool) {
-        id = UUID()
-        self.pairs = pairs
-        self.isClosed = isClosed
-    }
+    lazy var path: SwiftUI.Path = {
+        print(self)
+        var p = SwiftUI.Path()
+        guard let first = pairs.first else { return p }
+        p.move(to: first.0.position)
+        for s in segments {
+            s.action.draw(path: &p, to: s.to.position)
+        }
+        if isClosed {
+            p.closeSubpath()
+        }
+        return p
+    }()
+
+    lazy var boundingRect: CGRect = { path.boundingRect }()
 
     private init(id: UUID, pairs: [PathVertexActionPair], isClosed: Bool) {
         self.id = id
@@ -95,16 +104,10 @@ struct Path: Identifiable {
         self.isClosed = isClosed
     }
 
+    convenience init(pairs: [PathVertexActionPair], isClosed: Bool) { self.init(id: UUID(), pairs: pairs, isClosed: isClosed) }
+
     func draw(path: inout SwiftUI.Path) {
-        print(self)
-        guard let first = pairs.first else { return }
-        path.move(to: first.0.position)
-        for s in segments {
-            s.action.draw(path: &path, to: s.to.position)
-        }
-        if isClosed {
-            path.closeSubpath()
-        }
+        path.addPath(self.path)
     }
 
     func vertexViews() -> some View {
@@ -118,8 +121,7 @@ struct Path: Identifiable {
         let beziers = segments.compactMap { s in if case let .Bezier(bezier) = s.action { (s.from, s.to, bezier) } else { nil } }
         return Group {
             ForEach(arcs, id: \.0.id) { v, n, arc in
-                var endPointParam = arc.toParam(from: v.position, to: n.position)
-                let param = endPointParam.centerParam!.value
+                let param = arc.toParam(from: v.position, to: n.position).centerParam!
                 SwiftUI.Path { p in
                     p.move(to: .zero)
                     p.addLine(to: Point2(param.radius.width, 0))

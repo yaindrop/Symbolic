@@ -21,7 +21,7 @@ class PathModel: ObservableObject {
 
     func removePath(_ pathId: UUID) {
         guard let path = pathIdToPath[pathId] else { return }
-        // todo remove vertices
+        // TODO: remove vertices
         pathIds.removeAll { $0 == pathId }
         pathIdToPath.removeValue(forKey: pathId)
     }

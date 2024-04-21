@@ -15,29 +15,39 @@ extension CGFloat {
 }
 
 extension CGVector: AdditiveArithmetic {
-    public static func + (lhs: CGVector, rhs: CGVector) -> CGVector { CGVector(dx: lhs.dx + rhs.dx, dy: lhs.dy + rhs.dy) }
+    var shortDescription: String { String(format: "(%.3f, %.3f)", dx, dy) }
 
-    public static func - (lhs: CGVector, rhs: CGVector) -> CGVector { CGVector(dx: lhs.dx - rhs.dx, dy: lhs.dy - rhs.dy) }
+    init(_ x: CGFloat, _ y: CGFloat) { self.init(dx: x, dy: y) }
+
+    init(_ point: CGPoint) { self.init(point.x, point.y) }
+
+    init(_ size: CGSize) { self.init(size.width, size.height) }
+
+    // MARK: vector operator
+
+    public static func + (lhs: CGVector, rhs: CGVector) -> CGVector { CGVector(lhs.dx + rhs.dx, lhs.dy + rhs.dy) }
+
+    public static func - (lhs: CGVector, rhs: CGVector) -> CGVector { CGVector(lhs.dx - rhs.dx, lhs.dy - rhs.dy) }
 
     public static func += (lhs: inout CGVector, rhs: CGVector) { lhs = lhs + rhs }
 
     public static func -= (lhs: inout CGVector, rhs: CGVector) { lhs = lhs - rhs }
 
-    public static prefix func - (vector: CGVector) -> CGVector { CGVector(dx: -vector.dx, dy: -vector.dy) }
+    public static prefix func - (vector: CGVector) -> CGVector { CGVector(-vector.dx, -vector.dy) }
 
-    // MARK: multiply by scalar
+    // MARK: scalar operator
 
-    public static func * (lhs: CGVector, rhs: CGFloat) -> CGVector { CGVector(dx: lhs.dx * rhs, dy: lhs.dy * rhs) }
+    public static func * (lhs: CGVector, rhs: CGFloat) -> CGVector { CGVector(lhs.dx * rhs, lhs.dy * rhs) }
 
     public static func * (lhs: CGFloat, rhs: CGVector) -> CGVector { rhs * lhs }
 
-    public static func / (lhs: CGVector, rhs: CGFloat) -> CGVector { CGVector(dx: lhs.dx / rhs, dy: lhs.dy / rhs) }
+    public static func / (lhs: CGVector, rhs: CGFloat) -> CGVector { CGVector(lhs.dx / rhs, lhs.dy / rhs) }
 
     public static func *= (lhs: inout CGVector, rhs: CGFloat) { lhs = lhs * rhs }
 
     public static func /= (lhs: inout CGVector, rhs: CGFloat) { lhs = lhs / rhs }
 
-    // MARK: geometric operations
+    // MARK: geometric operation
 
     func dotProduct(_ rhs: CGVector) -> CGFloat { dx * rhs.dx + dy * rhs.dy }
 
@@ -53,11 +63,7 @@ extension CGVector: AdditiveArithmetic {
         return rad
     }
 
-    // MARK: conversions
-
-    init(from point: CGPoint) { self.init(dx: point.x, dy: point.y) }
-
-    init(from size: CGSize) { self.init(dx: size.width, dy: size.height) }
+    // MARK: init
 
     func length() -> CGFloat { hypot(dx, dy) }
 
@@ -65,68 +71,70 @@ extension CGVector: AdditiveArithmetic {
         var translationCancelled = t
         translationCancelled.tx = 0
         translationCancelled.ty = 0
-        return CGVector(from: CGPoint(from: self).applying(translationCancelled))
+        return CGVector(CGPoint(self).applying(translationCancelled))
     }
-
-    var shortDescription: String { String(format: "(%.3f, %.3f)", dx, dy) }
 }
 
 // MARK: CGPoint
 
 extension CGPoint {
-    // MARK: adding vector
+    var shortDescription: String { String(format: "(%.3f, %.3f)", x, y) }
 
-    public static func + (lhs: CGPoint, rhs: CGVector) -> CGPoint { CGPoint(x: lhs.x + rhs.dx, y: lhs.y + rhs.dy) }
+    init(_ x: CGFloat, _ y: CGFloat) { self.init(x: x, y: y) }
 
-    public static func - (lhs: CGPoint, rhs: CGVector) -> CGPoint { CGPoint(x: lhs.x - rhs.dx, y: lhs.y - rhs.dy) }
+    init(_ vector: CGVector) { self.init(vector.dx, vector.dy) }
+
+    // MARK: operator
+
+    public static func + (lhs: CGPoint, rhs: CGVector) -> CGPoint { CGPoint(CGVector(lhs) + rhs) }
+
+    public static func - (lhs: CGPoint, rhs: CGVector) -> CGPoint { CGPoint(CGVector(lhs) - rhs) }
 
     public static func += (lhs: inout CGPoint, rhs: CGVector) { lhs = lhs + rhs }
 
     public static func -= (lhs: inout CGPoint, rhs: CGVector) { lhs = lhs - rhs }
 
-    // MARK: conversions
+    // MARK: geometric operation
 
-    init(from vector: CGVector) { self.init(x: vector.dx, y: vector.dy) }
-
-    func deltaVector(to point: CGPoint) -> CGVector { CGVector(dx: point.x - x, dy: point.y - y) }
+    func deltaVector(to point: CGPoint) -> CGVector { CGVector(point) - CGVector(self) }
 
     func distance(to point: CGPoint) -> CGFloat { deltaVector(to: point).length() }
+}
 
-    var shortDescription: String { String(format: "(%.3f, %.3f)", x, y) }
+// MARK: CGSize
+
+extension CGSize {
+    init(_ width: CGFloat, _ height: CGFloat) { self.init(width: width, height: height) }
 }
 
 // MARK: CGRect
 
 extension CGRect {
-    init(from size: CGSize) {
-        self.init(x: 0, y: 0, width: size.width, height: size.height)
-    }
+    var center: CGPoint { CGPoint(midX, midY) }
 
-    public init(center: CGPoint, size: CGSize) {
-        self.init(origin: center - CGVector(from: size) / 2, size: size)
-    }
+    init(_ size: CGSize) { self.init(x: 0, y: 0, width: size.width, height: size.height) }
 
-    var center: CGPoint { CGPoint(x: midX, y: midY) }
+    init(center: CGPoint, size: CGSize) { self.init(origin: center - CGVector(size) / 2, size: size) }
 }
 
 // MARK: CGAffineTransform
 
 extension CGAffineTransform {
+    var translation: CGVector { CGVector(tx, ty) }
+
     init(translation vector: CGVector) { self.init(translationX: vector.dx, y: vector.dy) }
 
     init(scale: CGFloat) { self.init(scaleX: scale, y: scale) }
 
-    var translation: CGVector { CGVector(dx: tx, dy: ty) }
-
     func apply<T>(_ mapper: (Self) -> T) -> T { mapper(self) }
 
     func centered(at anchor: CGPoint, mapper: (CGAffineTransform) -> CGAffineTransform) -> CGAffineTransform {
-        translatedBy(x: anchor.x, y: anchor.y)
+        translatedBy(CGVector(anchor))
             .apply(mapper)
-            .translatedBy(x: -anchor.x, y: -anchor.y)
+            .translatedBy(-CGVector(anchor))
     }
 
-    func translatedBy(translation vector: CGVector) -> CGAffineTransform { translatedBy(x: vector.dx, y: vector.dy) }
+    func translatedBy(_ vector: CGVector) -> CGAffineTransform { translatedBy(x: vector.dx, y: vector.dy) }
 
-    func scaledBy(scale: CGFloat) -> CGAffineTransform { scaledBy(x: scale, y: scale) }
+    func scaledBy(_ scale: CGFloat) -> CGAffineTransform { scaledBy(x: scale, y: scale) }
 }

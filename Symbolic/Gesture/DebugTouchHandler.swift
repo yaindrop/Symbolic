@@ -66,7 +66,7 @@ class DebugTouchHandler: UIGestureRecognizer {
         touchSpotView.center = touch.location(in: self.view)
 
         view.addSubview(touchSpotView)
-        UIView.animate(withDuration: 0.1) { touchSpotView.bounds.size = CGSize(width: 80, height: 80) }
+        UIView.animate(withDuration: 0.1) { touchSpotView.bounds.size = CGSize(80, 80) }
 
         touchSpotViews[touch] = touchSpotView
     }

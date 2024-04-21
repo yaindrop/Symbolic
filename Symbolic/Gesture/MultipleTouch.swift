@@ -54,10 +54,10 @@ struct PinchInfo {
     }
 
     var center: PanInfo {
-        let originVector = (CGVector(from: origin.0) + CGVector(from: origin.1)) / 2
+        let originVector = (CGVector(origin.0) + CGVector(origin.1)) / 2
         let current = self.current
-        let currentVector = (CGVector(from: current.0) + CGVector(from: current.1)) / 2
-        return PanInfo(origin: CGPoint(from: originVector), offset: currentVector - originVector)
+        let currentVector = (CGVector(current.0) + CGVector(current.1)) / 2
+        return PanInfo(origin: CGPoint(originVector), offset: currentVector - originVector)
     }
 
     var originDistance: CGFloat {
@@ -180,11 +180,11 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
 
     private func onActiveTouchesMoved() {
         if let info = context.panInfo, let touch = panTouch {
-            let movedInfo = PanInfo(origin: info.origin, offset: CGVector(from: location(of: touch)) - CGVector(from: info.origin))
+            let movedInfo = PanInfo(origin: info.origin, offset: CGVector(location(of: touch)) - CGVector(info.origin))
             context.maxPanOffset = max(context.maxPanOffset, movedInfo.offset.length())
             context.panInfo = movedInfo
         } else if let info = context.pinchInfo, let touches = pinchTouches {
-            let movedInfo = PinchInfo(origin: info.origin, offset: (CGVector(from: location(of: touches.0)) - CGVector(from: info.origin.0), CGVector(from: location(of: touches.1)) - CGVector(from: info.origin.1)))
+            let movedInfo = PinchInfo(origin: info.origin, offset: (CGVector(location(of: touches.0)) - CGVector(info.origin.0), CGVector(location(of: touches.1)) - CGVector(info.origin.1)))
             context.pinchInfo = movedInfo
         }
     }

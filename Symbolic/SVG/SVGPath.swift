@@ -203,9 +203,9 @@ class SVGPathParser {
 
     private func positionOf(x: CGFloat, y: CGFloat) -> CGPoint {
         if isRelative {
-            return path.last + CGVector(dx: x, dy: y)
+            return path.last + CGVector(x, y)
         } else {
-            return CGPoint(x: x, y: y)
+            return CGPoint(x, y)
         }
     }
 
@@ -326,7 +326,7 @@ class SVGPathParser {
             throw SVGPathParserError.invalidParameters("Invalid arc-to parameters \(parameters)")
         }
         for group in groups {
-            let radius = CGSize(width: group[0], height: group[1])
+            let radius = CGSize(group[0], group[1])
             let rotation = group[2]
             guard let largeArc = flagOf(value: group[3]), let sweep = flagOf(value: group[4]) else {
                 throw SVGPathParserError.invalidParameters("Invalid arc-to flags in \(group)")

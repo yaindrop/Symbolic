@@ -115,14 +115,14 @@ struct Path: Identifiable {
                 let param = endPointParam.centerParam!.value
                 SwiftUI.Path { p in
                     p.move(to: .zero)
-                    p.addLine(to: CGPoint(x: param.radius.width, y: 0))
+                    p.addLine(to: CGPoint(param.radius.width, 0))
                     p.move(to: .zero)
-                    p.addLine(to: CGPoint(x: 0, y: param.radius.height))
+                    p.addLine(to: CGPoint(0, param.radius.height))
                 }
                 .stroke(.yellow.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
                 .frame(width: param.radius.width, height: param.radius.height)
                 .rotationEffect(param.rotation, anchor: UnitPoint(x: 0, y: 0))
-                .position(param.center + CGVector(dx: param.radius.width / 2, dy: param.radius.height / 2))
+                .position(param.center + CGVector(param.radius.width / 2, param.radius.height / 2))
                 Circle().fill(.yellow).frame(width: 4, height: 4).position(param.center)
                 Circle()
                     .fill(.brown.opacity(0.5))

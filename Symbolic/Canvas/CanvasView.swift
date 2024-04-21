@@ -126,13 +126,13 @@ struct CanvasView: View {
                         let path = SwiftUI.Path { path in
                             for index in 0 ... 10240 {
                                 let vOffset: CGFloat = CGFloat(index) * 10
-                                path.move(to: CGPoint(x: vOffset, y: 0))
-                                path.addLine(to: CGPoint(x: vOffset, y: 102400))
+                                path.move(to: CGPoint(vOffset, 0))
+                                path.addLine(to: CGPoint(vOffset, 102400))
                             }
                             for index in 0 ... 10240 {
                                 let hOffset: CGFloat = CGFloat(index) * 10
-                                path.move(to: CGPoint(x: 0, y: hOffset))
-                                path.addLine(to: CGPoint(x: 102400, y: hOffset))
+                                path.move(to: CGPoint(0, hOffset))
+                                path.addLine(to: CGPoint(102400, hOffset))
                             }
                         }
                         context.concatenate(viewport.info.worldToView)
@@ -163,7 +163,7 @@ struct CanvasView: View {
                     pressDetector.onTap { info in
                         let worldLocation = info.location.applying(viewport.info.viewToWorld)
                         print("onTap \(info) worldLocation \(worldLocation)")
-                        active = CGRect(center: CGPoint(x: 300, y: 300), size: CGSize(width: 200, height: 200)).contains(worldLocation)
+                        active = CGRect(center: CGPoint(300, 300), size: CGSize(200, 200)).contains(worldLocation)
                     }
                 }
                 if active {

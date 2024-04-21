@@ -21,7 +21,7 @@ struct ViewportInfo: CustomStringConvertible {
 
     init(origin: CGPoint) { self.init(origin: origin, scale: 1) }
 
-    var worldToView: CGAffineTransform { CGAffineTransform.identity.scaledBy(scale: scale).translatedBy(translation: -CGVector(from: origin)) }
+    var worldToView: CGAffineTransform { CGAffineTransform(scale: scale).translatedBy(-CGVector(origin)) }
     var viewToWorld: CGAffineTransform { worldToView.inverted() }
 
     func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
@@ -57,16 +57,16 @@ class ViewportUpdater: ObservableObject {
 
     private func onPanInfo(_ pan: PanInfo) {
         let scale = previousInfo.scale
-        let newOrigin = previousInfo.origin - pan.offset / scale
-        viewport.info = ViewportInfo(origin: newOrigin, scale: scale)
+        let origin = previousInfo.origin - pan.offset / scale
+        viewport.info = ViewportInfo(origin: origin, scale: scale)
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
-        let pinchTransformInView = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(scale: pinch.scale) }
-        let previousOriginInView = CGPoint.zero.applying(pinchTransformInView)
-        let newScale = previousInfo.scale * pinch.scale
-        let newOrigin = previousInfo.origin - CGVector(from: previousOriginInView) / newScale
-        viewport.info = ViewportInfo(origin: newOrigin, scale: newScale)
+        let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
+        let transformedOrigin = CGPoint.zero.applying(pinchTransform) // in view reference frame
+        let scale = previousInfo.scale * pinch.scale
+        let origin = previousInfo.origin - CGVector(transformedOrigin) / scale
+        viewport.info = ViewportInfo(origin: origin, scale: scale)
     }
 
     private func onCommit() {

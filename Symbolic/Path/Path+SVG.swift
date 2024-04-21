@@ -36,7 +36,7 @@ extension PathAction {
 
 extension Path {
     init(from svgPath: SVGPath) {
-        var pairs: Array<(PathVertex, PathAction)> = []
+        var pairs: [(PathVertex, PathAction)] = []
         var current = svgPath.initial
         for command in svgPath.commands {
             pairs.append((PathVertex(position: current), PathAction(from: command, at: current)))

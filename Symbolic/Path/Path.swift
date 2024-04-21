@@ -71,12 +71,12 @@ struct PathSegment {
 
 struct Path: Identifiable {
     let id = UUID()
-    let pairs: Array<(PathVertex, PathAction)>
+    let pairs: [(PathVertex, PathAction)]
     let isClosed: Bool
 
-    var vertices: Array<PathVertex> { pairs.map { $0.0 } }
+    var vertices: [PathVertex] { pairs.map { $0.0 } }
 
-    var segments: Array<PathSegment> {
+    var segments: [PathSegment] {
         pairs.enumerated().compactMap { i, pair in
             let (v, action) = pair
             let nextIndex = i + 1 == pairs.count ? 0 : i + 1

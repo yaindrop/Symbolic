@@ -101,8 +101,7 @@ struct CanvasView: View {
 //            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
 //        }.stroke(lineWidth: 10)
 //            .transformEffect(viewport.info.worldToView)
-        ForEach(pathModel.pathIds) { pid in
-            let p = pathModel.pathIdToPath[pid]!
+        ForEach(pathModel.paths) { p in
             SwiftUI.Path { path in p.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
             p.vertexViews()

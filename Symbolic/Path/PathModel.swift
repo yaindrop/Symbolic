@@ -8,17 +8,22 @@
 import Foundation
 
 class PathModel: ObservableObject {
-    @Published var pathIds: Array<UUID> = []
+    @Published var pathIds: [UUID] = []
+    @Published var vertexIds: [UUID] = []
 
     var pathIdToPath: [UUID: Path] = [:]
     var vertexIdToVertex: [UUID: PathVertex] = [:]
 
-    init() {
-    }
+    var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
+    var vertices: [PathVertex] { pathIds.compactMap { vid in vertexIdToVertex[vid] } }
 
     func addPath(_ path: Path) {
         pathIds.append(path.id)
         pathIdToPath[path.id] = path
+        for v in path.vertices {
+            vertexIds.append(v.id)
+            vertexIdToVertex[v.id] = v
+        }
     }
 }
 

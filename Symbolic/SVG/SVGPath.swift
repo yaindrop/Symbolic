@@ -78,7 +78,7 @@ enum SVGPathCommand: SVGPathPosition {
 
 struct SVGPath {
     var initial: CGPoint = CGPoint.zero
-    var commands: Array<SVGPathCommand> = []
+    var commands: [SVGPathCommand] = []
     var isClosed: Bool = false
 
     var isEmpty: Bool { commands.isEmpty }
@@ -98,7 +98,7 @@ enum SVGPathParserError: Error {
 
 // reference https://www.w3.org/TR/SVG11/paths.html
 class SVGPathParser {
-    var paths: Array<SVGPath> = []
+    var paths: [SVGPath] = []
 
     init(data: String) {
         scanner = Scanner(string: data.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines))
@@ -126,7 +126,7 @@ class SVGPathParser {
     // parsing command context
     private var command: Character = "M"
     private var isRelative: Bool { command.isLowercase }
-    private var parameters: Array<CGFloat> = []
+    private var parameters: [CGFloat] = []
 
     // MARK: scan
 
@@ -166,7 +166,7 @@ class SVGPathParser {
         return command
     }
 
-    private func scanParameters() throws -> Array<CGFloat> {
+    private func scanParameters() throws -> [CGFloat] {
         guard let parametersStr = scanner.scanUpToCharacters(from: SVGPathParser.commandCharacterSet) else { return [] }
         let parameterStrList = parametersStr.components(separatedBy: SVGPathParser.separatorCharacterSet).filter { !$0.isEmpty }
         let parameters = parameterStrList.compactMap { Double($0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)) }.map { CGFloat($0) }
@@ -192,9 +192,9 @@ class SVGPathParser {
 
     // MARK: parameter getter
 
-    private func parameterGroups(of n: Int) -> Array<Array<CGFloat>>? {
+    private func parameterGroups(of n: Int) -> [[CGFloat]]? {
         guard parameters.count % n == 0 else { return nil }
-        var groups: Array<Array<CGFloat>> = []
+        var groups: [[CGFloat]] = []
         for i in stride(from: 0, to: parameters.count, by: n) {
             groups.append(Array(parameters[i ..< i + n]))
         }

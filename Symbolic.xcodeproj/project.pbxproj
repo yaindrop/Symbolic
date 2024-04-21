@@ -28,7 +28,8 @@
 		57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */; };
 		57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */; };
 		57B5F1422BD4A608001E1B2E /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1412BD4A608001E1B2E /* Matrix.swift */; };
-		57B5F1442BD4A621001E1B2E /* UUID+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* UUID+.swift */; };
+		57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* Utils.swift */; };
+		57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1452BD4DDC1001E1B2E /* Box.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,7 +74,8 @@
 		57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcParam.swift; sourceTree = "<group>"; };
 		57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
 		57B5F1412BD4A608001E1B2E /* Matrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
-		57B5F1432BD4A621001E1B2E /* UUID+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+.swift"; sourceTree = "<group>"; };
+		57B5F1432BD4A621001E1B2E /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		57B5F1452BD4DDC1001E1B2E /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -205,9 +207,10 @@
 		57B5F13E2BD4A32E001E1B2E /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				57B5F1452BD4DDC1001E1B2E /* Box.swift */,
 				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
 				57B5F1412BD4A608001E1B2E /* Matrix.swift */,
-				57B5F1432BD4A621001E1B2E /* UUID+.swift */,
+				57B5F1432BD4A621001E1B2E /* Utils.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -355,10 +358,11 @@
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
+				57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
-				57B5F1442BD4A621001E1B2E /* UUID+.swift in Sources */,
+				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
 				57B5F1422BD4A608001E1B2E /* Matrix.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,

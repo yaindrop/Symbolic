@@ -8,14 +8,6 @@
 import Foundation
 import SwiftUI
 
-class Box<T> {
-    var value: T
-
-    init(_ value: T) {
-        self.value = value
-    }
-}
-
 // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives
 struct ArcCenterParam {
     let center: CGPoint

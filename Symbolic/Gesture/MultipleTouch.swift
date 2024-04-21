@@ -1,10 +1,3 @@
-//
-//  MultipleTouch.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/10.
-//
-
 import SwiftUI
 import UIKit
 
@@ -35,10 +28,10 @@ struct MultipleTouchModifier: ViewModifier {
 // MARK: multiple touch info
 
 struct PanInfo {
-    var origin: CGPoint
-    var offset: CGVector = CGVector.zero
+    var origin: Point2
+    var offset: Vector2 = Vector2.zero
 
-    var current: CGPoint {
+    var current: Point2 {
         return origin + offset
     }
 
@@ -46,18 +39,18 @@ struct PanInfo {
 }
 
 struct PinchInfo {
-    var origin: (CGPoint, CGPoint)
-    var offset: (CGVector, CGVector) = (CGVector.zero, CGVector.zero)
+    var origin: (Point2, Point2)
+    var offset: (Vector2, Vector2) = (Vector2.zero, Vector2.zero)
 
-    var current: (CGPoint, CGPoint) {
+    var current: (Point2, Point2) {
         return (origin.0 + offset.0, origin.1 + offset.1)
     }
 
     var center: PanInfo {
-        let originVector = (CGVector(origin.0) + CGVector(origin.1)) / 2
+        let originVector = (Vector2(origin.0) + Vector2(origin.1)) / 2
         let current = self.current
-        let currentVector = (CGVector(current.0) + CGVector(current.1)) / 2
-        return PanInfo(origin: CGPoint(originVector), offset: currentVector - originVector)
+        let currentVector = (Vector2(current.0) + Vector2(current.1)) / 2
+        return PanInfo(origin: Point2(originVector), offset: currentVector - originVector)
     }
 
     var originDistance: CGFloat {
@@ -165,7 +158,7 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
 
     // MARK: calc info
 
-    private func location(of touch: UITouch) -> CGPoint { touch.location(in: view) }
+    private func location(of touch: UITouch) -> Point2 { touch.location(in: view) }
 
     private func onActiveTouchesChanged() {
         context.panInfo = nil
@@ -180,11 +173,11 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
 
     private func onActiveTouchesMoved() {
         if let info = context.panInfo, let touch = panTouch {
-            let movedInfo = PanInfo(origin: info.origin, offset: CGVector(location(of: touch)) - CGVector(info.origin))
+            let movedInfo = PanInfo(origin: info.origin, offset: Vector2(location(of: touch)) - Vector2(info.origin))
             context.maxPanOffset = max(context.maxPanOffset, movedInfo.offset.length())
             context.panInfo = movedInfo
         } else if let info = context.pinchInfo, let touches = pinchTouches {
-            let movedInfo = PinchInfo(origin: info.origin, offset: (CGVector(location(of: touches.0)) - CGVector(info.origin.0), CGVector(location(of: touches.1)) - CGVector(info.origin.1)))
+            let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: touches.0)) - Vector2(info.origin.0), Vector2(location(of: touches.1)) - Vector2(info.origin.1)))
             context.pinchInfo = movedInfo
         }
     }

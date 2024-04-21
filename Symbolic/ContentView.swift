@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/8.
-//
-
 import SwiftUI
 import SwiftData
 

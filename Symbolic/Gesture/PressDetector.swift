@@ -1,15 +1,8 @@
-//
-//  PressDetector.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/10.
-//
-
 import Combine
 import Foundation
 
 struct TapInfo {
-    let location: CGPoint
+    let location: Point2
     let isDoubleTap: Bool
 }
 
@@ -19,7 +12,7 @@ class PressDetector: ObservableObject {
     static let doubleTapIntervalThreshold: TimeInterval = 0.5
     static let doubleTapOffsetThreshold: CGFloat = 20
 
-    var pressLocation: CGPoint? { isPress ? touchContext.panInfo?.origin : nil }
+    var pressLocation: Point2? { isPress ? touchContext.panInfo?.origin : nil }
 
     var tapSubject = PassthroughSubject<TapInfo, Never>()
 
@@ -45,7 +38,7 @@ class PressDetector: ObservableObject {
     }
 
     private var pendingDoubleTapTime: Date?
-    private var pendingDoubleTapLocation: CGPoint?
+    private var pendingDoubleTapLocation: Point2?
     private var canEndAsDoubleTap: Bool {
         guard let prevTime = pendingDoubleTapTime else { return false }
         guard let prevLocation = pendingDoubleTapLocation else { return false }

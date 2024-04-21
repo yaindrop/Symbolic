@@ -1,27 +1,20 @@
-//
-//  Viewport.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/10.
-//
-
 import Combine
 import Foundation
 
 struct ViewportInfo: CustomStringConvertible {
-    let origin: CGPoint // world position of the view origin (top left corner)
+    let origin: Point2 // world position of the view origin (top left corner)
     let scale: CGFloat
 
-    init(origin: CGPoint, scale: CGFloat) {
+    init(origin: Point2, scale: CGFloat) {
         self.origin = origin
         self.scale = scale
     }
 
     init() { self.init(origin: .zero, scale: 1) }
 
-    init(origin: CGPoint) { self.init(origin: origin, scale: 1) }
+    init(origin: Point2) { self.init(origin: origin, scale: 1) }
 
-    var worldToView: CGAffineTransform { CGAffineTransform(scale: scale).translatedBy(-CGVector(origin)) }
+    var worldToView: CGAffineTransform { CGAffineTransform(scale: scale).translatedBy(-Vector2(origin)) }
     var viewToWorld: CGAffineTransform { worldToView.inverted() }
 
     func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
@@ -63,9 +56,9 @@ class ViewportUpdater: ObservableObject {
 
     private func onPinchInfo(_ pinch: PinchInfo) {
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
-        let transformedOrigin = CGPoint.zero.applying(pinchTransform) // in view reference frame
+        let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
-        let origin = previousInfo.origin - CGVector(transformedOrigin) / scale
+        let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
         viewport.info = ViewportInfo(origin: origin, scale: scale)
     }
 

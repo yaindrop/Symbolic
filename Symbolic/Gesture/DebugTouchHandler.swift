@@ -1,10 +1,3 @@
-//
-//  DebugTouchHandler.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/10.
-//
-
 import UIKit
 
 class DebugTouchHandler: UIGestureRecognizer {

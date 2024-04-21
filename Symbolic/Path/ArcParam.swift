@@ -1,16 +1,9 @@
-//
-//  ArcParam.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/16.
-//
-
 import Foundation
 import SwiftUI
 
 // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives
 struct ArcCenterParam {
-    let center: CGPoint
+    let center: Point2
     let radius: CGSize
     let rotation: Angle
     let startAngle: Angle
@@ -25,8 +18,8 @@ struct ArcCenterParam {
         let theta1 = startAngle.radians, sinTheta1 = sin(theta1), cosTheta1 = cos(theta1)
         let theta2 = endAngle.radians, sinTheta2 = sin(theta2), cosTheta2 = cos(theta2)
         let mat = Matrix2((cosPhi, -sinPhi), (sinPhi, cosPhi))
-        let from = center + mat * CGVector(radius.width * cosTheta1, radius.height * sinTheta1)
-        let to = center + mat * CGVector(radius.width * cosTheta2, radius.height * sinTheta2)
+        let from = center + mat * Vector2(radius.width * cosTheta1, radius.height * sinTheta1)
+        let to = center + mat * Vector2(radius.width * cosTheta2, radius.height * sinTheta2)
         let largeArc = abs(deltaAngle.radians) > CGFloat.pi
         let sweep = deltaAngle.radians > 0
         return Box(ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep))
@@ -34,15 +27,15 @@ struct ArcCenterParam {
 }
 
 struct ArcEndpointParam {
-    let from: CGPoint
-    let to: CGPoint
+    let from: Point2
+    let to: Point2
     let radius: CGSize
     let rotation: Angle
     let largeArc: Bool
     let sweep: Bool
 
     lazy var centerParam: Box<ArcCenterParam>? = {
-        let a = CGVector(from), b = CGVector(to)
+        let a = Vector2(from), b = Vector2(to)
         let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
 
         var rx = abs(radius.width), ry = abs(radius.height)
@@ -72,16 +65,16 @@ struct ArcEndpointParam {
         let coefficientSign: CGFloat = largeArc == sweep ? -1 : 1
         let coefficient = coefficientSign * sqrt(abs((rx * rx * ry * ry - sumOfSquare) / sumOfSquare))
 
-        let cPrime = coefficient * CGVector(rx * y1p / ry, -ry * x1p / rx)
+        let cPrime = coefficient * Vector2(rx * y1p / ry, -ry * x1p / rx)
         let cxp = cPrime.dx, cyp = cPrime.dy
 
         // F.6.5.3
         let c = Matrix2((cosPhi, -sinPhi), (sinPhi, cosPhi)) * cPrime + (a + b) / 2
 
         // F.6.5.5
-        let u = CGVector(1, 0)
-        let v = CGVector((x1p - cxp) / rx, (y1p - cyp) / ry)
-        let w = CGVector((-x1p - cxp) / rx, (-y1p - cyp) / ry)
+        let u = Vector2(1, 0)
+        let v = Vector2((x1p - cxp) / rx, (y1p - cyp) / ry)
+        let w = Vector2((-x1p - cxp) / rx, (-y1p - cyp) / ry)
         let theta1 = u.radian(v)
 
         // F.6.5.6
@@ -91,6 +84,6 @@ struct ArcEndpointParam {
         } else if sweep && deltaTheta < 0 {
             deltaTheta += 2 * CGFloat.pi
         }
-        return Box(ArcCenterParam(center: CGPoint(c), radius: CGSize(rx, ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta)))
+        return Box(ArcCenterParam(center: Point2(c), radius: CGSize(rx, ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta)))
     }()
 }

@@ -16,7 +16,7 @@
 		5723BF972BC39846002209F2 /* SymbolicUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF962BC39846002209F2 /* SymbolicUITests.swift */; };
 		5723BF992BC39846002209F2 /* SymbolicUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */; };
 		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
-		57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */; };
+		57B5F1142BC62CFB001E1B2E /* Algebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* Algebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */; };
 		57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* PressDetector.swift */; };
@@ -27,7 +27,6 @@
 		57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */; };
 		57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */; };
 		57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */; };
-		57B5F1422BD4A608001E1B2E /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1412BD4A608001E1B2E /* Matrix.swift */; };
 		57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* Utils.swift */; };
 		57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1452BD4DDC1001E1B2E /* Box.swift */; };
 /* End PBXBuildFile section */
@@ -62,7 +61,7 @@
 		5723BF962BC39846002209F2 /* SymbolicUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITests.swift; sourceTree = "<group>"; };
 		5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
-		57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CG+Arithmetics.swift"; sourceTree = "<group>"; };
+		57B5F1132BC62CFB001E1B2E /* Algebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Algebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* DebugTouchHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugTouchHandler.swift; sourceTree = "<group>"; };
 		57B5F1192BC62FA3001E1B2E /* PressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressDetector.swift; sourceTree = "<group>"; };
@@ -73,7 +72,6 @@
 		57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+SVG.swift"; sourceTree = "<group>"; };
 		57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcParam.swift; sourceTree = "<group>"; };
 		57B5F13F2BD4A3EF001E1B2E /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
-		57B5F1412BD4A608001E1B2E /* Matrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
 		57B5F1432BD4A621001E1B2E /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		57B5F1452BD4DDC1001E1B2E /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -207,9 +205,8 @@
 		57B5F13E2BD4A32E001E1B2E /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				57B5F1132BC62CFB001E1B2E /* Algebra.swift */,
 				57B5F1452BD4DDC1001E1B2E /* Box.swift */,
-				57B5F1132BC62CFB001E1B2E /* CG+Arithmetics.swift */,
-				57B5F1412BD4A608001E1B2E /* Matrix.swift */,
 				57B5F1432BD4A621001E1B2E /* Utils.swift */,
 			);
 			path = Utils;
@@ -354,7 +351,7 @@
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* DebugTouchHandler.swift in Sources */,
-				57B5F1142BC62CFB001E1B2E /* CG+Arithmetics.swift in Sources */,
+				57B5F1142BC62CFB001E1B2E /* Algebra.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* PathModel.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
@@ -363,7 +360,6 @@
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
-				57B5F1422BD4A608001E1B2E /* Matrix.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,

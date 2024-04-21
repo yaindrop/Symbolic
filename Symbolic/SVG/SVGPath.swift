@@ -11,11 +11,11 @@ import SwiftUI
 // MARK: SVGPathCommand
 
 protocol SVGPathPosition {
-    var position: CGPoint { get }
+    var position: Point2 { get }
 }
 
 struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathPosition {
-    let position: CGPoint
+    let position: Point2
     public var description: String { return "L \(position.x) \(position.y)" }
 }
 
@@ -24,16 +24,16 @@ struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathPosition {
     let rotation: Angle
     let largeArc: Bool
     let sweep: Bool
-    let position: CGPoint
+    let position: Point2
     public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
 }
 
 struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathPosition {
-    let control0: CGPoint
-    let control1: CGPoint
-    let position: CGPoint
+    let control0: Point2
+    let control1: Point2
+    let position: Point2
 
-    func toQuadratic(current: CGPoint) -> SVGPathCommandQuadraticBezierTo? {
+    func toQuadratic(current: Point2) -> SVGPathCommandQuadraticBezierTo? {
         let quadraticControl0 = current + current.deltaVector(to: control0) * 3 / 2
         let quadraticControl1 = position + position.deltaVector(to: control1) * 3 / 2
         guard quadraticControl0 == quadraticControl1 else { return nil }
@@ -44,10 +44,10 @@ struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathPosition {
 }
 
 struct SVGPathCommandQuadraticBezierTo: CustomStringConvertible, SVGPathPosition {
-    let control: CGPoint
-    let position: CGPoint
+    let control: Point2
+    let position: Point2
 
-    func toCubic(current: CGPoint) -> SVGPathCommandBezierTo {
+    func toCubic(current: Point2) -> SVGPathCommandBezierTo {
         let control0 = current + (current.deltaVector(to: control)) * 2 / 3
         let control1 = position + (position.deltaVector(to: control)) * 2 / 3
         return SVGPathCommandBezierTo(control0: control0, control1: control1, position: position)
@@ -62,7 +62,7 @@ enum SVGPathCommand: SVGPathPosition {
     case BezierTo(SVGPathCommandBezierTo)
     case QuadraticBezierTo(SVGPathCommandQuadraticBezierTo)
 
-    var position: CGPoint {
+    var position: Point2 {
         switch self {
         case let .ArcTo(c):
             return c.position
@@ -77,14 +77,14 @@ enum SVGPathCommand: SVGPathPosition {
 }
 
 struct SVGPath {
-    var initial: CGPoint = CGPoint.zero
+    var initial: Point2 = Point2.zero
     var commands: [SVGPathCommand] = []
     var isClosed: Bool = false
 
     var isEmpty: Bool { commands.isEmpty }
 
-    var last: CGPoint {
-        guard let last = commands.last else { return CGPoint.zero }
+    var last: Point2 {
+        guard let last = commands.last else { return Point2.zero }
         return last.position
     }
 }
@@ -182,7 +182,7 @@ class SVGPathParser {
         path.commands.append(command)
     }
 
-    private func appendPath(withClosed isClosed: Bool, moveTo: CGPoint = CGPoint.zero) {
+    private func appendPath(withClosed isClosed: Bool, moveTo: Point2 = Point2.zero) {
         if !path.isEmpty {
             path.isClosed = isClosed
             paths.append(path)
@@ -201,11 +201,11 @@ class SVGPathParser {
         return groups
     }
 
-    private func positionOf(x: CGFloat, y: CGFloat) -> CGPoint {
+    private func positionOf(x: CGFloat, y: CGFloat) -> Point2 {
         if isRelative {
-            return path.last + CGVector(x, y)
+            return path.last + Vector2(x, y)
         } else {
-            return CGPoint(x, y)
+            return Point2(x, y)
         }
     }
 

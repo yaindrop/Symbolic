@@ -1,15 +1,8 @@
-//
-//  Path.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/11.
-//
-
 import Foundation
 import SwiftUI
 
 struct PathLine {
-    func draw(path: inout SwiftUI.Path, to: CGPoint) {
+    func draw(path: inout SwiftUI.Path, to: Point2) {
         path.addLine(to: to)
     }
 }
@@ -20,11 +13,11 @@ struct PathArc {
     let largeArc: Bool
     let sweep: Bool
 
-    func toParam(from: CGPoint, to: CGPoint) -> ArcEndpointParam {
+    func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
         ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
     }
 
-    func draw(path: inout SwiftUI.Path, to: CGPoint) {
+    func draw(path: inout SwiftUI.Path, to: Point2) {
         guard let from = path.currentPoint else { return }
         var endPointparam = toParam(from: from, to: to)
         guard let param = endPointparam.centerParam?.value else { return }
@@ -34,10 +27,10 @@ struct PathArc {
 }
 
 struct PathBezier {
-    let control0: CGPoint
-    let control1: CGPoint
+    let control0: Point2
+    let control1: Point2
 
-    func draw(path: inout SwiftUI.Path, to: CGPoint) {
+    func draw(path: inout SwiftUI.Path, to: Point2) {
         path.addCurve(to: to, control1: control0, control2: control1)
     }
 }
@@ -46,7 +39,7 @@ enum PathAction {
     case Line(PathLine)
     case Arc(PathArc)
     case Bezier(PathBezier)
-    func draw(path: inout SwiftUI.Path, to: CGPoint) {
+    func draw(path: inout SwiftUI.Path, to: Point2) {
         switch self {
         case let .Line(l):
             l.draw(path: &path, to: to)
@@ -60,7 +53,7 @@ enum PathAction {
 
 struct PathVertex: Identifiable {
     let id = UUID()
-    let position: CGPoint
+    let position: Point2
 }
 
 struct PathSegment {
@@ -115,14 +108,14 @@ struct Path: Identifiable {
                 let param = endPointParam.centerParam!.value
                 SwiftUI.Path { p in
                     p.move(to: .zero)
-                    p.addLine(to: CGPoint(param.radius.width, 0))
+                    p.addLine(to: Point2(param.radius.width, 0))
                     p.move(to: .zero)
-                    p.addLine(to: CGPoint(0, param.radius.height))
+                    p.addLine(to: Point2(0, param.radius.height))
                 }
                 .stroke(.yellow.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
                 .frame(width: param.radius.width, height: param.radius.height)
                 .rotationEffect(param.rotation, anchor: UnitPoint(x: 0, y: 0))
-                .position(param.center + CGVector(param.radius.width / 2, param.radius.height / 2))
+                .position(param.center + Vector2(param.radius.width / 2, param.radius.height / 2))
                 Circle().fill(.yellow).frame(width: 4, height: 4).position(param.center)
                 Circle()
                     .fill(.brown.opacity(0.5))

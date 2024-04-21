@@ -1,10 +1,3 @@
-//
-//  Path+SVG.swift
-//  Symbolic
-//
-//  Created by Yaindrop on 2024/4/15.
-//
-
 import Foundation
 
 extension PathArc {
@@ -20,7 +13,7 @@ extension PathBezier {
 }
 
 extension PathAction {
-    init(from command: SVGPathCommand, at current: CGPoint) {
+    init(from command: SVGPathCommand, at current: Point2) {
         switch command {
         case let .ArcTo(c):
             self = .Arc(PathArc(from: c))

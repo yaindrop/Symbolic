@@ -111,6 +111,10 @@ extension PathModel {
 class ActivePathModel: ObservableObject {
     @Published var activePathId: UUID?
 
+    var activePath: Path? {
+        pathModel.paths.first { $0.id == activePathId }
+    }
+
     var inactivePaths: some View {
         ForEach(pathModel.paths.filter { $0.id != activePathId }) { p in
             SwiftUI.Path { path in p.draw(path: &path) }

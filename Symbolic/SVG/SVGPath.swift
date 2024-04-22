@@ -3,25 +3,27 @@ import SwiftUI
 
 // MARK: SVGPathCommand
 
-protocol SVGPathPosition {
+protocol SVGPathCommandProtocol {
     var position: Point2 { get }
 }
 
-struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathPosition {
+struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathCommandProtocol {
     let position: Point2
+
     public var description: String { return "L \(position.x) \(position.y)" }
 }
 
-struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathPosition {
+struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathCommandProtocol {
     let radius: CGSize
     let rotation: Angle
     let largeArc: Bool
     let sweep: Bool
     let position: Point2
+
     public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
 }
 
-struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathPosition {
+struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
     let control0: Point2
     let control1: Point2
     let position: Point2
@@ -36,7 +38,7 @@ struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathPosition {
     public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
 }
 
-struct SVGPathCommandQuadraticBezierTo: CustomStringConvertible, SVGPathPosition {
+struct SVGPathCommandQuadraticBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
     let control: Point2
     let position: Point2
 
@@ -49,24 +51,22 @@ struct SVGPathCommandQuadraticBezierTo: CustomStringConvertible, SVGPathPosition
     public var description: String { return "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
 }
 
-enum SVGPathCommand: SVGPathPosition {
+enum SVGPathCommand: SVGPathCommandProtocol {
     case LineTo(SVGPathCommandLineTo)
     case ArcTo(SVGPathCommandArcTo)
     case BezierTo(SVGPathCommandBezierTo)
     case QuadraticBezierTo(SVGPathCommandQuadraticBezierTo)
 
-    var position: Point2 {
+    var value: SVGPathCommandProtocol {
         switch self {
-        case let .ArcTo(c):
-            return c.position
-        case let .BezierTo(c):
-            return c.position
-        case let .LineTo(c):
-            return c.position
-        case let .QuadraticBezierTo(c):
-            return c.position
+        case let .ArcTo(c): return c
+        case let .BezierTo(c): return c
+        case let .LineTo(c): return c
+        case let .QuadraticBezierTo(c): return c
         }
     }
+
+    var position: Point2 { value.position }
 }
 
 struct SVGPath {

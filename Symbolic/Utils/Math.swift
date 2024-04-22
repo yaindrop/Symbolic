@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import SwiftUI
 
 extension CGFloat {
     var shortDescription: String { String(format: "%.3f", self) }
@@ -45,7 +46,7 @@ struct Matrix2 {
 public typealias Vector2 = CGVector
 
 extension Vector2: AdditiveArithmetic {
-    var shortDescription: String { String(format: "(%.3f, %.3f)", dx, dy) }
+    var shortDescription: String { String(format: "(%.1f, %.1f)", dx, dy) }
 
     init(_ x: CGFloat, _ y: CGFloat) { self.init(dx: x, dy: y) }
 
@@ -110,7 +111,7 @@ extension Vector2: AdditiveArithmetic {
 public typealias Point2 = CGPoint
 
 extension Point2 {
-    var shortDescription: String { String(format: "(%.3f, %.3f)", x, y) }
+    var shortDescription: String { String(format: "(%.1f, %.1f)", x, y) }
 
     init(_ x: CGFloat, _ y: CGFloat) { self.init(x: x, y: y) }
 
@@ -136,12 +137,16 @@ extension Point2 {
 // MARK: CGSize
 
 extension CGSize {
+    var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
+
     init(_ width: CGFloat, _ height: CGFloat) { self.init(width: width, height: height) }
 }
 
 // MARK: CGRect
 
 extension CGRect {
+    var shortDescription: String { String(format: "(x: %.1f, y: %.1f, w: %.1f, h: %.1f)", minX, minY, width, height) }
+
     var center: Point2 { Point2(midX, midY) }
 
     init(_ size: CGSize) { self.init(x: 0, y: 0, width: size.width, height: size.height) }
@@ -169,4 +174,8 @@ extension CGAffineTransform {
     func translatedBy(_ vector: Vector2) -> CGAffineTransform { translatedBy(x: vector.dx, y: vector.dy) }
 
     func scaledBy(_ scale: CGFloat) -> CGAffineTransform { scaledBy(x: scale, y: scale) }
+}
+
+extension Angle {
+    var shortDescription: String { String(format: "%.3f°", degrees) }
 }

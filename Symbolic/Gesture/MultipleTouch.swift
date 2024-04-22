@@ -27,7 +27,7 @@ struct MultipleTouchModifier: ViewModifier {
 
 // MARK: multiple touch info
 
-struct PanInfo {
+struct PanInfo: CustomStringConvertible {
     var origin: Point2
     var offset: Vector2 = Vector2.zero
 
@@ -35,10 +35,10 @@ struct PanInfo {
         return origin + offset
     }
 
-    public var description: String { return "PanInfo(\(origin.shortDescription), \(offset.shortDescription))" }
+    public var description: String { "(\(origin.shortDescription), \(offset.shortDescription)" }
 }
 
-struct PinchInfo {
+struct PinchInfo: CustomStringConvertible {
     var origin: (Point2, Point2)
     var offset: (Vector2, Vector2) = (Vector2.zero, Vector2.zero)
 
@@ -66,7 +66,7 @@ struct PinchInfo {
         return currentDistance / originDistance
     }
 
-    public var description: String { return "PinchInfo((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))" }
+    public var description: String { return "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))" }
 }
 
 // MARK: MultipleTouchContext

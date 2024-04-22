@@ -130,6 +130,7 @@ struct CanvasView: View {
                 activePaths
             }
             .overlay {
+                ActivePathView(activePathModel: activePathModel)
                 DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, pathModel: pathModel, activePathModel: activePathModel)
             }
             .navigationTitle("Canvas")

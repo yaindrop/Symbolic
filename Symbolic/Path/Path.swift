@@ -1,17 +1,25 @@
 import Foundation
 import SwiftUI
 
-struct PathLine {
+protocol PathActionProtocol: CustomStringConvertible {
+    func draw(path: inout SwiftUI.Path, to: Point2)
+}
+
+struct PathLine: PathActionProtocol {
+    var description: String { "Line" }
+
     func draw(path: inout SwiftUI.Path, to: Point2) {
         path.addLine(to: to)
     }
 }
 
-struct PathArc {
+struct PathArc: PathActionProtocol {
     let radius: CGSize
     let rotation: Angle
     let largeArc: Bool
     let sweep: Bool
+
+    var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
 
     func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
         ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
@@ -25,29 +33,33 @@ struct PathArc {
     }
 }
 
-struct PathBezier {
+struct PathBezier: PathActionProtocol {
     let control0: Point2
     let control1: Point2
+
+    var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 
     func draw(path: inout SwiftUI.Path, to: Point2) {
         path.addCurve(to: to, control1: control0, control2: control1)
     }
 }
 
-enum PathAction {
+enum PathAction: PathActionProtocol {
     case Line(PathLine)
     case Arc(PathArc)
     case Bezier(PathBezier)
-    func draw(path: inout SwiftUI.Path, to: Point2) {
+
+    var value: PathActionProtocol {
         switch self {
-        case let .Line(l):
-            l.draw(path: &path, to: to)
-        case let .Arc(a):
-            a.draw(path: &path, to: to)
-        case let .Bezier(b):
-            b.draw(path: &path, to: to)
+        case let .Line(l): return l
+        case let .Arc(a): return a
+        case let .Bezier(b): return b
         }
     }
+
+    var description: String { value.description }
+
+    func draw(path: inout SwiftUI.Path, to: Point2) { value.draw(path: &path, to: to) }
 }
 
 struct PathVertex: Identifiable {

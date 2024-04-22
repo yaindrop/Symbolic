@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 class PathModel: ObservableObject {
     @Published var pathIds: [UUID] = []
@@ -9,7 +10,9 @@ class PathModel: ObservableObject {
 
     var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
     var vertices: [PathVertex] { pathIds.compactMap { vid in vertexIdToVertex[vid] } }
+}
 
+extension PathModel {
     func addPath(_ path: Path) {
         pathIds.append(path.id)
         pathIdToPath[path.id] = path
@@ -97,6 +100,38 @@ extension PathModel {
         guard let path = pathIdToPath[pathId] else { return }
         updatePath(path.vertexUpdated(vertexUpdate: vertexUpdate))
     }
+}
+
+extension PathModel {
+    func hitTest(worldPosition: Point2) -> Path? {
+        return paths.first { p in p.hitPath.contains(worldPosition) }
+    }
+}
+
+class ActivePathModel: ObservableObject {
+    @Published var activePathId: UUID?
+
+    var inactivePaths: some View {
+        ForEach(pathModel.paths.filter { $0.id != activePathId }) { p in
+            SwiftUI.Path { path in p.draw(path: &path) }
+                .stroke(Color(UIColor.label), lineWidth: 1)
+        }
+    }
+
+    var activePaths: some View {
+        ForEach(pathModel.paths.filter { $0.id == activePathId }) { p in
+            SwiftUI.Path { path in p.draw(path: &path) }
+                .stroke(Color(UIColor.label), lineWidth: 1)
+            p.vertexViews()
+            p.controlViews()
+        }
+    }
+
+    init(pathModel: PathModel) {
+        self.pathModel = pathModel
+    }
+
+    private var pathModel: PathModel
 }
 
 class PathUpdater: ObservableObject {

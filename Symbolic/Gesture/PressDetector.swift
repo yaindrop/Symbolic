@@ -3,14 +3,14 @@ import Foundation
 
 struct TapInfo {
     let location: Point2
-    let isDoubleTap: Bool
+    let count: Int
 }
 
 class PressDetector: ObservableObject {
     static let pressOffsetThreshold: CGFloat = 10
     static let tapDurationThreshold: TimeInterval = 1
-    static let doubleTapIntervalThreshold: TimeInterval = 0.5
-    static let doubleTapOffsetThreshold: CGFloat = 20
+    static let repeatedTapIntervalThreshold: TimeInterval = 0.5
+    static let repeatedTapOffsetThreshold: CGFloat = 20
 
     var pressLocation: Point2? { isPress ? touchContext.panInfo?.origin : nil }
 
@@ -34,31 +34,30 @@ class PressDetector: ObservableObject {
 
     private var canEndAsTap: Bool {
         guard let beganTime = touchContext.firstTouchBeganTime else { return false }
-        return Date().timeIntervalSince(beganTime) < PressDetector.doubleTapIntervalThreshold
+        return Date().timeIntervalSince(beganTime) < PressDetector.tapDurationThreshold
     }
 
-    private var pendingDoubleTapTime: Date?
-    private var pendingDoubleTapLocation: Point2?
-    private var canEndAsDoubleTap: Bool {
-        guard let prevTime = pendingDoubleTapTime else { return false }
-        guard let prevLocation = pendingDoubleTapLocation else { return false }
+    private struct RepeatedTapInfo {
+        let count: Int
+        let time: Date
+        let location: Point2
+    }
+
+    private var pendingRepeatedTapInfo: RepeatedTapInfo?
+    private var canEndAsRepeatedTap: Bool {
+        guard let info = pendingRepeatedTapInfo else { return false }
         guard let currLocation = pressLocation else { return false }
-        return Date().timeIntervalSince(prevTime) < PressDetector.doubleTapIntervalThreshold && prevLocation.distance(to: currLocation) < PressDetector.doubleTapOffsetThreshold
+        return Date().timeIntervalSince(info.time) < PressDetector.repeatedTapIntervalThreshold && info.location.distance(to: currLocation) < PressDetector.repeatedTapOffsetThreshold
     }
 
     private func onTouchEnded() {
-        var isSingleTap = canEndAsTap
-        if isSingleTap, let location = pressLocation {
-            let isDoubleTap = canEndAsDoubleTap
-            tapSubject.send(TapInfo(location: location, isDoubleTap: isDoubleTap))
-            isSingleTap = !isDoubleTap
-        }
-        if isSingleTap {
-            pendingDoubleTapTime = Date()
-            pendingDoubleTapLocation = pressLocation
+        if canEndAsTap, let location = pressLocation {
+            let count: Int = canEndAsRepeatedTap ? pendingRepeatedTapInfo!.count + 1 : 1
+            let info = TapInfo(location: location, count: count)
+            tapSubject.send(info)
+            pendingRepeatedTapInfo = RepeatedTapInfo(count: count, time: Date(), location: location)
         } else {
-            pendingDoubleTapTime = nil
-            pendingDoubleTapLocation = nil
+            pendingRepeatedTapInfo = nil
         }
     }
 }

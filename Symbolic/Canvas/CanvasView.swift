@@ -1,36 +1,15 @@
 import Combine
 import SwiftUI
 
-struct DebugTitle: View {
-    let title: String
+struct BlurView: UIViewRepresentable {
+    var style: UIBlurEffect.Style
 
-    var body: some View {
-        Text(title)
-            .font(.title3)
-            .padding(.vertical, 4)
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        return UIVisualEffectView(effect: UIBlurEffect(style: style))
     }
-}
 
-struct DebugLine: View {
-    let name: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(name)
-                .font(.headline)
-            Spacer()
-            Text(value)
-                .font(.body)
-                .padding(.vertical, 4)
-        }
-    }
-}
-
-struct DebugDivider: View {
-    var body: some View {
-        Divider()
-            .background(.white)
+    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
+        uiView.effect = UIBlurEffect(style: style)
     }
 }
 
@@ -42,6 +21,7 @@ struct CanvasView: View {
     @StateObject var viewportUpdater: ViewportUpdater
 
     @StateObject var pathModel: PathModel
+    @StateObject var activePathModel: ActivePathModel
 
     init() {
         let viewport = Viewport()
@@ -50,40 +30,14 @@ struct CanvasView: View {
         for event in foo().events {
             pathModel.loadEvent(event)
         }
+        let activePathModel = ActivePathModel(pathModel: pathModel)
         _touchContext = StateObject(wrappedValue: touchContext)
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
         _pathModel = StateObject(wrappedValue: pathModel)
+        _activePathModel = StateObject(wrappedValue: activePathModel)
     }
-
-    var debugView: some View {
-        HStack {
-            Spacer()
-            VStack {
-                VStack(alignment: HorizontalAlignment.leading) {
-                    DebugTitle(title: "Debug")
-                    DebugLine(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
-                    DebugLine(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
-                    DebugLine(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
-                    DebugDivider()
-                    DebugLine(name: "Viewport", value: viewport.info.description)
-                    Button("Toggle sidebar", systemImage: "sidebar.left") {
-                        print("columnVisibility", columnVisibility)
-                        columnVisibility = columnVisibility == .detailOnly ? .doubleColumn : .detailOnly
-                    }
-                }
-                .padding(12)
-                .frame(maxWidth: 360)
-                .background(.gray.opacity(0.5))
-                .cornerRadius(12)
-                Spacer()
-            }
-            .padding(24)
-        }
-    }
-
-    @State var active: UUID?
 
 //    var stuff: some View {
 //        RoundedRectangle(cornerRadius: 25)
@@ -98,88 +52,85 @@ struct CanvasView: View {
 //            .transformEffect(viewport.info.worldToView)
 //    }
 
-    var inactivePaths: some View {
-        ForEach(pathModel.paths.filter { $0.id != active }) { p in
-            SwiftUI.Path { path in p.draw(path: &path) }
-                .stroke(Color(UIColor.label), lineWidth: 1)
+    var background: some View {
+        GeometryReader { geometry in
+            Canvas { context, _ in
+                context.concatenate(viewport.info.worldToView)
+                let path = SwiftUI.Path { path in
+                    for index in 0 ... 10240 {
+                        let vOffset: CGFloat = CGFloat(index) * 10
+                        path.move(to: CGPoint(vOffset, 0))
+                        path.addLine(to: CGPoint(vOffset, 102400))
+                    }
+                    for index in 0 ... 10240 {
+                        let hOffset: CGFloat = CGFloat(index) * 10
+                        path.move(to: CGPoint(0, hOffset))
+                        path.addLine(to: CGPoint(102400, hOffset))
+                    }
+                }
+                context.stroke(path, with: .color(.red), lineWidth: 0.5)
+            }
+            //                Group {
+            //                    Path { path in
+            //                        for index in 0 ... 1024 {
+            //                            let vOffset: CGFloat = CGFloat(index) * 10
+            //                            path.move(to: CGPoint(x: vOffset, y: 0))
+            //                            path.addLine(to: CGPoint(x: vOffset, y: 10240))
+            //                        }
+            //                        for index in 0 ... 1024 {
+            //                            let hOffset: CGFloat = CGFloat(index) * 10
+            //                            path.move(to: CGPoint(x: 0, y: hOffset))
+            //                            path.addLine(to: CGPoint(x: 10240, y: hOffset))
+            //                        }
+            //                    }
+            //                    .stroke(.red)
+            //                }
+            //                .transformEffect(viewport.info.worldToView)
+            .onChange(of: geometry.size) { oldValue, newValue in
+                print("Changing size from \(oldValue) to \(newValue)")
+            }
         }
-        .transformEffect(viewport.info.worldToView)
+    }
+
+    var inactivePaths: some View {
+        activePathModel.inactivePaths
+            .transformEffect(viewport.info.worldToView)
+            .blur(radius: 1)
+    }
+
+    var foreground: some View {
+        Canvas { context, size in
+            let rect = Rectangle().path(in: CGRect(size))
+            context.fill(rect, with: .color(.white.opacity(0.1)))
+        }
+        .modifier(MultipleTouchModifier(context: touchContext))
+        .onAppear {
+            pressDetector.onTap { info in
+                let worldLocation = info.location.applying(viewport.info.viewToWorld)
+                print("onTap \(info) worldLocation \(worldLocation)")
+                activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
+            }
+        }
     }
 
     var activePaths: some View {
-        ForEach(pathModel.paths.filter { $0.id == active }) { p in
-            SwiftUI.Path { path in p.draw(path: &path) }
-                .stroke(Color(UIColor.label), lineWidth: 1)
-            p.vertexViews()
-            p.controlViews()
-        }
-        .transformEffect(viewport.info.worldToView)
+        activePathModel.activePaths
+            .transformEffect(viewport.info.worldToView)
     }
 
-    @State private var columnVisibility = NavigationSplitViewVisibility.detailOnly
-
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: .constant(.detail)) {
+        NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
             Text("sidebar")
                 .navigationTitle("Sidebar")
         } detail: {
             ZStack {
+                background
                 inactivePaths
-                GeometryReader { geometry in
-                    Canvas { context, _ in
-                        let path = SwiftUI.Path { path in
-                            for index in 0 ... 10240 {
-                                let vOffset: CGFloat = CGFloat(index) * 10
-                                path.move(to: CGPoint(vOffset, 0))
-                                path.addLine(to: CGPoint(vOffset, 102400))
-                            }
-                            for index in 0 ... 10240 {
-                                let hOffset: CGFloat = CGFloat(index) * 10
-                                path.move(to: CGPoint(0, hOffset))
-                                path.addLine(to: CGPoint(102400, hOffset))
-                            }
-                        }
-                        context.concatenate(viewport.info.worldToView)
-                        context.stroke(path, with: .color(.red), lineWidth: 0.5)
-                    }
-                    //                Group {
-                    //                    Path { path in
-                    //                        for index in 0 ... 1024 {
-                    //                            let vOffset: CGFloat = CGFloat(index) * 10
-                    //                            path.move(to: CGPoint(x: vOffset, y: 0))
-                    //                            path.addLine(to: CGPoint(x: vOffset, y: 10240))
-                    //                        }
-                    //                        for index in 0 ... 1024 {
-                    //                            let hOffset: CGFloat = CGFloat(index) * 10
-                    //                            path.move(to: CGPoint(x: 0, y: hOffset))
-                    //                            path.addLine(to: CGPoint(x: 10240, y: hOffset))
-                    //                        }
-                    //                    }
-                    //                    .stroke(.red)
-                    //                }
-                    //                .transformEffect(viewport.info.worldToView)
-                    .onChange(of: geometry.size) { oldValue, newValue in
-                        print("Changing size from \(oldValue) to \(newValue)")
-                    }
-                }
-                .modifier(MultipleTouchModifier(context: touchContext))
-                .onAppear {
-                    pressDetector.onTap { info in
-                        let worldLocation = info.location.applying(viewport.info.viewToWorld)
-                        print("onTap \(info) worldLocation \(worldLocation)")
-                        active = nil
-                        for p in pathModel.paths {
-                            if p.hitPath.contains(worldLocation) {
-                                active = p.id
-                                break
-                            }
-                        }
-                    }
-                }
+                foreground
                 activePaths
             }
             .overlay {
-                debugView
+                DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, pathModel: pathModel, activePathModel: activePathModel)
             }
             .navigationTitle("Canvas")
 //            .toolbar(.hidden, for: .navigationBar)

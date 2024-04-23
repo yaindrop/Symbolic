@@ -1,6 +1,8 @@
 import Combine
 import Foundation
 
+// MARK: - SVGParserDelegate
+
 class SVGParserDelegate: NSObject, XMLParserDelegate {
     var pathSubject = PassthroughSubject<SVGPath, Never>()
 

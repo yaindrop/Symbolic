@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: SVGPathCommand
+// MARK: - SVGPathCommand
 
 protocol SVGPathCommandProtocol {
     var position: Point2 { get }
@@ -82,7 +82,7 @@ struct SVGPath {
     }
 }
 
-// MARK: SVGPathParser
+// MARK: - SVGPathParser
 
 enum SVGPathParserError: Error {
     case invalidCommand(String)

@@ -6,7 +6,7 @@ extension CGFloat {
     var shortDescription: String { String(format: "%.3f", self) }
 }
 
-// MARK: Matrix2
+// MARK: - Matrix2
 
 struct Matrix2 {
     var a: CGFloat
@@ -41,7 +41,7 @@ struct Matrix2 {
     }
 }
 
-// MARK: Vector2
+// MARK: - Vector2
 
 public typealias Vector2 = CGVector
 
@@ -106,7 +106,7 @@ extension Vector2: AdditiveArithmetic {
     }
 }
 
-// MARK: Point2
+// MARK: - Point2
 
 public typealias Point2 = CGPoint
 
@@ -134,7 +134,7 @@ extension Point2 {
     func distance(to point: Point2) -> CGFloat { deltaVector(to: point).length() }
 }
 
-// MARK: CGSize
+// MARK: - CGSize
 
 extension CGSize {
     var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
@@ -142,7 +142,7 @@ extension CGSize {
     init(_ width: CGFloat, _ height: CGFloat) { self.init(width: width, height: height) }
 }
 
-// MARK: CGRect
+// MARK: - CGRect
 
 extension CGRect {
     var shortDescription: String { String(format: "(x: %.1f, y: %.1f, w: %.1f, h: %.1f)", minX, minY, width, height) }
@@ -154,7 +154,7 @@ extension CGRect {
     init(center: Point2, size: CGSize) { self.init(origin: center - Vector2(size) / 2, size: size) }
 }
 
-// MARK: CGAffineTransform
+// MARK: - CGAffineTransform
 
 extension CGAffineTransform {
     var translation: Vector2 { Vector2(tx, ty) }

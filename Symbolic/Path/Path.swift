@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: PathEdge
+// MARK: - PathEdge
 
 protocol PathEdgeProtocol: CustomStringConvertible {
     func draw(path: inout SwiftUI.Path, to: Point2)
@@ -64,17 +64,20 @@ enum PathEdge: PathEdgeProtocol {
     func draw(path: inout SwiftUI.Path, to: Point2) { value.draw(path: &path, to: to) }
 }
 
-// MARK: PathNode
+// MARK: - PathNode
 
 struct PathNode: Identifiable {
     let id = UUID()
     let position: Point2
 }
 
-struct PathSegment {
+struct PathSegment: Identifiable {
+    let index: Int
     let edge: PathEdge
     let from: PathNode
     let to: PathNode
+
+    var id: UUID { from.id }
 
     var hitPath: SwiftUI.Path {
         var p = SwiftUI.Path()
@@ -84,13 +87,16 @@ struct PathSegment {
     }
 }
 
-struct PathVertex {
+struct PathVertex: Identifiable {
+    let index: Int
     let node: PathNode
     let prev: PathEdge?
     let next: PathEdge?
+
+    var id: UUID { node.id }
 }
 
-// MARK: Path
+// MARK: - Path
 
 class Path: Identifiable, ReflectedStringConvertible {
     typealias NodeEdgePair = (PathNode, PathEdge)
@@ -109,7 +115,7 @@ class Path: Identifiable, ReflectedStringConvertible {
             }
             let (node, edge) = pair
             let (nextNode, _) = pairs[isLast ? 0 : i + 1]
-            return PathSegment(edge: edge, from: node, to: nextNode)
+            return PathSegment(index: i, edge: edge, from: node, to: nextNode)
         }
     }
 
@@ -125,7 +131,7 @@ class Path: Identifiable, ReflectedStringConvertible {
                 if i > 0 { prevEdge = pairs[i - 1].1 }
                 if i + 1 < pairs.count { nextEdge = edge }
             }
-            return PathVertex(node: node, prev: prevEdge, next: nextEdge)
+            return PathVertex(index: i, node: node, prev: prevEdge, next: nextEdge)
         }
     }
 
@@ -218,7 +224,7 @@ class Path: Identifiable, ReflectedStringConvertible {
     }
 }
 
-// MARK: path event handlers
+// MARK: - path event handlers
 
 extension Path {
     func edgeUpdated(edgeUpdate: PathEdgeUpdate) -> Path {

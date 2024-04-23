@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: PathEvent
+// MARK: - PathEvent
 
 struct PathCreate {
     let path: Path
@@ -10,7 +10,7 @@ struct PathDelete {
     let pathId: UUID
 }
 
-// MARK: PathUpdate
+// MARK: - PathUpdate
 
 struct PathNodeCreate {
     let prevNodeId: UUID?

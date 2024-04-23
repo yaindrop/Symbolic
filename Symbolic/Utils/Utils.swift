@@ -5,6 +5,8 @@ extension UUID: Identifiable {
     public var id: UUID { self }
 }
 
+// MARK: - ReflectedStringConvertible
+
 public protocol ReflectedStringConvertible: CustomStringConvertible { }
 
 extension ReflectedStringConvertible {
@@ -17,6 +19,8 @@ extension ReflectedStringConvertible {
         return "\(mirror.subjectType)(\(propertiesStr))"
     }
 }
+
+// MARK: - CornerPosition
 
 enum CornerPosition {
     case topLeft
@@ -46,40 +50,116 @@ struct CornerPositionModifier: ViewModifier {
     }
 }
 
+// MARK: - conditional modifier
+
+extension View {
+    @ViewBuilder func `if`<T: View>(
+        _ condition: @autoclosure () -> Bool,
+        then content: (Self) -> T
+    ) -> some View {
+        if condition() {
+            content(self)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder func `if`<TrueContent: View, FalseContent: View>(
+        _ condition: @autoclosure () -> Bool,
+        then trueContent: (Self) -> TrueContent,
+        else falseContent: (Self) -> FalseContent
+    ) -> some View {
+        if condition() {
+            trueContent(self)
+        } else {
+            falseContent(self)
+        }
+    }
+}
+
+// MARK: - ScrollOffset
+
+class ScrollOffsetModel: ObservableObject {
+    let coordinateSpaceName = UUID().uuidString
+
+    @Published var offset: CGFloat = 0
+    var scrolled: Bool { offset > 0 }
+}
+
+struct ScrollOffsetKey: PreferenceKey {
+    typealias Value = CGFloat
+    static var defaultValue: CGFloat = .zero
+    static func reduce(value: inout Value, nextValue: () -> Value) { value += nextValue() }
+}
+
+struct ScrollOffsetReaderModifier: ViewModifier {
+    @ObservedObject var model: ScrollOffsetModel
+
+    func body(content: Content) -> some View {
+        content.background(
+            GeometryReader {
+                Color.clear.preference(key: ScrollOffsetKey.self,
+                                       value: -$0.frame(in: .named(model.coordinateSpaceName)).origin.y)
+            }
+        )
+    }
+}
+
+struct ScrollOffsetProviderModifier: ViewModifier {
+    @ObservedObject var model: ScrollOffsetModel
+
+    func body(content: Content) -> some View {
+        content.coordinateSpace(name: model.coordinateSpaceName)
+            .onPreferenceChange(ScrollOffsetKey.self) { value in withAnimation { model.offset = value } }
+    }
+}
+
+extension View {
+    func scrollOffsetReader(model: ScrollOffsetModel) -> some View {
+        modifier(ScrollOffsetReaderModifier(model: model))
+    }
+
+    func scrollOffsetProvider(model: ScrollOffsetModel) -> some View {
+        modifier(ScrollOffsetProviderModifier(model: model))
+    }
+}
+
+// MARK: - default colors
+
 extension Color {
-    // MARK: - Text Colors
+    // MARK: text
 
     static let lightText = Color(.lightText)
     static let darkText = Color(.darkText)
     static let placeholderText = Color(.placeholderText)
 
-    // MARK: - Label Colors
+    // MARK: label
 
     static let label = Color(.label)
     static let secondaryLabel = Color(.secondaryLabel)
     static let tertiaryLabel = Color(.tertiaryLabel)
     static let quaternaryLabel = Color(.quaternaryLabel)
 
-    // MARK: - Background Colors
+    // MARK: background
 
     static let systemBackground = Color(.systemBackground)
     static let secondarySystemBackground = Color(.secondarySystemBackground)
     static let tertiarySystemBackground = Color(.tertiarySystemBackground)
 
-    // MARK: - Fill Colors
+    // MARK: fill
 
     static let systemFill = Color(.systemFill)
     static let secondarySystemFill = Color(.secondarySystemFill)
     static let tertiarySystemFill = Color(.tertiarySystemFill)
     static let quaternarySystemFill = Color(.quaternarySystemFill)
 
-    // MARK: - Grouped Background Colors
+    // MARK: grouped background
 
     static let systemGroupedBackground = Color(.systemGroupedBackground)
     static let secondarySystemGroupedBackground = Color(.secondarySystemGroupedBackground)
     static let tertiarySystemGroupedBackground = Color(.tertiarySystemGroupedBackground)
 
-    // MARK: - Gray Colors
+    // MARK: gray
 
     static let systemGray = Color(.systemGray)
     static let systemGray2 = Color(.systemGray2)
@@ -88,13 +168,13 @@ extension Color {
     static let systemGray5 = Color(.systemGray5)
     static let systemGray6 = Color(.systemGray6)
 
-    // MARK: - Other Colors
+    // MARK: others
 
     static let separator = Color(.separator)
     static let opaqueSeparator = Color(.opaqueSeparator)
     static let link = Color(.link)
 
-    // MARK: System Colors
+    // MARK: system
 
     static let systemBlue = Color(.systemBlue)
     static let systemPurple = Color(.systemPurple)

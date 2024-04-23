@@ -6,6 +6,8 @@ struct TapInfo {
     let count: Int
 }
 
+// MARK: - PressDetector
+
 class PressDetector: ObservableObject {
     static let pressOffsetThreshold: CGFloat = 10
     static let tapDurationThreshold: TimeInterval = 1

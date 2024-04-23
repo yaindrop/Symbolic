@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// MARK: MultipleTouchModifier
+// MARK: - MultipleTouchModifier
 
 struct MultipleTouchModifier: ViewModifier {
     private struct Representable: UIViewRepresentable {
@@ -25,7 +25,7 @@ struct MultipleTouchModifier: ViewModifier {
     }
 }
 
-// MARK: multiple touch info
+// MARK: - multiple touch info
 
 struct PanInfo: CustomStringConvertible {
     var origin: Point2
@@ -69,7 +69,7 @@ struct PinchInfo: CustomStringConvertible {
     public var description: String { return "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))" }
 }
 
-// MARK: MultipleTouchContext
+// MARK: - MultipleTouchContext
 
 class MultipleTouchContext: ObservableObject {
     @Published var active: Bool = false
@@ -95,7 +95,7 @@ class MultipleTouchContext: ObservableObject {
     }
 }
 
-// MARK: MultipleTouchHandler
+// MARK: - MultipleTouchHandler
 
 class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
     init(context: MultipleTouchContext) {

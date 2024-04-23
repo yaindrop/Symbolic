@@ -26,7 +26,7 @@ class Viewport: ObservableObject {
     @Published var info: ViewportInfo = ViewportInfo()
 }
 
-// MARK: ViewportUpdater
+// MARK: - ViewportUpdater
 
 class ViewportUpdater: ObservableObject {
     @Published var previousInfo: ViewportInfo = ViewportInfo()

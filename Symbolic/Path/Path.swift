@@ -91,13 +91,13 @@ class Path: Identifiable, ReflectedStringConvertible {
 
     var segments: [PathSegment] {
         pairs.enumerated().compactMap { i, pair in
-            let (v, action) = pair
-            let nextIndex = i + 1 == pairs.count ? 0 : i + 1
-            let next = pairs[nextIndex].0
-            if !isClosed && nextIndex == 0 {
+            let isLast = i + 1 == pairs.count
+            if isLast && !isClosed {
                 return nil
             }
-            return PathSegment(from: v, to: next, action: action)
+            let (vertex, action) = pair
+            let (nextVertex, _) = pairs[isLast ? 0 : i + 1]
+            return PathSegment(from: vertex, to: nextVertex, action: action)
         }
     }
 

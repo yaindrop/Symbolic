@@ -10,8 +10,6 @@ struct DebugView: View {
     @ObservedObject var pathModel: PathModel
     @ObservedObject var activePathModel: ActivePathModel
 
-    @State private var columnVisibility = NavigationSplitViewVisibility.detailOnly
-
     var title: some View {
         HStack {
             Text("Debug")
@@ -19,11 +17,6 @@ struct DebugView: View {
                 .padding(.vertical, 4)
             Spacer()
         }
-    }
-
-    var divider: some View {
-        Divider()
-            .background(.white)
     }
 
     var body: some View {
@@ -34,20 +27,15 @@ struct DebugView: View {
                     Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
                     Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
                     Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
-                    divider
+                    Divider()
                     Row(name: "Viewport", value: viewport.info.description)
-                    Button("Toggle sidebar", systemImage: "sidebar.left") {
-                        print("columnVisibility", columnVisibility)
-                        columnVisibility = columnVisibility == .detailOnly ? .doubleColumn : .detailOnly
-                    }
                 }
                 .padding(12)
             }
-            .background(.gray.opacity(0.5))
+            .background(.regularMaterial)
             .cornerRadius(12)
         }
         .frame(maxWidth: 360)
-        .background(.white.opacity(0.5))
         .padding(24)
         .modifier(CornerPositionModifier(position: .topRight))
     }

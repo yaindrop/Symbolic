@@ -10,7 +10,7 @@ class ArcCenterParam: ReflectedStringConvertible {
     let deltaAngle: Angle
 
     var endAngle: Angle { startAngle + deltaAngle }
-    var clockwise: Bool { deltaAngle < Angle.zero }
+    var clockwise: Bool { deltaAngle < .zero }
     var transform: CGAffineTransform { CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) } }
 
     lazy var endpointParam: ArcEndpointParam = {
@@ -21,7 +21,7 @@ class ArcCenterParam: ReflectedStringConvertible {
         let from = center + mat * Vector2(radius.width * cosTheta1, radius.height * sinTheta1)
         let to = center + mat * Vector2(radius.width * cosTheta2, radius.height * sinTheta2)
         let largeArc = abs(deltaAngle.radians) > CGFloat.pi
-        let sweep = deltaAngle.radians > 0
+        let sweep = deltaAngle > .zero
         return ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
     }()
 

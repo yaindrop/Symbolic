@@ -164,20 +164,20 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
         context.panInfo = nil
         context.pinchInfo = nil
         context.maxTouchesCount = max(context.maxTouchesCount, activeTouches.count)
-        if let touch = panTouch {
-            context.panInfo = PanInfo(origin: location(of: touch))
-        } else if let touches = pinchTouches {
-            context.pinchInfo = PinchInfo(origin: (location(of: touches.0), location(of: touches.1)))
+        if let panTouch {
+            context.panInfo = PanInfo(origin: location(of: panTouch))
+        } else if let pinchTouches {
+            context.pinchInfo = PinchInfo(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1)))
         }
     }
 
     private func onActiveTouchesMoved() {
-        if let info = context.panInfo, let touch = panTouch {
-            let movedInfo = PanInfo(origin: info.origin, offset: Vector2(location(of: touch)) - Vector2(info.origin))
+        if let info = context.panInfo, let panTouch {
+            let movedInfo = PanInfo(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
             context.maxPanOffset = max(context.maxPanOffset, movedInfo.offset.length())
             context.panInfo = movedInfo
-        } else if let info = context.pinchInfo, let touches = pinchTouches {
-            let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: touches.0)) - Vector2(info.origin.0), Vector2(location(of: touches.1)) - Vector2(info.origin.1)))
+        } else if let info = context.pinchInfo, let pinchTouches {
+            let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1)))
             context.pinchInfo = movedInfo
         }
     }

@@ -2,34 +2,6 @@ import Combine
 import Foundation
 import SwiftUI
 
-fileprivate enum PathActionPropertyKind {
-    case Point(Point2)
-    case Size(CGSize)
-    case Angle(Angle)
-    case Flag(Bool)
-}
-
-fileprivate struct PathActionProperty {
-    let name: String
-    let kind: PathActionPropertyKind
-}
-
-fileprivate func getPathActionName(_ pathAction: PathAction) -> String {
-    switch pathAction {
-    case .Arc: return "Arc"
-    case .Bezier: return "Bezier"
-    case .Line: return "Line"
-    }
-}
-
-fileprivate func getPathActionProperties(_ pathAction: PathAction) -> String {
-    switch pathAction {
-    case .Arc: return "Arc"
-    case .Bezier: return "Bezier"
-    case .Line: return "Line"
-    }
-}
-
 struct ActivePathView: View {
     @ObservedObject var activePathModel: ActivePathModel
 
@@ -58,8 +30,8 @@ struct ActivePathView: View {
                     }
                     VStack(spacing: 12) {
                         ForEach(Array(zip(activePath.pairs, activePath.pairs.indices)), id: \.0.0.id) { pair, index in
-                            VertexRow(index: index, vertex: pair.0)
-                            ActionRow(action: pair.1)
+                            NodeRow(index: index, node: pair.0)
+                            EdgeRow(edge: pair.1)
                         }
                     }
                 }
@@ -87,60 +59,50 @@ struct ActivePathView: View {
         .padding(24)
         .modifier(CornerPositionModifier(position: .bottomRight))
     }
+}
 
-    private struct ActionRow: View {
-        let action: PathAction
-        @State var expanded = false
+// MARK: Component rows
 
-        var name: String { getPathActionName(action) }
+fileprivate struct EdgeRow: View {
+    let edge: PathEdge
+    @State var expanded = false
 
-        var body: some View {
-            HStack {
-                Spacer(minLength: 24)
-                VStack(spacing: 0) {
-                    HStack {
-                        Button {
-                            withAnimation {
-                                expanded.toggle()
-                            }
-                        } label: {
-                            Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
-                            Text(name)
-                                .font(.body)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        Spacer()
-                    }
-                    .padding(6)
-                    Group {
-                        if case let .Bezier(bezier) = action {
-                            PathBezierPanel(bezier: bezier)
-                        } else if case let .Arc(arc) = action {
-                            PathArcPanel(arc: arc)
-                        }
-                    }
-                    .padding(.top, 6)
-                    .frame(height: expanded ? nil : 0, alignment: .top)
-                    .clipped()
-                }
-                .padding(12)
-                .background(Color.systemBackground)
-                .cornerRadius(12)
-            }
+    var name: String {
+        switch edge {
+        case .Arc: return "Arc"
+        case .Bezier: return "Bezier"
+        case .Line: return "Line"
         }
     }
 
-    private struct VertexRow: View {
-        let index: Int
-        let vertex: PathVertex
-
-        var body: some View {
-            HStack {
-                Image(systemName: "smallcircle.filled.circle")
-                Text("\(index)")
-                    .font(.headline)
-                Spacer()
-                PositionPicker(position: vertex.position)
+    var body: some View {
+        HStack {
+            Spacer(minLength: 24)
+            VStack(spacing: 0) {
+                HStack {
+                    Button {
+                        withAnimation {
+                            expanded.toggle()
+                        }
+                    } label: {
+                        Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
+                        Text(name)
+                            .font(.body)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    Spacer()
+                }
+                .padding(6)
+                Group {
+                    if case let .Bezier(bezier) = edge {
+                        BezierPanel(bezier: bezier)
+                    } else if case let .Arc(arc) = edge {
+                        ArcPanel(arc: arc)
+                    }
+                }
+                .padding(.top, 6)
+                .frame(height: expanded ? nil : 0, alignment: .top)
+                .clipped()
             }
             .padding(12)
             .background(Color.systemBackground)
@@ -149,7 +111,27 @@ struct ActivePathView: View {
     }
 }
 
-fileprivate struct PathBezierPanel: View {
+fileprivate struct NodeRow: View {
+    let index: Int
+    let node: PathNode
+
+    var body: some View {
+        HStack {
+            Image(systemName: "smallcircle.filled.circle")
+            Text("\(index)")
+                .font(.headline)
+            Spacer()
+            PositionPicker(position: node.position)
+        }
+        .padding(12)
+        .background(Color.systemBackground)
+        .cornerRadius(12)
+    }
+}
+
+// MARK: PathEdge panels
+
+fileprivate struct BezierPanel: View {
     var bezier: PathBezier
 
     var body: some View {
@@ -180,7 +162,7 @@ fileprivate struct PathBezierPanel: View {
     }
 }
 
-fileprivate struct PathArcPanel: View {
+fileprivate struct ArcPanel: View {
     var arc: PathArc
 
     var body: some View {
@@ -224,8 +206,8 @@ func sanitized(decimalStr: String) -> String {
     return (dotSplit.first ?? "") + (remaining.isEmpty ? "" : "." + remaining.joined(separator: ""))
 }
 
-func decimalFormatStyle<Value>(maxFractionDigits: Int = 3) -> FloatingPointFormatStyle<Value> {
-    FloatingPointFormatStyle<Value>().precision(.fractionLength(0 ... maxFractionDigits))
+func decimalFormatStyle<Value>(maxFredgeDigits: Int = 3) -> FloatingPointFormatStyle<Value> {
+    FloatingPointFormatStyle<Value>().precision(.fractionLength(0 ... maxFredgeDigits))
 }
 
 struct DecimalInput: View {

@@ -12,7 +12,7 @@ extension PathBezier {
     }
 }
 
-extension PathAction {
+extension PathEdge {
     init(from command: SVGPathCommand, at current: Point2) {
         switch command {
         case let .ArcTo(c):
@@ -29,14 +29,14 @@ extension PathAction {
 
 extension Path {
     convenience init(from svgPath: SVGPath) {
-        var pairs: [PathVertexActionPair] = []
+        var pairs: [NodeEdgePair] = []
         var current = svgPath.initial
         for command in svgPath.commands {
-            pairs.append((PathVertex(position: current), PathAction(from: command, at: current)))
+            pairs.append((PathNode(position: current), PathEdge(from: command, at: current)))
             current = command.position
         }
         if svgPath.initial != svgPath.last {
-            pairs.append((PathVertex(position: svgPath.last), .Line(PathLine())))
+            pairs.append((PathNode(position: svgPath.last), .Line(PathLine())))
         }
         self.init(pairs: pairs, isClosed: svgPath.isClosed)
     }

@@ -1,11 +1,13 @@
 import Foundation
 import SwiftUI
 
-protocol PathActionProtocol: CustomStringConvertible {
+// MARK: PathEdge
+
+protocol PathEdgeProtocol: CustomStringConvertible {
     func draw(path: inout SwiftUI.Path, to: Point2)
 }
 
-struct PathLine: PathActionProtocol {
+struct PathLine: PathEdgeProtocol {
     var description: String { "Line" }
 
     func draw(path: inout SwiftUI.Path, to: Point2) {
@@ -13,7 +15,7 @@ struct PathLine: PathActionProtocol {
     }
 }
 
-struct PathArc: PathActionProtocol {
+struct PathArc: PathEdgeProtocol {
     let radius: CGSize
     let rotation: Angle
     let largeArc: Bool
@@ -33,7 +35,7 @@ struct PathArc: PathActionProtocol {
     }
 }
 
-struct PathBezier: PathActionProtocol {
+struct PathBezier: PathEdgeProtocol {
     let control0: Point2
     let control1: Point2
 
@@ -44,12 +46,12 @@ struct PathBezier: PathActionProtocol {
     }
 }
 
-enum PathAction: PathActionProtocol {
+enum PathEdge: PathEdgeProtocol {
     case Line(PathLine)
     case Arc(PathArc)
     case Bezier(PathBezier)
 
-    var value: PathActionProtocol {
+    var value: PathEdgeProtocol {
         switch self {
         case let .Line(l): return l
         case let .Arc(a): return a
@@ -62,32 +64,42 @@ enum PathAction: PathActionProtocol {
     func draw(path: inout SwiftUI.Path, to: Point2) { value.draw(path: &path, to: to) }
 }
 
-struct PathVertex: Identifiable {
+// MARK: PathNode
+
+struct PathNode: Identifiable {
     let id = UUID()
     let position: Point2
 }
 
 struct PathSegment {
-    let from: PathVertex
-    let to: PathVertex
-    let action: PathAction
+    let edge: PathEdge
+    let from: PathNode
+    let to: PathNode
 
     var hitPath: SwiftUI.Path {
         var p = SwiftUI.Path()
         p.move(to: from.position)
-        action.draw(path: &p, to: to.position)
+        edge.draw(path: &p, to: to.position)
         return p.strokedPath(StrokeStyle(lineWidth: 10, lineCap: .round))
     }
 }
 
-typealias PathVertexActionPair = (PathVertex, PathAction)
+struct PathVertex {
+    let node: PathNode
+    let prev: PathEdge?
+    let next: PathEdge?
+}
+
+// MARK: Path
 
 class Path: Identifiable, ReflectedStringConvertible {
+    typealias NodeEdgePair = (PathNode, PathEdge)
+
     let id: UUID
-    let pairs: [PathVertexActionPair]
+    let pairs: [NodeEdgePair]
     let isClosed: Bool
 
-    var vertices: [PathVertex] { pairs.map { $0.0 } }
+    var nodes: [PathNode] { pairs.map { $0.0 } }
 
     var segments: [PathSegment] {
         pairs.enumerated().compactMap { i, pair in
@@ -95,9 +107,25 @@ class Path: Identifiable, ReflectedStringConvertible {
             if isLast && !isClosed {
                 return nil
             }
-            let (vertex, action) = pair
-            let (nextVertex, _) = pairs[isLast ? 0 : i + 1]
-            return PathSegment(from: vertex, to: nextVertex, action: action)
+            let (node, edge) = pair
+            let (nextNode, _) = pairs[isLast ? 0 : i + 1]
+            return PathSegment(edge: edge, from: node, to: nextNode)
+        }
+    }
+
+    var vertices: [PathVertex] {
+        pairs.enumerated().compactMap { i, pair in
+            let (node, edge) = pair
+            var prevEdge: PathEdge?
+            var nextEdge: PathEdge?
+            if isClosed {
+                prevEdge = pairs[i == 0 ? pairs.count - 1 : i - 1].1
+                nextEdge = edge
+            } else {
+                if i > 0 { prevEdge = pairs[i - 1].1 }
+                if i + 1 < pairs.count { nextEdge = edge }
+            }
+            return PathVertex(node: node, prev: prevEdge, next: nextEdge)
         }
     }
 
@@ -107,7 +135,7 @@ class Path: Identifiable, ReflectedStringConvertible {
         guard let first = pairs.first else { return p }
         p.move(to: first.0.position)
         for s in segments {
-            s.action.draw(path: &p, to: s.to.position)
+            s.edge.draw(path: &p, to: s.to.position)
         }
         if isClosed {
             p.closeSubpath()
@@ -125,27 +153,27 @@ class Path: Identifiable, ReflectedStringConvertible {
         return p
     }()
 
-    private init(id: UUID, pairs: [PathVertexActionPair], isClosed: Bool) {
+    private init(id: UUID, pairs: [NodeEdgePair], isClosed: Bool) {
         self.id = id
         self.pairs = pairs
         self.isClosed = isClosed
     }
 
-    convenience init(pairs: [PathVertexActionPair], isClosed: Bool) { self.init(id: UUID(), pairs: pairs, isClosed: isClosed) }
+    convenience init(pairs: [NodeEdgePair], isClosed: Bool) { self.init(id: UUID(), pairs: pairs, isClosed: isClosed) }
 
     func draw(path: inout SwiftUI.Path) {
         path.addPath(self.path)
     }
 
-    func vertexViews() -> some View {
-        ForEach(vertices, id: \.id) { v in
+    func nodeViews() -> some View {
+        ForEach(nodes, id: \.id) { v in
             Circle().fill(.blue.opacity(0.5)).frame(width: 4, height: 4).position(v.position)
         }
     }
 
     func controlViews() -> some View {
-        let arcs = segments.compactMap { s in if case let .Arc(arc) = s.action { (s.from, s.to, arc) } else { nil } }
-        let beziers = segments.compactMap { s in if case let .Bezier(bezier) = s.action { (s.from, s.to, bezier) } else { nil } }
+        let arcs = segments.compactMap { s in if case let .Arc(arc) = s.edge { (s.from, s.to, arc) } else { nil } }
+        let beziers = segments.compactMap { s in if case let .Bezier(bezier) = s.edge { (s.from, s.to, bezier) } else { nil } }
         return Group {
             ForEach(segments, id: \.from.id) { s in s.hitPath.fill(.blue.opacity(0.5)) }
             ForEach(arcs, id: \.0.id) { v, n, arc in
@@ -190,36 +218,38 @@ class Path: Identifiable, ReflectedStringConvertible {
     }
 }
 
+// MARK: path event handlers
+
 extension Path {
-    func actionUpdated(actionUpdate: PathActionUpdate) -> Path {
-        guard let i = (pairs.firstIndex { vertex, _ in vertex.id == actionUpdate.fromVertexId }) else { return self }
-        var pairs: [PathVertexActionPair] = pairs
-        pairs[i].1 = actionUpdate.action
+    func edgeUpdated(edgeUpdate: PathEdgeUpdate) -> Path {
+        guard let i = (pairs.firstIndex { node, _ in node.id == edgeUpdate.fromNodeId }) else { return self }
+        var pairs: [NodeEdgePair] = pairs
+        pairs[i].1 = edgeUpdate.edge
         return Path(id: id, pairs: pairs, isClosed: isClosed)
     }
 
-    func vertexCreated(vertexCreate: PathVertexCreate) -> Path {
+    func nodeCreated(nodeCreate: PathNodeCreate) -> Path {
         var i = 0
-        if let id = vertexCreate.prevVertexId {
-            guard let prevVertexIndex = (pairs.firstIndex { vertex, _ in vertex.id == id }) else { return self }
-            i = prevVertexIndex + 1
+        if let id = nodeCreate.prevNodeId {
+            guard let prevNodeIndex = (pairs.firstIndex { node, _ in node.id == id }) else { return self }
+            i = prevNodeIndex + 1
         }
-        var pairs: [PathVertexActionPair] = pairs
-        pairs.insert((vertexCreate.vertex, .Line(PathLine())), at: i)
+        var pairs: [NodeEdgePair] = pairs
+        pairs.insert((nodeCreate.node, .Line(PathLine())), at: i)
         return Path(id: id, pairs: pairs, isClosed: isClosed)
     }
 
-    func vertexDeleted(vertexDelete: PathVertexDelete) -> Path {
-        guard let i = (pairs.firstIndex { vertex, _ in vertex.id == vertexDelete.vertexId }) else { return self }
-        var pairs: [PathVertexActionPair] = pairs
+    func nodeDeleted(nodeDelete: PathNodeDelete) -> Path {
+        guard let i = (pairs.firstIndex { node, _ in node.id == nodeDelete.nodeId }) else { return self }
+        var pairs: [NodeEdgePair] = pairs
         pairs.remove(at: i)
         return Path(id: id, pairs: pairs, isClosed: isClosed)
     }
 
-    func vertexUpdated(vertexUpdate: PathVertexUpdate) -> Path {
-        guard let i = (pairs.firstIndex { vertex, _ in vertex.id == vertexUpdate.vertex.id }) else { return self }
-        var pairs: [PathVertexActionPair] = pairs
-        pairs[i].0 = vertexUpdate.vertex
+    func nodeUpdated(nodeUpdate: PathNodeUpdate) -> Path {
+        guard let i = (pairs.firstIndex { node, _ in node.id == nodeUpdate.node.id }) else { return self }
+        var pairs: [NodeEdgePair] = pairs
+        pairs[i].0 = nodeUpdate.node
         return Path(id: id, pairs: pairs, isClosed: isClosed)
     }
 }

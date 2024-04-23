@@ -3,28 +3,28 @@ import SwiftUI
 
 class PathModel: ObservableObject {
     @Published var pathIds: [UUID] = []
-    @Published var vertexIds: [UUID] = []
+    @Published var nodeIds: [UUID] = []
 
     var pathIdToPath: [UUID: Path] = [:]
-    var vertexIdToVertex: [UUID: PathVertex] = [:]
+    var nodeIdToNode: [UUID: PathNode] = [:]
 
     var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
-    var vertices: [PathVertex] { pathIds.compactMap { vid in vertexIdToVertex[vid] } }
+    var nodes: [PathNode] { pathIds.compactMap { nid in nodeIdToNode[nid] } }
 }
 
 extension PathModel {
     func addPath(_ path: Path) {
         pathIds.append(path.id)
         pathIdToPath[path.id] = path
-        for v in path.vertices {
-            vertexIds.append(v.id)
-            vertexIdToVertex[v.id] = v
+        for n in path.nodes {
+            nodeIds.append(n.id)
+            nodeIdToNode[n.id] = n
         }
     }
 
     func removePath(_ pathId: UUID) {
         guard let path = pathIdToPath[pathId] else { return }
-        // TODO: remove vertices
+        // TODO: remove nodes
         pathIds.removeAll { $0 == pathId }
         pathIdToPath.removeValue(forKey: pathId)
     }
@@ -70,35 +70,35 @@ extension PathModel {
 
     func loadEvent(_ event: PathUpdate) {
         switch event.kind {
-        case let .actionUpdate(actionUpdate):
-            loadPathUpdate(pathId: event.pathId, actionUpdate: actionUpdate)
-        case let .vertexCreate(vertexCreate):
-            loadPathUpdate(pathId: event.pathId, vertexCreate: vertexCreate)
-        case let .vertexDelete(vertexDelete):
-            loadPathUpdate(pathId: event.pathId, vertexDelete: vertexDelete)
-        case let .vertexUpdate(vertexUpdate):
-            loadPathUpdate(pathId: event.pathId, vertexUpdate: vertexUpdate)
+        case let .edgeUpdate(edgeUpdate):
+            loadPathUpdate(pathId: event.pathId, edgeUpdate: edgeUpdate)
+        case let .nodeCreate(nodeCreate):
+            loadPathUpdate(pathId: event.pathId, nodeCreate: nodeCreate)
+        case let .nodeDelete(nodeDelete):
+            loadPathUpdate(pathId: event.pathId, nodeDelete: nodeDelete)
+        case let .nodeUpdate(nodeUpdate):
+            loadPathUpdate(pathId: event.pathId, nodeUpdate: nodeUpdate)
         }
     }
 
-    func loadPathUpdate(pathId: UUID, actionUpdate: PathActionUpdate) {
+    func loadPathUpdate(pathId: UUID, edgeUpdate: PathEdgeUpdate) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.actionUpdated(actionUpdate: actionUpdate))
+        updatePath(path.edgeUpdated(edgeUpdate: edgeUpdate))
     }
 
-    func loadPathUpdate(pathId: UUID, vertexCreate: PathVertexCreate) {
+    func loadPathUpdate(pathId: UUID, nodeCreate: PathNodeCreate) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.vertexCreated(vertexCreate: vertexCreate))
+        updatePath(path.nodeCreated(nodeCreate: nodeCreate))
     }
 
-    func loadPathUpdate(pathId: UUID, vertexDelete: PathVertexDelete) {
+    func loadPathUpdate(pathId: UUID, nodeDelete: PathNodeDelete) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.vertexDeleted(vertexDelete: vertexDelete))
+        updatePath(path.nodeDeleted(nodeDelete: nodeDelete))
     }
 
-    func loadPathUpdate(pathId: UUID, vertexUpdate: PathVertexUpdate) {
+    func loadPathUpdate(pathId: UUID, nodeUpdate: PathNodeUpdate) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.vertexUpdated(vertexUpdate: vertexUpdate))
+        updatePath(path.nodeUpdated(nodeUpdate: nodeUpdate))
     }
 }
 
@@ -126,7 +126,7 @@ class ActivePathModel: ObservableObject {
         ForEach(pathModel.paths.filter { $0.id == activePathId }) { p in
             SwiftUI.Path { path in p.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
-            p.vertexViews()
+            p.nodeViews()
             p.controlViews()
         }
     }

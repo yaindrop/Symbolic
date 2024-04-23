@@ -12,29 +12,29 @@ struct PathDelete {
 
 // MARK: PathUpdate
 
-struct PathVertexCreate {
-    let prevVertexId: UUID?
-    let vertex: PathVertex
+struct PathNodeCreate {
+    let prevNodeId: UUID?
+    let node: PathNode
 }
 
-struct PathVertexUpdate {
-    let vertex: PathVertex
+struct PathNodeUpdate {
+    let node: PathNode
 }
 
-struct PathActionUpdate {
-    let fromVertexId: UUID
-    let action: PathAction
+struct PathEdgeUpdate {
+    let fromNodeId: UUID
+    let edge: PathEdge
 }
 
-struct PathVertexDelete {
-    let vertexId: UUID
+struct PathNodeDelete {
+    let nodeId: UUID
 }
 
 enum PathUpdateKind {
-    case vertexCreate(PathVertexCreate)
-    case vertexUpdate(PathVertexUpdate)
-    case actionUpdate(PathActionUpdate)
-    case vertexDelete(PathVertexDelete)
+    case edgeUpdate(PathEdgeUpdate)
+    case nodeCreate(PathNodeCreate)
+    case nodeDelete(PathNodeDelete)
+    case nodeUpdate(PathNodeUpdate)
 }
 
 struct PathUpdate {

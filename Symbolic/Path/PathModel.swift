@@ -5,8 +5,8 @@ class PathModel: ObservableObject {
     @Published var pathIds: [UUID] = []
     @Published var nodeIds: [UUID] = []
 
-    var pathIdToPath: [UUID: Path] = [:]
-    var nodeIdToNode: [UUID: PathNode] = [:]
+    @Published var pathIdToPath: [UUID: Path] = [:]
+    @Published var nodeIdToNode: [UUID: PathNode] = [:]
 
     var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
     var nodes: [PathNode] { pathIds.compactMap { nid in nodeIdToNode[nid] } }
@@ -32,6 +32,13 @@ extension PathModel {
     func updatePath(_ path: Path) {
         guard pathIdToPath[path.id] != nil else { return }
         pathIdToPath[path.id] = path
+    }
+
+    func clear() {
+        pathIds.removeAll()
+        nodeIds.removeAll()
+        pathIdToPath.removeAll()
+        nodeIdToNode.removeAll()
     }
 }
 

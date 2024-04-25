@@ -2,6 +2,17 @@ import Combine
 import Foundation
 import SwiftUI
 
+fileprivate struct PathNodeIdEnvironmentKey: EnvironmentKey {
+    static let defaultValue: UUID = UUID()
+}
+
+fileprivate extension EnvironmentValues {
+    var pathNodeId: UUID {
+        get { self[PathNodeIdEnvironmentKey.self] }
+        set { self[PathNodeIdEnvironmentKey.self] = newValue }
+    }
+}
+
 // MARK: - ActivePathView
 
 struct ActivePathView: View {
@@ -24,6 +35,7 @@ struct ActivePathView: View {
         .frame(maxWidth: 360, maxHeight: 480)
         .padding(24)
         .modifier(CornerPositionModifier(position: .bottomRight))
+        .environmentObject(activePathModel)
     }
 
     // MARK: private
@@ -58,8 +70,11 @@ struct ActivePathView: View {
                     segmentTitle("Components")
                     LazyVStack(spacing: 12) {
                         ForEach(activePath.segments) { segment in
-                            NodePanel(index: segment.index, node: segment.from)
-                            EdgePanel(edge: segment.edge)
+                            Group {
+                                NodePanel(index: segment.index, node: segment.from)
+                                EdgePanel(edge: segment.edge)
+                            }
+                            .environment(\.pathNodeId, segment.from.id)
                         }
                     }
                 }
@@ -147,6 +162,10 @@ fileprivate struct NodePanel: View {
 
 fileprivate struct BezierPanel: View {
     var bezier: PathBezier
+    @EnvironmentObject var documentModel: DocumentModel
+    @EnvironmentObject var pathModel: PathModel
+    @EnvironmentObject var activePathModel: ActivePathModel
+    @Environment(\.pathNodeId) var nodeId
 
     var body: some View {
         VStack(spacing: 12) {
@@ -154,9 +173,13 @@ fileprivate struct BezierPanel: View {
                 Image(systemName: "1.square")
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control0) { p in
-                    print("b c0 change", p)
+                    let bezier = PathBezier(control0: bezier.control0, control1: p)
+                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
+                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
                 } onDone: { p in
-                    print("b c0 done", p)
+                    let bezier = PathBezier(control0: bezier.control0, control1: p)
+                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
+                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
                 }
             }
             Divider()
@@ -164,9 +187,13 @@ fileprivate struct BezierPanel: View {
                 Image(systemName: "2.square")
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control1) { p in
-                    print("b c1 change", p)
+                    let bezier = PathBezier(control0: p, control1: bezier.control1)
+                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
+                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
                 } onDone: { p in
-                    print("b c1 done", p)
+                    let bezier = PathBezier(control0: p, control1: bezier.control1)
+                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
+                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
                 }
             }
         }

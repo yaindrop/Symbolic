@@ -20,6 +20,7 @@ struct CanvasView: View {
     @StateObject var viewport: Viewport
     @StateObject var viewportUpdater: ViewportUpdater
 
+    @StateObject var documentModel: DocumentModel = DocumentModel()
     @StateObject var pathModel: PathModel
     @StateObject var activePathModel: ActivePathModel
 
@@ -27,9 +28,6 @@ struct CanvasView: View {
         let viewport = Viewport()
         let touchContext = MultipleTouchContext()
         let pathModel = PathModel()
-        for event in foo().events {
-            pathModel.loadEvent(event)
-        }
         let activePathModel = ActivePathModel(pathModel: pathModel)
         _touchContext = StateObject(wrappedValue: touchContext)
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
@@ -131,12 +129,23 @@ struct CanvasView: View {
             }
             .overlay {
                 ActivePathView(activePathModel: activePathModel)
+                    .environmentObject(pathModel)
                 DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, pathModel: pathModel, activePathModel: activePathModel)
             }
             .navigationTitle("Canvas")
 //            .toolbar(.hidden, for: .navigationBar)
             .edgesIgnoringSafeArea(.all)
         }
+        .onChange(of: documentModel.activeDocument) {
+            pathModel.clear()
+            for event in documentModel.activeDocument.events {
+                pathModel.loadEvent(event)
+            }
+        }
+        .onAppear {
+            documentModel.activeDocument = Document(from: fooSvg)
+        }
+        .environmentObject(documentModel)
     }
 }
 

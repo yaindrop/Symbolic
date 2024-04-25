@@ -12,6 +12,11 @@ struct PathDelete {
 
 // MARK: - PathUpdate
 
+struct PathEdgeUpdate {
+    let fromNodeId: UUID
+    let edge: PathEdge
+}
+
 struct PathNodeCreate {
     let prevNodeId: UUID?
     let node: PathNode
@@ -19,11 +24,6 @@ struct PathNodeCreate {
 
 struct PathNodeUpdate {
     let node: PathNode
-}
-
-struct PathEdgeUpdate {
-    let fromNodeId: UUID
-    let edge: PathEdge
 }
 
 struct PathNodeDelete {
@@ -53,6 +53,33 @@ enum DocumentEventKind {
 }
 
 struct DocumentEvent {
-    let time: Date
+    let id: UUID = UUID()
+    let time: Date = Date()
     let kind: DocumentEventKind
+}
+
+extension DocumentEvent {
+    init(inPath pathId: UUID, updateEdgeFrom fromNodeId: UUID, _ edge: PathEdge) {
+        let edgeUpdate = PathEdgeUpdate(fromNodeId: fromNodeId, edge: edge)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .edgeUpdate(edgeUpdate))
+        self.init(kind: .pathEvent(.update(pathUpdate)))
+    }
+
+    init(inPath pathId: UUID, createNodeAfter prevNodeId: UUID?, _ node: PathNode) {
+        let nodeCreate = PathNodeCreate(prevNodeId: prevNodeId, node: node)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeCreate(nodeCreate))
+        self.init(kind: .pathEvent(.update(pathUpdate)))
+    }
+
+    init(inPath pathId: UUID, updateNode node: PathNode) {
+        let nodeUpdate = PathNodeUpdate(node: node)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeUpdate(nodeUpdate))
+        self.init(kind: .pathEvent(.update(pathUpdate)))
+    }
+
+    init(inPath pathId: UUID, deleteNode nodeId: UUID) {
+        let nodeDelete = PathNodeDelete(nodeId: nodeId)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeDelete(nodeDelete))
+        self.init(kind: .pathEvent(.update(pathUpdate)))
+    }
 }

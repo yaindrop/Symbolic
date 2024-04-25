@@ -11,9 +11,10 @@ class PathStore: ObservableObject {
     @Published private(set) var nodeIds: [UUID] = []
     @Published private(set) var nodeIdToNode: [UUID: PathNode] = [:]
 
-    private var loadingPendingEvent = false
     @Published var pendingEvent: DocumentEvent?
     @Published private(set) var pendingPaths: [Path]? = nil
+
+    private var loadingPendingEvent = false
     private var subscriptions = Set<AnyCancellable>()
 
     var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
@@ -26,6 +27,8 @@ class PathStore: ObservableObject {
             if let e {
                 self.pendingPaths = self.paths
                 self.loadEvent(e)
+            } else {
+                self.pendingPaths = nil
             }
         }.store(in: &subscriptions)
     }
@@ -100,58 +103,58 @@ extension PathStore {
     func loadEvent(_ event: PathEvent) {
         switch event {
         case let .create(create):
-            loadEvent(create)
+            loadPathEvent(create)
         case let .delete(delete):
-            loadEvent(delete)
+            loadPathEvent(delete)
         case let .update(update):
-            loadEvent(update)
+            loadPathEvent(update)
         }
     }
 
-    func loadEvent(_ event: PathCreate) {
+    func loadPathEvent(_ event: PathCreate) {
         add(path: event.path)
     }
 
-    func loadEvent(_ event: PathDelete) {
+    func loadPathEvent(_ event: PathDelete) {
         remove(pathId: event.pathId)
     }
 
-    func loadEvent(_ event: PathUpdate) {
+    func loadPathEvent(_ event: PathUpdate) {
         switch event.kind {
-        case let .edgeUpdate(edgeUpdate):
-            loadPathUpdate(pathId: event.pathId, edgeUpdate: edgeUpdate)
-        case let .nodeCreate(nodeCreate):
-            loadPathUpdate(pathId: event.pathId, nodeCreate: nodeCreate)
-        case let .nodeDelete(nodeDelete):
-            loadPathUpdate(pathId: event.pathId, nodeDelete: nodeDelete)
-        case let .nodeUpdate(nodeUpdate):
-            loadPathUpdate(pathId: event.pathId, nodeUpdate: nodeUpdate)
+        case let .edgeUpdate(v):
+            loadPathUpdate(pathId: event.pathId, edgeUpdate: v)
+        case let .nodeCreate(v):
+            loadPathUpdate(pathId: event.pathId, nodeCreate: v)
+        case let .nodeDelete(v):
+            loadPathUpdate(pathId: event.pathId, nodeDelete: v)
+        case let .nodeUpdate(v):
+            loadPathUpdate(pathId: event.pathId, nodeUpdate: v)
         }
     }
 
     func loadPathUpdate(pathId: UUID, edgeUpdate: PathEdgeUpdate) {
         guard let path = pathIdToPath[pathId] else { return }
-        update(path: path.edgeUpdated(edgeUpdate: edgeUpdate))
+        update(path: path.with(edgeUpdate: edgeUpdate))
     }
 
     func loadPathUpdate(pathId: UUID, nodeCreate: PathNodeCreate) {
         guard let path = pathIdToPath[pathId] else { return }
-        update(path: path.nodeCreated(nodeCreate: nodeCreate))
+        update(path: path.with(nodeCreate: nodeCreate))
     }
 
     func loadPathUpdate(pathId: UUID, nodeDelete: PathNodeDelete) {
         guard let path = pathIdToPath[pathId] else { return }
-        update(path: path.nodeDeleted(nodeDelete: nodeDelete))
+        update(path: path.with(nodeDelete: nodeDelete))
     }
 
     func loadPathUpdate(pathId: UUID, nodeUpdate: PathNodeUpdate) {
         guard let path = pathIdToPath[pathId] else { return }
-        update(path: path.nodeUpdated(nodeUpdate: nodeUpdate))
+        update(path: path.with(nodeUpdate: nodeUpdate))
     }
 }
 
 extension PathStore {
     func hitTest(worldPosition: Point2) -> Path? {
-        return paths.first { p in p.hitPath.contains(worldPosition) }
+        paths.first { p in p.hitPath.contains(worldPosition) }
     }
 }

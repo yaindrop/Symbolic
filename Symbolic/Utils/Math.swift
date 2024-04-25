@@ -10,6 +10,12 @@ extension CGFloat {
     var shortDescription: String { String(format: "%.3f", self) }
 }
 
+extension ClosedRange {
+    func clamp(_ value: Bound) -> Bound {
+        return lowerBound > value ? lowerBound : upperBound < value ? upperBound : value
+    }
+}
+
 // MARK: - Matrix2
 
 struct Matrix2 {
@@ -84,14 +90,16 @@ extension Vector2: AdditiveArithmetic, Transformable {
 
     // MARK: geometric operation
 
+    var length: CGFloat { hypot(dx, dy) }
+
     func dotProduct(_ rhs: Vector2) -> CGFloat { dx * rhs.dx + dy * rhs.dy }
 
     func crossProduct(_ rhs: Vector2) -> CGFloat { dx * rhs.dy - dy * rhs.dx }
 
     func radian(_ v: Vector2) -> CGFloat {
         let dot = dotProduct(v)
-        let mod = length() * v.length()
-        var rad = acos(dot / mod)
+        let mod = length * v.length
+        var rad = acos((-1.0 ... 1.0).clamp(dot / mod))
         if crossProduct(v) < 0 {
             rad = -rad
         }
@@ -99,8 +107,6 @@ extension Vector2: AdditiveArithmetic, Transformable {
     }
 
     // MARK: init
-
-    func length() -> CGFloat { hypot(dx, dy) }
 
     func applying(_ t: CGAffineTransform) -> Self {
         var translationCancelled = t
@@ -135,7 +141,7 @@ extension Point2 {
 
     func deltaVector(to point: Point2) -> Vector2 { Vector2(point) - Vector2(self) }
 
-    func distance(to point: Point2) -> CGFloat { deltaVector(to: point).length() }
+    func distance(to point: Point2) -> CGFloat { deltaVector(to: point).length }
 }
 
 // MARK: - CGSize

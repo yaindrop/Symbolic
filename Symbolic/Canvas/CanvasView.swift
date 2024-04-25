@@ -130,7 +130,9 @@ struct CanvasView: View {
                 inactivePaths
                 foreground
                 activePaths
+                    .allowsHitTesting(!touchContext.active)
                 overlay
+                    .allowsHitTesting(!touchContext.active)
             }
             .overlay {
                 ActivePathPanel(activePathModel: activePathModel)

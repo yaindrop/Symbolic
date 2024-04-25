@@ -17,6 +17,14 @@ fileprivate class Updater: ObservableObject {
     var activePath: Path?
     var viewport: Viewport?
 
+    func update(node id: UUID, with positionInView: Point2, ended: Bool) {
+        guard let activePath else { return }
+        guard let viewport else { return }
+        let position = positionInView.applying(viewport.info.viewToWorld)
+        let event = DocumentEvent(inPath: activePath.id, updateNode: activePath.nodes.first { $0.id == id }!.with(position: position))
+        (ended ? eventSubject : pendingEventSubject).send(event)
+    }
+
     func update(edge fromNodeId: UUID, with bezierInView: PathBezier, ended: Bool) {
         guard let activePath else { return }
         guard let viewport else { return }
@@ -87,7 +95,32 @@ struct ActivePathVertexHandle: View {
     let data: PathVertexData
 
     var body: some View {
-        Circle().fill(.blue.opacity(0.5)).frame(width: 8, height: 8).position(data.node)
+        circle(at: node, color: .blue)
+            .gesture(drag(updating: $dragging))
+    }
+
+    private static let lineWidth: CGFloat = 4
+    private static let circleSize: CGFloat = 32
+
+    @Environment(\.pathNodeId) private var nodeId: UUID
+    @EnvironmentObject private var updater: Updater
+    @GestureState private var dragging: Point2?
+
+    private var node: Point2 { dragging ?? data.node }
+
+    @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
+        Circle()
+            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
+            .fill(color.opacity(0.5))
+            .frame(width: Self.circleSize, height: Self.circleSize)
+            .position(point)
+    }
+
+    private func drag(updating v: GestureState<Point2?>) -> some Gesture {
+        DragGesture()
+            .updating(v) { value, state, _ in state = value.location }
+            .onChanged { updater.update(node: nodeId, with: $0.location, ended: false) }
+            .onEnded { updater.update(node: nodeId, with: $0.location, ended: true) }
     }
 }
 
@@ -121,39 +154,14 @@ struct ActivePathBezierHandle: View {
     let from: Point2
     let to: Point2
 
-    var control0: Point2 { dragging0 ?? bezier.control0 }
-    var control1: Point2 { dragging1 ?? bezier.control1 }
-
-    @ViewBuilder func link(from: Point2, to: Point2, color: Color) -> some View {
-        SUPath { p in
-            p.move(to: from)
-            p.addLine(to: to)
-        }.stroke(color.opacity(0.5), style: StrokeStyle(lineWidth: Self.lineWidth, dash: [Self.lineWidth * 2]))
-    }
-
-    @ViewBuilder func circle(at point: Point2, color: Color) -> some View {
-        Circle()
-            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
-            .fill(color.opacity(0.5))
-            .frame(width: Self.circleSize, height: Self.circleSize)
-            .position(point)
-    }
-
-    func drag(updating v: GestureState<Point2?>, callback: @escaping (Point2) -> PathBezier) -> some Gesture {
-        DragGesture()
-            .updating(v) { value, state, _ in state = value.location }
-            .onChanged { updater.update(edge: fromId, with: callback($0.location), ended: false) }
-            .onEnded { updater.update(edge: fromId, with: callback($0.location), ended: true) }
-    }
-
     var body: some View {
         ZStack {
             link(from: from, to: control0, color: .green)
             circle(at: control0, color: .green)
-                .gesture(drag(updating: $dragging0, callback: { bezier.with(control0: $0) }))
+                .gesture(drag(updating: $dragging0) { bezier.with(control0: $0) })
             link(from: to, to: control1, color: .orange)
             circle(at: control1, color: .orange)
-                .gesture(drag(updating: $dragging1, callback: { bezier.with(control1: $0) }))
+                .gesture(drag(updating: $dragging1) { bezier.with(control1: $0) })
         }
     }
 
@@ -164,6 +172,31 @@ struct ActivePathBezierHandle: View {
     @EnvironmentObject private var updater: Updater
     @GestureState private var dragging0: Point2?
     @GestureState private var dragging1: Point2?
+
+    private var control0: Point2 { dragging0 ?? bezier.control0 }
+    private var control1: Point2 { dragging1 ?? bezier.control1 }
+
+    @ViewBuilder private func link(from: Point2, to: Point2, color: Color) -> some View {
+        SUPath { p in
+            p.move(to: from)
+            p.addLine(to: to)
+        }.stroke(color.opacity(0.5), style: StrokeStyle(lineWidth: Self.lineWidth, dash: [Self.lineWidth * 2]))
+    }
+
+    @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
+        Circle()
+            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
+            .fill(color.opacity(0.5))
+            .frame(width: Self.circleSize, height: Self.circleSize)
+            .position(point)
+    }
+
+    private func drag(updating v: GestureState<Point2?>, callback: @escaping (Point2) -> PathBezier) -> some Gesture {
+        DragGesture()
+            .updating(v) { value, state, _ in state = value.location }
+            .onChanged { updater.update(edge: fromId, with: callback($0.location), ended: false) }
+            .onEnded { updater.update(edge: fromId, with: callback($0.location), ended: true) }
+    }
 }
 
 struct ActivePathArcHandle: View {

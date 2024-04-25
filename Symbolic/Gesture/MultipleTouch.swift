@@ -174,7 +174,7 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
     private func onActiveTouchesMoved() {
         if let info = context.panInfo, let panTouch {
             let movedInfo = PanInfo(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
-            context.maxPanOffset = max(context.maxPanOffset, movedInfo.offset.length())
+            context.maxPanOffset = max(context.maxPanOffset, movedInfo.offset.length)
             context.panInfo = movedInfo
         } else if let info = context.pinchInfo, let pinchTouches {
             let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1)))

@@ -34,7 +34,6 @@ struct PathArc: PathEdgeProtocol {
     func draw(path: inout SUPath, to: Point2) {
         guard let from = path.currentPoint else { return }
         guard let param = toParam(from: from, to: to).centerParam else { return }
-        print(param)
         path.addArc(center: param.center, radius: 1, startAngle: param.startAngle, endAngle: param.endAngle, clockwise: param.clockwise, transform: param.transform)
     }
 
@@ -86,8 +85,20 @@ enum PathEdge: PathEdgeProtocol {
 // MARK: - PathNode
 
 struct PathNode: Identifiable {
-    let id = UUID()
+    let id: UUID
     let position: Point2
+
+    func with(position: Point2) -> Self { Self(id: id, position: position) }
+
+    init(position: Point2) {
+        id = UUID()
+        self.position = position
+    }
+
+    private init(id: UUID, position: Point2) {
+        self.id = id
+        self.position = position
+    }
 }
 
 struct PathSegmentData: Transformable {
@@ -175,7 +186,6 @@ class Path: Identifiable, ReflectedStringConvertible {
     }
 
     lazy var path: SUPath = {
-        print(self)
         var p = SUPath()
         guard let first = pairs.first else { return p }
         p.move(to: first.0.position)
@@ -209,19 +219,21 @@ class Path: Identifiable, ReflectedStringConvertible {
     func draw(path: inout SUPath) {
         path.addPath(self.path)
     }
+
+    func with(pairs: [NodeEdgePair]) -> Path { Path(id: id, pairs: pairs, isClosed: isClosed) }
 }
 
-// MARK: - path event handlers
+// MARK: - clone with path update event
 
 extension Path {
-    func edgeUpdated(edgeUpdate: PathEdgeUpdate) -> Path {
+    func with(edgeUpdate: PathEdgeUpdate) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == edgeUpdate.fromNodeId }) else { return self }
         var pairs: [NodeEdgePair] = pairs
         pairs[i].1 = edgeUpdate.edge
-        return Path(id: id, pairs: pairs, isClosed: isClosed)
+        return with(pairs: pairs)
     }
 
-    func nodeCreated(nodeCreate: PathNodeCreate) -> Path {
+    func with(nodeCreate: PathNodeCreate) -> Path {
         var i = 0
         if let id = nodeCreate.prevNodeId {
             guard let prevNodeIndex = (pairs.firstIndex { node, _ in node.id == id }) else { return self }
@@ -229,20 +241,20 @@ extension Path {
         }
         var pairs: [NodeEdgePair] = pairs
         pairs.insert((nodeCreate.node, .Line(PathLine())), at: i)
-        return Path(id: id, pairs: pairs, isClosed: isClosed)
+        return with(pairs: pairs)
     }
 
-    func nodeDeleted(nodeDelete: PathNodeDelete) -> Path {
+    func with(nodeDelete: PathNodeDelete) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == nodeDelete.nodeId }) else { return self }
         var pairs: [NodeEdgePair] = pairs
         pairs.remove(at: i)
-        return Path(id: id, pairs: pairs, isClosed: isClosed)
+        return with(pairs: pairs)
     }
 
-    func nodeUpdated(nodeUpdate: PathNodeUpdate) -> Path {
+    func with(nodeUpdate: PathNodeUpdate) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == nodeUpdate.node.id }) else { return self }
         var pairs: [NodeEdgePair] = pairs
         pairs[i].0 = nodeUpdate.node
-        return Path(id: id, pairs: pairs, isClosed: isClosed)
+        return with(pairs: pairs)
     }
 }

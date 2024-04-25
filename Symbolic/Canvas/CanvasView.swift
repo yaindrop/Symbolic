@@ -21,19 +21,19 @@ struct CanvasView: View {
     @StateObject var viewportUpdater: ViewportUpdater
 
     @StateObject var documentModel: DocumentModel = DocumentModel()
-    @StateObject var pathModel: PathModel
+    @StateObject var pathStore: PathStore
     @StateObject var activePathModel: ActivePathModel
 
     init() {
         let viewport = Viewport()
         let touchContext = MultipleTouchContext()
-        let pathModel = PathModel()
-        let activePathModel = ActivePathModel(pathModel: pathModel)
+        let pathStore = PathStore()
+        let activePathModel = ActivePathModel(pathStore: pathStore)
         _touchContext = StateObject(wrappedValue: touchContext)
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
-        _pathModel = StateObject(wrappedValue: pathModel)
+        _pathStore = StateObject(wrappedValue: pathStore)
         _activePathModel = StateObject(wrappedValue: activePathModel)
     }
 
@@ -43,7 +43,7 @@ struct CanvasView: View {
 //            .frame(width: 200, height: 200)
 //            .position(x: 300, y: 300)
 //            .transformEffect(viewport.info.worldToView)
-//        SwiftUI.Path { path in
+//        SUPath { path in
 //            path.move(to: CGPoint(x: 400, y: 200))
 //            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
 //        }.stroke(lineWidth: 10)
@@ -54,7 +54,7 @@ struct CanvasView: View {
         GeometryReader { geometry in
             Canvas { context, _ in
                 context.concatenate(viewport.info.worldToView)
-                let path = SwiftUI.Path { path in
+                let path = SUPath { path in
                     for index in 0 ... 10240 {
                         let vOffset: CGFloat = CGFloat(index) * 10
                         path.move(to: CGPoint(vOffset, 0))
@@ -91,7 +91,7 @@ struct CanvasView: View {
     }
 
     var inactivePaths: some View {
-        activePathModel.inactivePaths
+        activePathModel.inactivePathsView
             .transformEffect(viewport.info.worldToView)
             .blur(radius: 1)
     }
@@ -106,14 +106,18 @@ struct CanvasView: View {
             pressDetector.onTap { info in
                 let worldLocation = info.location.applying(viewport.info.viewToWorld)
                 print("onTap \(info) worldLocation \(worldLocation)")
-                activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
+                activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
             }
         }
     }
 
     var activePaths: some View {
-        activePathModel.activePaths
+        activePathModel.activePathView
             .transformEffect(viewport.info.worldToView)
+    }
+
+    @ViewBuilder var overlay: some View {
+        ActivePathHandles()
     }
 
     var body: some View {
@@ -126,26 +130,27 @@ struct CanvasView: View {
                 inactivePaths
                 foreground
                 activePaths
+                overlay
             }
             .overlay {
-                ActivePathView(activePathModel: activePathModel)
-                    .environmentObject(pathModel)
-                DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, pathModel: pathModel, activePathModel: activePathModel)
+                ActivePathPanel(activePathModel: activePathModel)
+                DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, activePathModel: activePathModel)
             }
             .navigationTitle("Canvas")
-//            .toolbar(.hidden, for: .navigationBar)
+            .toolbar(.hidden, for: .navigationBar)
             .edgesIgnoringSafeArea(.all)
         }
         .onChange(of: documentModel.activeDocument) {
-            pathModel.clear()
-            for event in documentModel.activeDocument.events {
-                pathModel.loadEvent(event)
-            }
+            pathStore.clear()
+            pathStore.loadDocument(documentModel.activeDocument)
         }
         .onAppear {
             documentModel.activeDocument = Document(from: fooSvg)
         }
+        .environmentObject(viewport)
         .environmentObject(documentModel)
+        .environmentObject(pathStore)
+        .environmentObject(activePathModel)
     }
 }
 

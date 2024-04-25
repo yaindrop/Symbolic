@@ -1,18 +1,22 @@
 import Foundation
 import SwiftUI
 
+typealias SUPath = SwiftUI.Path
+
 // MARK: - PathEdge
 
-protocol PathEdgeProtocol: CustomStringConvertible {
-    func draw(path: inout SwiftUI.Path, to: Point2)
+protocol PathEdgeProtocol: CustomStringConvertible, Transformable {
+    func draw(path: inout SUPath, to: Point2)
 }
 
 struct PathLine: PathEdgeProtocol {
     var description: String { "Line" }
 
-    func draw(path: inout SwiftUI.Path, to: Point2) {
+    func draw(path: inout SUPath, to: Point2) {
         path.addLine(to: to)
     }
+
+    func applying(_ t: CGAffineTransform) -> Self { Self() }
 }
 
 struct PathArc: PathEdgeProtocol {
@@ -27,12 +31,14 @@ struct PathArc: PathEdgeProtocol {
         ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
     }
 
-    func draw(path: inout SwiftUI.Path, to: Point2) {
+    func draw(path: inout SUPath, to: Point2) {
         guard let from = path.currentPoint else { return }
         guard let param = toParam(from: from, to: to).centerParam else { return }
         print(param)
         path.addArc(center: param.center, radius: 1, startAngle: param.startAngle, endAngle: param.endAngle, clockwise: param.clockwise, transform: param.transform)
     }
+
+    func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
 }
 
 struct PathBezier: PathEdgeProtocol {
@@ -41,9 +47,14 @@ struct PathBezier: PathEdgeProtocol {
 
     var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 
-    func draw(path: inout SwiftUI.Path, to: Point2) {
+    func draw(path: inout SUPath, to: Point2) {
         path.addCurve(to: to, control1: control0, control2: control1)
     }
+
+    func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
+
+    func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
+    func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
 }
 
 enum PathEdge: PathEdgeProtocol {
@@ -61,7 +72,15 @@ enum PathEdge: PathEdgeProtocol {
 
     var description: String { value.description }
 
-    func draw(path: inout SwiftUI.Path, to: Point2) { value.draw(path: &path, to: to) }
+    func draw(path: inout SUPath, to: Point2) { value.draw(path: &path, to: to) }
+
+    func applying(_ t: CGAffineTransform) -> Self {
+        switch self {
+        case let .Line(l): return .Line(l.applying(t))
+        case let .Arc(a): return .Arc(a.applying(t))
+        case let .Bezier(b): return .Bezier(b.applying(t))
+        }
+    }
 }
 
 // MARK: - PathNode
@@ -69,6 +88,14 @@ enum PathEdge: PathEdgeProtocol {
 struct PathNode: Identifiable {
     let id = UUID()
     let position: Point2
+}
+
+struct PathSegmentData: Transformable {
+    let edge: PathEdge
+    let from: Point2
+    let to: Point2
+
+    func applying(_ t: CGAffineTransform) -> Self { Self(edge: edge.applying(t), from: from.applying(t), to: to.applying(t)) }
 }
 
 struct PathSegment: Identifiable {
@@ -79,12 +106,22 @@ struct PathSegment: Identifiable {
 
     var id: UUID { from.id }
 
-    var hitPath: SwiftUI.Path {
-        var p = SwiftUI.Path()
-        p.move(to: from.position)
-        edge.draw(path: &p, to: to.position)
-        return p.strokedPath(StrokeStyle(lineWidth: 10, lineCap: .round))
+    var data: PathSegmentData { PathSegmentData(edge: edge, from: from.position, to: to.position) }
+
+    var hitPath: SUPath {
+        SUPath { p in
+            p.move(to: from.position)
+            edge.draw(path: &p, to: to.position)
+        }.strokedPath(StrokeStyle(lineWidth: 10, lineCap: .round))
     }
+}
+
+struct PathVertexData {
+    let node: Point2
+    let prev: PathEdge?
+    let next: PathEdge?
+
+    func applying(_ t: CGAffineTransform) -> Self { Self(node: node.applying(t), prev: prev, next: next) }
 }
 
 struct PathVertex: Identifiable {
@@ -94,6 +131,8 @@ struct PathVertex: Identifiable {
     let next: PathEdge?
 
     var id: UUID { node.id }
+
+    var data: PathVertexData { PathVertexData(node: node.position, prev: prev, next: next) }
 }
 
 // MARK: - Path
@@ -135,9 +174,9 @@ class Path: Identifiable, ReflectedStringConvertible {
         }
     }
 
-    lazy var path: SwiftUI.Path = {
+    lazy var path: SUPath = {
         print(self)
-        var p = SwiftUI.Path()
+        var p = SUPath()
         guard let first = pairs.first else { return p }
         p.move(to: first.0.position)
         for s in segments {
@@ -151,8 +190,8 @@ class Path: Identifiable, ReflectedStringConvertible {
 
     lazy var boundingRect: CGRect = { path.boundingRect }()
 
-    lazy var hitPath: SwiftUI.Path = {
-        var p = SwiftUI.Path()
+    lazy var hitPath: SUPath = {
+        var p = SUPath()
         for s in segments {
             p.addPath(s.hitPath)
         }
@@ -167,60 +206,8 @@ class Path: Identifiable, ReflectedStringConvertible {
 
     convenience init(pairs: [NodeEdgePair], isClosed: Bool) { self.init(id: UUID(), pairs: pairs, isClosed: isClosed) }
 
-    func draw(path: inout SwiftUI.Path) {
+    func draw(path: inout SUPath) {
         path.addPath(self.path)
-    }
-
-    func nodeViews() -> some View {
-        ForEach(nodes, id: \.id) { v in
-            Circle().fill(.blue.opacity(0.5)).frame(width: 4, height: 4).position(v.position)
-        }
-    }
-
-    func controlViews() -> some View {
-        let arcs = segments.compactMap { s in if case let .Arc(arc) = s.edge { (s.from, s.to, arc) } else { nil } }
-        let beziers = segments.compactMap { s in if case let .Bezier(bezier) = s.edge { (s.from, s.to, bezier) } else { nil } }
-        return Group {
-            ForEach(segments, id: \.from.id) { s in s.hitPath.fill(.blue.opacity(0.5)) }
-            ForEach(arcs, id: \.0.id) { v, n, arc in
-                let param = arc.toParam(from: v.position, to: n.position).centerParam!
-                SwiftUI.Path { p in
-                    p.move(to: .zero)
-                    p.addLine(to: Point2(param.radius.width, 0))
-                    p.move(to: .zero)
-                    p.addLine(to: Point2(0, param.radius.height))
-                }
-                .stroke(.yellow.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
-                .frame(width: param.radius.width, height: param.radius.height)
-                .rotationEffect(param.rotation, anchor: UnitPoint(x: 0, y: 0))
-                .position(param.center + Vector2(param.radius.width / 2, param.radius.height / 2))
-                Circle().fill(.yellow).frame(width: 4, height: 4).position(param.center)
-                Circle()
-                    .fill(.brown.opacity(0.5))
-                    .frame(width: 1, height: 1)
-                    .scaleEffect(x: param.radius.width * 2, y: param.radius.height * 2)
-                    .rotationEffect(param.rotation)
-                    .position(param.center)
-            }
-            ForEach(beziers, id: \.0.id) { v, n, bezier in
-                SwiftUI.Path { p in
-                    p.move(to: v.position)
-                    p.addLine(to: bezier.control0)
-                }.stroke(.green.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
-                SwiftUI.Path { p in
-                    p.move(to: n.position)
-                    p.addLine(to: bezier.control1)
-                }.stroke(.orange.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [2]))
-                Circle()
-                    .fill(.green)
-                    .frame(width: 4, height: 4)
-                    .position(bezier.control0)
-                Circle()
-                    .fill(.orange)
-                    .frame(width: 4, height: 4)
-                    .position(bezier.control1)
-            }
-        }
     }
 }
 

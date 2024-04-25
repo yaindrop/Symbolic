@@ -7,7 +7,6 @@ struct DebugView: View {
     @ObservedObject var viewport: Viewport
     @ObservedObject var viewportUpdater: ViewportUpdater
 
-    @ObservedObject var pathModel: PathModel
     @ObservedObject var activePathModel: ActivePathModel
 
     var title: some View {

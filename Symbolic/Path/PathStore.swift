@@ -1,48 +1,89 @@
+import Combine
 import Foundation
 import SwiftUI
 
-class PathModel: ObservableObject {
-    @Published var pathIds: [UUID] = []
-    @Published var nodeIds: [UUID] = []
+// MARK: - PathStore
 
-    @Published var pathIdToPath: [UUID: Path] = [:]
-    @Published var nodeIdToNode: [UUID: PathNode] = [:]
+class PathStore: ObservableObject {
+    @Published private(set) var pathIds: [UUID] = []
+    @Published private(set) var pathIdToPath: [UUID: Path] = [:]
+
+    @Published private(set) var nodeIds: [UUID] = []
+    @Published private(set) var nodeIdToNode: [UUID: PathNode] = [:]
+
+    private var loadingPendingEvent = false
+    @Published var pendingEvent: DocumentEvent?
+    @Published private(set) var pendingPaths: [Path]? = nil
+    private var subscriptions = Set<AnyCancellable>()
 
     var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
     var nodes: [PathNode] { pathIds.compactMap { nid in nodeIdToNode[nid] } }
-}
 
-extension PathModel {
-    func addPath(_ path: Path) {
+    init() {
+        $pendingEvent.sink { e in
+            self.loadingPendingEvent = true
+            defer { self.loadingPendingEvent = false }
+            if let e {
+                self.pendingPaths = self.paths
+                self.loadEvent(e)
+            }
+        }.store(in: &subscriptions)
+    }
+
+    func add(path: Path) {
+        if loadingPendingEvent {
+            pendingPaths?.append(path)
+            return
+        }
+        guard pathIdToPath[path.id] == nil else { return }
         pathIds.append(path.id)
         pathIdToPath[path.id] = path
-        for n in path.nodes {
-            nodeIds.append(n.id)
-            nodeIdToNode[n.id] = n
-        }
+        refreshNodes()
     }
 
-    func removePath(_ pathId: UUID) {
-        guard let path = pathIdToPath[pathId] else { return }
-        // TODO: remove nodes
+    func remove(pathId: UUID) {
+        if loadingPendingEvent {
+            pendingPaths?.removeAll { $0.id == pathId }
+            return
+        }
+        guard pathIdToPath[pathId] != nil else { return }
         pathIds.removeAll { $0 == pathId }
         pathIdToPath.removeValue(forKey: pathId)
+        refreshNodes()
     }
 
-    func updatePath(_ path: Path) {
+    func update(path: Path) {
+        if loadingPendingEvent {
+            guard let i = (pendingPaths?.firstIndex { $0.id == path.id }) else { return }
+            pendingPaths?[i] = path
+            return
+        }
         guard pathIdToPath[path.id] != nil else { return }
         pathIdToPath[path.id] = path
+        refreshNodes()
     }
 
     func clear() {
         pathIds.removeAll()
-        nodeIds.removeAll()
         pathIdToPath.removeAll()
+        refreshNodes()
+    }
+
+    private func refreshNodes() {
+        nodeIds.removeAll()
         nodeIdToNode.removeAll()
+        for (_, path) in pathIdToPath {
+            for n in path.nodes {
+                nodeIds.append(n.id)
+                nodeIdToNode[n.id] = n
+            }
+        }
     }
 }
 
-extension PathModel {
+// MARK: - PathStore load events
+
+extension PathStore {
     func loadDocument(_ document: Document) {
         for event in document.events {
             loadEvent(event)
@@ -68,11 +109,11 @@ extension PathModel {
     }
 
     func loadEvent(_ event: PathCreate) {
-        addPath(event.path)
+        add(path: event.path)
     }
 
     func loadEvent(_ event: PathDelete) {
-        removePath(event.pathId)
+        remove(pathId: event.pathId)
     }
 
     func loadEvent(_ event: PathUpdate) {
@@ -90,60 +131,27 @@ extension PathModel {
 
     func loadPathUpdate(pathId: UUID, edgeUpdate: PathEdgeUpdate) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.edgeUpdated(edgeUpdate: edgeUpdate))
+        update(path: path.edgeUpdated(edgeUpdate: edgeUpdate))
     }
 
     func loadPathUpdate(pathId: UUID, nodeCreate: PathNodeCreate) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.nodeCreated(nodeCreate: nodeCreate))
+        update(path: path.nodeCreated(nodeCreate: nodeCreate))
     }
 
     func loadPathUpdate(pathId: UUID, nodeDelete: PathNodeDelete) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.nodeDeleted(nodeDelete: nodeDelete))
+        update(path: path.nodeDeleted(nodeDelete: nodeDelete))
     }
 
     func loadPathUpdate(pathId: UUID, nodeUpdate: PathNodeUpdate) {
         guard let path = pathIdToPath[pathId] else { return }
-        updatePath(path.nodeUpdated(nodeUpdate: nodeUpdate))
+        update(path: path.nodeUpdated(nodeUpdate: nodeUpdate))
     }
 }
 
-extension PathModel {
+extension PathStore {
     func hitTest(worldPosition: Point2) -> Path? {
         return paths.first { p in p.hitPath.contains(worldPosition) }
     }
-}
-
-class ActivePathModel: ObservableObject {
-    @Published var activePathId: UUID?
-
-    var activePath: Path? {
-        pathModel.paths.first { $0.id == activePathId }
-    }
-
-    var inactivePaths: some View {
-        ForEach(pathModel.paths.filter { $0.id != activePathId }) { p in
-            SwiftUI.Path { path in p.draw(path: &path) }
-                .stroke(Color(UIColor.label), lineWidth: 1)
-        }
-    }
-
-    var activePaths: some View {
-        ForEach(pathModel.paths.filter { $0.id == activePathId }) { p in
-            SwiftUI.Path { path in p.draw(path: &path) }
-                .stroke(Color(UIColor.label), lineWidth: 1)
-            p.nodeViews()
-            p.controlViews()
-        }
-    }
-
-    init(pathModel: PathModel) {
-        self.pathModel = pathModel
-    }
-
-    private var pathModel: PathModel
-}
-
-class PathUpdater: ObservableObject {
 }

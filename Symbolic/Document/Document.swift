@@ -35,6 +35,10 @@ struct Document: Equatable {
 
 class DocumentModel: ObservableObject {
     @Published var activeDocument: Document = Document()
+
+    func sendEvent(_ event: DocumentEvent) {
+        activeDocument = Document(events: activeDocument.events + [event])
+    }
 }
 
 let fooSvg = """

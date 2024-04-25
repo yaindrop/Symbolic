@@ -2,6 +2,10 @@ import CoreGraphics
 import Foundation
 import SwiftUI
 
+protocol Transformable {
+    func applying(_ t: CGAffineTransform) -> Self
+}
+
 extension CGFloat {
     var shortDescription: String { String(format: "%.3f", self) }
 }
@@ -45,7 +49,7 @@ struct Matrix2 {
 
 public typealias Vector2 = CGVector
 
-extension Vector2: AdditiveArithmetic {
+extension Vector2: AdditiveArithmetic, Transformable {
     var shortDescription: String { String(format: "(%.1f, %.1f)", dx, dy) }
 
     init(_ x: CGFloat, _ y: CGFloat) { self.init(dx: x, dy: y) }
@@ -98,11 +102,11 @@ extension Vector2: AdditiveArithmetic {
 
     func length() -> CGFloat { hypot(dx, dy) }
 
-    func applying(_ t: CGAffineTransform) -> Vector2 {
+    func applying(_ t: CGAffineTransform) -> Self {
         var translationCancelled = t
         translationCancelled.tx = 0
         translationCancelled.ty = 0
-        return Vector2(Point2(self).applying(translationCancelled))
+        return Self(Point2(self).applying(translationCancelled))
     }
 }
 
@@ -136,10 +140,15 @@ extension Point2 {
 
 // MARK: - CGSize
 
-extension CGSize {
+extension CGSize: Transformable {
     var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
 
     init(_ width: CGFloat, _ height: CGFloat) { self.init(width: width, height: height) }
+
+    func applying(_ t: CGAffineTransform) -> Self {
+        let v = CGVector(self).applying(t)
+        return Self(width: v.dx, height: v.dy)
+    }
 }
 
 // MARK: - CGRect

@@ -4,18 +4,19 @@ import Foundation
 struct ViewportInfo: CustomStringConvertible {
     let origin: Point2 // world position of the view origin (top left corner)
     let scale: CGFloat
+    let worldToView: CGAffineTransform
+    let viewToWorld: CGAffineTransform
 
     init(origin: Point2, scale: CGFloat) {
         self.origin = origin
         self.scale = scale
+        worldToView = CGAffineTransform(scale: scale).translatedBy(-Vector2(origin))
+        viewToWorld = worldToView.inverted()
     }
 
     init() { self.init(origin: .zero, scale: 1) }
 
     init(origin: Point2) { self.init(origin: origin, scale: 1) }
-
-    var worldToView: CGAffineTransform { CGAffineTransform(scale: scale).translatedBy(-Vector2(origin)) }
-    var viewToWorld: CGAffineTransform { worldToView.inverted() }
 
     func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
 

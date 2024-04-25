@@ -2,20 +2,20 @@ import Combine
 import Foundation
 import SwiftUI
 
-fileprivate struct PathNodeIdEnvironmentKey: EnvironmentKey {
-    static let defaultValue: UUID = UUID()
-}
-
 fileprivate extension EnvironmentValues {
+    struct PathNodeIdKey: EnvironmentKey {
+        static let defaultValue = UUID()
+    }
+
     var pathNodeId: UUID {
-        get { self[PathNodeIdEnvironmentKey.self] }
-        set { self[PathNodeIdEnvironmentKey.self] = newValue }
+        get { self[PathNodeIdKey.self] }
+        set { self[PathNodeIdKey.self] = newValue }
     }
 }
 
-// MARK: - ActivePathView
+// MARK: - ActivePathPanel
 
-struct ActivePathView: View {
+struct ActivePathPanel: View {
     @ObservedObject var activePathModel: ActivePathModel
 
     var body: some View {
@@ -35,7 +35,6 @@ struct ActivePathView: View {
         .frame(maxWidth: 360, maxHeight: 480)
         .padding(24)
         .modifier(CornerPositionModifier(position: .bottomRight))
-        .environmentObject(activePathModel)
     }
 
     // MARK: private
@@ -163,7 +162,6 @@ fileprivate struct NodePanel: View {
 fileprivate struct BezierPanel: View {
     var bezier: PathBezier
     @EnvironmentObject var documentModel: DocumentModel
-    @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var activePathModel: ActivePathModel
     @Environment(\.pathNodeId) var nodeId
 
@@ -174,12 +172,10 @@ fileprivate struct BezierPanel: View {
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control0) { p in
                     let bezier = PathBezier(control0: bezier.control0, control1: p)
-                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
-                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
+                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
                 } onDone: { p in
                     let bezier = PathBezier(control0: bezier.control0, control1: p)
-                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
-                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
+                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
                 }
             }
             Divider()
@@ -188,12 +184,10 @@ fileprivate struct BezierPanel: View {
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control1) { p in
                     let bezier = PathBezier(control0: p, control1: bezier.control1)
-                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
-                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
+                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
                 } onDone: { p in
                     let bezier = PathBezier(control0: p, control1: bezier.control1)
-                    let event = DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier))
-                    documentModel.activeDocument = Document(events: documentModel.activeDocument.events + [event])
+                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
                 }
             }
         }

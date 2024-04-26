@@ -58,6 +58,9 @@ public typealias Vector2 = CGVector
 extension Vector2: AdditiveArithmetic, Transformable {
     var shortDescription: String { String(format: "(%.1f, %.1f)", dx, dy) }
 
+    static let unitX: Vector2 = Vector2(1, 0)
+    static let unitY: Vector2 = Vector2(0, 1)
+
     init(_ x: CGFloat, _ y: CGFloat) { self.init(dx: x, dy: y) }
 
     init(_ point: Point2) { self.init(point.x, point.y) }
@@ -149,6 +152,8 @@ extension Point2 {
 extension CGSize: Transformable {
     var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
 
+    var flipped: CGSize { CGSize(height, width) }
+
     init(_ width: CGFloat, _ height: CGFloat) { self.init(width: width, height: height) }
 
     init(squared size: CGFloat) { self.init(size, size) }
@@ -157,6 +162,9 @@ extension CGSize: Transformable {
         let v = CGVector(self).applying(t)
         return Self(width: v.dx, height: v.dy)
     }
+
+    func with(width: CGFloat) -> CGSize { CGSize(width: width, height: height) }
+    func with(height: CGFloat) -> CGSize { CGSize(width: width, height: height) }
 }
 
 // MARK: - CGRect

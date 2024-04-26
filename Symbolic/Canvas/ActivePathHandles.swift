@@ -175,10 +175,10 @@ struct ActivePathBezierHandle: View {
 
     var body: some View {
         ZStack {
-            link(from: from, to: control0, color: .green)
+            line(from: from, to: control0, color: .green)
             circle(at: control0, color: .green)
                 .gesture(drag(updating: $dragging0) { bezier.with(control0: $0) })
-            link(from: to, to: control1, color: .orange)
+            line(from: to, to: control1, color: .orange)
             circle(at: control1, color: .orange)
                 .gesture(drag(updating: $dragging1) { bezier.with(control1: $0) })
         }
@@ -198,13 +198,19 @@ struct ActivePathBezierHandle: View {
     private var control0: Point2 { dragging0 ?? bezier.control0 }
     private var control1: Point2 { dragging1 ?? bezier.control1 }
 
-    @ViewBuilder private func link(from: Point2, to: Point2, color: Color) -> some View {
+    private func subtractingCircle(at point: Point2) -> SUPath {
+        SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
+    }
+
+    @ViewBuilder private func line(from: Point2, to: Point2, color: Color) -> some View {
         SUPath { p in
             p.move(to: from)
             p.addLine(to: to)
             p = p.strokedPath(StrokeStyle(lineWidth: Self.lineWidth))
-            p = p.subtracting(SUPath { $0.addEllipse(in: CGRect(center: to, size: CGSize(squared: Self.circleSize))) })
-        }.fill(color.opacity(0.5))
+            p = p.subtracting(subtractingCircle(at: to))
+        }
+        .fill(color.opacity(0.5))
+        .allowsHitTesting(false)
     }
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
@@ -233,28 +239,111 @@ struct ActivePathArcHandle: View {
     let to: Point2
 
     var body: some View {
-        let param = arc.toParam(from: from, to: to).centerParam!
-        SUPath { p in
-            p.move(to: .zero)
-            p.addLine(to: Point2(param.radius.width, 0))
-            p.move(to: .zero)
-            p.addLine(to: Point2(0, param.radius.height))
-        }
-        .stroke(.yellow.opacity(0.5), style: StrokeStyle(lineWidth: 4, dash: [8]))
-        .frame(width: param.radius.width, height: param.radius.height)
-        .rotationEffect(param.rotation, anchor: UnitPoint(x: 0, y: 0))
-        .position(param.center + Vector2(param.radius.width / 2, param.radius.height / 2))
-        Circle().fill(.yellow).frame(width: 8, height: 8).position(param.center)
-        Circle()
-            .fill(.brown.opacity(0.5))
-            .frame(width: 1, height: 1)
-            .scaleEffect(x: param.radius.width * 2, y: param.radius.height * 2)
-            .rotationEffect(param.rotation)
-            .position(param.center)
+        ellipse
+        radiusLine
+//        centerCircle
+        radiusWidthRect
+            .gesture(dragRadius(updating: $draggingRadiusW) { arc.with(radius: radius.with(width: $0)) })
+        radiusHeightRect
+            .gesture(dragRadius(updating: $draggingRadiusH) { arc.with(radius: radius.with(height: $0)) })
     }
+
+    // MARK: private
+
+    private static let lineWidth: CGFloat = 1
+    private static let circleSize: CGFloat = 12
+    private static let rectSize: CGSize = CGSize(16, 9)
+    private static let touchablePadding: CGFloat = 24
 
     @Environment(\.pathNodeId) private var fromId: UUID
     @EnvironmentObject private var updater: Updater
-    @GestureState private var dragging0: Point2?
-    @GestureState private var dragging1: Point2?
+    @GestureState private var draggingRadiusW: CGFloat?
+    @GestureState private var draggingRadiusH: CGFloat?
+
+    private var radius: CGSize { CGSize(draggingRadiusW ?? arc.radius.width, draggingRadiusH ?? arc.radius.height) }
+    private var endPointParam: ArcEndpointParam { arc.with(radius: radius).toParam(from: from, to: to) }
+    private var param: ArcCenterParam { endPointParam.centerParam! }
+    private var center: Point2 { param.center }
+    private var radiusWidthEnd: Point2 { (center + Vector2.unitX).applying(param.transform) }
+    private var radiusHeightEnd: Point2 { (center + Vector2.unitY).applying(param.transform) }
+    private var radiusHalfWidthEnd: Point2 { (center + Vector2.unitX / 2).applying(param.transform) }
+    private var radiusHalfHeightEnd: Point2 { (center + Vector2.unitY / 2).applying(param.transform) }
+
+    @ViewBuilder private var ellipse: some View {
+        Circle()
+            .fill(.red.opacity(0.2))
+            .frame(width: 1, height: 1)
+            .scaleEffect(x: radius.width * 2, y: radius.height * 2)
+            .rotationEffect(param.rotation)
+            .position(center)
+            .allowsHitTesting(false)
+    }
+
+//    private func subtractingCircle(at point: Point2) -> SUPath {
+//        SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
+//    }
+
+    private func subtractingRect(at point: Point2, size: CGSize) -> SUPath {
+        SUPath { $0.addRect(CGRect(center: point, size: size)) }
+    }
+
+    @ViewBuilder private var radiusLine: some View {
+        SUPath { p in
+            p.move(to: center)
+            p.addLine(to: radiusWidthEnd)
+            p.move(to: center)
+            p.addLine(to: radiusHeightEnd)
+            p = p.strokedPath(StrokeStyle(lineWidth: Self.lineWidth))
+//            p = p.subtracting(subtractingCircle(at: center))
+            p = p.subtracting(subtractingRect(at: radiusHalfWidthEnd, size: Self.rectSize))
+            p = p.subtracting(subtractingRect(at: radiusHalfHeightEnd, size: Self.rectSize.flipped))
+        }
+        .fill(.pink.opacity(0.5))
+        .allowsTightening(false)
+    }
+
+    @ViewBuilder private var radiusRect: some View {
+        EmptyView()
+    }
+
+//    @ViewBuilder private var centerCircle: some View {
+//        Circle()
+//            .stroke(.pink, style: StrokeStyle(lineWidth: Self.lineWidth))
+//            .fill(.pink.opacity(0.5))
+//            .frame(width: Self.circleSize, height: Self.circleSize)
+//            .padding(Self.touchablePadding)
+//            .invisibleSoildOverlay()
+//            .position(center)
+//    }
+
+    @ViewBuilder private var radiusWidthRect: some View {
+        Rectangle()
+            .stroke(.pink, style: StrokeStyle(lineWidth: Self.lineWidth))
+            .fill(.pink.opacity(0.5))
+            .frame(width: Self.rectSize.width, height: Self.rectSize.height)
+            .padding(Self.touchablePadding)
+            .invisibleSoildOverlay()
+            .rotationEffect(arc.rotation)
+            .position(radiusHalfWidthEnd)
+    }
+
+    @ViewBuilder private var radiusHeightRect: some View {
+        Rectangle()
+            .stroke(.pink, style: StrokeStyle(lineWidth: Self.lineWidth))
+            .fill(.pink.opacity(0.5))
+            .frame(width: Self.rectSize.height, height: Self.rectSize.width)
+            .padding(Self.touchablePadding)
+            .invisibleSoildOverlay()
+            .rotationEffect(arc.rotation)
+            .position(radiusHalfHeightEnd)
+    }
+
+    private func dragRadius(updating v: GestureState<CGFloat?>, callback: @escaping (CGFloat) -> PathArc) -> some Gesture {
+        let center = arc.toParam(from: from, to: to).centerParam!.center
+        let getValue = { (position: Point2) in position.distance(to: center) * 2 }
+        return DragGesture()
+            .updating(v) { value, state, _ in state = getValue(value.location) }
+            .onChanged { updater.update(edge: fromId, with: callback(getValue($0.location)), ended: false) }
+            .onEnded { updater.update(edge: fromId, with: callback(getValue($0.location)), ended: true) }
+    }
 }

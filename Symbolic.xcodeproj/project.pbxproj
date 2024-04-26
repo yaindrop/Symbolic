@@ -16,6 +16,7 @@
 		5723BF972BC39846002209F2 /* SymbolicUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF962BC39846002209F2 /* SymbolicUITests.swift */; };
 		5723BF992BC39846002209F2 /* SymbolicUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */; };
 		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
+		572487762BDBAF860096DDE4 /* PathUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* PathUpdater.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugView.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DataInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DataInput.swift */; };
@@ -68,6 +69,7 @@
 		5723BF962BC39846002209F2 /* SymbolicUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITests.swift; sourceTree = "<group>"; };
 		5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
+		572487752BDBAF860096DDE4 /* PathUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUpdater.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DataInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataInput.swift; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				575C3CFB2BDA14590035B758 /* PathStore.swift */,
+				572487752BDBAF860096DDE4 /* PathUpdater.swift */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -396,6 +399,7 @@
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugView.swift in Sources */,
+				572487762BDBAF860096DDE4 /* PathUpdater.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,

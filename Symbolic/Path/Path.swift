@@ -38,7 +38,7 @@ struct PathArc: PathEdgeProtocol {
     }
 
     func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    
+
     func with(radius: CGSize) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
     func with(rotation: Angle) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
     func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
@@ -161,6 +161,8 @@ class Path: Identifiable, ReflectedStringConvertible {
     let isClosed: Bool
 
     var nodes: [PathNode] { pairs.map { $0.0 } }
+
+    func node(id: UUID) -> PathNode? { nodes.first { $0.id == id }}
 
     var segments: [PathSegment] {
         pairs.enumerated().compactMap { i, pair in

@@ -20,21 +20,37 @@ struct CanvasView: View {
     @StateObject var viewport: Viewport
     @StateObject var viewportUpdater: ViewportUpdater
 
-    @StateObject var documentModel: DocumentModel = DocumentModel()
+    @StateObject var documentModel: DocumentModel
+
     @StateObject var pathStore: PathStore
     @StateObject var activePathModel: ActivePathModel
+    @StateObject var pathUpdater: PathUpdater
 
     init() {
-        let viewport = Viewport()
         let touchContext = MultipleTouchContext()
+
+        let viewport = Viewport()
+
+        let documentModel = DocumentModel()
+
         let pathStore = PathStore()
         let activePathModel = ActivePathModel(pathStore: pathStore)
+        let pathUpdater = PathUpdater(activePathModel: activePathModel, viewport: viewport)
+
+        pathUpdater.onPendingEvent { pathStore.pendingEvent = $0 }
+        pathUpdater.onEvent { e in
+            pathStore.pendingEvent = nil
+            documentModel.sendEvent(e)
+        }
+
         _touchContext = StateObject(wrappedValue: touchContext)
         _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
+        _documentModel = StateObject(wrappedValue: documentModel)
         _pathStore = StateObject(wrappedValue: pathStore)
         _activePathModel = StateObject(wrappedValue: activePathModel)
+        _pathUpdater = StateObject(wrappedValue: pathUpdater)
     }
 
 //    var stuff: some View {
@@ -153,6 +169,7 @@ struct CanvasView: View {
         .environmentObject(documentModel)
         .environmentObject(pathStore)
         .environmentObject(activePathModel)
+        .environmentObject(pathUpdater)
     }
 }
 

@@ -1,4 +1,3 @@
-import Combine
 import Foundation
 import SwiftUI
 
@@ -13,49 +12,6 @@ fileprivate extension EnvironmentValues {
         get { self[PathNodeIdKey.self] }
         set { self[PathNodeIdKey.self] = newValue }
     }
-}
-
-// MARK: - Updater
-
-fileprivate class Updater: ObservableObject {
-    var activePath: Path?
-    var viewport: Viewport?
-
-    func update(node id: UUID, with positionInView: Point2, ended: Bool) {
-        guard let activePath else { return }
-        guard let viewport else { return }
-        let position = positionInView.applying(viewport.info.viewToWorld)
-        let event = DocumentEvent(inPath: activePath.id, updateNode: activePath.nodes.first { $0.id == id }!.with(position: position))
-        (ended ? eventSubject : pendingEventSubject).send(event)
-    }
-
-    func update(edge fromNodeId: UUID, with bezierInView: PathBezier, ended: Bool) {
-        guard let activePath else { return }
-        guard let viewport else { return }
-        let bezier = bezierInView.applying(viewport.info.viewToWorld)
-        let event = DocumentEvent(inPath: activePath.id, updateEdgeFrom: fromNodeId, .Bezier(bezier))
-        (ended ? eventSubject : pendingEventSubject).send(event)
-    }
-
-    func update(edge fromNodeId: UUID, with arcInView: PathArc, ended: Bool) {
-        guard let activePath else { return }
-        guard let viewport else { return }
-        let arc = arcInView.applying(viewport.info.viewToWorld)
-        let event = DocumentEvent(inPath: activePath.id, updateEdgeFrom: fromNodeId, .Arc(arc))
-        (ended ? eventSubject : pendingEventSubject).send(event)
-    }
-
-    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
-        eventSubject.sink { value in callback(value) }.store(in: &subscriptions)
-    }
-
-    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) {
-        pendingEventSubject.sink { value in callback(value) }.store(in: &subscriptions)
-    }
-
-    private var subscriptions = Set<AnyCancellable>()
-    private var eventSubject = PassthroughSubject<DocumentEvent, Never>()
-    private var pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
 }
 
 // MARK: - ActivePathHandles
@@ -77,20 +33,9 @@ struct ActivePathHandles: View {
                         .environment(\.pathNodeId, s.id)
                 }
             }
-            .onAppear {
-                updater.activePath = activePath
-                updater.viewport = viewport
-                updater.onPendingEvent { pathStore.pendingEvent = $0 }
-                updater.onEvent {
-                    pathStore.pendingEvent = nil
-                    documentModel.sendEvent($0)
-                }
-            }
-            .environmentObject(updater)
         }
     }
 
-    @StateObject private var updater: Updater = Updater()
     @EnvironmentObject private var viewport: Viewport
     @EnvironmentObject private var documentModel: DocumentModel
     @EnvironmentObject private var pathStore: PathStore
@@ -114,7 +59,7 @@ struct ActivePathVertexHandle: View {
     private static let touchablePadding: CGFloat = 24
 
     @Environment(\.pathNodeId) private var nodeId: UUID
-    @EnvironmentObject private var updater: Updater
+    @EnvironmentObject private var updater: PathUpdater
     @GestureState private var dragging: Point2?
 
     private var node: Point2 { dragging ?? data.node }
@@ -132,8 +77,8 @@ struct ActivePathVertexHandle: View {
     private func drag(updating v: GestureState<Point2?>) -> some Gesture {
         DragGesture()
             .updating(v) { value, state, _ in state = value.location }
-            .onChanged { updater.update(node: nodeId, with: $0.location, ended: false) }
-            .onEnded { updater.update(node: nodeId, with: $0.location, ended: true) }
+            .onChanged { updater.activePathHandle(node: nodeId, with: $0.location, pending: true) }
+            .onEnded { updater.activePathHandle(node: nodeId, with: $0.location) }
     }
 }
 
@@ -191,7 +136,7 @@ struct ActivePathBezierHandle: View {
     private static let touchablePadding: CGFloat = 24
 
     @Environment(\.pathNodeId) private var fromId: UUID
-    @EnvironmentObject private var updater: Updater
+    @EnvironmentObject private var updater: PathUpdater
     @GestureState private var dragging0: Point2?
     @GestureState private var dragging1: Point2?
 
@@ -226,8 +171,8 @@ struct ActivePathBezierHandle: View {
     private func drag(updating v: GestureState<Point2?>, callback: @escaping (Point2) -> PathBezier) -> some Gesture {
         DragGesture()
             .updating(v) { value, state, _ in state = value.location }
-            .onChanged { updater.update(edge: fromId, with: callback($0.location), ended: false) }
-            .onEnded { updater.update(edge: fromId, with: callback($0.location), ended: true) }
+            .onChanged { updater.activePathHandle(edge: fromId, with: callback($0.location), pending: true) }
+            .onEnded { updater.activePathHandle(edge: fromId, with: callback($0.location)) }
     }
 }
 
@@ -256,7 +201,7 @@ struct ActivePathArcHandle: View {
     private static let touchablePadding: CGFloat = 24
 
     @Environment(\.pathNodeId) private var fromId: UUID
-    @EnvironmentObject private var updater: Updater
+    @EnvironmentObject private var updater: PathUpdater
     @GestureState private var draggingRadiusW: CGFloat?
     @GestureState private var draggingRadiusH: CGFloat?
 
@@ -343,7 +288,7 @@ struct ActivePathArcHandle: View {
         let getValue = { (position: Point2) in position.distance(to: center) * 2 }
         return DragGesture()
             .updating(v) { value, state, _ in state = getValue(value.location) }
-            .onChanged { updater.update(edge: fromId, with: callback(getValue($0.location)), ended: false) }
-            .onEnded { updater.update(edge: fromId, with: callback(getValue($0.location)), ended: true) }
+            .onChanged { updater.activePathHandle(edge: fromId, with: callback(getValue($0.location)), pending: true) }
+            .onEnded { updater.activePathHandle(edge: fromId, with: callback(getValue($0.location))) }
     }
 }

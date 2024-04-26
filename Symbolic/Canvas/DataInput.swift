@@ -60,7 +60,7 @@ struct PositionPicker: View {
                 content.onChange(of: inputPosition) { onChange(inputPosition) }
             } else {
                 Menu {
-                    Button { isInputMode = true } label: { Text("Input") }
+                    Button { startInput() } label: { Text("Input") }
                 } label: {
                     content
                 }
@@ -79,8 +79,6 @@ struct PositionPicker: View {
         self.position = position
         self.onChange = onChange
         self.onDone = onDone
-        inputX = position.x
-        inputY = position.y
     }
 
     // MARK: private
@@ -90,18 +88,15 @@ struct PositionPicker: View {
     private let onDone: (Point2) -> Void
 
     @State private var isInputMode: Bool = false
-    @State private var inputX: Double
-    @State private var inputY: Double
+    @State private var inputX: Double = 0
+    @State private var inputY: Double = 0
 
     private var inputPosition: Point2 { Point2(inputX, inputY) }
 
     private var content: some View {
         Group {
             if isInputMode {
-                Button {
-                    isInputMode = false
-                    onDone(inputPosition)
-                } label: { Image(systemName: "checkmark.circle") }
+                Button { endInput() } label: { Image(systemName: "checkmark.circle") }
             }
             Image(systemName: "arrow.right")
             if isInputMode {
@@ -119,6 +114,17 @@ struct PositionPicker: View {
         }
         .font(.callout.monospacedDigit())
     }
+
+    private func startInput() {
+        isInputMode = true
+        inputX = position.x
+        inputY = position.y
+    }
+
+    private func endInput() {
+        isInputMode = false
+        onDone(inputPosition)
+    }
 }
 
 // MARK: - SizePicker
@@ -130,7 +136,7 @@ struct SizePicker: View {
                 content.onChange(of: inputSize) { onChange(inputSize) }
             } else {
                 Menu {
-                    Button { isInputMode = true } label: { Text("Input") }
+                    Button { startInput() } label: { Text("Input") }
                 } label: {
                     content
                 }
@@ -149,8 +155,6 @@ struct SizePicker: View {
         self.size = size
         self.onChange = onChange
         self.onDone = onDone
-        inputW = size.width
-        inputH = size.height
     }
 
     // MARK: private
@@ -160,18 +164,15 @@ struct SizePicker: View {
     private let onDone: (CGSize) -> Void
 
     @State private var isInputMode: Bool = false
-    @State private var inputW: Double
-    @State private var inputH: Double
+    @State private var inputW: Double = 0
+    @State private var inputH: Double = 0
 
     private var inputSize: CGSize { CGSize(inputW, inputH) }
 
     private var content: some View {
         Group {
             if isInputMode {
-                Button {
-                    isInputMode = false
-                    onDone(inputSize)
-                } label: { Image(systemName: "checkmark.circle") }
+                Button { endInput() } label: { Image(systemName: "checkmark.circle") }
             }
             Image(systemName: "arrow.left.and.right")
             if isInputMode {
@@ -189,6 +190,17 @@ struct SizePicker: View {
         }
         .font(.callout.monospacedDigit())
     }
+
+    private func startInput() {
+        isInputMode = true
+        inputW = size.width
+        inputH = size.height
+    }
+
+    private func endInput() {
+        isInputMode = false
+        onDone(inputSize)
+    }
 }
 
 // MARK: - AnglePicker
@@ -200,7 +212,7 @@ struct AnglePicker: View {
                 content.onChange(of: inputAngle) { onChange(inputAngle) }
             } else {
                 Menu {
-                    Button { isInputMode = true } label: { Text("Input") }
+                    Button { startInput() } label: { Text("Input") }
                 } label: {
                     content
                 }
@@ -220,7 +232,6 @@ struct AnglePicker: View {
         self.onChange = onChange
         self.onDone = onDone
         isRadians = false
-        inputNumber = angle.degrees
     }
 
     // MARK: private
@@ -231,7 +242,7 @@ struct AnglePicker: View {
 
     @State private var isRadians: Bool
     @State private var isInputMode: Bool = false
-    @State private var inputNumber: Double
+    @State private var inputNumber: Double = 0
 
     private var angleValue: Double { isRadians ? angle.radians : angle.degrees }
     private var inputAngle: Angle { isRadians ? Angle(radians: inputNumber) : Angle(degrees: inputNumber) }
@@ -239,10 +250,7 @@ struct AnglePicker: View {
     private var content: some View {
         Group {
             if isInputMode {
-                Button {
-                    isInputMode = false
-                    onDone(inputAngle)
-                } label: { Image(systemName: "checkmark.circle") }
+                Button { endInput() } label: { Image(systemName: "checkmark.circle") }
             }
             Image(systemName: "angle")
             if isInputMode {
@@ -257,5 +265,15 @@ struct AnglePicker: View {
             } label: { Text(isRadians ? "rad" : " ° ") }
         }
         .font(.callout.monospacedDigit())
+    }
+
+    private func startInput() {
+        isInputMode = true
+        inputNumber = angle.degrees
+    }
+
+    private func endInput() {
+        isInputMode = false
+        onDone(inputAngle)
     }
 }

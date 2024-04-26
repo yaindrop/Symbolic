@@ -93,16 +93,6 @@ struct ActivePathPanel: View {
 fileprivate struct EdgePanel: View {
     let edge: PathEdge
 
-    @State var expanded = false
-
-    var name: String {
-        switch edge {
-        case .Arc: return "Arc"
-        case .Bezier: return "Bezier"
-        case .Line: return "Line"
-        }
-    }
-
     var body: some View {
         HStack {
             Spacer(minLength: 24)
@@ -137,6 +127,16 @@ fileprivate struct EdgePanel: View {
             .cornerRadius(12)
         }
     }
+
+    @State private var expanded = false
+
+    private var name: String {
+        switch edge {
+        case .Arc: return "Arc"
+        case .Bezier: return "Bezier"
+        case .Line: return "Line"
+        }
+    }
 }
 
 fileprivate struct NodePanel: View {
@@ -149,45 +149,45 @@ fileprivate struct NodePanel: View {
             Text("\(index)")
                 .font(.headline)
             Spacer()
-            PositionPicker(position: node.position)
+            PositionPicker(position: node.position) {
+                updater.activePathPanel(node: nodeId, with: $0, pending: true)
+            } onDone: {
+                updater.activePathPanel(node: nodeId, with: $0)
+            }
         }
         .padding(12)
         .background(.ultraThickMaterial)
         .cornerRadius(12)
     }
+
+    @EnvironmentObject private var updater: PathUpdater
+    @Environment(\.pathNodeId) private var nodeId
 }
 
 // MARK: - PathEdge panels
 
 fileprivate struct BezierPanel: View {
-    var bezier: PathBezier
-    @EnvironmentObject var documentModel: DocumentModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @Environment(\.pathNodeId) var nodeId
+    let bezier: PathBezier
 
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "1.square")
                 Spacer(minLength: 12)
-                PositionPicker(position: bezier.control0) { p in
-                    let bezier = PathBezier(control0: bezier.control0, control1: p)
-                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
-                } onDone: { p in
-                    let bezier = PathBezier(control0: bezier.control0, control1: p)
-                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
+                PositionPicker(position: bezier.control0) {
+                    updater.activePathPanel(edge: nodeId, with: bezier.with(control0: $0), pending: true)
+                } onDone: {
+                    updater.activePathPanel(edge: nodeId, with: bezier.with(control0: $0))
                 }
             }
             Divider()
             HStack {
                 Image(systemName: "2.square")
                 Spacer(minLength: 12)
-                PositionPicker(position: bezier.control1) { p in
-                    let bezier = PathBezier(control0: p, control1: bezier.control1)
-                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
-                } onDone: { p in
-                    let bezier = PathBezier(control0: p, control1: bezier.control1)
-                    documentModel.sendEvent(DocumentEvent(inPath: activePathModel.activePathId!, updateEdgeFrom: nodeId, .Bezier(bezier)))
+                PositionPicker(position: bezier.control1) {
+                    updater.activePathPanel(edge: nodeId, with: bezier.with(control1: $0), pending: true)
+                } onDone: {
+                    updater.activePathPanel(edge: nodeId, with: bezier.with(control1: $0))
                 }
             }
         }
@@ -195,23 +195,34 @@ fileprivate struct BezierPanel: View {
         .background(.regularMaterial)
         .cornerRadius(12)
     }
+
+    @EnvironmentObject private var updater: PathUpdater
+    @Environment(\.pathNodeId) private var nodeId
 }
 
 fileprivate struct ArcPanel: View {
-    var arc: PathArc
+    let arc: PathArc
 
     var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Text("Radius")
                 Spacer()
-                SizePicker(size: arc.radius)
+                SizePicker(size: arc.radius) {
+                    updater.activePathPanel(edge: nodeId, with: arc.with(radius: $0), pending: true)
+                } onDone: {
+                    updater.activePathPanel(edge: nodeId, with: arc.with(radius: $0))
+                }
             }
             Divider()
             HStack {
                 Text("Rotation")
                 Spacer()
-                AnglePicker(angle: arc.rotation)
+                AnglePicker(angle: arc.rotation) {
+                    updater.activePathPanel(edge: nodeId, with: arc.with(rotation: $0), pending: true)
+                } onDone: {
+                    updater.activePathPanel(edge: nodeId, with: arc.with(rotation: $0))
+                }
             }
             Divider()
             HStack {
@@ -230,4 +241,7 @@ fileprivate struct ArcPanel: View {
         .background(Color.secondarySystemBackground)
         .cornerRadius(12)
     }
+
+    @EnvironmentObject private var updater: PathUpdater
+    @Environment(\.pathNodeId) private var nodeId
 }

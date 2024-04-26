@@ -2,6 +2,8 @@ import Combine
 import Foundation
 import SwiftUI
 
+// MARK: - EnvironmentValues
+
 fileprivate extension EnvironmentValues {
     struct PathNodeIdKey: EnvironmentKey {
         static let defaultValue = UUID()
@@ -12,6 +14,8 @@ fileprivate extension EnvironmentValues {
         set { self[PathNodeIdKey.self] = newValue }
     }
 }
+
+// MARK: - Updater
 
 fileprivate class Updater: ObservableObject {
     var activePath: Path?
@@ -54,6 +58,8 @@ fileprivate class Updater: ObservableObject {
     private var pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
 }
 
+// MARK: - ActivePathHandles
+
 struct ActivePathHandles: View {
     var body: some View {
         if let activePath = activePathModel.activePath {
@@ -91,6 +97,8 @@ struct ActivePathHandles: View {
     @EnvironmentObject private var activePathModel: ActivePathModel
 }
 
+// MARK: - ActivePathVertexHandle
+
 struct ActivePathVertexHandle: View {
     let data: PathVertexData
 
@@ -99,8 +107,11 @@ struct ActivePathVertexHandle: View {
             .gesture(drag(updating: $dragging))
     }
 
-    private static let lineWidth: CGFloat = 4
-    private static let circleSize: CGFloat = 32
+    // MARK: private
+
+    private static let lineWidth: CGFloat = 2
+    private static let circleSize: CGFloat = 16
+    private static let touchablePadding: CGFloat = 24
 
     @Environment(\.pathNodeId) private var nodeId: UUID
     @EnvironmentObject private var updater: Updater
@@ -113,6 +124,8 @@ struct ActivePathVertexHandle: View {
             .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
             .fill(color.opacity(0.5))
             .frame(width: Self.circleSize, height: Self.circleSize)
+            .padding(Self.touchablePadding)
+            .invisibleSoildOverlay()
             .position(point)
     }
 
@@ -124,6 +137,8 @@ struct ActivePathVertexHandle: View {
     }
 }
 
+// MARK: - ActivePathSegmentHandle
+
 struct ActivePathSegmentHandle: View {
     let data: PathSegmentData
 
@@ -133,9 +148,11 @@ struct ActivePathSegmentHandle: View {
             data.edge.draw(path: &p, to: data.to)
         }
         .strokedPath(StrokeStyle(lineWidth: 16, lineCap: .round))
-        .fill(.blue.opacity(0.5))
+        .fill(.blue.opacity(0.2))
     }
 }
+
+// MARK: - ActivePathEdgeHandle
 
 struct ActivePathEdgeHandle: View {
     let data: PathSegmentData
@@ -148,6 +165,8 @@ struct ActivePathEdgeHandle: View {
         }
     }
 }
+
+// MARK: - ActivePathBezierHandle
 
 struct ActivePathBezierHandle: View {
     let bezier: PathBezier
@@ -165,8 +184,11 @@ struct ActivePathBezierHandle: View {
         }
     }
 
-    private static let lineWidth: CGFloat = 4
-    private static let circleSize: CGFloat = 32
+    // MARK: private
+
+    private static let lineWidth: CGFloat = 1
+    private static let circleSize: CGFloat = 12
+    private static let touchablePadding: CGFloat = 24
 
     @Environment(\.pathNodeId) private var fromId: UUID
     @EnvironmentObject private var updater: Updater
@@ -180,7 +202,9 @@ struct ActivePathBezierHandle: View {
         SUPath { p in
             p.move(to: from)
             p.addLine(to: to)
-        }.stroke(color.opacity(0.5), style: StrokeStyle(lineWidth: Self.lineWidth, dash: [Self.lineWidth * 2]))
+            p = p.strokedPath(StrokeStyle(lineWidth: Self.lineWidth))
+            p = p.subtracting(SUPath { $0.addEllipse(in: CGRect(center: to, size: CGSize(squared: Self.circleSize))) })
+        }.fill(color.opacity(0.5))
     }
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
@@ -188,6 +212,8 @@ struct ActivePathBezierHandle: View {
             .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
             .fill(color.opacity(0.5))
             .frame(width: Self.circleSize, height: Self.circleSize)
+            .padding(Self.touchablePadding)
+            .invisibleSoildOverlay()
             .position(point)
     }
 
@@ -198,6 +224,8 @@ struct ActivePathBezierHandle: View {
             .onEnded { updater.update(edge: fromId, with: callback($0.location), ended: true) }
     }
 }
+
+// MARK: - ActivePathArcHandle
 
 struct ActivePathArcHandle: View {
     let arc: PathArc

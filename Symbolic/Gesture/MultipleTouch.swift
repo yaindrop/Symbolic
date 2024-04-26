@@ -97,10 +97,11 @@ class MultipleTouchContext: ObservableObject {
 
 // MARK: - MultipleTouchHandler
 
-class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
+class MultipleTouchHandler: UIGestureRecognizer {
     init(context: MultipleTouchContext) {
         self.context = context
         super.init(target: nil, action: nil)
+        delegate = self
     }
 
     private var context: MultipleTouchContext
@@ -180,5 +181,11 @@ class MultipleTouchHandler: UIGestureRecognizer, ObservableObject {
             let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1)))
             context.pinchInfo = movedInfo
         }
+    }
+}
+
+extension MultipleTouchHandler: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }

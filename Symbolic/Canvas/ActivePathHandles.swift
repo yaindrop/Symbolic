@@ -18,7 +18,7 @@ fileprivate extension EnvironmentValues {
 
 struct ActivePathHandles: View {
     var body: some View {
-        if let activePath = activePathModel.activePath {
+        if let activePath = activePathModel.pendingActivePath {
             Group {
                 ForEach(activePath.segments) { s in
                     ActivePathSegmentHandle(data: s.data.applying(viewport.info.worldToView))
@@ -56,7 +56,7 @@ struct ActivePathVertexHandle: View {
 
     private static let lineWidth: CGFloat = 2
     private static let circleSize: CGFloat = 16
-    private static let touchablePadding: CGFloat = 24
+    private static let touchablePadding: CGFloat = 16
 
     @Environment(\.pathNodeId) private var nodeId: UUID
     @EnvironmentObject private var updater: PathUpdater
@@ -89,20 +89,31 @@ struct ActivePathSegmentHandle: View {
 
     var body: some View {
         outline
-        circle(at: data.edge.position(from: data.from, to: data.to, at: 0.5), color: .teal)
+        if focused {
+            circle(at: data.edge.position(from: data.from, to: data.to, at: 0.5), color: .teal)
+        }
     }
 
     private static let lineWidth: CGFloat = 2
     private static let circleSize: CGFloat = 16
-    private static let touchablePadding: CGFloat = 24
+    private static let touchablePadding: CGFloat = 16
+
+    @Environment(\.pathNodeId) private var id: UUID
+    @EnvironmentObject private var activePathModel: ActivePathModel
+
+    private var focused: Bool { activePathModel.focusedPart?.id == id }
 
     @ViewBuilder private var outline: some View {
         SUPath { p in
             p.move(to: data.from)
             data.edge.draw(path: &p, to: data.to)
         }
-        .strokedPath(StrokeStyle(lineWidth: 16, lineCap: .round))
+        .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
         .fill(Color.invisibleSolid)
+        .onTapGesture {
+            print("focus segment", id)
+            activePathModel.focusedPart = .segment(id)
+        }
     }
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
@@ -138,13 +149,15 @@ struct ActivePathBezierHandle: View {
     let to: Point2
 
     var body: some View {
-        ZStack {
-            line(from: from, to: control0, color: .green)
-            circle(at: control0, color: .green)
-                .gesture(drag(updating: $dragging0) { bezier.with(control0: $0) })
-            line(from: to, to: control1, color: .orange)
-            circle(at: control1, color: .orange)
-                .gesture(drag(updating: $dragging1) { bezier.with(control1: $0) })
+        if focused {
+            ZStack {
+                line(from: from, to: control0, color: .green)
+                circle(at: control0, color: .green)
+                    .gesture(drag(updating: $dragging0) { bezier.with(control0: $0) })
+                line(from: to, to: control1, color: .orange)
+                circle(at: control1, color: .orange)
+                    .gesture(drag(updating: $dragging1) { bezier.with(control1: $0) })
+            }
         }
     }
 
@@ -152,12 +165,15 @@ struct ActivePathBezierHandle: View {
 
     private static let lineWidth: CGFloat = 1
     private static let circleSize: CGFloat = 12
-    private static let touchablePadding: CGFloat = 24
+    private static let touchablePadding: CGFloat = 12
 
     @Environment(\.pathNodeId) private var fromId: UUID
+    @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
     @GestureState private var dragging0: Point2?
     @GestureState private var dragging1: Point2?
+
+    private var focused: Bool { activePathModel.focusedPart?.id == fromId }
 
     private var control0: Point2 { dragging0 ?? bezier.control0 }
     private var control1: Point2 { dragging1 ?? bezier.control1 }
@@ -203,13 +219,22 @@ struct ActivePathArcHandle: View {
     let to: Point2
 
     var body: some View {
-        ellipse
-        radiusLine
-//        centerCircle
-        radiusWidthRect
-            .gesture(dragRadius(updating: $draggingRadiusW) { arc.with(radius: radius.with(width: $0)) })
-        radiusHeightRect
-            .gesture(dragRadius(updating: $draggingRadiusH) { arc.with(radius: radius.with(height: $0)) })
+        if focused {
+            ZStack {
+                ellipse
+                radiusLine
+                //            centerCircle
+                radiusWidthRect
+                    .gesture(dragRadius(updating: $draggingRadiusW) { arc.with(radius: radius.with(width: $0)) })
+                radiusHeightRect
+                    .gesture(dragRadius(updating: $draggingRadiusH) { arc.with(radius: radius.with(height: $0)) })
+            }
+            .onChange(of: draggingRadius) {
+                if draggingRadius == false {
+                    draggingCenter = nil
+                }
+            }
+        }
     }
 
     // MARK: private
@@ -217,14 +242,20 @@ struct ActivePathArcHandle: View {
     private static let lineWidth: CGFloat = 1
     private static let circleSize: CGFloat = 12
     private static let rectSize: CGSize = CGSize(16, 9)
-    private static let touchablePadding: CGFloat = 24
+    private static let touchablePadding: CGFloat = 12
 
     @Environment(\.pathNodeId) private var fromId: UUID
+    @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
-    @GestureState private var draggingRadiusW: CGFloat?
-    @GestureState private var draggingRadiusH: CGFloat?
 
-    private var radius: CGSize { CGSize(draggingRadiusW ?? arc.radius.width, draggingRadiusH ?? arc.radius.height) }
+    @GestureState private var draggingRadiusW: Bool = false
+    @GestureState private var draggingRadiusH: Bool = false
+    var draggingRadius: Bool { draggingRadiusW || draggingRadiusH }
+    @State var draggingCenter: CGPoint?
+
+    private var focused: Bool { activePathModel.focusedPart?.id == fromId }
+
+    private var radius: CGSize { arc.radius }
     private var endPointParam: ArcEndpointParam { arc.with(radius: radius).toParam(from: from, to: to) }
     private var param: ArcCenterParam { endPointParam.centerParam! }
     private var center: Point2 { param.center }
@@ -302,12 +333,16 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfHeightEnd)
     }
 
-    private func dragRadius(updating v: GestureState<CGFloat?>, callback: @escaping (CGFloat) -> PathArc) -> some Gesture {
-        let center = arc.toParam(from: from, to: to).centerParam!.center
-        let getValue = { (position: Point2) in position.distance(to: center) * 2 }
+    private func dragRadius(updating v: GestureState<Bool>, callback: @escaping (CGFloat) -> PathArc) -> some Gesture {
+        let getValue: (Point2) -> CGFloat = { $0.distance(to: draggingCenter!) * 2 }
         return DragGesture()
-            .updating(v) { value, state, _ in state = getValue(value.location) }
-            .onChanged { updater.activePathHandle(edge: fromId, with: callback(getValue($0.location)), pending: true) }
+            .updating(v) { _, state, _ in state = true }
+            .onChanged {
+                if draggingCenter == nil {
+                    draggingCenter = center
+                }
+                updater.activePathHandle(edge: fromId, with: callback(getValue($0.location)), pending: true)
+            }
             .onEnded { updater.activePathHandle(edge: fromId, with: callback(getValue($0.location))) }
     }
 }

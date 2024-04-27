@@ -130,7 +130,11 @@ struct CanvasView: View {
     }
 
     @ViewBuilder var overlay: some View {
-        ActivePathHandles()
+        ZStack {
+            activePaths
+            ActivePathHandles()
+        }
+        .allowsHitTesting(!touchContext.active)
     }
 
     var body: some View {
@@ -142,10 +146,7 @@ struct CanvasView: View {
                 background
                 inactivePaths
                 foreground
-                activePaths
-                    .allowsHitTesting(!touchContext.active)
                 overlay
-                    .allowsHitTesting(!touchContext.active)
             }
             .overlay {
                 ActivePathPanel()
@@ -158,6 +159,9 @@ struct CanvasView: View {
         .onChange(of: documentModel.activeDocument) {
             pathStore.clear()
             pathStore.loadDocument(documentModel.activeDocument)
+        }
+        .onChange(of: activePathModel.activePath) {
+            activePathModel.onActivePathChanged()
         }
         .onAppear {
             documentModel.activeDocument = Document(from: fooSvg)

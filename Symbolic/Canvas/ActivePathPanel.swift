@@ -16,9 +16,6 @@ fileprivate extension EnvironmentValues {
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View {
-    @EnvironmentObject var pathStore: PathStore
-    @EnvironmentObject var activePathModel: ActivePathModel
-
     var body: some View {
         VStack {
             Spacer()
@@ -39,6 +36,9 @@ struct ActivePathPanel: View {
     }
 
     // MARK: private
+
+    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var activePathModel: ActivePathModel
 
     @ViewBuilder private var title: some View {
         HStack {
@@ -64,23 +64,25 @@ struct ActivePathPanel: View {
     @StateObject private var scrollOffset = ScrollOffsetModel()
 
     @ViewBuilder private var components: some View {
-        if let activePath = activePathModel.activePath {
-            ScrollView {
-                VStack(spacing: 4) {
-                    segmentTitle("Components")
-                    LazyVStack(spacing: 12) {
-                        ForEach(activePath.segments) { segment in
-                            Group {
-                                NodePanel(index: segment.index, node: segment.from)
-                                EdgePanel(edge: segment.edge)
+        if let activePath = activePathModel.pendingActivePath {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 4) {
+                        segmentTitle("Components")
+                        VStack(spacing: 12) {
+                            ForEach(activePath.segments) { segment in
+                                NodeEdgeGroup(segment: segment)
                             }
-                            .environment(\.pathNodeId, segment.from.id)
                         }
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 24)
+                    .scrollOffsetReader(model: scrollOffset)
                 }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 24)
-                .scrollOffsetReader(model: scrollOffset)
+                .onChange(of: activePathModel.focusedPart) {
+                    guard let id = activePathModel.focusedPart?.id else { return }
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .top) }
+                }
             }
             .scrollOffsetProvider(model: scrollOffset)
             .frame(maxHeight: 400)
@@ -92,6 +94,35 @@ struct ActivePathPanel: View {
 
 // MARK: - Component rows
 
+fileprivate struct NodeEdgeGroup: View {
+    let segment: PathSegment
+
+    var body: some View {
+        Group {
+            NodePanel(index: segment.index, node: segment.from)
+            EdgePanel(edge: segment.edge)
+        }
+        .environment(\.pathNodeId, segment.from.id)
+        .scaleEffect(scale)
+        .onChange(of: focused) { animateOnFocused() }
+    }
+
+    @EnvironmentObject private var activePathModel: ActivePathModel
+    @State private var scale: Double = 1
+
+    private var focused: Bool { activePathModel.focusedPart?.id == segment.id }
+
+    func animateOnFocused() {
+        if focused {
+            withAnimation(.easeInOut(duration: 0.2).delay(0.2)) {
+                scale = 1.1
+            } completion: {
+                withAnimation(.easeInOut(duration: 0.2)) { scale = 1 }
+            }
+        }
+    }
+}
+
 fileprivate struct EdgePanel: View {
     let edge: PathEdge
 
@@ -101,9 +132,7 @@ fileprivate struct EdgePanel: View {
             VStack(spacing: 0) {
                 HStack {
                     Button {
-                        withAnimation {
-                            expanded.toggle()
-                        }
+                        withAnimation { expanded.toggle() }
                     } label: {
                         Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                         Text(name)
@@ -127,10 +156,17 @@ fileprivate struct EdgePanel: View {
             .padding(12)
             .background(.ultraThinMaterial)
             .cornerRadius(12)
+            .onChange(of: focused) {
+                withAnimation { expanded = focused }
+            }
         }
     }
 
+    @EnvironmentObject private var activePathModel: ActivePathModel
+    @Environment(\.pathNodeId) private var fromId
     @State private var expanded = false
+
+    private var focused: Bool { activePathModel.focusedPart?.id == fromId }
 
     private var name: String {
         switch edge {

@@ -141,6 +141,8 @@ struct PathSegmentData: Transformable {
 }
 
 struct PathSegment: Identifiable {
+    static let hitPathLineWidth: CGFloat = 12
+
     let index: Int
     let edge: PathEdge
     let from: PathNode
@@ -154,7 +156,7 @@ struct PathSegment: Identifiable {
         SUPath { p in
             p.move(to: from.position)
             edge.draw(path: &p, to: to.position)
-        }.strokedPath(StrokeStyle(lineWidth: 10, lineCap: .round))
+        }.strokedPath(StrokeStyle(lineWidth: Self.hitPathLineWidth, lineCap: .round))
     }
 }
 
@@ -179,7 +181,7 @@ struct PathVertex: Identifiable {
 
 // MARK: - Path
 
-class Path: Identifiable, ReflectedStringConvertible {
+class Path: Identifiable, ReflectedStringConvertible, Equatable {
     typealias NodeEdgePair = (PathNode, PathEdge)
 
     let id: UUID
@@ -252,6 +254,8 @@ class Path: Identifiable, ReflectedStringConvertible {
     func draw(path: inout SUPath) {
         path.addPath(self.path)
     }
+
+    static func == (lhs: Path, rhs: Path) -> Bool { ObjectIdentifier(lhs) == ObjectIdentifier(rhs) }
 }
 
 // MARK: - clone with path update event

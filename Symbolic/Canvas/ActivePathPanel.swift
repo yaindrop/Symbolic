@@ -16,7 +16,8 @@ fileprivate extension EnvironmentValues {
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View {
-    @ObservedObject var activePathModel: ActivePathModel
+    @EnvironmentObject var pathStore: PathStore
+    @EnvironmentObject var activePathModel: ActivePathModel
 
     var body: some View {
         VStack {
@@ -39,7 +40,7 @@ struct ActivePathPanel: View {
 
     // MARK: private
 
-    private var title: some View {
+    @ViewBuilder private var title: some View {
         HStack {
             Spacer()
             Text("Active Path")
@@ -50,7 +51,7 @@ struct ActivePathPanel: View {
         }
     }
 
-    private func segmentTitle(_ title: String) -> some View {
+    @ViewBuilder private func segmentTitle(_ title: String) -> some View {
         HStack {
             Text(title)
                 .font(.subheadline)

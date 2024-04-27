@@ -4,47 +4,44 @@ import UIKit
 // MARK: - MultipleTouchModifier
 
 struct MultipleTouchModifier: ViewModifier {
-    private struct Representable: UIViewRepresentable {
-        @ObservedObject var context: MultipleTouchContext
-
-        func makeUIView(context: Context) -> UIView {
-            let view = UIView()
-            view.isMultipleTouchEnabled = true
-            view.addGestureRecognizer(DebugTouchHandler())
-            view.addGestureRecognizer(MultipleTouchHandler(context: self.context))
-            return view
-        }
-
-        func updateUIView(_ uiView: UIView, context: Context) {}
-    }
-
     @ObservedObject var context: MultipleTouchContext
 
     func body(content: Content) -> some View {
-        return content.overlay { Representable(context: context) }
+        content.overlay { Representable(context: context) }
+    }
+
+    // MARK: private
+
+    private struct Representable: UIViewRepresentable {
+        @ObservedObject var context: MultipleTouchContext
+
+        func makeUIView(context: Context) -> UIView { MultipleTouchView(context: self.context) }
+
+        func updateUIView(_ uiView: UIView, context: Context) {}
     }
 }
 
 // MARK: - multiple touch info
 
 struct PanInfo: CustomStringConvertible {
-    var origin: Point2
-    var offset: Vector2 = Vector2.zero
+    let origin: Point2
+    let offset: Vector2
 
-    var current: Point2 {
-        return origin + offset
-    }
+    var current: Point2 { origin + offset }
 
     public var description: String { "(\(origin.shortDescription), \(offset.shortDescription)" }
+
+    init(origin: Point2, offset: Vector2 = Vector2.zero) {
+        self.origin = origin
+        self.offset = offset
+    }
 }
 
 struct PinchInfo: CustomStringConvertible {
-    var origin: (Point2, Point2)
-    var offset: (Vector2, Vector2) = (Vector2.zero, Vector2.zero)
+    let origin: (Point2, Point2)
+    let offset: (Vector2, Vector2)
 
-    var current: (Point2, Point2) {
-        return (origin.0 + offset.0, origin.1 + offset.1)
-    }
+    var current: (Point2, Point2) { (origin.0 + offset.0, origin.1 + offset.1) }
 
     var center: PanInfo {
         let originVector = (Vector2(origin.0) + Vector2(origin.1)) / 2
@@ -53,20 +50,23 @@ struct PinchInfo: CustomStringConvertible {
         return PanInfo(origin: Point2(originVector), offset: currentVector - originVector)
     }
 
-    var originDistance: CGFloat {
-        origin.0.distance(to: origin.1)
-    }
+    var originDistance: CGFloat { origin.0.distance(to: origin.1) }
 
     var currentDistance: CGFloat {
         let current = self.current
         return current.0.distance(to: current.1)
     }
 
-    var scale: CGFloat {
-        return currentDistance / originDistance
+    var scale: CGFloat { currentDistance / originDistance }
+
+    public var description: String {
+        "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))"
     }
 
-    public var description: String { return "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))" }
+    init(origin: (Point2, Point2), offset: (Vector2, Vector2) = (Vector2.zero, Vector2.zero)) {
+        self.origin = origin
+        self.offset = offset
+    }
 }
 
 // MARK: - MultipleTouchContext
@@ -95,32 +95,12 @@ class MultipleTouchContext: ObservableObject {
     }
 }
 
-// MARK: - MultipleTouchHandler
+// MARK: - MultipleTouchView
 
-class MultipleTouchHandler: UIGestureRecognizer {
-    init(context: MultipleTouchContext) {
-        self.context = context
-        super.init(target: nil, action: nil)
-        delegate = self
-    }
-
-    private var context: MultipleTouchContext
-
-    private var activeTouches = Set<UITouch>()
-    private var panTouch: UITouch? { activeTouches.count == 1 ? activeTouches.first : nil }
-    private var pinchTouches: (UITouch, UITouch)? {
-        if activeTouches.count != 2 {
-            return nil
-        }
-        let touches = Array(activeTouches)
-        return (touches[0], touches[1])
-    }
-
-    // MARK: event handler
-
+class MultipleTouchView: TouchDebugView {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
         if activeTouches.isEmpty {
-            state = .began
             context.onFirstTouchBegan()
         }
         for touch in touches {
@@ -134,32 +114,59 @@ class MultipleTouchHandler: UIGestureRecognizer {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
         activeTouches.subtract(touches)
         if activeTouches.isEmpty {
             context.onAllTouchesEnded()
-            state = .ended
         } else {
             onActiveTouchesChanged()
         }
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
         activeTouches.subtract(touches)
         if activeTouches.isEmpty {
             context.onAllTouchesEnded()
-            state = .cancelled
         } else {
             onActiveTouchesChanged()
         }
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
         onActiveTouchesMoved()
     }
 
-    // MARK: calc info
+    init(context: MultipleTouchContext, frame: CGRect) {
+        self.context = context
+        super.init(frame: frame)
+        isMultipleTouchEnabled = true
+    }
 
-    private func location(of touch: UITouch) -> Point2 { touch.location(in: view) }
+    convenience init(context: MultipleTouchContext) {
+        self.init(context: context, frame: CGRect.zero)
+    }
+
+    required init(coder aDecoder: NSCoder) {
+        fatalError("This class does not support NSCoding")
+    }
+
+    // MARK: private
+
+    private var context: MultipleTouchContext
+
+    private var activeTouches = Set<UITouch>()
+    private var panTouch: UITouch? { activeTouches.count == 1 ? activeTouches.first : nil }
+    private var pinchTouches: (UITouch, UITouch)? {
+        if activeTouches.count != 2 {
+            return nil
+        }
+        let touches = Array(activeTouches)
+        return (touches[0], touches[1])
+    }
+
+    private func location(of touch: UITouch) -> Point2 { touch.location(in: self) }
 
     private func onActiveTouchesChanged() {
         context.panInfo = nil
@@ -181,11 +188,5 @@ class MultipleTouchHandler: UIGestureRecognizer {
             let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1)))
             context.pinchInfo = movedInfo
         }
-    }
-}
-
-extension MultipleTouchHandler: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
     }
 }

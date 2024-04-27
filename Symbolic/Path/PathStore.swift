@@ -14,24 +14,8 @@ class PathStore: ObservableObject {
     @Published var pendingEvent: DocumentEvent?
     @Published private(set) var pendingPaths: [Path]? = nil
 
-    private var loadingPendingEvent = false
-    private var subscriptions = Set<AnyCancellable>()
-
     var paths: [Path] { pathIds.compactMap { pid in pathIdToPath[pid] } }
     var nodes: [PathNode] { pathIds.compactMap { nid in nodeIdToNode[nid] } }
-
-    init() {
-        $pendingEvent.sink { e in
-            self.loadingPendingEvent = true
-            defer { self.loadingPendingEvent = false }
-            if let e {
-                self.pendingPaths = self.paths
-                self.loadEvent(e)
-            } else {
-                self.pendingPaths = nil
-            }
-        }.store(in: &subscriptions)
-    }
 
     func add(path: Path) {
         if loadingPendingEvent {
@@ -71,6 +55,24 @@ class PathStore: ObservableObject {
         pathIdToPath.removeAll()
         refreshNodes()
     }
+
+    init() {
+        $pendingEvent.sink { e in
+            self.loadingPendingEvent = true
+            defer { self.loadingPendingEvent = false }
+            if let e {
+                self.pendingPaths = self.paths
+                self.loadEvent(e)
+            } else {
+                self.pendingPaths = nil
+            }
+        }.store(in: &subscriptions)
+    }
+
+    // MARK: private
+
+    private var loadingPendingEvent = false
+    private var subscriptions = Set<AnyCancellable>()
 
     private func refreshNodes() {
         nodeIds.removeAll()

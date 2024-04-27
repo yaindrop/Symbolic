@@ -1,34 +1,37 @@
 import UIKit
 
-class DebugTouchHandler: UIGestureRecognizer {
-    override init(target: Any?, action: Selector?) {
-        super.init(target: target, action: action)
-        delegate = self
-    }
+// MARK: - TouchDebugView
 
+class TouchDebugView: UIView {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
         for touch in touches {
             createTouchSpotView(for: touch)
         }
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
         for touch in touches {
             removeTouchSpotView(for: touch)
         }
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
         for touch in touches {
             removeTouchSpotView(for: touch)
         }
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
         for touch in touches {
             updateTouchSpotView(for: touch)
         }
     }
+
+    // MARK: private
 
     private class TouchSpotView: UIView {
         override init(frame: CGRect) {
@@ -53,12 +56,11 @@ class DebugTouchHandler: UIGestureRecognizer {
     private var touchSpotViews = [UITouch: TouchSpotView]()
 
     private func createTouchSpotView(for touch: UITouch) {
-        guard let view = view else { return }
         let touchSpotView = TouchSpotView()
         touchSpotView.bounds = CGRect(x: 0, y: 0, width: 40, height: 40)
-        touchSpotView.center = touch.location(in: self.view)
+        touchSpotView.center = touch.location(in: self)
 
-        view.addSubview(touchSpotView)
+        addSubview(touchSpotView)
         UIView.animate(withDuration: 0.1) { touchSpotView.bounds.size = CGSize(80, 80) }
 
         touchSpotViews[touch] = touchSpotView
@@ -66,18 +68,12 @@ class DebugTouchHandler: UIGestureRecognizer {
 
     private func updateTouchSpotView(for touch: UITouch) {
         guard let touchSpotView = touchSpotViews[touch] else { return }
-        touchSpotView.center = touch.location(in: view)
+        touchSpotView.center = touch.location(in: self)
     }
 
     private func removeTouchSpotView(for touch: UITouch) {
         if let view = touchSpotViews.removeValue(forKey: touch) {
             view.removeFromSuperview()
         }
-    }
-}
-
-extension DebugTouchHandler: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
     }
 }

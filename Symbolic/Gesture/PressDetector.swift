@@ -16,7 +16,7 @@ class PressDetector: ObservableObject {
 
     var pressLocation: Point2? { isPress ? touchContext.panInfo?.origin : nil }
 
-    var tapSubject = PassthroughSubject<TapInfo, Never>()
+    private(set) var tapSubject = PassthroughSubject<TapInfo, Never>()
 
     func onTap(_ callback: @escaping (TapInfo) -> Void) {
         tapSubject.sink { value in callback(value) }.store(in: &subscriptions)

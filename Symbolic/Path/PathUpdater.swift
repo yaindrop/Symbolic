@@ -59,6 +59,8 @@ class PathUpdater: ObservableObject {
         self.activePathModel = activePathModel
         self.viewport = viewport
     }
+    
+    // MARK: private
 
     private var subscriptions = Set<AnyCancellable>()
     private var eventSubject = PassthroughSubject<DocumentEvent, Never>()

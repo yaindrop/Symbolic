@@ -113,18 +113,15 @@ struct CanvasView: View {
     }
 
     var foreground: some View {
-        Canvas { context, size in
-            let rect = Rectangle().path(in: CGRect(size))
-            context.fill(rect, with: .color(.white.opacity(0.1)))
-        }
-        .modifier(MultipleTouchModifier(context: touchContext))
-        .onAppear {
-            pressDetector.onTap { info in
-                let worldLocation = info.location.applying(viewport.info.viewToWorld)
-                print("onTap \(info) worldLocation \(worldLocation)")
-                activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
+        Color.white.opacity(0.1)
+            .modifier(MultipleTouchModifier(context: touchContext))
+            .onAppear {
+                pressDetector.onTap { info in
+                    let worldLocation = info.location.applying(viewport.info.viewToWorld)
+                    print("onTap \(info) worldLocation \(worldLocation)")
+                    activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
+                }
             }
-        }
     }
 
     var activePaths: some View {
@@ -151,7 +148,7 @@ struct CanvasView: View {
                     .allowsHitTesting(!touchContext.active)
             }
             .overlay {
-                ActivePathPanel(activePathModel: activePathModel)
+                ActivePathPanel()
                 DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, activePathModel: activePathModel)
             }
             .navigationTitle("Canvas")

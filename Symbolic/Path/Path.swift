@@ -7,16 +7,24 @@ typealias SUPath = SwiftUI.Path
 
 protocol PathEdgeProtocol: CustomStringConvertible, Transformable {
     func draw(path: inout SUPath, to: Point2)
+    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2
 }
 
 struct PathLine: PathEdgeProtocol {
     var description: String { "Line" }
 
+    func applying(_ t: CGAffineTransform) -> Self { Self() }
+
     func draw(path: inout SUPath, to: Point2) {
         path.addLine(to: to)
     }
 
-    func applying(_ t: CGAffineTransform) -> Self { Self() }
+    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+        let t = (0.0 ... 1.0).clamp(t)
+        let p0 = Vector2(from)
+        let p1 = Vector2(to)
+        return Point2(p0 + (p1 - p0) * t)
+    }
 }
 
 struct PathArc: PathEdgeProtocol {
@@ -25,11 +33,14 @@ struct PathArc: PathEdgeProtocol {
     let largeArc: Bool
     let sweep: Bool
 
+    func with(radius: CGSize) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+    func with(rotation: Angle) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+    func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+    func with(sweep: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+
     var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
 
-    func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
-        ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
-    }
+    func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
 
     func draw(path: inout SUPath, to: Point2) {
         guard let from = path.currentPoint else { return }
@@ -37,28 +48,41 @@ struct PathArc: PathEdgeProtocol {
         path.addArc(center: param.center, radius: 1, startAngle: param.startAngle, endAngle: param.endAngle, clockwise: param.clockwise, transform: param.transform)
     }
 
-    func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
+    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+        let t = (0.0 ... 1.0).clamp(t)
+        guard let param = toParam(from: from, to: to).centerParam else { return from }
+        let tParam = param.with(deltaAngle: param.deltaAngle * t)
+        return tParam.endpointParam.to
+    }
 
-    func with(radius: CGSize) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    func with(rotation: Angle) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    func with(sweep: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+    func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
+        ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+    }
 }
 
 struct PathBezier: PathEdgeProtocol {
     let control0: Point2
     let control1: Point2
 
+    func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
+    func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
+
     var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
+
+    func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
 
     func draw(path: inout SUPath, to: Point2) {
         path.addCurve(to: to, control1: control0, control2: control1)
     }
 
-    func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
-
-    func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
-    func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
+    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+        let t = (0.0 ... 1.0).clamp(t)
+        let p0 = Vector2(from)
+        let p1 = Vector2(control0)
+        let p2 = Vector2(control1)
+        let p3 = Vector2(to)
+        return Point2(pow(1 - t, 3) * p0 + 3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3) * p3)
+    }
 }
 
 enum PathEdge: PathEdgeProtocol {
@@ -76,8 +100,6 @@ enum PathEdge: PathEdgeProtocol {
 
     var description: String { value.description }
 
-    func draw(path: inout SUPath, to: Point2) { value.draw(path: &path, to: to) }
-
     func applying(_ t: CGAffineTransform) -> Self {
         switch self {
         case let .Line(l): return .Line(l.applying(t))
@@ -85,6 +107,10 @@ enum PathEdge: PathEdgeProtocol {
         case let .Bezier(b): return .Bezier(b.applying(t))
         }
     }
+
+    func draw(path: inout SUPath, to: Point2) { value.draw(path: &path, to: to) }
+
+    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 { value.position(from: from, to: to, at: t) }
 }
 
 // MARK: - PathNode
@@ -226,13 +252,13 @@ class Path: Identifiable, ReflectedStringConvertible {
     func draw(path: inout SUPath) {
         path.addPath(self.path)
     }
-
-    func with(pairs: [NodeEdgePair]) -> Path { Path(id: id, pairs: pairs, isClosed: isClosed) }
 }
 
 // MARK: - clone with path update event
 
 extension Path {
+    func with(pairs: [NodeEdgePair]) -> Path { Path(id: id, pairs: pairs, isClosed: isClosed) }
+
     func with(edgeUpdate: PathEdgeUpdate) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == edgeUpdate.fromNodeId }) else { return self }
         var pairs: [NodeEdgePair] = pairs

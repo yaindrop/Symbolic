@@ -9,6 +9,8 @@ struct ArcCenterParam: ReflectedStringConvertible {
     let startAngle: Angle
     let deltaAngle: Angle
 
+    func with(deltaAngle: Angle) -> Self { Self(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
+
     var endAngle: Angle { startAngle + deltaAngle }
     var clockwise: Bool { deltaAngle < .zero }
     var transform: CGAffineTransform { CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) } }

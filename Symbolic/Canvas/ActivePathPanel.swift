@@ -79,6 +79,7 @@ struct ActivePathPanel: View {
                     }
                 }
                 .padding(.horizontal, 12)
+                .padding(.bottom, 24)
                 .scrollOffsetReader(model: scrollOffset)
             }
             .scrollOffsetProvider(model: scrollOffset)

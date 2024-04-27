@@ -187,8 +187,12 @@ extension Color {
     static let systemIndigo = Color(.systemIndigo)
 }
 
+extension Color {
+    static let invisibleSolid: Color = .white.opacity(1e-3)
+}
+
 extension View {
     func invisibleSoildOverlay() -> some View {
-        overlay(.white.opacity(1e-3))
+        overlay(Color.invisibleSolid)
     }
 }

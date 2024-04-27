@@ -88,12 +88,31 @@ struct ActivePathSegmentHandle: View {
     let data: PathSegmentData
 
     var body: some View {
+        outline
+        circle(at: data.edge.position(from: data.from, to: data.to, at: 0.5), color: .teal)
+    }
+
+    private static let lineWidth: CGFloat = 2
+    private static let circleSize: CGFloat = 16
+    private static let touchablePadding: CGFloat = 24
+
+    @ViewBuilder private var outline: some View {
         SUPath { p in
             p.move(to: data.from)
             data.edge.draw(path: &p, to: data.to)
         }
         .strokedPath(StrokeStyle(lineWidth: 16, lineCap: .round))
-        .fill(.blue.opacity(0.2))
+        .fill(Color.invisibleSolid)
+    }
+
+    @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
+        Circle()
+            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
+            .fill(color.opacity(0.5))
+            .frame(width: Self.circleSize, height: Self.circleSize)
+            .padding(Self.touchablePadding)
+            .invisibleSoildOverlay()
+            .position(point)
     }
 }
 

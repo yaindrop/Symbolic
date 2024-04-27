@@ -56,6 +56,9 @@ struct Matrix2 {
 public typealias Vector2 = CGVector
 
 extension Vector2: AdditiveArithmetic, Transformable {
+    func with(dx: CGFloat) -> Self { Self(dx: dx, dy: dy) }
+    func with(dy: CGFloat) -> Self { Self(dx: dx, dy: dy) }
+
     var shortDescription: String { String(format: "(%.1f, %.1f)", dx, dy) }
 
     static let unitX: Vector2 = Vector2(1, 0)
@@ -124,6 +127,9 @@ extension Vector2: AdditiveArithmetic, Transformable {
 public typealias Point2 = CGPoint
 
 extension Point2 {
+    func with(x: CGFloat) -> Self { Self(x: x, y: y) }
+    func with(y: CGFloat) -> Self { Self(x: x, y: y) }
+
     var shortDescription: String { String(format: "(%.1f, %.1f)", x, y) }
 
     init(_ x: CGFloat, _ y: CGFloat) { self.init(x: x, y: y) }
@@ -150,6 +156,9 @@ extension Point2 {
 // MARK: - CGSize
 
 extension CGSize: Transformable {
+    func with(width: CGFloat) -> Self { Self(width: width, height: height) }
+    func with(height: CGFloat) -> Self { Self(width: width, height: height) }
+
     var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
 
     var flipped: CGSize { CGSize(height, width) }
@@ -162,9 +171,6 @@ extension CGSize: Transformable {
         let v = CGVector(self).applying(t)
         return Self(width: v.dx, height: v.dy)
     }
-
-    func with(width: CGFloat) -> CGSize { CGSize(width: width, height: height) }
-    func with(height: CGFloat) -> CGSize { CGSize(width: width, height: height) }
 }
 
 // MARK: - CGRect

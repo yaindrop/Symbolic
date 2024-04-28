@@ -3,6 +3,19 @@ import SwiftUI
 
 typealias SUPath = SwiftUI.Path
 
+func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
+    switch element {
+    case let .curve(to, control1, control2):
+        path.addCurve(to: to, control1: control1, control2: control2)
+    case let .line(to):
+        path.addLine(to: to)
+    case let .quadCurve(to, control):
+        path.addQuadCurve(to: to, control: control)
+    default:
+        return
+    }
+}
+
 // MARK: - PathEdge
 
 protocol PathEdgeProtocol: CustomStringConvertible, Transformable {
@@ -45,7 +58,8 @@ struct PathArc: PathEdgeProtocol {
     func draw(path: inout SUPath, to: Point2) {
         guard let from = path.currentPoint else { return }
         guard let param = toParam(from: from, to: to).centerParam else { return }
-        path.addArc(center: param.center, radius: 1, startAngle: param.startAngle, endAngle: param.endAngle, clockwise: param.clockwise, transform: param.transform)
+        SUPath { $0.addRelativeArc(center: param.center, radius: 1, startAngle: param.startAngle, delta: param.deltaAngle, transform: param.transform) }
+            .forEach { appendNonMove(element: $0, to: &path) }
     }
 
     func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {

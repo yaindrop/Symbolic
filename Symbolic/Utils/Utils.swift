@@ -196,3 +196,9 @@ extension View {
         overlay(Color.invisibleSolid)
     }
 }
+
+extension Gesture {
+    @inlinable public func updating<Bool>(flag: GestureState<Bool>) -> GestureStateGesture<Self, Bool> {
+        updating(flag) { _, state, _ in state = true as! Bool }
+    }
+}

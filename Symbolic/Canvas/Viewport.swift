@@ -25,6 +25,9 @@ struct ViewportInfo: CustomStringConvertible {
 
 class Viewport: ObservableObject {
     @Published var info: ViewportInfo = ViewportInfo()
+
+    var toWorld: CGAffineTransform { info.viewToWorld }
+    var toView: CGAffineTransform { info.worldToView }
 }
 
 // MARK: - ViewportUpdater

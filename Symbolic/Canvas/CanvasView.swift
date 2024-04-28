@@ -69,7 +69,7 @@ struct CanvasView: View {
     var background: some View {
         GeometryReader { geometry in
             Canvas { context, _ in
-                context.concatenate(viewport.info.worldToView)
+                context.concatenate(viewport.toView)
                 let path = SUPath { path in
                     for index in 0 ... 10240 {
                         let vOffset: CGFloat = CGFloat(index) * 10
@@ -108,7 +108,7 @@ struct CanvasView: View {
 
     var inactivePaths: some View {
         activePathModel.inactivePathsView
-            .transformEffect(viewport.info.worldToView)
+            .transformEffect(viewport.toView)
             .blur(radius: 1)
     }
 
@@ -117,7 +117,7 @@ struct CanvasView: View {
             .modifier(MultipleTouchModifier(context: touchContext))
             .onAppear {
                 pressDetector.onTap { info in
-                    let worldLocation = info.location.applying(viewport.info.viewToWorld)
+                    let worldLocation = info.location.applying(viewport.toWorld)
                     print("onTap \(info) worldLocation \(worldLocation)")
                     activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
                 }
@@ -126,7 +126,7 @@ struct CanvasView: View {
 
     var activePaths: some View {
         activePathModel.activePathView
-            .transformEffect(viewport.info.worldToView)
+            .transformEffect(viewport.toView)
     }
 
     @ViewBuilder var overlay: some View {

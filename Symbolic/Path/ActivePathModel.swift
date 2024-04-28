@@ -19,6 +19,18 @@ class ActivePathModel: ObservableObject {
     @Published var activePathId: UUID?
     @Published var focusedPart: ActivePathFocusedPart?
 
+    var focusedEdgeId: UUID? {
+        guard let focusedPart else { return nil }
+        guard case let .edge(id) = focusedPart else { return nil }
+        return id
+    }
+
+    var focusedNodeId: UUID? {
+        guard let focusedPart else { return nil }
+        guard case let .node(id) = focusedPart else { return nil }
+        return id
+    }
+
     var activePath: Path? {
         pathStore.paths.first { $0.id == activePathId }
     }

@@ -32,15 +32,15 @@ class PathUpdater: ObservableObject {
     }
 
     func updateActivePath(node id: UUID, positionInView: Point2, pending: Bool = false) {
-        updateActivePath(node: id, position: positionInView.applying(viewport.info.viewToWorld), pending: pending)
+        updateActivePath(node: id, position: positionInView.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(edge fromNodeId: UUID, bezierInView: PathBezier, pending: Bool = false) {
-        updateActivePath(edge: fromNodeId, bezier: bezierInView.applying(viewport.info.viewToWorld), pending: pending)
+        updateActivePath(edge: fromNodeId, bezier: bezierInView.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(edge fromNodeId: UUID, arcInView: PathArc, pending: Bool = false) {
-        updateActivePath(edge: fromNodeId, arc: arcInView.applying(viewport.info.viewToWorld), pending: pending)
+        updateActivePath(edge: fromNodeId, arc: arcInView.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: compound update
@@ -67,7 +67,7 @@ class PathUpdater: ObservableObject {
     }
 
     func updateActivePath(nodeAndControl id: UUID, deltaInView: Vector2, pending: Bool = false) {
-        updateActivePath(nodeAndControl: id, delta: deltaInView.applying(viewport.info.viewToWorld), pending: pending)
+        updateActivePath(nodeAndControl: id, delta: deltaInView.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: update handler

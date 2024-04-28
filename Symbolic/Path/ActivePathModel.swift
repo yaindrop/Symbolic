@@ -2,13 +2,13 @@ import Foundation
 import SwiftUI
 
 enum ActivePathFocusedPart: Equatable {
-    case vertex(UUID)
-    case segment(UUID)
+    case node(UUID)
+    case edge(UUID)
 
     var id: UUID {
         switch self {
-        case let .vertex(id): id
-        case let .segment(id): id
+        case let .node(id): id
+        case let .edge(id): id
         }
     }
 }
@@ -51,6 +51,7 @@ class ActivePathModel: ObservableObject {
         if let pendingActivePath {
             SUPath { path in pendingActivePath.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
+                .allowsHitTesting(false)
         }
     }
 

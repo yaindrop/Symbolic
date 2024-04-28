@@ -20,15 +20,16 @@ struct ActivePathHandles: View {
     var body: some View {
         if let activePath = activePathModel.pendingActivePath {
             Group {
-                ForEach(activePath.segments) { s in
+                let segments = activePath.segments
+                ForEach(segments) { s in
                     ActivePathSegmentHandle(data: s.data.applying(viewport.info.worldToView))
                         .environment(\.pathNodeId, s.id)
                 }
-                ForEach(activePath.vertices) { v in
-                    ActivePathVertexHandle(data: v.data.applying(viewport.info.worldToView))
-                        .environment(\.pathNodeId, v.id)
+                ForEach(segments) { s in
+                    ActivePathNodeHandle(data: s.data.applying(viewport.info.worldToView))
+                        .environment(\.pathNodeId, s.id)
                 }
-                ForEach(activePath.segments) { s in
+                ForEach(segments) { s in
                     ActivePathEdgeHandle(data: s.data.applying(viewport.info.worldToView))
                         .environment(\.pathNodeId, s.id)
                 }
@@ -42,10 +43,10 @@ struct ActivePathHandles: View {
     @EnvironmentObject private var activePathModel: ActivePathModel
 }
 
-// MARK: - ActivePathVertexHandle
+// MARK: - ActivePathNodeHandle
 
-struct ActivePathVertexHandle: View {
-    let data: PathVertexData
+struct ActivePathNodeHandle: View {
+    let data: PathSegmentData
 
     var body: some View {
         circle(at: node, color: .blue)
@@ -77,8 +78,8 @@ struct ActivePathVertexHandle: View {
     private func drag(updating v: GestureState<Point2?>) -> some Gesture {
         DragGesture()
             .updating(v) { value, state, _ in state = value.location }
-            .onChanged { updater.activePathHandle(node: nodeId, with: $0.location, pending: true) }
-            .onEnded { updater.activePathHandle(node: nodeId, with: $0.location) }
+            .onChanged { updater.updateActivePath(nodeAndControl: nodeId, deltaInView: Vector2($0.translation), pending: true) }
+            .onEnded { updater.updateActivePath(nodeAndControl: nodeId, deltaInView: Vector2($0.translation)) }
     }
 }
 
@@ -89,8 +90,8 @@ struct ActivePathSegmentHandle: View {
 
     var body: some View {
         outline
-        if focused {
-            circle(at: data.edge.position(from: data.from, to: data.to, at: 0.5), color: .teal)
+        if let nextNode = data.nextNode, focused {
+            circle(at: data.edge.position(from: data.node, to: nextNode, at: 0.5), color: .teal)
         }
     }
 
@@ -104,15 +105,18 @@ struct ActivePathSegmentHandle: View {
     private var focused: Bool { activePathModel.focusedPart?.id == id }
 
     @ViewBuilder private var outline: some View {
-        SUPath { p in
-            p.move(to: data.from)
-            data.edge.draw(path: &p, to: data.to)
-        }
-        .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
-        .fill(Color.invisibleSolid)
-        .onTapGesture {
-            print("focus segment", id)
-            activePathModel.focusedPart = .segment(id)
+        if let nextNode = data.nextNode {
+            SUPath { p in
+                p.move(to: data.node)
+                data.edge.draw(path: &p, to: nextNode)
+            }
+            .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
+            .fill(Color.invisibleSolid)
+            .onTapGesture {
+                print("focus segment", id)
+                activePathModel.focusedPart = .edge(id)
+            }
+            .allowsHitTesting(!focused)
         }
     }
 
@@ -133,10 +137,12 @@ struct ActivePathEdgeHandle: View {
     let data: PathSegmentData
 
     var body: some View {
-        if case let .Arc(arc) = data.edge {
-            ActivePathArcHandle(arc: arc, from: data.from, to: data.to)
-        } else if case let .Bezier(bezier) = data.edge {
-            ActivePathBezierHandle(bezier: bezier, from: data.from, to: data.to)
+        if let nextNode = data.nextNode {
+            if case let .Arc(arc) = data.edge {
+                ActivePathArcHandle(arc: arc, from: data.node, to: nextNode)
+            } else if case let .Bezier(bezier) = data.edge {
+                ActivePathBezierHandle(bezier: bezier, from: data.node, to: nextNode)
+            }
         }
     }
 }
@@ -206,8 +212,8 @@ struct ActivePathBezierHandle: View {
     private func drag(updating v: GestureState<Point2?>, callback: @escaping (Point2) -> PathBezier) -> some Gesture {
         DragGesture()
             .updating(v) { value, state, _ in state = value.location }
-            .onChanged { updater.activePathHandle(edge: fromId, with: callback($0.location), pending: true) }
-            .onEnded { updater.activePathHandle(edge: fromId, with: callback($0.location)) }
+            .onChanged { updater.updateActivePath(edge: fromId, bezierInView: callback($0.location), pending: true) }
+            .onEnded { updater.updateActivePath(edge: fromId, bezierInView: callback($0.location)) }
     }
 }
 
@@ -341,8 +347,8 @@ struct ActivePathArcHandle: View {
                 if draggingCenter == nil {
                     draggingCenter = center
                 }
-                updater.activePathHandle(edge: fromId, with: callback(getValue($0.location)), pending: true)
+                updater.updateActivePath(edge: fromId, arcInView: callback(getValue($0.location)), pending: true)
             }
-            .onEnded { updater.activePathHandle(edge: fromId, with: callback(getValue($0.location))) }
+            .onEnded { updater.updateActivePath(edge: fromId, arcInView: callback(getValue($0.location))) }
     }
 }

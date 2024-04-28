@@ -57,16 +57,7 @@ class PathStore: ObservableObject {
     }
 
     init() {
-        $pendingEvent.sink { e in
-            self.loadingPendingEvent = true
-            defer { self.loadingPendingEvent = false }
-            if let e {
-                self.pendingPaths = self.paths
-                self.loadEvent(e)
-            } else {
-                self.pendingPaths = nil
-            }
-        }.store(in: &subscriptions)
+        $pendingEvent.sink { _ in self.loadPendingEvent() }.store(in: &subscriptions)
     }
 
     // MARK: private
@@ -84,6 +75,24 @@ class PathStore: ObservableObject {
             }
         }
     }
+
+    private func loadPendingEvent() {
+        guard let pendingEvent else {
+            pendingPaths = nil
+            return
+        }
+        loadingPendingEvent = true
+        defer { self.loadingPendingEvent = false }
+        pendingPaths = paths
+        loadEvent(pendingEvent)
+    }
+
+    private func getEventPath(id: UUID) -> Path? {
+        if loadingPendingEvent {
+            return pendingPaths?.first { $0.id == id }
+        }
+        return pathIdToPath[id]
+    }
 }
 
 // MARK: - PathStore load events
@@ -99,6 +108,13 @@ extension PathStore {
         switch event.kind {
         case let .pathEvent(pathEvent):
             loadEvent(pathEvent)
+        case let .compoundEvent(events):
+            events.forEach {
+                switch $0 {
+                case let .pathEvent(pathEvent):
+                    loadEvent(pathEvent)
+                }
+            }
         }
     }
 
@@ -135,22 +151,22 @@ extension PathStore {
     }
 
     func loadPathUpdate(pathId: UUID, edgeUpdate: PathEdgeUpdate) {
-        guard let path = pathIdToPath[pathId] else { return }
+        guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(edgeUpdate: edgeUpdate))
     }
 
     func loadPathUpdate(pathId: UUID, nodeCreate: PathNodeCreate) {
-        guard let path = pathIdToPath[pathId] else { return }
+        guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeCreate: nodeCreate))
     }
 
     func loadPathUpdate(pathId: UUID, nodeDelete: PathNodeDelete) {
-        guard let path = pathIdToPath[pathId] else { return }
+        guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeDelete: nodeDelete))
     }
 
     func loadPathUpdate(pathId: UUID, nodeUpdate: PathNodeUpdate) {
-        guard let path = pathIdToPath[pathId] else { return }
+        guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeUpdate: nodeUpdate))
     }
 }

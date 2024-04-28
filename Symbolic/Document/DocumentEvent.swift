@@ -48,14 +48,45 @@ enum PathEvent {
     case delete(PathDelete)
 }
 
+enum CompoundEventKind {
+    case pathEvent(PathEvent)
+}
+
 enum DocumentEventKind {
     case pathEvent(PathEvent)
+    case compoundEvent([CompoundEventKind])
 }
 
 struct DocumentEvent {
     let id: UUID = UUID()
     let time: Date = Date()
     let kind: DocumentEventKind
+}
+
+extension PathEvent {
+    init(in pathId: UUID, updateEdgeFrom fromNodeId: UUID, _ edge: PathEdge) {
+        let edgeUpdate = PathEdgeUpdate(fromNodeId: fromNodeId, edge: edge)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .edgeUpdate(edgeUpdate))
+        self = .update(pathUpdate)
+    }
+
+    init(in pathId: UUID, createNodeAfter prevNodeId: UUID?, _ node: PathNode) {
+        let nodeCreate = PathNodeCreate(prevNodeId: prevNodeId, node: node)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeCreate(nodeCreate))
+        self = .update(pathUpdate)
+    }
+
+    init(in pathId: UUID, updateNode node: PathNode) {
+        let nodeUpdate = PathNodeUpdate(node: node)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeUpdate(nodeUpdate))
+        self = .update(pathUpdate)
+    }
+
+    init(in pathId: UUID, deleteNode nodeId: UUID) {
+        let nodeDelete = PathNodeDelete(nodeId: nodeId)
+        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeDelete(nodeDelete))
+        self = .update(pathUpdate)
+    }
 }
 
 extension DocumentEvent {
@@ -81,5 +112,9 @@ extension DocumentEvent {
         let nodeDelete = PathNodeDelete(nodeId: nodeId)
         let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeDelete(nodeDelete))
         self.init(kind: .pathEvent(.update(pathUpdate)))
+    }
+
+    init(compound: [CompoundEventKind]) {
+        self.init(kind: .compoundEvent(compound))
     }
 }

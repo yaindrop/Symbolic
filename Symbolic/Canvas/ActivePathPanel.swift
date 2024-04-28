@@ -51,7 +51,7 @@ struct ActivePathPanel: View {
         }
     }
 
-    @ViewBuilder private func segmentTitle(_ title: String) -> some View {
+    @ViewBuilder private func sectionTitle(_ title: String) -> some View {
         HStack {
             Text(title)
                 .font(.subheadline)
@@ -68,7 +68,7 @@ struct ActivePathPanel: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 4) {
-                        segmentTitle("Components")
+                        sectionTitle("Components")
                         VStack(spacing: 12) {
                             ForEach(activePath.segments) { segment in
                                 NodeEdgeGroup(segment: segment)
@@ -99,10 +99,10 @@ fileprivate struct NodeEdgeGroup: View {
 
     var body: some View {
         Group {
-            NodePanel(index: segment.index, node: segment.from)
+            NodePanel(index: segment.index, node: segment.node)
             EdgePanel(edge: segment.edge)
         }
-        .environment(\.pathNodeId, segment.from.id)
+        .environment(\.pathNodeId, segment.id)
         .scaleEffect(scale)
         .onChange(of: focused) { animateOnFocused() }
     }
@@ -188,9 +188,9 @@ fileprivate struct NodePanel: View {
                 .font(.headline)
             Spacer()
             PositionPicker(position: node.position) {
-                updater.activePathPanel(node: nodeId, with: $0, pending: true)
+                updater.updateActivePath(node: nodeId, position: $0, pending: true)
             } onDone: {
-                updater.activePathPanel(node: nodeId, with: $0)
+                updater.updateActivePath(node: nodeId, position: $0)
             }
         }
         .padding(12)
@@ -213,9 +213,9 @@ fileprivate struct BezierPanel: View {
                 Image(systemName: "1.square")
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control0) {
-                    updater.activePathPanel(edge: nodeId, with: bezier.with(control0: $0), pending: true)
+                    updater.updateActivePath(edge: nodeId, bezier: bezier.with(control0: $0), pending: true)
                 } onDone: {
-                    updater.activePathPanel(edge: nodeId, with: bezier.with(control0: $0))
+                    updater.updateActivePath(edge: nodeId, bezier: bezier.with(control0: $0))
                 }
             }
             Divider()
@@ -223,9 +223,9 @@ fileprivate struct BezierPanel: View {
                 Image(systemName: "2.square")
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control1) {
-                    updater.activePathPanel(edge: nodeId, with: bezier.with(control1: $0), pending: true)
+                    updater.updateActivePath(edge: nodeId, bezier: bezier.with(control1: $0), pending: true)
                 } onDone: {
-                    updater.activePathPanel(edge: nodeId, with: bezier.with(control1: $0))
+                    updater.updateActivePath(edge: nodeId, bezier: bezier.with(control1: $0))
                 }
             }
         }
@@ -247,9 +247,9 @@ fileprivate struct ArcPanel: View {
                 Text("Radius")
                 Spacer()
                 SizePicker(size: arc.radius) {
-                    updater.activePathPanel(edge: nodeId, with: arc.with(radius: $0), pending: true)
+                    updater.updateActivePath(edge: nodeId, arc: arc.with(radius: $0), pending: true)
                 } onDone: {
-                    updater.activePathPanel(edge: nodeId, with: arc.with(radius: $0))
+                    updater.updateActivePath(edge: nodeId, arc: arc.with(radius: $0))
                 }
             }
             Divider()
@@ -257,9 +257,9 @@ fileprivate struct ArcPanel: View {
                 Text("Rotation")
                 Spacer()
                 AnglePicker(angle: arc.rotation) {
-                    updater.activePathPanel(edge: nodeId, with: arc.with(rotation: $0), pending: true)
+                    updater.updateActivePath(edge: nodeId, arc: arc.with(rotation: $0), pending: true)
                 } onDone: {
-                    updater.activePathPanel(edge: nodeId, with: arc.with(rotation: $0))
+                    updater.updateActivePath(edge: nodeId, arc: arc.with(rotation: $0))
                 }
             }
             Divider()

@@ -146,51 +146,36 @@ struct PathNode: Identifiable {
     }
 }
 
+// MARK: - PathSegment
+
 struct PathSegmentData: Transformable {
+    let node: Point2
     let edge: PathEdge
-    let from: Point2
-    let to: Point2
+    let prevNode: Point2?
+    let prevEdge: PathEdge?
+    let nextNode: Point2?
+    let nextEdge: PathEdge?
 
-    func applying(_ t: CGAffineTransform) -> Self { Self(edge: edge.applying(t), from: from.applying(t), to: to.applying(t)) }
-}
-
-struct PathSegment: Identifiable {
-    static let hitPathLineWidth: CGFloat = 12
-
-    let index: Int
-    let edge: PathEdge
-    let from: PathNode
-    let to: PathNode
-
-    var id: UUID { from.id }
-
-    var data: PathSegmentData { PathSegmentData(edge: edge, from: from.position, to: to.position) }
-
-    var hitPath: SUPath {
-        SUPath { p in
-            p.move(to: from.position)
-            edge.draw(path: &p, to: to.position)
-        }.strokedPath(StrokeStyle(lineWidth: Self.hitPathLineWidth, lineCap: .round))
+    func applying(_ t: CGAffineTransform) -> Self {
+        Self(node: node.applying(t), edge: edge.applying(t), prevNode: prevNode?.applying(t), prevEdge: prevEdge?.applying(t), nextNode: nextNode?.applying(t), nextEdge: nextEdge?.applying(t))
     }
 }
 
-struct PathVertexData {
-    let node: Point2
-    let prev: PathEdge?
-    let next: PathEdge?
-
-    func applying(_ t: CGAffineTransform) -> Self { Self(node: node.applying(t), prev: prev, next: next) }
-}
-
-struct PathVertex: Identifiable {
+struct PathSegment: Identifiable {
     let index: Int
     let node: PathNode
-    let prev: PathEdge?
-    let next: PathEdge?
+    let edge: PathEdge
+
+    let prevNode: PathNode?
+    let prevEdge: PathEdge?
+    let nextNode: PathNode?
+    let nextEdge: PathEdge?
 
     var id: UUID { node.id }
+    var prevId: UUID? { prevNode?.id }
+    var nextId: UUID? { nextNode?.id }
 
-    var data: PathVertexData { PathVertexData(node: node.position, prev: prev, next: next) }
+    var data: PathSegmentData { PathSegmentData(node: node.position, edge: edge, prevNode: prevNode?.position, prevEdge: prevEdge, nextNode: nextNode?.position, nextEdge: nextEdge) }
 }
 
 // MARK: - Path
@@ -204,42 +189,33 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
 
     var nodes: [PathNode] { pairs.map { $0.0 } }
 
-    func node(id: UUID) -> PathNode? { nodes.first { $0.id == id }}
-
     var segments: [PathSegment] {
         pairs.enumerated().compactMap { i, pair in
             let isLast = i + 1 == pairs.count
             if isLast && !isClosed {
                 return nil
             }
+            let isFirst = i == 0
+            var prevNode: PathNode?, prevEdge: PathEdge?
+            if !(isFirst && !isClosed) {
+                (prevNode, prevEdge) = pairs[isFirst ? pairs.count - 1 : i - 1]
+            }
             let (node, edge) = pair
-            let (nextNode, _) = pairs[isLast ? 0 : i + 1]
-            return PathSegment(index: i, edge: edge, from: node, to: nextNode)
+            let (nextNode, nextEdge) = pairs[isLast ? 0 : i + 1]
+            return PathSegment(index: i, node: node, edge: edge, prevNode: prevNode, prevEdge: prevEdge, nextNode: nextNode, nextEdge: nextEdge)
         }
     }
 
-    var vertices: [PathVertex] {
-        pairs.enumerated().compactMap { i, pair in
-            let (node, edge) = pair
-            var prevEdge: PathEdge?
-            var nextEdge: PathEdge?
-            if isClosed {
-                prevEdge = pairs[i == 0 ? pairs.count - 1 : i - 1].1
-                nextEdge = edge
-            } else {
-                if i > 0 { prevEdge = pairs[i - 1].1 }
-                if i + 1 < pairs.count { nextEdge = edge }
-            }
-            return PathVertex(index: i, node: node, prev: prevEdge, next: nextEdge)
-        }
-    }
+    func node(id: UUID) -> PathNode? { nodes.first { $0.id == id }}
+    func segment(id: UUID) -> PathSegment? { segments.first { $0.id == id }}
 
     lazy var path: SUPath = {
         var p = SUPath()
         guard let first = pairs.first else { return p }
         p.move(to: first.0.position)
         for s in segments {
-            s.edge.draw(path: &p, to: s.to.position)
+            guard let to = s.nextNode?.position else { break }
+            s.edge.draw(path: &p, to: to)
         }
         if isClosed {
             p.closeSubpath()
@@ -250,11 +226,7 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
     lazy var boundingRect: CGRect = { path.boundingRect }()
 
     lazy var hitPath: SUPath = {
-        var p = SUPath()
-        for s in segments {
-            p.addPath(s.hitPath)
-        }
-        return p
+        path.strokedPath(StrokeStyle(lineWidth: 12, lineCap: .round))
     }()
 
     private init(id: UUID, pairs: [NodeEdgePair], isClosed: Bool) {

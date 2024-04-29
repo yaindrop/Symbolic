@@ -47,8 +47,8 @@ class PressDetector: ObservableObject {
 
     private var pendingRepeatedTapInfo: RepeatedTapInfo?
     private var canEndAsRepeatedTap: Bool {
-        guard let info = pendingRepeatedTapInfo else { return false }
-        guard let currLocation = pressLocation else { return false }
+        guard let info = pendingRepeatedTapInfo,
+              let currLocation = pressLocation else { return false }
         return Date().timeIntervalSince(info.time) < PressDetector.repeatedTapIntervalThreshold && info.location.distance(to: currLocation) < PressDetector.repeatedTapOffsetThreshold
     }
 

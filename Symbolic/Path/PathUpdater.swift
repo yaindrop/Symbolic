@@ -45,29 +45,59 @@ class PathUpdater: ObservableObject {
 
     // MARK: compound update
 
-    func updateActivePath(nodeAndControl id: UUID, delta: Vector2, pending: Bool = false) {
-        guard let activePath else { return }
-        guard let segment = activePath.segment(id: id) else { return }
-        print("delta", delta)
+    func updateActivePath(aroundNode id: UUID, offset: Vector2, pending: Bool = false) {
+        guard let activePath,
+              let segment = activePath.segment(id: id) else { return }
         var compound: [CompoundEventKind] = []
-        let pathEvent = PathEvent(in: activePath.id, updateNode: segment.node.with(position: segment.node.position + delta))
-        compound.append(.pathEvent(pathEvent))
         if let prevId = segment.prevId, case let .Bezier(bezier) = segment.prevEdge {
-            let prevEdge = PathEdge.Bezier(bezier.with(control1: bezier.control1 + delta))
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, prevEdge)
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, .Bezier(bezier.with(control1: bezier.control1 + offset)))
             compound.append(.pathEvent(pathEvent))
         }
+        let node = segment.node
+        let pathEvent = PathEvent(in: activePath.id, updateNode: node.with(offset: offset))
+        compound.append(.pathEvent(pathEvent))
         if case let .Bezier(bezier) = segment.edge {
-            let edge = PathEdge.Bezier(bezier.with(control0: bezier.control0 + delta))
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, edge)
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, .Bezier(bezier.with(control0: bezier.control0 + offset)))
             compound.append(.pathEvent(pathEvent))
         }
         let event = DocumentEvent(compound: compound)
         (pending ? pendingEventSubject : eventSubject).send(event)
     }
 
-    func updateActivePath(nodeAndControl id: UUID, deltaInView: Vector2, pending: Bool = false) {
-        updateActivePath(nodeAndControl: id, delta: deltaInView.applying(viewport.toWorld), pending: pending)
+    func updateActivePath(aroundEdge id: UUID, offset: Vector2, pending: Bool = false) {
+        guard let activePath,
+              let segment = activePath.segment(id: id) else { return }
+        var compound: [CompoundEventKind] = []
+        if let prevId = segment.prevId, case let .Bezier(bezier) = segment.prevEdge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, .Bezier(bezier.with(control1: bezier.control1 + offset)))
+            compound.append(.pathEvent(pathEvent))
+        }
+        let node = segment.node
+        let pathEvent = PathEvent(in: activePath.id, updateNode: node.with(offset: offset))
+        compound.append(.pathEvent(pathEvent))
+        if case let .Bezier(bezier) = segment.edge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, .Bezier(bezier.with(offset: offset)))
+            compound.append(.pathEvent(pathEvent))
+        }
+        if let nextNode = segment.nextNode {
+            let pathEvent = PathEvent(in: activePath.id, updateNode: nextNode.with(offset: offset))
+            compound.append(.pathEvent(pathEvent))
+        }
+        if let nextId = segment.nextId, case let .Bezier(bezier) = segment.nextEdge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: nextId, .Bezier(bezier.with(control1: bezier.control1 + offset)))
+            compound.append(.pathEvent(pathEvent))
+        }
+        let event = DocumentEvent(compound: compound)
+        print("event", event)
+        (pending ? pendingEventSubject : eventSubject).send(event)
+    }
+
+    func updateActivePath(aroundNode id: UUID, offsetInView: Vector2, pending: Bool = false) {
+        updateActivePath(aroundNode: id, offset: offsetInView.applying(viewport.toWorld), pending: pending)
+    }
+
+    func updateActivePath(aroundEdge id: UUID, offsetInView: Vector2, pending: Bool = false) {
+        updateActivePath(aroundEdge: id, offset: offsetInView.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: update handler

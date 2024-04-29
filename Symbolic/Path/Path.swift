@@ -56,8 +56,8 @@ struct PathArc: PathEdgeProtocol {
     func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
 
     func draw(path: inout SUPath, to: Point2) {
-        guard let from = path.currentPoint else { return }
-        guard let param = toParam(from: from, to: to).centerParam else { return }
+        guard let from = path.currentPoint,
+              let param = toParam(from: from, to: to).centerParam else { return }
         SUPath { $0.addRelativeArc(center: param.center, radius: 1, startAngle: param.startAngle, delta: param.deltaAngle, transform: param.transform) }
             .forEach { appendNonMove(element: $0, to: &path) }
     }
@@ -80,6 +80,7 @@ struct PathBezier: PathEdgeProtocol {
 
     func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
     func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
+    func with(offset: Vector2) -> Self { Self(control0: control0 + offset, control1: control1 + offset) }
 
     var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 
@@ -134,6 +135,7 @@ struct PathNode: Identifiable {
     let position: Point2
 
     func with(position: Point2) -> Self { Self(id: id, position: position) }
+    func with(offset: Vector2) -> Self { Self(id: id, position: position + offset) }
 
     init(position: Point2) {
         id = UUID()

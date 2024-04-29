@@ -67,17 +67,17 @@ struct ActivePathNodeHandle: View {
 
     private func drag(updating v: GestureState<Bool>) -> some Gesture {
         let getLocation: (DragGesture.Value) -> Point2 = { $0.location }
-        let getDelta: (DragGesture.Value) -> Vector2 = { dragOriginPosition?.deltaVector(to: getLocation($0)) ?? .zero }
+        let getOffset: (DragGesture.Value) -> Vector2 = { dragOriginPosition?.deltaVector(to: getLocation($0)) ?? .zero }
         return DragGesture()
             .updating(flag: v)
             .onChanged { value in
                 if dragOriginPosition == nil {
                     dragOriginPosition = data.node
                 }
-                updater.updateActivePath(nodeAndControl: nodeId, deltaInView: getDelta(value), pending: true)
+                updater.updateActivePath(aroundNode: nodeId, offsetInView: getOffset(value), pending: true)
             }
             .onEnded { value in
-                updater.updateActivePath(nodeAndControl: nodeId, deltaInView: getDelta(value))
+                updater.updateActivePath(aroundNode: nodeId, offsetInView: getOffset(value))
             }
     }
 }
@@ -94,8 +94,14 @@ struct ActivePathSegmentHandle: View {
                 print("focus edge", segmentId)
                 activePathModel.focusedPart = .edge(segmentId)
             }
-        if let nextNode = data.nextNode, focused {
-            circle(at: data.edge.position(from: data.node, to: nextNode, at: 0.5), color: .teal)
+            .onChange(of: dragging) {
+                if !dragging {
+                    dragOriginPosition = nil
+                }
+            }
+        if let circlePosition, focused {
+            circle(at: circlePosition, color: .teal)
+                .gesture(drag(updating: $dragging))
         }
     }
 
@@ -104,9 +110,20 @@ struct ActivePathSegmentHandle: View {
     private static let touchablePadding: CGFloat = 16
 
     @EnvironmentObject private var activePathModel: ActivePathModel
+    @EnvironmentObject private var updater: PathUpdater
+
+    @GestureState private var dragging: Bool = false
+    @State var dragOriginPosition: CGPoint?
 
     private var segmentId: UUID { segment.id }
     private var focused: Bool { activePathModel.focusedEdgeId == segmentId }
+    private var circlePosition: Point2? {
+        if let nextNode = data.nextNode {
+            data.edge.position(from: data.node, to: nextNode, at: 0.5)
+        } else {
+            nil
+        }
+    }
 
     @ViewBuilder private var outline: some View {
         if let nextNode = data.nextNode {
@@ -128,6 +145,22 @@ struct ActivePathSegmentHandle: View {
             .padding(Self.touchablePadding)
             .invisibleSoildOverlay()
             .position(point)
+    }
+
+    private func drag(updating v: GestureState<Bool>) -> some Gesture {
+        let getLocation: (DragGesture.Value) -> Point2 = { $0.location }
+        let getOffset: (DragGesture.Value) -> Vector2 = { dragOriginPosition?.deltaVector(to: getLocation($0)) ?? .zero }
+        return DragGesture()
+            .updating(flag: v)
+            .onChanged { value in
+                if dragOriginPosition == nil {
+                    dragOriginPosition = circlePosition
+                }
+                updater.updateActivePath(aroundEdge: segmentId, offsetInView: getOffset(value), pending: true)
+            }
+            .onEnded { value in
+                updater.updateActivePath(aroundEdge: segmentId, offsetInView: getOffset(value))
+            }
     }
 }
 

@@ -43,7 +43,7 @@ struct ActivePathNodeHandle: View {
 
     private var drag: DragGestureWithContext<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { value, origin in updater.updateActivePath(aroundNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
+            { value, origin in updater.updateActivePath(moveNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }
         return DragGestureWithContext(data.node, onChanged: update(pending: true), onEnded: update())
     }

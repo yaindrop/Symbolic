@@ -37,14 +37,14 @@ extension PathEdge.Arc {
         let largeArc: Bool
         let sweep: Bool
 
-        var centerParam: CenterParam? {
+        var centerParam: CenterParam {
             let a = Vector2(from), b = Vector2(to)
             let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
 
             var rx = abs(radius.width), ry = abs(radius.height)
             guard rx != 0 && ry != 0 else {
                 print("Radius cannot be 0")
-                return nil
+                return CenterParam(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 
             // F.6.5.1
@@ -62,7 +62,7 @@ extension PathEdge.Arc {
             let sumOfSquare = rx * rx * y1p * y1p + ry * ry * x1p * x1p
             guard sumOfSquare != 0 else {
                 print("Start point can not be same as end point")
-                return nil
+                return CenterParam(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 
             let coefficientSign: CGFloat = largeArc == sweep ? -1 : 1

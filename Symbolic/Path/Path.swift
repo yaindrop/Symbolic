@@ -57,15 +57,15 @@ enum PathEdge: PathEdgeProtocol {
         func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
 
         func draw(path: inout SUPath, to: Point2) {
-            guard let from = path.currentPoint,
-                  let param = toParam(from: from, to: to).centerParam else { return }
+            guard let from = path.currentPoint else { return }
+            let param = toParam(from: from, to: to).centerParam
             SUPath { $0.addRelativeArc(center: param.center, radius: 1, startAngle: param.startAngle, delta: param.deltaAngle, transform: param.transform) }
                 .forEach { appendNonMove(element: $0, to: &path) }
         }
 
         func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
             let t = (0.0 ... 1.0).clamp(t)
-            guard let param = toParam(from: from, to: to).centerParam else { return from }
+            let param = toParam(from: from, to: to).centerParam
             let tParam = param.with(deltaAngle: param.deltaAngle * t)
             return tParam.endpointParam.to
         }
@@ -152,12 +152,7 @@ struct PathNode: Identifiable {
 
 struct PathSegment: Identifiable {
     struct Data: Transformable {
-        let node: Point2
-        let edge: PathEdge
-        let prevNode: Point2?
-        let prevEdge: PathEdge?
-        let nextNode: Point2?
-        let nextEdge: PathEdge?
+        let node: Point2, edge: PathEdge, prevNode: Point2?, prevEdge: PathEdge?, nextNode: Point2?, nextEdge: PathEdge?
 
         func applying(_ t: CGAffineTransform) -> Self {
             Self(node: node.applying(t), edge: edge.applying(t), prevNode: prevNode?.applying(t), prevEdge: prevEdge?.applying(t), nextNode: nextNode?.applying(t), nextEdge: nextEdge?.applying(t))
@@ -251,14 +246,14 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
 extension Path {
     func with(pairs: [NodeEdgePair]) -> Path { Path(id: id, pairs: pairs, isClosed: isClosed) }
 
-    func with(edgeUpdate: PathEdgeUpdate) -> Path {
+    func with(edgeUpdate: PathEvent.Update.EdgeUpdate) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == edgeUpdate.fromNodeId }) else { return self }
         var pairs: [NodeEdgePair] = pairs
         pairs[i].1 = edgeUpdate.edge
         return with(pairs: pairs)
     }
 
-    func with(nodeCreate: PathNodeCreate) -> Path {
+    func with(nodeCreate: PathEvent.Update.NodeCreate) -> Path {
         var i = 0
         if let id = nodeCreate.prevNodeId {
             guard let prevNodeIndex = (pairs.firstIndex { node, _ in node.id == id }) else { return self }
@@ -269,14 +264,14 @@ extension Path {
         return with(pairs: pairs)
     }
 
-    func with(nodeDelete: PathNodeDelete) -> Path {
+    func with(nodeDelete: PathEvent.Update.NodeDelete) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == nodeDelete.nodeId }) else { return self }
         var pairs: [NodeEdgePair] = pairs
         pairs.remove(at: i)
         return with(pairs: pairs)
     }
 
-    func with(nodeUpdate: PathNodeUpdate) -> Path {
+    func with(nodeUpdate: PathEvent.Update.NodeUpdate) -> Path {
         guard let i = (pairs.firstIndex { node, _ in node.id == nodeUpdate.node.id }) else { return self }
         var pairs: [NodeEdgePair] = pairs
         pairs[i].0 = nodeUpdate.node

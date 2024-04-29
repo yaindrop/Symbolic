@@ -110,8 +110,8 @@ extension PathStore {
         switch event.kind {
         case let .pathEvent(pathEvent):
             loadEvent(pathEvent)
-        case let .compoundEvent(events):
-            events.forEach {
+        case let .compoundEvent(compoundEvent):
+            compoundEvent.events.forEach {
                 switch $0 {
                 case let .pathEvent(pathEvent):
                     loadEvent(pathEvent)
@@ -131,15 +131,15 @@ extension PathStore {
         }
     }
 
-    func loadPathEvent(_ event: PathCreate) {
+    func loadPathEvent(_ event: PathEvent.Create) {
         add(path: event.path)
     }
 
-    func loadPathEvent(_ event: PathDelete) {
+    func loadPathEvent(_ event: PathEvent.Delete) {
         remove(pathId: event.pathId)
     }
 
-    func loadPathEvent(_ event: PathUpdate) {
+    func loadPathEvent(_ event: PathEvent.Update) {
         switch event.kind {
         case let .edgeUpdate(v):
             loadPathUpdate(pathId: event.pathId, edgeUpdate: v)
@@ -152,22 +152,22 @@ extension PathStore {
         }
     }
 
-    func loadPathUpdate(pathId: UUID, edgeUpdate: PathEdgeUpdate) {
+    func loadPathUpdate(pathId: UUID, edgeUpdate: PathEvent.Update.EdgeUpdate) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(edgeUpdate: edgeUpdate))
     }
 
-    func loadPathUpdate(pathId: UUID, nodeCreate: PathNodeCreate) {
+    func loadPathUpdate(pathId: UUID, nodeCreate: PathEvent.Update.NodeCreate) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeCreate: nodeCreate))
     }
 
-    func loadPathUpdate(pathId: UUID, nodeDelete: PathNodeDelete) {
+    func loadPathUpdate(pathId: UUID, nodeDelete: PathEvent.Update.NodeDelete) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeDelete: nodeDelete))
     }
 
-    func loadPathUpdate(pathId: UUID, nodeUpdate: PathNodeUpdate) {
+    func loadPathUpdate(pathId: UUID, nodeUpdate: PathEvent.Update.NodeUpdate) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeUpdate: nodeUpdate))
     }

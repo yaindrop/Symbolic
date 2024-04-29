@@ -2,119 +2,78 @@ import Foundation
 
 // MARK: - PathEvent
 
-struct PathCreate {
-    let path: Path
-}
-
-struct PathDelete {
-    let pathId: UUID
-}
-
-// MARK: - PathUpdate
-
-struct PathEdgeUpdate {
-    let fromNodeId: UUID
-    let edge: PathEdge
-}
-
-struct PathNodeCreate {
-    let prevNodeId: UUID?
-    let node: PathNode
-}
-
-struct PathNodeUpdate {
-    let node: PathNode
-}
-
-struct PathNodeDelete {
-    let nodeId: UUID
-}
-
-enum PathUpdateKind {
-    case edgeUpdate(PathEdgeUpdate)
-    case nodeCreate(PathNodeCreate)
-    case nodeDelete(PathNodeDelete)
-    case nodeUpdate(PathNodeUpdate)
-}
-
-struct PathUpdate {
-    let pathId: UUID
-    let kind: PathUpdateKind
-}
-
 enum PathEvent {
-    case create(PathCreate)
-    case update(PathUpdate)
-    case delete(PathDelete)
+    struct Create { let path: Path }
+    struct Delete { let pathId: UUID }
+    struct Update { let pathId: UUID, kind: Kind }
+
+    case create(Create)
+    case update(Update)
+    case delete(Delete)
 }
 
-enum CompoundEventKind {
-    case pathEvent(PathEvent)
+// MARK: Update
+
+extension PathEvent.Update {
+    struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
+    struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
+    struct NodeUpdate { let node: PathNode }
+    struct NodeDelete { let nodeId: UUID }
+
+    enum Kind {
+        case edgeUpdate(EdgeUpdate)
+        case nodeCreate(NodeCreate)
+        case nodeDelete(NodeDelete)
+        case nodeUpdate(NodeUpdate)
+    }
 }
 
-enum DocumentEventKind {
-    case pathEvent(PathEvent)
-    case compoundEvent([CompoundEventKind])
+// MARK: - CompoundEvent
+
+struct CompoundEvent {
+    enum Kind {
+        case pathEvent(PathEvent)
+    }
+
+    let events: [Kind]
 }
+
+// MARK: - DocumentEvent
 
 struct DocumentEvent: Identifiable {
+    enum Kind {
+        case pathEvent(PathEvent)
+        case compoundEvent(CompoundEvent)
+    }
+
     let id: UUID = UUID()
     let time: Date = Date()
-    let kind: DocumentEventKind
+    let kind: Kind
+    let action: DocumentAction
 }
 
 extension PathEvent {
     init(in pathId: UUID, updateEdgeFrom fromNodeId: UUID, _ edge: PathEdge) {
-        let edgeUpdate = PathEdgeUpdate(fromNodeId: fromNodeId, edge: edge)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .edgeUpdate(edgeUpdate))
-        self = .update(pathUpdate)
+        let edgeUpdate = PathEvent.Update.EdgeUpdate(fromNodeId: fromNodeId, edge: edge)
+        let update = PathEvent.Update(pathId: pathId, kind: .edgeUpdate(edgeUpdate))
+        self = .update(update)
     }
 
     init(in pathId: UUID, createNodeAfter prevNodeId: UUID?, _ node: PathNode) {
-        let nodeCreate = PathNodeCreate(prevNodeId: prevNodeId, node: node)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeCreate(nodeCreate))
-        self = .update(pathUpdate)
+        let nodeCreate = PathEvent.Update.NodeCreate(prevNodeId: prevNodeId, node: node)
+        let update = PathEvent.Update(pathId: pathId, kind: .nodeCreate(nodeCreate))
+        self = .update(update)
     }
 
     init(in pathId: UUID, updateNode node: PathNode) {
-        let nodeUpdate = PathNodeUpdate(node: node)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeUpdate(nodeUpdate))
-        self = .update(pathUpdate)
+        let nodeUpdate = PathEvent.Update.NodeUpdate(node: node)
+        let update = PathEvent.Update(pathId: pathId, kind: .nodeUpdate(nodeUpdate))
+        self = .update(update)
     }
 
     init(in pathId: UUID, deleteNode nodeId: UUID) {
-        let nodeDelete = PathNodeDelete(nodeId: nodeId)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeDelete(nodeDelete))
-        self = .update(pathUpdate)
-    }
-}
-
-extension DocumentEvent {
-    init(inPath pathId: UUID, updateEdgeFrom fromNodeId: UUID, _ edge: PathEdge) {
-        let edgeUpdate = PathEdgeUpdate(fromNodeId: fromNodeId, edge: edge)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .edgeUpdate(edgeUpdate))
-        self.init(kind: .pathEvent(.update(pathUpdate)))
-    }
-
-    init(inPath pathId: UUID, createNodeAfter prevNodeId: UUID?, _ node: PathNode) {
-        let nodeCreate = PathNodeCreate(prevNodeId: prevNodeId, node: node)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeCreate(nodeCreate))
-        self.init(kind: .pathEvent(.update(pathUpdate)))
-    }
-
-    init(inPath pathId: UUID, updateNode node: PathNode) {
-        let nodeUpdate = PathNodeUpdate(node: node)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeUpdate(nodeUpdate))
-        self.init(kind: .pathEvent(.update(pathUpdate)))
-    }
-
-    init(inPath pathId: UUID, deleteNode nodeId: UUID) {
-        let nodeDelete = PathNodeDelete(nodeId: nodeId)
-        let pathUpdate = PathUpdate(pathId: pathId, kind: .nodeDelete(nodeDelete))
-        self.init(kind: .pathEvent(.update(pathUpdate)))
-    }
-
-    init(compound: [CompoundEventKind]) {
-        self.init(kind: .compoundEvent(compound))
+        let nodeDelete = PathEvent.Update.NodeDelete(nodeId: nodeId)
+        let update = PathEvent.Update(pathId: pathId, kind: .nodeDelete(nodeDelete))
+        self = .update(update)
     }
 }

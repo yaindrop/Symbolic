@@ -23,9 +23,8 @@ struct Document: Equatable {
         parser.delegate = delegate
         delegate.onPath {
             let path = Path(from: $0)
-            let pathCreate = PathCreate(path: path)
-            let pathEvent: PathEvent = .create(pathCreate)
-            let event = DocumentEvent(kind: .pathEvent(pathEvent))
+            let pathEvent: PathEvent = .create(.init(path: path))
+            let event = DocumentEvent(kind: .pathEvent(pathEvent), action: .pathAction(.loadPath))
             events.append(event)
         }
         parser.parse()

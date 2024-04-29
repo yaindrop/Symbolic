@@ -35,7 +35,7 @@ struct CanvasView: View {
 
         let pathStore = PathStore()
         let activePathModel = ActivePathModel(pathStore: pathStore)
-        let pathUpdater = PathUpdater(activePathModel: activePathModel, viewport: viewport)
+        let pathUpdater = PathUpdater(pathStore: pathStore, activePathModel: activePathModel, viewport: viewport)
 
         pathUpdater.onPendingEvent {
             pathStore.pendingEvent = $0

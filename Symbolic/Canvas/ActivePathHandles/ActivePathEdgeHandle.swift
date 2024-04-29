@@ -79,7 +79,7 @@ struct ActivePathFocusedEdgeHandle: View {
 
     private func drag(origin: Point2) -> DragGestureWithContext<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { value, origin in updater.updateActivePath(aroundEdge: segmentId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
+            { value, origin in updater.updateActivePath(moveEdge: segmentId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }
         return DragGestureWithContext(origin, onChanged: update(pending: true), onEnded: update())
     }

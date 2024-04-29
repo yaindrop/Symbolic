@@ -15,19 +15,13 @@ enum SVGPathCommand: SVGPathCommandProtocol {
     }
 
     struct ArcTo: CustomStringConvertible, SVGPathCommandProtocol {
-        let radius: CGSize
-        let rotation: Angle
-        let largeArc: Bool
-        let sweep: Bool
-        let position: Point2
+        let radius: CGSize, rotation: Angle, largeArc: Bool, sweep: Bool, position: Point2
 
         public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
     }
 
     struct BezierTo: CustomStringConvertible, SVGPathCommandProtocol {
-        let control0: Point2
-        let control1: Point2
-        let position: Point2
+        let control0: Point2, control1: Point2, position: Point2
 
         func toQuadratic(current: Point2) -> QuadraticBezierTo? {
             let quadraticControl0 = current + current.deltaVector(to: control0) * 3 / 2
@@ -40,8 +34,7 @@ enum SVGPathCommand: SVGPathCommandProtocol {
     }
 
     struct QuadraticBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
-        let control: Point2
-        let position: Point2
+        let control: Point2, position: Point2
 
         func toCubic(current: Point2) -> BezierTo {
             let control0 = current + (current.deltaVector(to: control)) * 2 / 3

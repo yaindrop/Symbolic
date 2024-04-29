@@ -3,12 +3,7 @@ import SwiftUI
 
 fileprivate extension DocumentEvent {
     var name: String {
-        switch kind {
-        case .compoundEvent:
-            return "Compound"
-        case .pathEvent:
-            return "Path"
-        }
+        "\(action)"
     }
 }
 

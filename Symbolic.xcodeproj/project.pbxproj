@@ -295,8 +295,8 @@
 			isa = PBXGroup;
 			children = (
 				57B5F14A2BD54AA5001E1B2E /* Document.swift */,
-				57B5F1482BD54279001E1B2E /* DocumentEvent.swift */,
 				572487912BDFA7B80096DDE4 /* DocumentAction.swift */,
+				57B5F1482BD54279001E1B2E /* DocumentEvent.swift */,
 			);
 			path = Document;
 			sourceTree = "<group>";

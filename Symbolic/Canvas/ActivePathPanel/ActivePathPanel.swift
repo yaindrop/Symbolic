@@ -10,7 +10,7 @@ struct ActivePathPanel: View {
             Group {
                 VStack(spacing: 0) {
                     title
-                    ActivePathPanelComponents()
+                    Components()
                 }
             }
             .background(.regularMaterial)

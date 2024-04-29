@@ -1,56 +1,58 @@
 import Foundation
 import SwiftUI
 
-struct ActivePathPanelEdgePanel: View {
-    let fromNodeId: UUID
-    let edge: PathEdge
+extension ActivePathPanel {
+    struct EdgePanel: View {
+        let fromNodeId: UUID
+        let edge: PathEdge
 
-    var body: some View {
-        HStack {
-            Spacer(minLength: 24)
-            VStack(spacing: 0) {
-                HStack {
-                    Button {
-                        withAnimation { expanded.toggle() }
-                    } label: {
-                        Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
-                        Text(name)
-                            .font(.body)
+        var body: some View {
+            HStack {
+                Spacer(minLength: 24)
+                VStack(spacing: 0) {
+                    HStack {
+                        Button {
+                            withAnimation { expanded.toggle() }
+                        } label: {
+                            Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
+                            Text(name)
+                                .font(.body)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        Spacer()
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    Spacer()
-                }
-                .padding(6)
-                Group {
-                    if case let .bezier(bezier) = edge {
-                        BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
-                    } else if case let .arc(arc) = edge {
-                        ArcPanel(fromNodeId: fromNodeId, arc: arc)
+                    .padding(6)
+                    Group {
+                        if case let .bezier(bezier) = edge {
+                            BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
+                        } else if case let .arc(arc) = edge {
+                            ArcPanel(fromNodeId: fromNodeId, arc: arc)
+                        }
                     }
+                    .padding(.top, 6)
+                    .frame(height: expanded ? nil : 0, alignment: .top)
+                    .clipped()
                 }
-                .padding(.top, 6)
-                .frame(height: expanded ? nil : 0, alignment: .top)
-                .clipped()
-            }
-            .padding(12)
-            .background(.ultraThinMaterial)
-            .cornerRadius(12)
-            .onChange(of: focused) {
-                withAnimation { expanded = focused }
+                .padding(12)
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .onChange(of: focused) {
+                    withAnimation { expanded = focused }
+                }
             }
         }
-    }
 
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    @State private var expanded = false
+        @EnvironmentObject private var activePathModel: ActivePathModel
+        @State private var expanded = false
 
-    private var focused: Bool { activePathModel.focusedPart?.id == fromNodeId }
+        private var focused: Bool { activePathModel.focusedPart?.id == fromNodeId }
 
-    private var name: String {
-        switch edge {
-        case .arc: "Arc"
-        case .bezier: "Bezier"
-        case .line: "Line"
+        private var name: String {
+            switch edge {
+            case .arc: "Arc"
+            case .bezier: "Bezier"
+            case .line: "Line"
+            }
         }
     }
 }

@@ -70,8 +70,8 @@ enum PathEdge: PathEdgeProtocol {
             return tParam.endpointParam.to
         }
 
-        func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
-            ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+        func toParam(from: Point2, to: Point2) -> EndpointParam {
+            EndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
         }
     }
 

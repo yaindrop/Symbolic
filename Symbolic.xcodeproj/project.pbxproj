@@ -17,9 +17,9 @@
 		5723BF992BC39846002209F2 /* SymbolicUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */; };
 		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
 		572487762BDBAF860096DDE4 /* PathUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* PathUpdater.swift */; };
-		5724877C2BDF80000096DDE4 /* ActivePathPanelComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* ActivePathPanelComponents.swift */; };
-		5724877E2BDF80B00096DDE4 /* ActivePathPanelNodePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877D2BDF80B00096DDE4 /* ActivePathPanelNodePanel.swift */; };
-		572487802BDF80E50096DDE4 /* ActivePathPanelEdgePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877F2BDF80E50096DDE4 /* ActivePathPanelEdgePanel.swift */; };
+		5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */; };
+		5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */; };
+		572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */; };
 		572487832BDF82420096DDE4 /* ActivePathNodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* ActivePathNodeHandle.swift */; };
 		572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* ActivePathEdgeHandle.swift */; };
 		572487872BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift */; };
@@ -81,9 +81,9 @@
 		5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		572487752BDBAF860096DDE4 /* PathUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUpdater.swift; sourceTree = "<group>"; };
-		5724877B2BDF80000096DDE4 /* ActivePathPanelComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanelComponents.swift; sourceTree = "<group>"; };
-		5724877D2BDF80B00096DDE4 /* ActivePathPanelNodePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanelNodePanel.swift; sourceTree = "<group>"; };
-		5724877F2BDF80E50096DDE4 /* ActivePathPanelEdgePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanelEdgePanel.swift; sourceTree = "<group>"; };
+		5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+Components.swift"; sourceTree = "<group>"; };
+		5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+NodePanel.swift"; sourceTree = "<group>"; };
+		5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+EdgePanel.swift"; sourceTree = "<group>"; };
 		572487822BDF82420096DDE4 /* ActivePathNodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathNodeHandle.swift; sourceTree = "<group>"; };
 		572487842BDF832D0096DDE4 /* ActivePathEdgeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathEdgeHandle.swift; sourceTree = "<group>"; };
 		572487862BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathEdgeKindHandle.swift; sourceTree = "<group>"; };
@@ -206,9 +206,9 @@
 			isa = PBXGroup;
 			children = (
 				575C3CF52BD60C200035B758 /* ActivePathPanel.swift */,
-				5724877B2BDF80000096DDE4 /* ActivePathPanelComponents.swift */,
-				5724877F2BDF80E50096DDE4 /* ActivePathPanelEdgePanel.swift */,
-				5724877D2BDF80B00096DDE4 /* ActivePathPanelNodePanel.swift */,
+				5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */,
+				5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */,
+				5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */,
 			);
 			path = ActivePathPanel;
 			sourceTree = "<group>";
@@ -238,13 +238,13 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				572487882BDF83D90096DDE4 /* DataInput */,
 				572487812BDF82180096DDE4 /* ActivePathHandles */,
 				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
+				572487882BDF83D90096DDE4 /* DataInput */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
-				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
+				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -439,11 +439,11 @@
 				5723BF7E2BC39844002209F2 /* Item.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
-				5724877C2BDF80000096DDE4 /* ActivePathPanelComponents.swift in Sources */,
+				5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				575C3CFA2BD9F11E0035B758 /* ActivePathHandles.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
-				572487802BDF80E50096DDE4 /* ActivePathPanelEdgePanel.swift in Sources */,
+				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* Math.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
@@ -463,7 +463,7 @@
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,
-				5724877E2BDF80B00096DDE4 /* ActivePathPanelNodePanel.swift in Sources */,
+				5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */,
 				572487832BDF82420096DDE4 /* ActivePathNodeHandle.swift in Sources */,
 				572487762BDBAF860096DDE4 /* PathUpdater.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParam.swift in Sources */,

@@ -1,20 +1,13 @@
 import Foundation
 
 enum DocumentAction {
-    enum PathHandle {
-        case aroundNode
-        case aroundEdge
-        case bezierControl
-        case arcRadius
+    enum PathAction {
+        case nodePosition(pathId: UUID, fromNodeId: UUID, position: Point2)
+        case bezier(pathId: UUID, fromNodeId: UUID, bezier: PathEdge.Bezier)
+        case arc(pathId: UUID, fromNodeId: UUID, arc: PathEdge.Arc)
+        case aroundNode(pathId: UUID, nodeId: UUID, delta: Vector2)
+        case aroundEdge(pathId: UUID, fromNodeId: UUID, delta: Vector2)
     }
 
-    enum PathInput {
-        case nodePosition
-        case bezierControl
-        case arcRadius
-        case arcRotation
-    }
-
-    case pathHandle(PathHandle)
-    case pathInput(PathInput)
+    case pathAction(PathAction)
 }

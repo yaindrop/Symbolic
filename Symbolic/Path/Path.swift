@@ -3,7 +3,7 @@ import SwiftUI
 
 typealias SUPath = SwiftUI.Path
 
-func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
+fileprivate func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
     switch element {
     case let .curve(to, control1, control2):
         path.addCurve(to: to, control1: control1, control2: control2)
@@ -18,98 +18,98 @@ func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
 
 // MARK: - PathEdge
 
-protocol PathEdgeProtocol: CustomStringConvertible, Transformable {
+fileprivate protocol PathEdgeProtocol: CustomStringConvertible, Transformable {
     func draw(path: inout SUPath, to: Point2)
     func position(from: Point2, to: Point2, at t: CGFloat) -> Point2
 }
 
-struct PathLine: PathEdgeProtocol {
-    var description: String { "Line" }
-
-    func applying(_ t: CGAffineTransform) -> Self { Self() }
-
-    func draw(path: inout SUPath, to: Point2) {
-        path.addLine(to: to)
-    }
-
-    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
-        let t = (0.0 ... 1.0).clamp(t)
-        let p0 = Vector2(from)
-        let p1 = Vector2(to)
-        return Point2(p0 + (p1 - p0) * t)
-    }
-}
-
-struct PathArc: PathEdgeProtocol {
-    let radius: CGSize
-    let rotation: Angle
-    let largeArc: Bool
-    let sweep: Bool
-
-    func with(radius: CGSize) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    func with(rotation: Angle) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    func with(sweep: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-
-    var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
-
-    func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
-
-    func draw(path: inout SUPath, to: Point2) {
-        guard let from = path.currentPoint,
-              let param = toParam(from: from, to: to).centerParam else { return }
-        SUPath { $0.addRelativeArc(center: param.center, radius: 1, startAngle: param.startAngle, delta: param.deltaAngle, transform: param.transform) }
-            .forEach { appendNonMove(element: $0, to: &path) }
-    }
-
-    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
-        let t = (0.0 ... 1.0).clamp(t)
-        guard let param = toParam(from: from, to: to).centerParam else { return from }
-        let tParam = param.with(deltaAngle: param.deltaAngle * t)
-        return tParam.endpointParam.to
-    }
-
-    func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
-        ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
-    }
-}
-
-struct PathBezier: PathEdgeProtocol {
-    let control0: Point2
-    let control1: Point2
-
-    func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
-    func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
-    func with(offset: Vector2) -> Self { Self(control0: control0 + offset, control1: control1 + offset) }
-
-    var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
-
-    func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
-
-    func draw(path: inout SUPath, to: Point2) {
-        path.addCurve(to: to, control1: control0, control2: control1)
-    }
-
-    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
-        let t = (0.0 ... 1.0).clamp(t)
-        let p0 = Vector2(from)
-        let p1 = Vector2(control0)
-        let p2 = Vector2(control1)
-        let p3 = Vector2(to)
-        return Point2(pow(1 - t, 3) * p0 + 3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3) * p3)
-    }
-}
-
 enum PathEdge: PathEdgeProtocol {
-    case Line(PathLine)
-    case Arc(PathArc)
-    case Bezier(PathBezier)
+    struct Line: PathEdgeProtocol {
+        var description: String { "Line" }
 
-    var value: PathEdgeProtocol {
+        func applying(_ t: CGAffineTransform) -> Self { Self() }
+
+        func draw(path: inout SUPath, to: Point2) {
+            path.addLine(to: to)
+        }
+
+        func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+            let t = (0.0 ... 1.0).clamp(t)
+            let p0 = Vector2(from)
+            let p1 = Vector2(to)
+            return Point2(p0 + (p1 - p0) * t)
+        }
+    }
+
+    struct Arc: PathEdgeProtocol {
+        let radius: CGSize
+        let rotation: Angle
+        let largeArc: Bool
+        let sweep: Bool
+
+        func with(radius: CGSize) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(rotation: Angle) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(sweep: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+
+        var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
+
+        func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
+
+        func draw(path: inout SUPath, to: Point2) {
+            guard let from = path.currentPoint,
+                  let param = toParam(from: from, to: to).centerParam else { return }
+            SUPath { $0.addRelativeArc(center: param.center, radius: 1, startAngle: param.startAngle, delta: param.deltaAngle, transform: param.transform) }
+                .forEach { appendNonMove(element: $0, to: &path) }
+        }
+
+        func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+            let t = (0.0 ... 1.0).clamp(t)
+            guard let param = toParam(from: from, to: to).centerParam else { return from }
+            let tParam = param.with(deltaAngle: param.deltaAngle * t)
+            return tParam.endpointParam.to
+        }
+
+        func toParam(from: Point2, to: Point2) -> ArcEndpointParam {
+            ArcEndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+        }
+    }
+
+    struct Bezier: PathEdgeProtocol {
+        let control0: Point2
+        let control1: Point2
+
+        func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
+        func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
+        func with(offset: Vector2) -> Self { Self(control0: control0 + offset, control1: control1 + offset) }
+
+        var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
+
+        func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
+
+        func draw(path: inout SUPath, to: Point2) {
+            path.addCurve(to: to, control1: control0, control2: control1)
+        }
+
+        func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+            let t = (0.0 ... 1.0).clamp(t)
+            let p0 = Vector2(from)
+            let p1 = Vector2(control0)
+            let p2 = Vector2(control1)
+            let p3 = Vector2(to)
+            return Point2(pow(1 - t, 3) * p0 + 3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3) * p3)
+        }
+    }
+
+    case line(Line)
+    case arc(Arc)
+    case bezier(Bezier)
+
+    fileprivate var value: PathEdgeProtocol {
         switch self {
-        case let .Line(l): return l
-        case let .Arc(a): return a
-        case let .Bezier(b): return b
+        case let .line(l): l
+        case let .arc(a): a
+        case let .bezier(b): b
         }
     }
 
@@ -117,9 +117,9 @@ enum PathEdge: PathEdgeProtocol {
 
     func applying(_ t: CGAffineTransform) -> Self {
         switch self {
-        case let .Line(l): return .Line(l.applying(t))
-        case let .Arc(a): return .Arc(a.applying(t))
-        case let .Bezier(b): return .Bezier(b.applying(t))
+        case let .line(l): .line(l.applying(t))
+        case let .arc(a): .arc(a.applying(t))
+        case let .bezier(b): .bezier(b.applying(t))
         }
     }
 
@@ -150,20 +150,20 @@ struct PathNode: Identifiable {
 
 // MARK: - PathSegment
 
-struct PathSegmentData: Transformable {
-    let node: Point2
-    let edge: PathEdge
-    let prevNode: Point2?
-    let prevEdge: PathEdge?
-    let nextNode: Point2?
-    let nextEdge: PathEdge?
-
-    func applying(_ t: CGAffineTransform) -> Self {
-        Self(node: node.applying(t), edge: edge.applying(t), prevNode: prevNode?.applying(t), prevEdge: prevEdge?.applying(t), nextNode: nextNode?.applying(t), nextEdge: nextEdge?.applying(t))
-    }
-}
-
 struct PathSegment: Identifiable {
+    struct Data: Transformable {
+        let node: Point2
+        let edge: PathEdge
+        let prevNode: Point2?
+        let prevEdge: PathEdge?
+        let nextNode: Point2?
+        let nextEdge: PathEdge?
+
+        func applying(_ t: CGAffineTransform) -> Self {
+            Self(node: node.applying(t), edge: edge.applying(t), prevNode: prevNode?.applying(t), prevEdge: prevEdge?.applying(t), nextNode: nextNode?.applying(t), nextEdge: nextEdge?.applying(t))
+        }
+    }
+
     let index: Int
     let node: PathNode
     let edge: PathEdge
@@ -177,7 +177,7 @@ struct PathSegment: Identifiable {
     var prevId: UUID? { prevNode?.id }
     var nextId: UUID? { nextNode?.id }
 
-    var data: PathSegmentData { PathSegmentData(node: node.position, edge: edge, prevNode: prevNode?.position, prevEdge: prevEdge, nextNode: nextNode?.position, nextEdge: nextEdge) }
+    var data: Data { Data(node: node.position, edge: edge, prevNode: prevNode?.position, prevEdge: prevEdge, nextNode: nextNode?.position, nextEdge: nextEdge) }
 }
 
 // MARK: - Path
@@ -265,7 +265,7 @@ extension Path {
             i = prevNodeIndex + 1
         }
         var pairs: [NodeEdgePair] = pairs
-        pairs.insert((nodeCreate.node, .Line(PathLine())), at: i)
+        pairs.insert((nodeCreate.node, .line(PathEdge.Line())), at: i)
         return with(pairs: pairs)
     }
 

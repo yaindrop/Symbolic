@@ -1,13 +1,13 @@
 import Foundation
 
-extension PathArc {
-    init(from command: SVGPathCommandArcTo) {
+extension PathEdge.Arc {
+    init(from command: SVGPathCommand.ArcTo) {
         self.init(radius: command.radius, rotation: command.rotation, largeArc: command.largeArc, sweep: command.sweep)
     }
 }
 
-extension PathBezier {
-    init(from command: SVGPathCommandBezierTo) {
+extension PathEdge.Bezier {
+    init(from command: SVGPathCommand.BezierTo) {
         self.init(control0: command.control0, control1: command.control1)
     }
 }
@@ -15,14 +15,14 @@ extension PathBezier {
 extension PathEdge {
     init(from command: SVGPathCommand, at current: Point2) {
         switch command {
-        case let .ArcTo(c):
-            self = .Arc(PathArc(from: c))
-        case let .BezierTo(c):
-            self = .Bezier(PathBezier(from: c))
-        case .LineTo:
-            self = .Line(PathLine())
-        case let .QuadraticBezierTo(c):
-            self = .Bezier(PathBezier(from: c.toCubic(current: current)))
+        case let .arcTo(c):
+            self = .arc(Arc(from: c))
+        case let .bezierTo(c):
+            self = .bezier(Bezier(from: c))
+        case .lineTo:
+            self = .line(Line())
+        case let .quadraticBezierTo(c):
+            self = .bezier(Bezier(from: c.toCubic(current: current)))
         }
     }
 }
@@ -36,7 +36,7 @@ extension Path {
             current = command.position
         }
         if svgPath.initial != svgPath.last {
-            pairs.append((PathNode(position: svgPath.last), .Line(PathLine())))
+            pairs.append((PathNode(position: svgPath.last), .line(PathEdge.Line())))
         }
         self.init(pairs: pairs, isClosed: svgPath.isClosed)
     }

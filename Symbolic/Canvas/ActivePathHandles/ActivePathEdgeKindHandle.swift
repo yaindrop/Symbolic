@@ -5,13 +5,13 @@ import SwiftUI
 
 struct ActivePathEdgeKindHandle: View {
     let segment: PathSegment
-    let data: PathSegmentData
+    let data: PathSegment.Data
 
     var body: some View {
         if let nextNode = data.nextNode {
-            if case let .Arc(arc) = data.edge {
+            if case let .arc(arc) = data.edge {
                 ActivePathArcHandle(segment: segment, arc: arc, from: data.node, to: nextNode)
-            } else if case let .Bezier(bezier) = data.edge {
+            } else if case let .bezier(bezier) = data.edge {
                 ActivePathBezierHandle(segment: segment, bezier: bezier, from: data.node, to: nextNode)
             }
         }
@@ -22,7 +22,7 @@ struct ActivePathEdgeKindHandle: View {
 
 struct ActivePathBezierHandle: View {
     let segment: PathSegment
-    let bezier: PathBezier
+    let bezier: PathEdge.Bezier
     let from: Point2
     let to: Point2
 
@@ -79,7 +79,7 @@ struct ActivePathBezierHandle: View {
             .position(point)
     }
 
-    private func drag(getBezier: @escaping (Point2) -> PathBezier) -> DragGestureWithContext<Void> {
+    private func drag(getBezier: @escaping (Point2) -> PathEdge.Bezier) -> DragGestureWithContext<Void> {
         DragGestureWithContext(()) { value, _ in
             updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location), pending: true)
         } onEnded: { value, _ in
@@ -92,7 +92,7 @@ struct ActivePathBezierHandle: View {
 
 struct ActivePathArcHandle: View {
     let segment: PathSegment
-    let arc: PathArc
+    let arc: PathEdge.Arc
     let from: Point2
     let to: Point2
 
@@ -202,7 +202,7 @@ struct ActivePathArcHandle: View {
             .modifier(dragRadius { arc.with(radius: radius.with(height: $0)) })
     }
 
-    private func dragRadius(getArc: @escaping (CGFloat) -> PathArc) -> DragGestureWithContext<Point2> {
+    private func dragRadius(getArc: @escaping (CGFloat) -> PathEdge.Arc) -> DragGestureWithContext<Point2> {
         DragGestureWithContext(center) { value, origin in
             updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2), pending: true)
         } onEnded: { value, origin in

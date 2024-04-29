@@ -17,16 +17,16 @@ class PathUpdater: ObservableObject {
         (pending ? pendingEventSubject : eventSubject).send(event)
     }
 
-    func updateActivePath(edge fromNodeId: UUID, bezier: PathBezier, pending: Bool = false) {
+    func updateActivePath(edge fromNodeId: UUID, bezier: PathEdge.Bezier, pending: Bool = false) {
         guard let activePath else { return }
-        let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: fromNodeId, .Bezier(bezier))
+        let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: fromNodeId, .bezier(bezier))
         let event = DocumentEvent(kind: .pathEvent(pathEvent))
         (pending ? pendingEventSubject : eventSubject).send(event)
     }
 
-    func updateActivePath(edge fromNodeId: UUID, arc: PathArc, pending: Bool = false) {
+    func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {
         guard let activePath else { return }
-        let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: fromNodeId, .Arc(arc))
+        let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: fromNodeId, .arc(arc))
         let event = DocumentEvent(kind: .pathEvent(pathEvent))
         (pending ? pendingEventSubject : eventSubject).send(event)
     }
@@ -35,11 +35,11 @@ class PathUpdater: ObservableObject {
         updateActivePath(node: id, position: positionInView.applying(viewport.toWorld), pending: pending)
     }
 
-    func updateActivePath(edge fromNodeId: UUID, bezierInView: PathBezier, pending: Bool = false) {
+    func updateActivePath(edge fromNodeId: UUID, bezierInView: PathEdge.Bezier, pending: Bool = false) {
         updateActivePath(edge: fromNodeId, bezier: bezierInView.applying(viewport.toWorld), pending: pending)
     }
 
-    func updateActivePath(edge fromNodeId: UUID, arcInView: PathArc, pending: Bool = false) {
+    func updateActivePath(edge fromNodeId: UUID, arcInView: PathEdge.Arc, pending: Bool = false) {
         updateActivePath(edge: fromNodeId, arc: arcInView.applying(viewport.toWorld), pending: pending)
     }
 
@@ -49,15 +49,15 @@ class PathUpdater: ObservableObject {
         guard let activePath,
               let segment = activePath.segment(id: id) else { return }
         var compound: [CompoundEventKind] = []
-        if let prevId = segment.prevId, case let .Bezier(bezier) = segment.prevEdge {
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, .Bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let prevId = segment.prevId, case let .bezier(bezier) = segment.prevEdge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, .bezier(bezier.with(control1: bezier.control1 + offset)))
             compound.append(.pathEvent(pathEvent))
         }
         let node = segment.node
         let pathEvent = PathEvent(in: activePath.id, updateNode: node.with(offset: offset))
         compound.append(.pathEvent(pathEvent))
-        if case let .Bezier(bezier) = segment.edge {
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, .Bezier(bezier.with(control0: bezier.control0 + offset)))
+        if case let .bezier(bezier) = segment.edge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, .bezier(bezier.with(control0: bezier.control0 + offset)))
             compound.append(.pathEvent(pathEvent))
         }
         let event = DocumentEvent(compound: compound)
@@ -68,23 +68,23 @@ class PathUpdater: ObservableObject {
         guard let activePath,
               let segment = activePath.segment(id: id) else { return }
         var compound: [CompoundEventKind] = []
-        if let prevId = segment.prevId, case let .Bezier(bezier) = segment.prevEdge {
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, .Bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let prevId = segment.prevId, case let .bezier(bezier) = segment.prevEdge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: prevId, .bezier(bezier.with(control1: bezier.control1 + offset)))
             compound.append(.pathEvent(pathEvent))
         }
         let node = segment.node
         let pathEvent = PathEvent(in: activePath.id, updateNode: node.with(offset: offset))
         compound.append(.pathEvent(pathEvent))
-        if case let .Bezier(bezier) = segment.edge {
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, .Bezier(bezier.with(offset: offset)))
+        if case let .bezier(bezier) = segment.edge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: id, .bezier(bezier.with(offset: offset)))
             compound.append(.pathEvent(pathEvent))
         }
         if let nextNode = segment.nextNode {
             let pathEvent = PathEvent(in: activePath.id, updateNode: nextNode.with(offset: offset))
             compound.append(.pathEvent(pathEvent))
         }
-        if let nextId = segment.nextId, case let .Bezier(bezier) = segment.nextEdge {
-            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: nextId, .Bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let nextId = segment.nextId, case let .bezier(bezier) = segment.nextEdge {
+            let pathEvent = PathEvent(in: activePath.id, updateEdgeFrom: nextId, .bezier(bezier.with(control1: bezier.control1 + offset)))
             compound.append(.pathEvent(pathEvent))
         }
         let event = DocumentEvent(compound: compound)

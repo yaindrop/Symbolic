@@ -5,7 +5,7 @@ import SwiftUI
 
 struct ActivePathEdgeHandle: View {
     let segment: PathSegment
-    let data: PathSegmentData
+    let data: PathSegment.Data
 
     var body: some View {
         outline
@@ -39,7 +39,7 @@ struct ActivePathEdgeHandle: View {
 
 struct ActivePathFocusedEdgeHandle: View {
     let segment: PathSegment
-    let data: PathSegmentData
+    let data: PathSegment.Data
 
     var body: some View {
         if let circlePosition, focused {

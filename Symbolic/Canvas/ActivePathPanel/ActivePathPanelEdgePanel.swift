@@ -22,9 +22,9 @@ struct ActivePathPanelEdgePanel: View {
                 }
                 .padding(6)
                 Group {
-                    if case let .Bezier(bezier) = edge {
+                    if case let .bezier(bezier) = edge {
                         BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
-                    } else if case let .Arc(arc) = edge {
+                    } else if case let .arc(arc) = edge {
                         ArcPanel(fromNodeId: fromNodeId, arc: arc)
                     }
                 }
@@ -48,9 +48,9 @@ struct ActivePathPanelEdgePanel: View {
 
     private var name: String {
         switch edge {
-        case .Arc: return "Arc"
-        case .Bezier: return "Bezier"
-        case .Line: return "Line"
+        case .arc: "Arc"
+        case .bezier: "Bezier"
+        case .line: "Line"
         }
     }
 }
@@ -59,7 +59,7 @@ struct ActivePathPanelEdgePanel: View {
 
 fileprivate struct BezierPanel: View {
     let fromNodeId: UUID
-    let bezier: PathBezier
+    let bezier: PathEdge.Bezier
 
     var body: some View {
         VStack(spacing: 12) {
@@ -93,7 +93,7 @@ fileprivate struct BezierPanel: View {
 
 fileprivate struct ArcPanel: View {
     let fromNodeId: UUID
-    let arc: PathArc
+    let arc: PathEdge.Arc
 
     var body: some View {
         VStack(spacing: 12) {

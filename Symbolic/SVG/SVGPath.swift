@@ -3,66 +3,66 @@ import SwiftUI
 
 // MARK: - SVGPathCommand
 
-protocol SVGPathCommandProtocol {
+fileprivate protocol SVGPathCommandProtocol {
     var position: Point2 { get }
 }
 
-struct SVGPathCommandLineTo: CustomStringConvertible, SVGPathCommandProtocol {
-    let position: Point2
-
-    public var description: String { return "L \(position.x) \(position.y)" }
-}
-
-struct SVGPathCommandArcTo: CustomStringConvertible, SVGPathCommandProtocol {
-    let radius: CGSize
-    let rotation: Angle
-    let largeArc: Bool
-    let sweep: Bool
-    let position: Point2
-
-    public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
-}
-
-struct SVGPathCommandBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
-    let control0: Point2
-    let control1: Point2
-    let position: Point2
-
-    func toQuadratic(current: Point2) -> SVGPathCommandQuadraticBezierTo? {
-        let quadraticControl0 = current + current.deltaVector(to: control0) * 3 / 2
-        let quadraticControl1 = position + position.deltaVector(to: control1) * 3 / 2
-        guard quadraticControl0 == quadraticControl1 else { return nil }
-        return SVGPathCommandQuadraticBezierTo(control: quadraticControl0, position: position)
-    }
-
-    public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
-}
-
-struct SVGPathCommandQuadraticBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
-    let control: Point2
-    let position: Point2
-
-    func toCubic(current: Point2) -> SVGPathCommandBezierTo {
-        let control0 = current + (current.deltaVector(to: control)) * 2 / 3
-        let control1 = position + (position.deltaVector(to: control)) * 2 / 3
-        return SVGPathCommandBezierTo(control0: control0, control1: control1, position: position)
-    }
-
-    public var description: String { return "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
-}
-
 enum SVGPathCommand: SVGPathCommandProtocol {
-    case LineTo(SVGPathCommandLineTo)
-    case ArcTo(SVGPathCommandArcTo)
-    case BezierTo(SVGPathCommandBezierTo)
-    case QuadraticBezierTo(SVGPathCommandQuadraticBezierTo)
+    struct LineTo: CustomStringConvertible, SVGPathCommandProtocol {
+        let position: Point2
 
-    var value: SVGPathCommandProtocol {
+        public var description: String { return "L \(position.x) \(position.y)" }
+    }
+
+    struct ArcTo: CustomStringConvertible, SVGPathCommandProtocol {
+        let radius: CGSize
+        let rotation: Angle
+        let largeArc: Bool
+        let sweep: Bool
+        let position: Point2
+
+        public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
+    }
+
+    struct BezierTo: CustomStringConvertible, SVGPathCommandProtocol {
+        let control0: Point2
+        let control1: Point2
+        let position: Point2
+
+        func toQuadratic(current: Point2) -> QuadraticBezierTo? {
+            let quadraticControl0 = current + current.deltaVector(to: control0) * 3 / 2
+            let quadraticControl1 = position + position.deltaVector(to: control1) * 3 / 2
+            guard quadraticControl0 == quadraticControl1 else { return nil }
+            return QuadraticBezierTo(control: quadraticControl0, position: position)
+        }
+
+        public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
+    }
+
+    struct QuadraticBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
+        let control: Point2
+        let position: Point2
+
+        func toCubic(current: Point2) -> BezierTo {
+            let control0 = current + (current.deltaVector(to: control)) * 2 / 3
+            let control1 = position + (position.deltaVector(to: control)) * 2 / 3
+            return BezierTo(control0: control0, control1: control1, position: position)
+        }
+
+        public var description: String { return "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
+    }
+
+    case lineTo(LineTo)
+    case arcTo(ArcTo)
+    case bezierTo(BezierTo)
+    case quadraticBezierTo(QuadraticBezierTo)
+
+    fileprivate var value: SVGPathCommandProtocol {
         switch self {
-        case let .ArcTo(c): return c
-        case let .BezierTo(c): return c
-        case let .LineTo(c): return c
-        case let .QuadraticBezierTo(c): return c
+        case let .arcTo(c): c
+        case let .bezierTo(c): c
+        case let .lineTo(c): c
+        case let .quadraticBezierTo(c): c
         }
     }
 
@@ -221,7 +221,7 @@ class SVGPathParser {
         appendPath(withClosed: false, moveTo: moveToPosition)
         for group in groups.dropFirst() {
             let lineToPosition = positionOf(x: group[0], y: group[1])
-            appendCommand(.LineTo(SVGPathCommandLineTo(position: lineToPosition)))
+            appendCommand(.lineTo(SVGPathCommand.LineTo(position: lineToPosition)))
         }
     }
 
@@ -238,7 +238,7 @@ class SVGPathParser {
         }
         for group in groups {
             let position = positionOf(x: group[0], y: group[1])
-            appendCommand(.LineTo(SVGPathCommandLineTo(position: position)))
+            appendCommand(.lineTo(SVGPathCommand.LineTo(position: position)))
         }
     }
 
@@ -248,7 +248,7 @@ class SVGPathParser {
         }
         for x in parameters {
             let position = positionOf(x: x, y: 0)
-            appendCommand(.LineTo(SVGPathCommandLineTo(position: position)))
+            appendCommand(.lineTo(SVGPathCommand.LineTo(position: position)))
         }
     }
 
@@ -258,7 +258,7 @@ class SVGPathParser {
         }
         for y in parameters {
             let position = positionOf(x: 0, y: y)
-            appendCommand(.LineTo(SVGPathCommandLineTo(position: position)))
+            appendCommand(.lineTo(SVGPathCommand.LineTo(position: position)))
         }
     }
 
@@ -270,7 +270,7 @@ class SVGPathParser {
             let control0 = positionOf(x: group[0], y: group[1])
             let control1 = positionOf(x: group[2], y: group[3])
             let position = positionOf(x: group[4], y: group[5])
-            appendCommand(.BezierTo(SVGPathCommandBezierTo(control0: control0, control1: control1, position: position)))
+            appendCommand(.bezierTo(SVGPathCommand.BezierTo(control0: control0, control1: control1, position: position)))
         }
     }
 
@@ -279,13 +279,13 @@ class SVGPathParser {
             throw SVGPathParserError.invalidParameters("Invalid smooth curve-to parameters \(parameters)")
         }
         var control0 = path.last
-        if let lastCommand = path.commands.last, case let .BezierTo(lastBezier) = lastCommand {
+        if let lastCommand = path.commands.last, case let .bezierTo(lastBezier) = lastCommand {
             control0 = lastBezier.position + lastBezier.control1.deltaVector(to: lastBezier.position)
         }
         for group in groups {
             let control1 = positionOf(x: group[0], y: group[1])
             let position = positionOf(x: group[2], y: group[3])
-            appendCommand(.BezierTo(SVGPathCommandBezierTo(control0: control0, control1: control1, position: position)))
+            appendCommand(.bezierTo(SVGPathCommand.BezierTo(control0: control0, control1: control1, position: position)))
         }
     }
 
@@ -296,7 +296,7 @@ class SVGPathParser {
         for group in groups {
             let control = positionOf(x: group[0], y: group[1])
             let position = positionOf(x: group[2], y: group[3])
-            appendCommand(.QuadraticBezierTo(SVGPathCommandQuadraticBezierTo(control: control, position: position)))
+            appendCommand(.quadraticBezierTo(SVGPathCommand.QuadraticBezierTo(control: control, position: position)))
         }
     }
 
@@ -305,12 +305,12 @@ class SVGPathParser {
             throw SVGPathParserError.invalidParameters("Invalid smooth quadratic bezier curve-to parameters \(parameters)")
         }
         var control = path.last
-        if let lastCommand = path.commands.last, case let .QuadraticBezierTo(lastQuadraticBezier) = lastCommand {
+        if let lastCommand = path.commands.last, case let .quadraticBezierTo(lastQuadraticBezier) = lastCommand {
             control = lastQuadraticBezier.position + lastQuadraticBezier.control.deltaVector(to: lastQuadraticBezier.position)
         }
         for group in groups {
             let position = positionOf(x: group[0], y: group[1])
-            appendCommand(.QuadraticBezierTo(SVGPathCommandQuadraticBezierTo(control: control, position: position)))
+            appendCommand(.quadraticBezierTo(SVGPathCommand.QuadraticBezierTo(control: control, position: position)))
         }
     }
 
@@ -325,7 +325,7 @@ class SVGPathParser {
                 throw SVGPathParserError.invalidParameters("Invalid arc-to flags in \(group)")
             }
             let position = positionOf(x: group[5], y: group[6])
-            appendCommand(.ArcTo(SVGPathCommandArcTo(radius: radius, rotation: Angle(degrees: rotation), largeArc: largeArc, sweep: sweep, position: position)))
+            appendCommand(.arcTo(SVGPathCommand.ArcTo(radius: radius, rotation: Angle(degrees: rotation), largeArc: largeArc, sweep: sweep, position: position)))
         }
     }
 }

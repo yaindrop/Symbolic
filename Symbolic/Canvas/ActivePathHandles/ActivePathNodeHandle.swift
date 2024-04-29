@@ -5,7 +5,7 @@ import SwiftUI
 
 struct ActivePathNodeHandle: View {
     let segment: PathSegment
-    let data: PathSegmentData
+    let data: PathSegment.Data
 
     var body: some View {
         circle(at: data.node, color: .blue)

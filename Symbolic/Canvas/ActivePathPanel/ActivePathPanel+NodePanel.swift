@@ -14,11 +14,7 @@ extension ActivePathPanel {
                 Text("\(index)")
                     .font(.headline)
                 Spacer()
-                PositionPicker(position: node.position) {
-                    updater.updateActivePath(node: node.id, position: $0, pending: true)
-                } onDone: {
-                    updater.updateActivePath(node: node.id, position: $0)
-                }
+                PositionPicker(position: node.position, onChange: updatePosition(pending: true), onDone: updatePosition())
             }
             .padding(12)
             .background(.ultraThickMaterial)
@@ -26,5 +22,9 @@ extension ActivePathPanel {
         }
 
         @EnvironmentObject private var updater: PathUpdater
+
+        private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
+            { updater.updateActivePath(node: node.id, position: $0, pending: pending) }
+        }
     }
 }

@@ -80,11 +80,10 @@ struct ActivePathBezierHandle: View {
     }
 
     private func drag(getBezier: @escaping (Point2) -> PathEdge.Bezier) -> DragGestureWithContext<Void> {
-        DragGestureWithContext(()) { value, _ in
-            updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location), pending: true)
-        } onEnded: { value, _ in
-            updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location))
+        func update(pending: Bool = false) -> (DragGesture.Value, Any) -> Void {
+            { value, _ in updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location), pending: pending) }
         }
+        return DragGestureWithContext((), onChanged: update(pending: true), onEnded: update())
     }
 }
 
@@ -203,10 +202,9 @@ struct ActivePathArcHandle: View {
     }
 
     private func dragRadius(getArc: @escaping (CGFloat) -> PathEdge.Arc) -> DragGestureWithContext<Point2> {
-        DragGestureWithContext(center) { value, origin in
-            updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2), pending: true)
-        } onEnded: { value, origin in
-            updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2))
+        func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
+            { value, origin in updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2), pending: pending) }
         }
+        return DragGestureWithContext(center, onChanged: update(pending: true), onEnded: update())
     }
 }

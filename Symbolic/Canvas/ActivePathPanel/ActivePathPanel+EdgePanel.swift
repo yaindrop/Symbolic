@@ -70,21 +70,13 @@ fileprivate struct BezierPanel: View {
             HStack {
                 Image(systemName: "1.square")
                 Spacer(minLength: 12)
-                PositionPicker(position: bezier.control0) {
-                    updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: true)
-                } onDone: {
-                    updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0))
-                }
+                PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
             }
             Divider()
             HStack {
                 Image(systemName: "2.square")
                 Spacer(minLength: 12)
-                PositionPicker(position: bezier.control1) {
-                    updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: true)
-                } onDone: {
-                    updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0))
-                }
+                PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
             }
         }
         .padding(12)
@@ -93,6 +85,14 @@ fileprivate struct BezierPanel: View {
     }
 
     @EnvironmentObject private var updater: PathUpdater
+
+    private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
+        { updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
+    }
+
+    private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
+        { updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: pending) }
+    }
 }
 
 // MARK: - ArcPanel
@@ -106,21 +106,13 @@ fileprivate struct ArcPanel: View {
             HStack {
                 Text("Radius")
                 Spacer()
-                SizePicker(size: arc.radius) {
-                    updater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: true)
-                } onDone: {
-                    updater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0))
-                }
+                SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
             }
             Divider()
             HStack {
                 Text("Rotation")
                 Spacer()
-                AnglePicker(angle: arc.rotation) {
-                    updater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: true)
-                } onDone: {
-                    updater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0))
-                }
+                AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
             }
             Divider()
             HStack {
@@ -141,4 +133,12 @@ fileprivate struct ArcPanel: View {
     }
 
     @EnvironmentObject private var updater: PathUpdater
+
+    private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
+        { updater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }
+    }
+
+    private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
+        { updater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
+    }
 }

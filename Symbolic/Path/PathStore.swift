@@ -57,7 +57,7 @@ class PathStore: ObservableObject {
     }
 
     init() {
-        $pendingEvent.sink { _ in self.loadPendingEvent() }.store(in: &subscriptions)
+        $pendingEvent.sink { e in self.loadPendingEvent(e) }.store(in: &subscriptions)
     }
 
     // MARK: private
@@ -76,22 +76,24 @@ class PathStore: ObservableObject {
         }
     }
 
-    private func loadPendingEvent() {
-        guard let pendingEvent else {
+    private func loadPendingEvent(_ event: DocumentEvent?) {
+        guard let event else {
+            print("pendingPaths = nil")
             pendingPaths = nil
             return
         }
         loadingPendingEvent = true
         defer { self.loadingPendingEvent = false }
         pendingPaths = paths
-        loadEvent(pendingEvent)
+        loadEvent(event)
     }
 
     private func getEventPath(id: UUID) -> Path? {
         if loadingPendingEvent {
-            return pendingPaths?.first { $0.id == id }
+            pendingPaths?.first { $0.id == id }
+        } else {
+            pathIdToPath[id]
         }
-        return pathIdToPath[id]
     }
 }
 

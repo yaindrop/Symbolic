@@ -1,6 +1,61 @@
 import Foundation
 import SwiftUI
 
+// MARK: - DragGestureWithContext
+
+struct DragGestureWithContext<Context>: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .gesture(gesture)
+            .onChange(of: dragging) {
+                if !dragging {
+                    context = nil
+                }
+            }
+    }
+
+    init(getContext: @escaping () -> Context,
+         onChanged: @escaping (DragGesture.Value, Context) -> Void,
+         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
+        self.getContext = getContext
+        self.onChanged = onChanged
+        self.onEnded = onEnded
+    }
+
+    private let getContext: () -> Context
+    private let onChanged: (DragGesture.Value, Context) -> Void
+    private let onEnded: (DragGesture.Value, Context) -> Void
+
+    @State private var context: Context?
+    @GestureState private var dragging: Bool = false
+
+    private var gesture: some Gesture {
+        DragGesture()
+            .updating(flag: $dragging)
+            .onChanged { value in
+                if let context {
+                    onChanged(value, context)
+                } else {
+                    let context = getContext()
+                    self.context = context
+                    onChanged(value, context)
+                }
+            }
+            .onEnded { value in
+                if let context {
+                    onEnded(value, context)
+                }
+            }
+    }
+}
+
+extension DragGestureWithContext where Context == Void {
+    init(onChanged: @escaping (DragGesture.Value, Context) -> Void,
+         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
+        self.init(getContext: {}, onChanged: onChanged, onEnded: onEnded)
+    }
+}
+
 // MARK: - ActivePathHandles
 
 struct ActivePathHandles: View {
@@ -29,15 +84,10 @@ struct ActivePathNodeHandle: View {
 
     var body: some View {
         circle(at: data.node, color: .blue)
-            .gesture(drag(updating: $dragging))
+            .modifier(drag)
             .onTapGesture {
                 print("focus node", nodeId)
                 activePathModel.focusedPart = .node(nodeId)
-            }
-            .onChange(of: dragging) {
-                if !dragging {
-                    dragOriginPosition = nil
-                }
             }
     }
 
@@ -49,9 +99,6 @@ struct ActivePathNodeHandle: View {
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
-
-    @GestureState private var dragging: Bool = false
-    @State var dragOriginPosition: CGPoint?
 
     private var nodeId: UUID { segment.node.id }
 
@@ -65,20 +112,14 @@ struct ActivePathNodeHandle: View {
             .position(point)
     }
 
-    private func drag(updating v: GestureState<Bool>) -> some Gesture {
-        let getLocation: (DragGesture.Value) -> Point2 = { $0.location }
-        let getOffset: (DragGesture.Value) -> Vector2 = { dragOriginPosition?.deltaVector(to: getLocation($0)) ?? .zero }
-        return DragGesture()
-            .updating(flag: v)
-            .onChanged { value in
-                if dragOriginPosition == nil {
-                    dragOriginPosition = data.node
-                }
-                updater.updateActivePath(aroundNode: nodeId, offsetInView: getOffset(value), pending: true)
-            }
-            .onEnded { value in
-                updater.updateActivePath(aroundNode: nodeId, offsetInView: getOffset(value))
-            }
+    private var drag: DragGestureWithContext<Point2> {
+        DragGestureWithContext {
+            data.node
+        } onChanged: { value, origin in
+            updater.updateActivePath(aroundNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: true)
+        } onEnded: { value, origin in
+            updater.updateActivePath(aroundNode: nodeId, offsetInView: origin.deltaVector(to: value.location))
+        }
     }
 }
 
@@ -94,14 +135,9 @@ struct ActivePathSegmentHandle: View {
                 print("focus edge", segmentId)
                 activePathModel.focusedPart = .edge(segmentId)
             }
-            .onChange(of: dragging) {
-                if !dragging {
-                    dragOriginPosition = nil
-                }
-            }
         if let circlePosition, focused {
             circle(at: circlePosition, color: .teal)
-                .gesture(drag(updating: $dragging))
+                .modifier(drag(origin: circlePosition))
         }
     }
 
@@ -111,9 +147,6 @@ struct ActivePathSegmentHandle: View {
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
-
-    @GestureState private var dragging: Bool = false
-    @State var dragOriginPosition: CGPoint?
 
     private var segmentId: UUID { segment.id }
     private var focused: Bool { activePathModel.focusedEdgeId == segmentId }
@@ -147,20 +180,14 @@ struct ActivePathSegmentHandle: View {
             .position(point)
     }
 
-    private func drag(updating v: GestureState<Bool>) -> some Gesture {
-        let getLocation: (DragGesture.Value) -> Point2 = { $0.location }
-        let getOffset: (DragGesture.Value) -> Vector2 = { dragOriginPosition?.deltaVector(to: getLocation($0)) ?? .zero }
-        return DragGesture()
-            .updating(flag: v)
-            .onChanged { value in
-                if dragOriginPosition == nil {
-                    dragOriginPosition = circlePosition
-                }
-                updater.updateActivePath(aroundEdge: segmentId, offsetInView: getOffset(value), pending: true)
-            }
-            .onEnded { value in
-                updater.updateActivePath(aroundEdge: segmentId, offsetInView: getOffset(value))
-            }
+    private func drag(origin: Point2) -> DragGestureWithContext<Point2> {
+        DragGestureWithContext {
+            origin
+        } onChanged: { value, origin in
+            updater.updateActivePath(aroundEdge: segmentId, offsetInView: origin.deltaVector(to: value.location), pending: true)
+        } onEnded: { value, origin in
+            updater.updateActivePath(aroundEdge: segmentId, offsetInView: origin.deltaVector(to: value.location))
+        }
     }
 }
 
@@ -194,12 +221,12 @@ struct ActivePathBezierHandle: View {
             if edgeFocused || nodeFocused {
                 line(from: from, to: bezier.control0, color: .green)
                 circle(at: bezier.control0, color: .green)
-                    .gesture(drag(updating: $draggingControl0) { bezier.with(control0: $0) })
+                    .modifier(drag { bezier.with(control0: $0) })
             }
             if edgeFocused || nextFocused {
                 line(from: to, to: bezier.control1, color: .orange)
                 circle(at: bezier.control1, color: .orange)
-                    .gesture(drag(updating: $draggingControl1) { bezier.with(control1: $0) })
+                    .modifier(drag { bezier.with(control1: $0) })
             }
         }
     }
@@ -212,9 +239,6 @@ struct ActivePathBezierHandle: View {
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
-
-    @GestureState private var draggingControl0: Bool = false
-    @GestureState private var draggingControl1: Bool = false
 
     private var edgeFocused: Bool { activePathModel.focusedEdgeId == segment.node.id }
     private var nodeFocused: Bool { activePathModel.focusedNodeId == segment.node.id }
@@ -245,11 +269,12 @@ struct ActivePathBezierHandle: View {
             .position(point)
     }
 
-    private func drag(updating v: GestureState<Bool>, getBezier: @escaping (Point2) -> PathBezier) -> some Gesture {
-        DragGesture()
-            .updating(flag: v)
-            .onChanged { updater.updateActivePath(edge: segment.id, bezierInView: getBezier($0.location), pending: true) }
-            .onEnded { updater.updateActivePath(edge: segment.id, bezierInView: getBezier($0.location)) }
+    private func drag(getBezier: @escaping (Point2) -> PathBezier) -> DragGestureWithContext<Void> {
+        DragGestureWithContext { value, _ in
+            updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location), pending: true)
+        } onEnded: { value, _ in
+            updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location))
+        }
     }
 }
 
@@ -268,14 +293,9 @@ struct ActivePathArcHandle: View {
                 radiusLine
                 //            centerCircle
                 radiusWidthRect
-                    .gesture(dragRadius(updating: $draggingRadiusW) { arc.with(radius: radius.with(width: $0)) })
+                    .modifier(dragRadius { arc.with(radius: radius.with(width: $0)) })
                 radiusHeightRect
-                    .gesture(dragRadius(updating: $draggingRadiusH) { arc.with(radius: radius.with(height: $0)) })
-            }
-            .onChange(of: draggingRadius) {
-                if draggingRadius == false {
-                    dragOriginCenter = nil
-                }
+                    .modifier(dragRadius { arc.with(radius: radius.with(height: $0)) })
             }
         }
     }
@@ -289,11 +309,6 @@ struct ActivePathArcHandle: View {
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
-
-    @GestureState private var draggingRadiusW: Bool = false
-    @GestureState private var draggingRadiusH: Bool = false
-    var draggingRadius: Bool { draggingRadiusW || draggingRadiusH }
-    @State var dragOriginCenter: CGPoint?
 
     private var edgeFocused: Bool { activePathModel.focusedEdgeId == segment.node.id }
     private var nodeFocused: Bool { activePathModel.focusedNodeId == segment.node.id }
@@ -377,16 +392,13 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfHeightEnd)
     }
 
-    private func dragRadius(updating v: GestureState<Bool>, callback: @escaping (CGFloat) -> PathArc) -> some Gesture {
-        let getValue: (Point2) -> CGFloat = { $0.distance(to: dragOriginCenter!) * 2 }
-        return DragGesture()
-            .updating(flag: v)
-            .onChanged {
-                if dragOriginCenter == nil {
-                    dragOriginCenter = center
-                }
-                updater.updateActivePath(edge: segment.id, arcInView: callback(getValue($0.location)), pending: true)
-            }
-            .onEnded { updater.updateActivePath(edge: segment.id, arcInView: callback(getValue($0.location))) }
+    private func dragRadius(getArc: @escaping (CGFloat) -> PathArc) -> DragGestureWithContext<Point2> {
+        DragGestureWithContext {
+            center
+        } onChanged: { value, origin in
+            updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2), pending: true)
+        } onEnded: { value, origin in
+            updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2))
+        }
     }
 }

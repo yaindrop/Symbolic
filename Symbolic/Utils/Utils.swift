@@ -202,3 +202,58 @@ extension Gesture {
         updating(flag) { _, state, _ in state = true as! Bool }
     }
 }
+
+// MARK: - DragGestureWithContext
+
+struct DragGestureWithContext<Context>: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .gesture(gesture)
+            .onChange(of: dragging) {
+                if !dragging {
+                    context = nil
+                }
+            }
+    }
+
+    init(getContext: @escaping () -> Context,
+         onChanged: @escaping (DragGesture.Value, Context) -> Void,
+         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
+        self.getContext = getContext
+        self.onChanged = onChanged
+        self.onEnded = onEnded
+    }
+
+    private let getContext: () -> Context
+    private let onChanged: (DragGesture.Value, Context) -> Void
+    private let onEnded: (DragGesture.Value, Context) -> Void
+
+    @State private var context: Context?
+    @GestureState private var dragging: Bool = false
+
+    private var gesture: some Gesture {
+        DragGesture()
+            .updating(flag: $dragging)
+            .onChanged { value in
+                if let context {
+                    onChanged(value, context)
+                } else {
+                    let context = getContext()
+                    self.context = context
+                    onChanged(value, context)
+                }
+            }
+            .onEnded { value in
+                if let context {
+                    onEnded(value, context)
+                }
+            }
+    }
+}
+
+extension DragGestureWithContext where Context == Void {
+    init(onChanged: @escaping (DragGesture.Value, Context) -> Void,
+         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
+        self.init(getContext: {}, onChanged: onChanged, onEnded: onEnded)
+    }
+}

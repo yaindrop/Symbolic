@@ -1,13 +1,12 @@
 import SwiftUI
 
-struct DebugView: View {
+struct DebugPanel: View {
     @ObservedObject var touchContext: MultipleTouchContext
     @ObservedObject var pressDetector: PressDetector
-
-    @ObservedObject var viewport: Viewport
     @ObservedObject var viewportUpdater: ViewportUpdater
 
-    @ObservedObject var activePathModel: ActivePathModel
+    @EnvironmentObject var viewport: Viewport
+    @EnvironmentObject var activePathModel: ActivePathModel
 
     var title: some View {
         HStack {

@@ -152,7 +152,7 @@ struct CanvasView: View {
             }
             .overlay {
                 ActivePathPanel()
-                DebugView(touchContext: touchContext, pressDetector: pressDetector, viewport: viewport, viewportUpdater: viewportUpdater, activePathModel: activePathModel)
+                DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater)
             }
             .navigationTitle("Canvas")
             .toolbar(.hidden, for: .navigationBar)

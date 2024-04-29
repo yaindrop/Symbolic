@@ -64,10 +64,6 @@ class ActivePathModel: ObservableObject {
             SUPath { path in pendingActivePath.draw(path: &path) }
                 .stroke(Color(UIColor.label), lineWidth: 1)
                 .allowsHitTesting(false)
-                .onChange(of: pendingActivePath) {
-                    print("self.activePath", self.activePath)
-                    print("self.pendingActivePath", self.pendingActivePath)
-                }
         }
     }
 

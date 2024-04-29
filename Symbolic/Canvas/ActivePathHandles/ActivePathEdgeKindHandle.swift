@@ -1,199 +1,9 @@
 import Foundation
 import SwiftUI
 
-// MARK: - DragGestureWithContext
+// MARK: - ActivePathEdgeKindHandle
 
-struct DragGestureWithContext<Context>: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .gesture(gesture)
-            .onChange(of: dragging) {
-                if !dragging {
-                    context = nil
-                }
-            }
-    }
-
-    init(getContext: @escaping () -> Context,
-         onChanged: @escaping (DragGesture.Value, Context) -> Void,
-         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
-        self.getContext = getContext
-        self.onChanged = onChanged
-        self.onEnded = onEnded
-    }
-
-    private let getContext: () -> Context
-    private let onChanged: (DragGesture.Value, Context) -> Void
-    private let onEnded: (DragGesture.Value, Context) -> Void
-
-    @State private var context: Context?
-    @GestureState private var dragging: Bool = false
-
-    private var gesture: some Gesture {
-        DragGesture()
-            .updating(flag: $dragging)
-            .onChanged { value in
-                if let context {
-                    onChanged(value, context)
-                } else {
-                    let context = getContext()
-                    self.context = context
-                    onChanged(value, context)
-                }
-            }
-            .onEnded { value in
-                if let context {
-                    onEnded(value, context)
-                }
-            }
-    }
-}
-
-extension DragGestureWithContext where Context == Void {
-    init(onChanged: @escaping (DragGesture.Value, Context) -> Void,
-         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
-        self.init(getContext: {}, onChanged: onChanged, onEnded: onEnded)
-    }
-}
-
-// MARK: - ActivePathHandles
-
-struct ActivePathHandles: View {
-    var body: some View {
-        if let activePath = activePathModel.pendingActivePath {
-            Group {
-                let segments = activePath.segments
-                ForEach(segments) { s in ActivePathSegmentHandle(segment: s, data: s.data.applying(viewport.toView)) }
-                ForEach(segments) { s in ActivePathNodeHandle(segment: s, data: s.data.applying(viewport.toView)) }
-                ForEach(segments) { s in ActivePathEdgeHandle(segment: s, data: s.data.applying(viewport.toView)) }
-            }
-        }
-    }
-
-    @EnvironmentObject private var viewport: Viewport
-    @EnvironmentObject private var documentModel: DocumentModel
-    @EnvironmentObject private var pathStore: PathStore
-    @EnvironmentObject private var activePathModel: ActivePathModel
-}
-
-// MARK: - ActivePathNodeHandle
-
-struct ActivePathNodeHandle: View {
-    let segment: PathSegment
-    let data: PathSegmentData
-
-    var body: some View {
-        circle(at: data.node, color: .blue)
-            .modifier(drag)
-            .onTapGesture {
-                print("focus node", nodeId)
-                activePathModel.focusedPart = .node(nodeId)
-            }
-    }
-
-    // MARK: private
-
-    private static let lineWidth: CGFloat = 2
-    private static let circleSize: CGFloat = 16
-    private static let touchablePadding: CGFloat = 16
-
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
-
-    private var nodeId: UUID { segment.node.id }
-
-    @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
-        Circle()
-            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
-            .fill(color.opacity(0.5))
-            .frame(width: Self.circleSize, height: Self.circleSize)
-            .padding(Self.touchablePadding)
-            .invisibleSoildOverlay()
-            .position(point)
-    }
-
-    private var drag: DragGestureWithContext<Point2> {
-        DragGestureWithContext {
-            data.node
-        } onChanged: { value, origin in
-            updater.updateActivePath(aroundNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: true)
-        } onEnded: { value, origin in
-            updater.updateActivePath(aroundNode: nodeId, offsetInView: origin.deltaVector(to: value.location))
-        }
-    }
-}
-
-// MARK: - ActivePathSegmentHandle
-
-struct ActivePathSegmentHandle: View {
-    let segment: PathSegment
-    let data: PathSegmentData
-
-    var body: some View {
-        outline
-            .onTapGesture {
-                print("focus edge", segmentId)
-                activePathModel.focusedPart = .edge(segmentId)
-            }
-        if let circlePosition, focused {
-            circle(at: circlePosition, color: .teal)
-                .modifier(drag(origin: circlePosition))
-        }
-    }
-
-    private static let lineWidth: CGFloat = 2
-    private static let circleSize: CGFloat = 16
-    private static let touchablePadding: CGFloat = 16
-
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
-
-    private var segmentId: UUID { segment.id }
-    private var focused: Bool { activePathModel.focusedEdgeId == segmentId }
-    private var circlePosition: Point2? {
-        if let nextNode = data.nextNode {
-            data.edge.position(from: data.node, to: nextNode, at: 0.5)
-        } else {
-            nil
-        }
-    }
-
-    @ViewBuilder private var outline: some View {
-        if let nextNode = data.nextNode {
-            SUPath { p in
-                p.move(to: data.node)
-                data.edge.draw(path: &p, to: nextNode)
-            }
-            .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
-            .fill(Color.invisibleSolid)
-            .allowsHitTesting(!focused)
-        }
-    }
-
-    @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
-        Circle()
-            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
-            .fill(color.opacity(0.5))
-            .frame(width: Self.circleSize, height: Self.circleSize)
-            .padding(Self.touchablePadding)
-            .invisibleSoildOverlay()
-            .position(point)
-    }
-
-    private func drag(origin: Point2) -> DragGestureWithContext<Point2> {
-        DragGestureWithContext {
-            origin
-        } onChanged: { value, origin in
-            updater.updateActivePath(aroundEdge: segmentId, offsetInView: origin.deltaVector(to: value.location), pending: true)
-        } onEnded: { value, origin in
-            updater.updateActivePath(aroundEdge: segmentId, offsetInView: origin.deltaVector(to: value.location))
-        }
-    }
-}
-
-// MARK: - ActivePathEdgeHandle
-
-struct ActivePathEdgeHandle: View {
+struct ActivePathEdgeKindHandle: View {
     let segment: PathSegment
     let data: PathSegmentData
 
@@ -293,9 +103,7 @@ struct ActivePathArcHandle: View {
                 radiusLine
                 //            centerCircle
                 radiusWidthRect
-                    .modifier(dragRadius { arc.with(radius: radius.with(width: $0)) })
                 radiusHeightRect
-                    .modifier(dragRadius { arc.with(radius: radius.with(height: $0)) })
             }
         }
     }
@@ -379,6 +187,7 @@ struct ActivePathArcHandle: View {
             .invisibleSoildOverlay()
             .rotationEffect(arc.rotation)
             .position(radiusHalfWidthEnd)
+            .modifier(dragRadius { arc.with(radius: radius.with(width: $0)) })
     }
 
     @ViewBuilder private var radiusHeightRect: some View {
@@ -390,6 +199,7 @@ struct ActivePathArcHandle: View {
             .invisibleSoildOverlay()
             .rotationEffect(arc.rotation)
             .position(radiusHalfHeightEnd)
+            .modifier(dragRadius { arc.with(radius: radius.with(height: $0)) })
     }
 
     private func dragRadius(getArc: @escaping (CGFloat) -> PathArc) -> DragGestureWithContext<Point2> {

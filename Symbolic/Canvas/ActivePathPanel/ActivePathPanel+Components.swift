@@ -2,33 +2,22 @@ import Foundation
 import SwiftUI
 
 extension ActivePathPanel {
+    // MARK: - Components
+
     struct Components: View {
+        let activePath: Path
+
         @ViewBuilder var body: some View {
-            if let activePath = activePathModel.pendingActivePath {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(spacing: 4) {
-                            sectionTitle("Components")
-                            VStack(spacing: 12) {
-                                ForEach(activePath.segments) { segment in
-                                    NodeEdgeGroup(segment: segment)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, 24)
-                        .scrollOffsetReader(model: scrollOffset)
-                    }
-                    .onChange(of: activePathModel.focusedPart) {
-                        guard let id = activePathModel.focusedPart?.id else { return }
-                        withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .top) }
+            VStack(spacing: 4) {
+                sectionTitle("Components")
+                VStack(spacing: 12) {
+                    ForEach(activePath.segments) { segment in
+                        NodeEdgeGroup(segment: segment)
                     }
                 }
-                .scrollOffsetProvider(model: scrollOffset)
-                .frame(maxHeight: 400)
-                .fixedSize(horizontal: false, vertical: true)
-                .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
             }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 24)
         }
 
         // MARK: private
@@ -45,11 +34,9 @@ extension ActivePathPanel {
                 Spacer()
             }
         }
-
-        @StateObject private var scrollOffset = ScrollOffsetModel()
     }
 
-    // MARK: - Component rows
+    // MARK: - NodeEdgeGroup
 
     fileprivate struct NodeEdgeGroup: View {
         let segment: PathSegment

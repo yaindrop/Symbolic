@@ -2,6 +2,8 @@ import Foundation
 import SwiftUI
 
 extension ActivePathPanel {
+    // MARK: - NodePanel
+
     struct NodePanel: View {
         let index: Int
         let node: PathNode

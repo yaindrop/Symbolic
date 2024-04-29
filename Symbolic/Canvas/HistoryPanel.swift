@@ -18,11 +18,9 @@ struct HistoryPanel: View {
     var body: some View {
         VStack {
             Spacer()
-            Group {
-                VStack(spacing: 0) {
-                    title
-                    content
-                }
+            VStack(spacing: 0) {
+                title
+                scrollView
             }
             .background(.regularMaterial)
             .cornerRadius(12)
@@ -61,33 +59,35 @@ struct HistoryPanel: View {
 
     @StateObject private var scrollOffset = ScrollOffsetModel()
 
-    @ViewBuilder var content: some View {
-        let document = documentModel.activeDocument
+    @ViewBuilder var scrollView: some View {
         ScrollViewReader { _ in
-            ScrollView {
-                VStack(spacing: 4) {
-                    sectionTitle("Components")
-                    VStack(spacing: 12) {
-//                        ForEach(activePath.segments) { segment in
-//                            NodeEdgeGroup(segment: segment)
-//                        }
-                        ForEach(document.events) { e in
-                            Text("\(e.name)")
-                        }
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.bottom, 24)
-                .scrollOffsetReader(model: scrollOffset)
+            ScrollViewWithOffset(model: scrollOffset) {
+                content
             }
 //            .onChange(of: activePathModel.focusedPart) {
 //                guard let id = activePathModel.focusedPart?.id else { return }
 //                withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .top) }
 //            }
         }
-        .scrollOffsetProvider(model: scrollOffset)
         .frame(maxHeight: 400)
         .fixedSize(horizontal: false, vertical: true)
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+    }
+
+    @ViewBuilder var content: some View {
+        let document = documentModel.activeDocument
+        VStack(spacing: 4) {
+            sectionTitle("Events")
+            VStack(spacing: 12) {
+//                        ForEach(activePath.segments) { segment in
+//                            NodeEdgeGroup(segment: segment)
+//                        }
+                ForEach(document.events) { e in
+                    Text("\(e.name)")
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 24)
     }
 }

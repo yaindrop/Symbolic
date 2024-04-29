@@ -7,11 +7,9 @@ struct ActivePathPanel: View {
     var body: some View {
         VStack {
             Spacer()
-            Group {
-                VStack(spacing: 0) {
-                    title
-                    Components()
-                }
+            VStack(spacing: 0) {
+                title
+                scrollView
             }
             .background(.regularMaterial)
             .cornerRadius(12)
@@ -26,6 +24,8 @@ struct ActivePathPanel: View {
     @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
 
+    @StateObject private var scrollOffset = ScrollOffsetModel()
+
     @ViewBuilder private var title: some View {
         HStack {
             Spacer()
@@ -39,5 +39,20 @@ struct ActivePathPanel: View {
         .if(scrollOffset.scrolled) { $0.background(.regularMaterial) }
     }
 
-    @StateObject private var scrollOffset = ScrollOffsetModel()
+    @ViewBuilder private var scrollView: some View {
+        if let activePath = activePathModel.pendingActivePath {
+            ScrollViewReader { proxy in
+                ScrollViewWithOffset(model: scrollOffset) {
+                    Components(activePath: activePath)
+                }
+                .onChange(of: activePathModel.focusedPart) {
+                    guard let id = activePathModel.focusedPart?.id else { return }
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .top) }
+                }
+            }
+            .frame(maxHeight: 400)
+            .fixedSize(horizontal: false, vertical: true)
+            .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+        }
+    }
 }

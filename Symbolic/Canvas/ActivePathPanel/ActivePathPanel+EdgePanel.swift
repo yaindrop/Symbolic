@@ -2,6 +2,8 @@ import Foundation
 import SwiftUI
 
 extension ActivePathPanel {
+    // MARK: - EdgePanel
+
     struct EdgePanel: View {
         let fromNodeId: UUID
         let edge: PathEdge
@@ -57,7 +59,7 @@ extension ActivePathPanel {
     }
 }
 
-// MARK: - PathEdge panels
+// MARK: - BezierPanel
 
 fileprivate struct BezierPanel: View {
     let fromNodeId: UUID
@@ -92,6 +94,8 @@ fileprivate struct BezierPanel: View {
 
     @EnvironmentObject private var updater: PathUpdater
 }
+
+// MARK: - ArcPanel
 
 fileprivate struct ArcPanel: View {
     let fromNodeId: UUID

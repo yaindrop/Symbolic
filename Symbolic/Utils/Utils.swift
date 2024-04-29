@@ -86,9 +86,9 @@ extension View {
 // MARK: - ScrollOffset
 
 class ScrollOffsetModel: ObservableObject {
+    @Published var offset: CGFloat = 0
     let coordinateSpaceName = UUID().uuidString
 
-    @Published var offset: CGFloat = 0
     var scrolled: Bool { offset > 0 }
 }
 
@@ -103,15 +103,15 @@ struct ScrollOffsetReaderModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.background(
-            GeometryReader {
+            GeometryReader { proxy in
                 Color.clear.preference(key: ScrollOffsetKey.self,
-                                       value: -$0.frame(in: .named(model.coordinateSpaceName)).origin.y)
+                                       value: -proxy.frame(in: .named(model.coordinateSpaceName)).origin.y)
             }
         )
     }
 }
 
-struct ScrollOffsetProviderModifier: ViewModifier {
+struct ScrollOffsetSetterModifier: ViewModifier {
     @ObservedObject var model: ScrollOffsetModel
 
     func body(content: Content) -> some View {
@@ -125,8 +125,26 @@ extension View {
         modifier(ScrollOffsetReaderModifier(model: model))
     }
 
-    func scrollOffsetProvider(model: ScrollOffsetModel) -> some View {
-        modifier(ScrollOffsetProviderModifier(model: model))
+    func scrollOffsetSetter(model: ScrollOffsetModel) -> some View {
+        modifier(ScrollOffsetSetterModifier(model: model))
+    }
+}
+
+struct ScrollViewWithOffset<Content: View>: View {
+    @ObservedObject var model: ScrollOffsetModel
+    let content: Content
+
+    var body: some View {
+        ScrollView {
+            content
+                .scrollOffsetReader(model: model)
+        }
+        .scrollOffsetSetter(model: model)
+    }
+
+    init(model: ScrollOffsetModel, @ViewBuilder content: () -> Content) {
+        self.model = model
+        self.content = content()
     }
 }
 

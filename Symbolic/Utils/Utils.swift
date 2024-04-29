@@ -35,7 +35,7 @@ enum CornerPosition {
 }
 
 struct CornerPositionModifier: ViewModifier {
-    var position: CornerPosition
+    let position: CornerPosition
 
     func body(content: Content) -> some View {
         HStack {
@@ -47,6 +47,12 @@ struct CornerPositionModifier: ViewModifier {
             }
             if position.isLeft { Spacer() }
         }
+    }
+}
+
+extension View {
+    func atCornerPosition(_ position: CornerPosition) -> some View {
+        modifier(CornerPositionModifier(position: position))
     }
 }
 
@@ -216,7 +222,7 @@ struct DragGestureWithContext<Context>: ViewModifier {
             }
     }
 
-    init(getContext: @escaping () -> Context,
+    init(_ getContext: @autoclosure @escaping () -> Context,
          onChanged: @escaping (DragGesture.Value, Context) -> Void,
          onEnded: @escaping (DragGesture.Value, Context) -> Void) {
         self.getContext = getContext
@@ -248,12 +254,5 @@ struct DragGestureWithContext<Context>: ViewModifier {
                     onEnded(value, context)
                 }
             }
-    }
-}
-
-extension DragGestureWithContext where Context == Void {
-    init(onChanged: @escaping (DragGesture.Value, Context) -> Void,
-         onEnded: @escaping (DragGesture.Value, Context) -> Void) {
-        self.init(getContext: {}, onChanged: onChanged, onEnded: onEnded)
     }
 }

@@ -26,6 +26,8 @@
 		5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487892BDF84070096DDE4 /* PositionPicker.swift */; };
 		5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878B2BDF841E0096DDE4 /* SizePicker.swift */; };
 		5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878D2BDF84310096DDE4 /* AnglePicker.swift */; };
+		572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */; };
+		572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487912BDFA7B80096DDE4 /* DocumentAction.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -88,6 +90,8 @@
 		572487892BDF84070096DDE4 /* PositionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPicker.swift; sourceTree = "<group>"; };
 		5724878B2BDF841E0096DDE4 /* SizePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SizePicker.swift; sourceTree = "<group>"; };
 		5724878D2BDF84310096DDE4 /* AnglePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnglePicker.swift; sourceTree = "<group>"; };
+		5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanel.swift; sourceTree = "<group>"; };
+		572487912BDFA7B80096DDE4 /* DocumentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAction.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -240,6 +244,7 @@
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
 				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
+				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -291,6 +296,7 @@
 			children = (
 				57B5F14A2BD54AA5001E1B2E /* Document.swift */,
 				57B5F1482BD54279001E1B2E /* DocumentEvent.swift */,
+				572487912BDFA7B80096DDE4 /* DocumentAction.swift */,
 			);
 			path = Document;
 			sourceTree = "<group>";
@@ -438,6 +444,7 @@
 				575C3CFA2BD9F11E0035B758 /* ActivePathHandles.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				572487802BDF80E50096DDE4 /* ActivePathPanelEdgePanel.swift in Sources */,
+				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* Math.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
 				572487872BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift in Sources */,
@@ -448,6 +455,7 @@
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */,
 				57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */,
+				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,

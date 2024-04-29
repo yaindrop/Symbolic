@@ -57,7 +57,7 @@ enum DocumentEventKind {
     case compoundEvent([CompoundEventKind])
 }
 
-struct DocumentEvent {
+struct DocumentEvent: Identifiable {
     let id: UUID = UUID()
     let time: Date = Date()
     let kind: DocumentEventKind

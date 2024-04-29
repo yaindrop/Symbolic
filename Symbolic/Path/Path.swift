@@ -212,17 +212,17 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
     func segment(id: UUID) -> PathSegment? { segments.first { $0.id == id }}
 
     lazy var path: SUPath = {
-        var p = SUPath()
-        guard let first = pairs.first else { return p }
-        p.move(to: first.0.position)
-        for s in segments {
-            guard let to = s.nextNode?.position else { break }
-            s.edge.draw(path: &p, to: to)
+        SUPath { p in
+            guard let first = pairs.first else { return }
+            p.move(to: first.0.position)
+            for s in segments {
+                guard let to = s.nextNode?.position else { break }
+                s.edge.draw(path: &p, to: to)
+            }
+            if isClosed {
+                p.closeSubpath()
+            }
         }
-        if isClosed {
-            p.closeSubpath()
-        }
-        return p
     }()
 
     lazy var boundingRect: CGRect = { path.boundingRect }()

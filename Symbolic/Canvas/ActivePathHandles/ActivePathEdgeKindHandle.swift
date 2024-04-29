@@ -80,7 +80,7 @@ struct ActivePathBezierHandle: View {
     }
 
     private func drag(getBezier: @escaping (Point2) -> PathBezier) -> DragGestureWithContext<Void> {
-        DragGestureWithContext { value, _ in
+        DragGestureWithContext(()) { value, _ in
             updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location), pending: true)
         } onEnded: { value, _ in
             updater.updateActivePath(edge: segment.id, bezierInView: getBezier(value.location))
@@ -203,9 +203,7 @@ struct ActivePathArcHandle: View {
     }
 
     private func dragRadius(getArc: @escaping (CGFloat) -> PathArc) -> DragGestureWithContext<Point2> {
-        DragGestureWithContext {
-            center
-        } onChanged: { value, origin in
+        DragGestureWithContext(center) { value, origin in
             updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2), pending: true)
         } onEnded: { value, origin in
             updater.updateActivePath(edge: segment.id, arcInView: getArc(value.location.distance(to: origin) * 2))

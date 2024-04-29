@@ -152,6 +152,7 @@ struct CanvasView: View {
             }
             .overlay {
                 ActivePathPanel()
+                HistoryPanel()
                 DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater)
             }
             .navigationTitle("Canvas")

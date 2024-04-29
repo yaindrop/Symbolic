@@ -10,8 +10,6 @@ struct ActivePathPanel: View {
             Group {
                 VStack(spacing: 0) {
                     title
-                        .padding(12)
-                        .if(scrollOffset.scrolled) { $0.background(.regularMaterial) }
                     ActivePathPanelComponents()
                 }
             }
@@ -20,7 +18,7 @@ struct ActivePathPanel: View {
         }
         .frame(maxWidth: 360, maxHeight: 480)
         .padding(24)
-        .modifier(CornerPositionModifier(position: .bottomRight))
+        .atCornerPosition(.bottomRight)
     }
 
     // MARK: private
@@ -37,16 +35,8 @@ struct ActivePathPanel: View {
                 .padding(.vertical, 8)
             Spacer()
         }
-    }
-
-    @ViewBuilder private func sectionTitle(_ title: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.subheadline)
-                .foregroundStyle(Color.secondaryLabel)
-                .padding(.leading, 12)
-            Spacer()
-        }
+        .padding(12)
+        .if(scrollOffset.scrolled) { $0.background(.regularMaterial) }
     }
 
     @StateObject private var scrollOffset = ScrollOffsetModel()

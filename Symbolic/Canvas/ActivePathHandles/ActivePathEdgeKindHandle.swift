@@ -122,20 +122,20 @@ struct ActivePathArcHandle: View {
     private var nextFocused: Bool { activePathModel.focusedNodeId == segment.nextNode?.id }
 
     private var radius: CGSize { arc.radius }
-    private var endPointParam: PathEdge.Arc.EndpointParam { arc.with(radius: radius).toParam(from: from, to: to) }
-    private var param: PathEdge.Arc.CenterParam { endPointParam.centerParam }
-    private var center: Point2 { param.center }
-    private var radiusWidthEnd: Point2 { (center + Vector2.unitX).applying(param.transform) }
-    private var radiusHeightEnd: Point2 { (center + Vector2.unitY).applying(param.transform) }
-    private var radiusHalfWidthEnd: Point2 { (center + Vector2.unitX / 2).applying(param.transform) }
-    private var radiusHalfHeightEnd: Point2 { (center + Vector2.unitY / 2).applying(param.transform) }
+    private var endPointParams: PathEdge.Arc.EndpointParams { arc.with(radius: radius).toParams(from: from, to: to) }
+    private var params: PathEdge.Arc.CenterParams { endPointParams.centerParams }
+    private var center: Point2 { params.center }
+    private var radiusWidthEnd: Point2 { (center + Vector2.unitX).applying(params.transform) }
+    private var radiusHeightEnd: Point2 { (center + Vector2.unitY).applying(params.transform) }
+    private var radiusHalfWidthEnd: Point2 { (center + Vector2.unitX / 2).applying(params.transform) }
+    private var radiusHalfHeightEnd: Point2 { (center + Vector2.unitY / 2).applying(params.transform) }
 
     @ViewBuilder private var ellipse: some View {
         Circle()
             .fill(.red.opacity(0.2))
             .frame(width: 1, height: 1)
             .scaleEffect(x: radius.width * 2, y: radius.height * 2)
-            .rotationEffect(param.rotation)
+            .rotationEffect(params.rotation)
             .position(center)
             .allowsHitTesting(false)
     }

@@ -61,6 +61,8 @@ enum LineSegment {
         func paramT(closestTo: Point2) -> (t: CGFloat, distance: CGFloat)
     }
 
+    // MARK: SlopeIntercept
+
     struct SlopeIntercept: Form {
         let lineForm: Line.SlopeIntercept
         let x0: CGFloat, x1: CGFloat
@@ -86,6 +88,8 @@ enum LineSegment {
             return (t: (p.x - x0) / (x1 - x0), p.distance(to: point))
         }
     }
+
+    // MARK: Vertical
 
     struct Vertical: Form {
         let lineForm: Line.Vertical
@@ -146,7 +150,7 @@ extension LineSegment: LineSegment.Form {
     var start: Point2 { form.start }
     var end: Point2 { form.end }
 
-    func position(paramT t: CGFloat) -> Point2 { form.position(paramT: t) }
+    func position(paramT: CGFloat) -> Point2 { form.position(paramT: paramT) }
     func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) { form.paramT(closestTo: point) }
 
     var length: CGFloat { start.distance(to: end) }
@@ -176,20 +180,20 @@ struct PolyLine {
     }
 }
 
-// MARK: PolyLine parametrization
+// MARK: parametrization
 
 extension PolyLine {
-    struct InnerParam {
+    struct SegmentParam {
         let i: Int // segment index
         let t: CGFloat // segment param t
     }
 
-    func innerParam(paramT: CGFloat) -> InnerParam {
+    func segmentParam(paramT: CGFloat) -> SegmentParam {
         let t = (0 ... 1).clamp(paramT)
         if t == 0 {
-            return InnerParam(i: 0, t: 0)
+            return SegmentParam(i: 0, t: 0)
         } else if t == 1 {
-            return InnerParam(i: segments.count - 1, t: 1)
+            return SegmentParam(i: segments.count - 1, t: 1)
         }
         let target = length * t
         var cumulated: CGFloat = 0
@@ -197,14 +201,14 @@ extension PolyLine {
             let curr = cumulated + s.length
             let diff = curr - target
             if diff > 0 {
-                return InnerParam(i: i, t: diff / s.length)
+                return SegmentParam(i: i, t: diff / s.length)
             }
             cumulated = curr
         }
-        return InnerParam(i: segments.count - 1, t: 1)
+        return SegmentParam(i: segments.count - 1, t: 1)
     }
 
-    func paramT(innerParam param: InnerParam) -> CGFloat {
+    func paramT(segmentParam param: SegmentParam) -> CGFloat {
         var cumulated: CGFloat = 0
         for (i, s) in segments.enumerated() {
             if i == param.i {
@@ -217,18 +221,18 @@ extension PolyLine {
         return (0 ... 1).clamp(cumulated / length)
     }
 
-    func position(param: InnerParam) -> Point2 { segments[param.i].position(paramT: param.t) }
+    func position(segmentParam param: SegmentParam) -> Point2 { segments[param.i].position(paramT: param.t) }
 
-    func position(paramT t: CGFloat) -> Point2 { position(param: innerParam(paramT: t)) }
+    func position(paramT: CGFloat) -> Point2 { position(segmentParam: segmentParam(paramT: paramT)) }
 
-    func innerParam(closestTo point: Point2) -> InnerParam {
+    func segmentParam(closestTo point: Point2) -> SegmentParam {
         segments.enumerated()
             .map { i, s in
                 let (t, distance) = s.paramT(closestTo: point)
-                return (param: InnerParam(i: i, t: t), distance: distance)
+                return (param: SegmentParam(i: i, t: t), distance: distance)
             }
             .min(by: { $0.distance < $1.distance })!.param
     }
 
-    func paramT(closestTo point: Point2) -> CGFloat { paramT(innerParam: innerParam(closestTo: point)) }
+    func paramT(closestTo point: Point2) -> CGFloat { paramT(segmentParam: segmentParam(closestTo: point)) }
 }

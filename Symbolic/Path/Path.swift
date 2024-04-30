@@ -20,7 +20,7 @@ fileprivate func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
 
 fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {
     func draw(path: inout SUPath, to: Point2)
-    func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2
+    func position(from: Point2, to: Point2, paramT: CGFloat) -> Point2
 }
 
 enum PathEdge {
@@ -33,10 +33,9 @@ enum PathEdge {
             path.addLine(to: to)
         }
 
-        func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 {
-            let t = (0.0 ... 1.0).clamp(t)
-            let p0 = Vector2(from)
-            let p1 = Vector2(to)
+        func position(from: Point2, to: Point2, paramT: CGFloat) -> Point2 {
+            let t = (0.0 ... 1.0).clamp(paramT)
+            let p0 = Vector2(from), p1 = Vector2(to)
             return Point2(p0 + (p1 - p0) * t)
         }
     }
@@ -58,20 +57,17 @@ enum PathEdge {
 
         func draw(path: inout SUPath, to: Point2) {
             guard let from = path.currentPoint else { return }
-            let param = toParam(from: from, to: to).centerParam
-            SUPath { $0.addRelativeArc(center: param.center, radius: 1, startAngle: param.startAngle, delta: param.deltaAngle, transform: param.transform) }
+            let params = toParams(from: from, to: to).centerParams
+            SUPath { $0.addRelativeArc(center: params.center, radius: 1, startAngle: params.startAngle, delta: params.deltaAngle, transform: params.transform) }
                 .forEach { appendNonMove(element: $0, to: &path) }
         }
 
-        func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 {
-            let t = (0.0 ... 1.0).clamp(t)
-            let param = toParam(from: from, to: to).centerParam
-            let tParam = param.with(deltaAngle: param.deltaAngle * t)
-            return tParam.endpointParam.to
+        func position(from: Point2, to: Point2, paramT: CGFloat) -> Point2 {
+            toParams(from: from, to: to).centerParams.position(paramT: paramT)
         }
 
-        func toParam(from: Point2, to: Point2) -> EndpointParam {
-            EndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+        func toParams(from: Point2, to: Point2) -> EndpointParams {
+            EndpointParams(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
         }
     }
 
@@ -91,12 +87,9 @@ enum PathEdge {
             path.addCurve(to: to, control1: control0, control2: control1)
         }
 
-        func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 {
-            let t = (0.0 ... 1.0).clamp(t)
-            let p0 = Vector2(from)
-            let p1 = Vector2(control0)
-            let p2 = Vector2(control1)
-            let p3 = Vector2(to)
+        func position(from: Point2, to: Point2, paramT: CGFloat) -> Point2 {
+            let t = (0.0 ... 1.0).clamp(paramT)
+            let p0 = Vector2(from), p1 = Vector2(control0), p2 = Vector2(control1), p3 = Vector2(to)
             return Point2(pow(1 - t, 3) * p0 + 3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3) * p3)
         }
     }
@@ -127,7 +120,7 @@ extension PathEdge: PathEdgeImpl {
 
     func draw(path: inout SUPath, to: Point2) { impl.draw(path: &path, to: to) }
 
-    func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 { impl.position(from: from, to: to, paramT: t) }
+    func position(from: Point2, to: Point2, paramT: CGFloat) -> Point2 { impl.position(from: from, to: to, paramT: paramT) }
 }
 
 // MARK: - PathNode

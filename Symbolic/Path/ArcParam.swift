@@ -3,7 +3,7 @@ import SwiftUI
 
 extension PathEdge.Arc {
     // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives
-    struct CenterParam: ReflectedStringConvertible {
+    struct CenterParams: ReflectedStringConvertible {
         let center: Point2
         let radius: CGSize
         let rotation: Angle
@@ -16,7 +16,16 @@ extension PathEdge.Arc {
         var clockwise: Bool { deltaAngle < .zero }
         var transform: CGAffineTransform { CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) } }
 
-        var endpointParam: EndpointParam {
+        func position(paramT: CGFloat) -> Point2 {
+            let t = (0 ... 1).clamp(paramT)
+            let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
+            let theta = (startAngle + deltaAngle * t).radians
+            let sinTheta = sin(theta), cosTheta = cos(theta)
+            let mat = Matrix2((cosPhi, -sinPhi), (sinPhi, cosPhi))
+            return center + mat * Vector2(radius.width * cosTheta, radius.height * sinTheta)
+        }
+
+        var endpointParams: EndpointParams {
             let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
             let theta1 = startAngle.radians, sinTheta1 = sin(theta1), cosTheta1 = cos(theta1)
             let theta2 = endAngle.radians, sinTheta2 = sin(theta2), cosTheta2 = cos(theta2)
@@ -25,11 +34,11 @@ extension PathEdge.Arc {
             let to = center + mat * Vector2(radius.width * cosTheta2, radius.height * sinTheta2)
             let largeArc = abs(deltaAngle.radians) > CGFloat.pi
             let sweep = deltaAngle > .zero
-            return EndpointParam(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+            return EndpointParams(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
         }
     }
 
-    struct EndpointParam: ReflectedStringConvertible {
+    struct EndpointParams: ReflectedStringConvertible {
         let from: Point2
         let to: Point2
         let radius: CGSize
@@ -37,14 +46,14 @@ extension PathEdge.Arc {
         let largeArc: Bool
         let sweep: Bool
 
-        var centerParam: CenterParam {
+        var centerParams: CenterParams {
             let a = Vector2(from), b = Vector2(to)
             let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
 
             var rx = abs(radius.width), ry = abs(radius.height)
             guard rx != 0 && ry != 0 else {
                 print("Radius cannot be 0")
-                return CenterParam(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
+                return CenterParams(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 
             // F.6.5.1
@@ -62,7 +71,7 @@ extension PathEdge.Arc {
             let sumOfSquare = rx * rx * y1p * y1p + ry * ry * x1p * x1p
             guard sumOfSquare != 0 else {
                 print("Start point can not be same as end point")
-                return CenterParam(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
+                return CenterParams(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 
             let coefficientSign: CGFloat = largeArc == sweep ? -1 : 1
@@ -87,7 +96,7 @@ extension PathEdge.Arc {
             } else if sweep && deltaTheta < 0 {
                 deltaTheta += 2 * CGFloat.pi
             }
-            return CenterParam(center: Point2(c), radius: CGSize(rx, ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
+            return CenterParams(center: Point2(c), radius: CGSize(rx, ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
         }
     }
 }

@@ -14,8 +14,18 @@ protocol InverseParametrizable {
     func paramT(closestTo: Point2) -> (t: CGFloat, distance: CGFloat)
 }
 
+infix operator ~==: ComparisonPrecedence
+
 extension CGFloat {
+    static let nearlyEqualEpsilon: CGFloat = 0.001
+
     var shortDescription: String { String(format: "%.3f", self) }
+
+    func nearlyEqual(_ n: CGFloat, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
+        abs(self - n) < epsilon
+    }
+
+    public static func ~== (lhs: CGFloat, rhs: CGFloat) -> Bool { lhs.nearlyEqual(rhs) }
 }
 
 extension ClosedRange {
@@ -128,6 +138,12 @@ extension Vector2: AdditiveArithmetic, Transformable {
         translationCancelled.ty = 0
         return Self(Point2(self).applying(translationCancelled))
     }
+
+    func nearlyEqual(_ v: Vector2, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
+        dx.nearlyEqual(v.dx, epsilon: epsilon) && dy.nearlyEqual(v.dy, epsilon: epsilon)
+    }
+
+    public static func ~== (lhs: Vector2, rhs: Vector2) -> Bool { lhs.nearlyEqual(rhs) }
 }
 
 // MARK: - Point2
@@ -159,6 +175,12 @@ extension Point2 {
     func deltaVector(to point: Point2) -> Vector2 { Vector2(point) - Vector2(self) }
 
     func distance(to point: Point2) -> CGFloat { deltaVector(to: point).length }
+    
+    func nearlyEqual(_ p: Point2, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
+        x.nearlyEqual(p.x, epsilon: epsilon) && y.nearlyEqual(p.y, epsilon: epsilon)
+    }
+
+    public static func ~== (lhs: Point2, rhs: Point2) -> Bool { lhs.nearlyEqual(rhs) }
 }
 
 // MARK: - CGSize

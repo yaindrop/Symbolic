@@ -123,8 +123,8 @@ struct ActivePathArcHandle: View {
     private var nextFocused: Bool { activePathModel.focusedNodeId == toId }
 
     private var radius: CGSize { arc.radius }
-    private var endPointParams: PathEdge.Arc.EndpointParams { arc.with(radius: radius).toParams(from: segment.from, to: segment.to) }
-    private var params: PathEdge.Arc.CenterParams { endPointParams.centerParams }
+    private var endPointParams: PathSegment.Arc.EndpointParams { segment.params }
+    private var params: PathSegment.Arc.CenterParams { endPointParams.centerParams }
     private var center: Point2 { params.center }
     private var radiusWidthEnd: Point2 { (center + Vector2.unitX).applying(params.transform) }
     private var radiusHeightEnd: Point2 { (center + Vector2.unitY).applying(params.transform) }

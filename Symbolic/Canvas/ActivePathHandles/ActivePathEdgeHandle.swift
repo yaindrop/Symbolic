@@ -20,17 +20,14 @@ struct ActivePathEdgeHandle: View {
     }
 
     @ViewBuilder private var outline: some View {
-        SUPath { p in
-            p.move(to: segment.from)
-            segment.edge.draw(path: &p, to: segment.to)
-        }
-        .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
-        .fill(Color.invisibleSolid)
-        .onTapGesture {
-            toggleFocus()
-            let polyline = segment.tessellated()
-            print("param t", polyline.paramT(closestTo: $0.applying(viewport.toWorld)))
-        }
+        SUPath { p in segment.append(to: &p) }
+            .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
+            .fill(Color.invisibleSolid)
+            .onTapGesture {
+                toggleFocus()
+                let polyline = segment.tessellated()
+                print("param t", polyline.paramT(closestTo: $0.applying(viewport.toWorld)))
+            }
     }
 }
 

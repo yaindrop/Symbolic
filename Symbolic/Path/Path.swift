@@ -3,7 +3,7 @@ import SwiftUI
 
 typealias SUPath = SwiftUI.Path
 
-fileprivate func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
+fileprivate func appendNonMove(_ element: SUPath.Element, to path: inout SUPath) {
     switch element {
     case let .curve(to, control1, control2):
         path.addCurve(to: to, control1: control1, control2: control2)
@@ -16,11 +16,16 @@ fileprivate func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
     }
 }
 
+fileprivate func approxMove(_ path: inout SUPath, to point: Point2) {
+    if let p = path.currentPoint, p ~== point {
+        return
+    }
+    path.move(to: point)
+}
+
 // MARK: - PathEdge
 
-fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {
-    func draw(path: inout SUPath, to: Point2)
-}
+fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {}
 
 enum PathEdge {
     fileprivate typealias Impl = PathEdgeImpl
@@ -28,10 +33,6 @@ enum PathEdge {
         var description: String { "Line" }
 
         func applying(_ t: CGAffineTransform) -> Self { Self() }
-
-        func draw(path: inout SUPath, to: Point2) {
-            path.addLine(to: to)
-        }
     }
 
     struct Arc: Impl {
@@ -45,20 +46,9 @@ enum PathEdge {
         func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
         func with(sweep: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
 
-        func toParams(from: Point2, to: Point2) -> EndpointParams {
-            EndpointParams(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
-        }
-
         var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
 
         func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
-
-        func draw(path: inout SUPath, to: Point2) {
-            guard let from = path.currentPoint else { return }
-            let params = toParams(from: from, to: to).centerParams
-            SUPath { $0.addRelativeArc(center: params.center, radius: 1, startAngle: params.startAngle, delta: params.deltaAngle, transform: params.transform) }
-                .forEach { appendNonMove(element: $0, to: &path) }
-        }
     }
 
     struct Bezier: Impl {
@@ -72,10 +62,6 @@ enum PathEdge {
         var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 
         func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
-
-        func draw(path: inout SUPath, to: Point2) {
-            path.addCurve(to: to, control1: control0, control2: control1)
-        }
     }
 
     case line(Line)
@@ -94,8 +80,6 @@ extension PathEdge: PathEdgeImpl {
         }
     }
 
-    func draw(path: inout SUPath, to: Point2) { impl.draw(path: &path, to: to) }
-
     private var impl: Impl {
         switch self {
         case let .line(l): l
@@ -111,7 +95,11 @@ fileprivate protocol Tessellatable {
     func tessellated(count: Int) -> PolyLine
 }
 
-fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable {
+fileprivate protocol PathAppendable {
+    func append(to: inout SUPath)
+}
+
+fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, PathAppendable {
     var from: Point2 { get }
     var to: Point2 { get }
     var edge: PathEdge { get }
@@ -123,17 +111,28 @@ enum PathSegment {
         let arc: PathEdge.Arc
         let from: Point2, to: Point2
 
+        var params: EndpointParams {
+            EndpointParams(from: from, to: to, radius: arc.radius, rotation: arc.rotation, largeArc: arc.largeArc, sweep: arc.sweep)
+        }
+
         var edge: PathEdge { .arc(arc) }
         func applying(_ t: CGAffineTransform) -> Self { Self(arc: arc.applying(t), from: from.applying(t), to: to.applying(t)) }
 
         func position(paramT: CGFloat) -> Point2 {
-            arc.toParams(from: from, to: to).centerParams.position(paramT: paramT)
+            params.centerParams.position(paramT: paramT)
         }
 
         func tessellated(count: Int = 16) -> PolyLine {
-            let params = arc.toParams(from: from, to: to).centerParams
+            let params = params.centerParams
             let points = (0 ... count).map { i -> Point2 in params.position(paramT: CGFloat(i) / CGFloat(count)) }
             return PolyLine(points: points)
+        }
+
+        func append(to path: inout SUPath) {
+            approxMove(&path, to: from)
+            let params = params.centerParams
+            SUPath { $0.addRelativeArc(center: params.center, radius: 1, startAngle: params.startAngle, delta: params.deltaAngle, transform: params.transform) }
+                .forEach { appendNonMove($0, to: &path) }
         }
     }
 
@@ -154,6 +153,11 @@ enum PathSegment {
             let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
             return PolyLine(points: points)
         }
+
+        func append(to path: inout SUPath) {
+            approxMove(&path, to: from)
+            path.addCurve(to: to, control1: bezier.control0, control2: bezier.control1)
+        }
     }
 
     struct Line: Impl {
@@ -172,6 +176,11 @@ enum PathSegment {
         func tessellated(count: Int = 16) -> PolyLine {
             let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
             return PolyLine(points: points)
+        }
+
+        func append(to path: inout SUPath) {
+            approxMove(&path, to: from)
+            path.addLine(to: to)
         }
     }
 
@@ -212,6 +221,8 @@ extension PathSegment: PathSegmentImpl {
     func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
 
     func tessellated(count: Int = 16) -> PolyLine { impl.tessellated(count: count) }
+
+    func append(to path: inout SUPath) { impl.append(to: &path) }
 }
 
 // MARK: - PathNode
@@ -296,11 +307,7 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
 
     lazy var path: SUPath = {
         SUPath { p in
-            guard let firstNode = node(at: 0) else { return }
-            p.move(to: firstNode.position)
-            for s in segments {
-                s.edge.draw(path: &p, to: s.to)
-            }
+            segments.forEach { $0.append(to: &p) }
             if isClosed {
                 p.closeSubpath()
             }

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-extension PathEdge.Arc {
+extension PathSegment.Arc {
     // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives
     struct CenterParams: ReflectedStringConvertible {
         let center: Point2

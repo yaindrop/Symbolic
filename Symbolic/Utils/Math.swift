@@ -6,6 +6,14 @@ protocol Transformable {
     func applying(_ t: CGAffineTransform) -> Self
 }
 
+protocol Parametrizable {
+    func position(paramT: CGFloat) -> Point2
+}
+
+protocol InverseParametrizable {
+    func paramT(closestTo: Point2) -> (t: CGFloat, distance: CGFloat)
+}
+
 extension CGFloat {
     var shortDescription: String { String(format: "%.3f", self) }
 }

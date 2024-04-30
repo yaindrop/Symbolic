@@ -125,16 +125,16 @@ class PathUpdater: ObservableObject {
 
     private func getEventKind(_ moveNode: PathAction.MoveNode) -> DocumentEvent.Kind? {
         let pathId = moveNode.pathId, nodeId = moveNode.nodeId, offset = moveNode.offset
-        guard let segment = pathStore.pathIdToPath[pathId]?.segment(id: nodeId) else { return nil }
+        guard let path = pathStore.pathIdToPath[pathId],
+              let curr = path.pair(id: nodeId) else { return nil }
         var events: [CompoundEvent.Kind] = []
-        if let prevId = segment.prevId, case let .bezier(bezier) = segment.prevEdge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prevId, .bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let prev = path.pair(before: nodeId), case let .bezier(bezier) = prev.edge {
+            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prev.node.id, .bezier(bezier.with(control1: bezier.control1 + offset)))
             events.append(.pathEvent(pathEvent))
         }
-        let node = segment.node
-        let pathEvent = PathEvent(in: pathId, updateNode: node.with(offset: offset))
+        let pathEvent = PathEvent(in: pathId, updateNode: curr.node.with(offset: offset))
         events.append(.pathEvent(pathEvent))
-        if case let .bezier(bezier) = segment.edge {
+        if case let .bezier(bezier) = curr.edge {
             let pathEvent = PathEvent(in: pathId, updateEdgeFrom: nodeId, .bezier(bezier.with(control0: bezier.control0 + offset)))
             events.append(.pathEvent(pathEvent))
         }
@@ -143,26 +143,26 @@ class PathUpdater: ObservableObject {
 
     private func getEventKind(_ moveEdge: PathAction.MoveEdge) -> DocumentEvent.Kind? {
         let pathId = moveEdge.pathId, fromNodeId = moveEdge.fromNodeId, offset = moveEdge.offset
-        guard let segment = pathStore.pathIdToPath[pathId]?.segment(id: fromNodeId) else { return nil }
+        guard let path = pathStore.pathIdToPath[pathId],
+              let curr = path.pair(id: fromNodeId) else { return nil }
         var events: [CompoundEvent.Kind] = []
-        if let prevId = segment.prevId, case let .bezier(bezier) = segment.prevEdge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prevId, .bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let prev = path.pair(before: fromNodeId), case let .bezier(bezier) = prev.edge {
+            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prev.node.id, .bezier(bezier.with(control1: bezier.control1 + offset)))
             events.append(.pathEvent(pathEvent))
         }
-        let node = segment.node
-        let pathEvent = PathEvent(in: pathId, updateNode: node.with(offset: offset))
+        let pathEvent = PathEvent(in: pathId, updateNode: curr.node.with(offset: offset))
         events.append(.pathEvent(pathEvent))
-        if case let .bezier(bezier) = segment.edge {
+        if case let .bezier(bezier) = curr.edge {
             let pathEvent = PathEvent(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier.with(offset: offset)))
             events.append(.pathEvent(pathEvent))
         }
-        if let nextNode = segment.nextNode {
-            let pathEvent = PathEvent(in: pathId, updateNode: nextNode.with(offset: offset))
+        if let next = path.pair(after: fromNodeId) {
+            let pathEvent = PathEvent(in: pathId, updateNode: next.node.with(offset: offset))
             events.append(.pathEvent(pathEvent))
-        }
-        if let nextId = segment.nextId, case let .bezier(bezier) = segment.nextEdge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: nextId, .bezier(bezier.with(control1: bezier.control1 + offset)))
-            events.append(.pathEvent(pathEvent))
+            if case let .bezier(bezier) = next.edge {
+                let pathEvent = PathEvent(in: pathId, updateEdgeFrom: next.node.id, .bezier(bezier.with(control1: bezier.control1 + offset)))
+                events.append(.pathEvent(pathEvent))
+            }
         }
         return .compoundEvent(.init(events: events))
     }

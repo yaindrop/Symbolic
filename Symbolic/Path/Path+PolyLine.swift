@@ -1,27 +1,27 @@
 import Foundation
 
 fileprivate protocol Tessellatable {
-    func tessellated(from: Point2, to: Point2, count: Int) -> PolyLine
+    func tessellated(count: Int) -> PolyLine
 }
 
-extension PathEdge.Arc: Tessellatable {
-    func tessellated(from: Point2, to: Point2, count: Int = 16) -> PolyLine {
-        let params = toParams(from: from, to: to).centerParams
+extension PathSegment.Arc: Tessellatable {
+    func tessellated(count: Int = 16) -> PolyLine {
+        let params = arc.toParams(from: from, to: to).centerParams
         let points = (0 ... count).map { i -> Point2 in params.position(paramT: CGFloat(i) / CGFloat(count)) }
         return PolyLine(points: points)
     }
 }
 
-extension PathEdge.Bezier: Tessellatable {
-    func tessellated(from: Point2, to: Point2, count: Int = 16) -> PolyLine {
-        let points = (0 ... count).map { i in position(from: from, to: to, paramT: CGFloat(i) / CGFloat(count)) }
+extension PathSegment.Bezier: Tessellatable {
+    func tessellated(count: Int = 16) -> PolyLine {
+        let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
         return PolyLine(points: points)
     }
 }
 
-extension PathEdge.Line: Tessellatable {
-    func tessellated(from: Point2, to: Point2, count: Int = 16) -> PolyLine {
-        let points = (0 ... count).map { i in position(from: from, to: to, paramT: CGFloat(i) / CGFloat(count)) }
+extension PathSegment.Line: Tessellatable {
+    func tessellated(count: Int = 16) -> PolyLine {
+        let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
         return PolyLine(points: points)
     }
 }

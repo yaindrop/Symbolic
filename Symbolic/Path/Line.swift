@@ -2,12 +2,13 @@ import Foundation
 
 // MARK: - Line
 
-enum Line {
-    protocol Form {
-        func projected(from point: Point2) -> Point2
-    }
+fileprivate protocol LineImpl {
+    func projected(from point: Point2) -> Point2
+}
 
-    struct SlopeIntercept: Form {
+enum Line {
+    fileprivate typealias Impl = LineImpl
+    struct SlopeIntercept: Impl {
         let m: CGFloat, b: CGFloat
 
         func y(x: CGFloat) -> CGFloat { m * x + b }
@@ -18,7 +19,7 @@ enum Line {
         }
     }
 
-    struct Vertical: Form {
+    struct Vertical: Impl {
         let x: CGFloat
 
         func projected(from point: Point2) -> Point2 { Point2(x, point.y) }
@@ -38,43 +39,42 @@ enum Line {
     }
 }
 
-extension Line: Line.Form {
-    var form: Form {
+extension Line: LineImpl {
+    func projected(from point: Point2) -> Point2 { impl.projected(from: point) }
+
+    private var impl: Impl {
         switch self {
         case let .slopeIntercept(si): si
         case let .vertical(v): v
         }
     }
-
-    func projected(from point: Point2) -> Point2 { form.projected(from: point) }
 }
 
 // MARK: - LineSegment
 
+fileprivate protocol LineSegmentImpl: Parametrizable, InverseParametrizable {
+    var line: Line { get }
+    var start: Point2 { get }
+    var end: Point2 { get }
+}
+
 enum LineSegment {
-    protocol Form {
-        var line: Line { get }
-        var start: Point2 { get }
-        var end: Point2 { get }
-        // parametrization
-        func position(paramT: CGFloat) -> Point2
-        func paramT(closestTo: Point2) -> (t: CGFloat, distance: CGFloat)
-    }
+    fileprivate typealias Impl = LineSegmentImpl
 
     // MARK: SlopeIntercept
 
-    struct SlopeIntercept: Form {
-        let lineForm: Line.SlopeIntercept
+    struct SlopeIntercept: Impl {
+        let slopeIntercept: Line.SlopeIntercept
         let x0: CGFloat, x1: CGFloat
 
-        var line: Line { .slopeIntercept(lineForm) }
-        var start: Point2 { Point2(x0, lineForm.y(x: x0)) }
-        var end: Point2 { Point2(x1, lineForm.y(x: x1)) }
+        var line: Line { .slopeIntercept(slopeIntercept) }
+        var start: Point2 { Point2(x0, slopeIntercept.y(x: x0)) }
+        var end: Point2 { Point2(x1, slopeIntercept.y(x: x1)) }
 
         func position(paramT: CGFloat) -> Point2 {
             let t = (0 ... 1).clamp(paramT)
             let xt = x0 + (x1 - x0) * t
-            let yt = lineForm.y(x: xt)
+            let yt = slopeIntercept.y(x: xt)
             return Point2(xt, yt)
         }
 
@@ -91,18 +91,18 @@ enum LineSegment {
 
     // MARK: Vertical
 
-    struct Vertical: Form {
-        let lineForm: Line.Vertical
+    struct Vertical: Impl {
+        let vertical: Line.Vertical
         let y0: CGFloat, y1: CGFloat
 
-        var line: Line { .vertical(lineForm) }
-        var start: Point2 { Point2(lineForm.x, y0) }
-        var end: Point2 { Point2(lineForm.x, y1) }
+        var line: Line { .vertical(vertical) }
+        var start: Point2 { Point2(vertical.x, y0) }
+        var end: Point2 { Point2(vertical.x, y1) }
 
         func position(paramT: CGFloat) -> Point2 {
             let t = (0 ... 1).clamp(paramT)
             let yt = y0 + (y1 - y0) * t
-            return Point2(lineForm.x, yt)
+            return Point2(vertical.x, yt)
         }
 
         func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
@@ -122,38 +122,38 @@ enum LineSegment {
     init(p0: Point2, p1: Point2) {
         let line = Line(p0: p0, p1: p1)
         switch line {
-        case let .slopeIntercept(form):
+        case let .slopeIntercept(slopeIntercept):
             var x0 = p0.x, x1 = p1.x
             if x0 > x1 {
                 swap(&x0, &x1)
             }
-            self = .slopeIntercept(.init(lineForm: form, x0: x0, x1: x1))
-        case let .vertical(form):
+            self = .slopeIntercept(.init(slopeIntercept: slopeIntercept, x0: x0, x1: x1))
+        case let .vertical(vertical):
             var y0 = p0.y, y1 = p1.y
             if y0 > y1 {
                 swap(&y0, &y1)
             }
-            self = .vertical(.init(lineForm: form, y0: y0, y1: y1))
+            self = .vertical(.init(vertical: vertical, y0: y0, y1: y1))
         }
     }
 }
 
-extension LineSegment: LineSegment.Form {
-    var form: Form {
+extension LineSegment: LineSegmentImpl {
+    var line: Line { impl.line }
+    var start: Point2 { impl.start }
+    var end: Point2 { impl.end }
+
+    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
+    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: point) }
+
+    var length: CGFloat { start.distance(to: end) }
+
+    private var impl: Impl {
         switch self {
         case let .slopeIntercept(si): si
         case let .vertical(v): v
         }
     }
-
-    var line: Line { form.line }
-    var start: Point2 { form.start }
-    var end: Point2 { form.end }
-
-    func position(paramT: CGFloat) -> Point2 { form.position(paramT: paramT) }
-    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) { form.paramT(closestTo: point) }
-
-    var length: CGFloat { start.distance(to: end) }
 }
 
 // MARK: - PolyLine
@@ -182,7 +182,7 @@ struct PolyLine {
 
 // MARK: parametrization
 
-extension PolyLine {
+extension PolyLine: Parametrizable, InverseParametrizable {
     struct SegmentParam {
         let i: Int // segment index
         let t: CGFloat // segment param t
@@ -225,14 +225,17 @@ extension PolyLine {
 
     func position(paramT: CGFloat) -> Point2 { position(segmentParam: segmentParam(paramT: paramT)) }
 
-    func segmentParam(closestTo point: Point2) -> SegmentParam {
+    func segmentParam(closestTo point: Point2) -> (param: SegmentParam, distance: CGFloat) {
         segments.enumerated()
             .map { i, s in
                 let (t, distance) = s.paramT(closestTo: point)
                 return (param: SegmentParam(i: i, t: t), distance: distance)
             }
-            .min(by: { $0.distance < $1.distance })!.param
+            .min(by: { $0.distance < $1.distance })!
     }
 
-    func paramT(closestTo point: Point2) -> CGFloat { paramT(segmentParam: segmentParam(closestTo: point)) }
+    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
+        let (segmentParam, distance) = segmentParam(closestTo: point)
+        return (t: paramT(segmentParam: segmentParam), distance: distance)
+    }
 }

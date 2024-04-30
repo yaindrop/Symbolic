@@ -11,8 +11,8 @@ extension ActivePathPanel {
             VStack(spacing: 4) {
                 sectionTitle("Components")
                 VStack(spacing: 12) {
-                    ForEach(activePath.segments) { segment in
-                        NodeEdgeGroup(segment: segment)
+                    ForEach(activePath.pairs, id: \.node.id) { p in
+                        NodeEdgeGroup(index: activePath.nodeIdToIndex[p.node.id] ?? 0, node: p.node, edge: p.edge)
                     }
                 }
             }
@@ -39,12 +39,14 @@ extension ActivePathPanel {
     // MARK: - NodeEdgeGroup
 
     fileprivate struct NodeEdgeGroup: View {
-        let segment: PathSegment
+        let index: Int
+        let node: PathNode
+        let edge: PathEdge
 
         var body: some View {
             Group {
-                NodePanel(index: segment.index, node: segment.node)
-                EdgePanel(fromNodeId: segment.id, edge: segment.edge)
+                NodePanel(index: index, node: node)
+                EdgePanel(fromNodeId: node.id, edge: edge)
             }
             .scaleEffect(scale)
             .onChange(of: focused) { animateOnFocused() }
@@ -53,7 +55,7 @@ extension ActivePathPanel {
         @EnvironmentObject private var activePathModel: ActivePathModel
         @State private var scale: Double = 1
 
-        private var focused: Bool { activePathModel.focusedPart?.id == segment.id }
+        private var focused: Bool { activePathModel.focusedPart?.id == node.id }
 
         func animateOnFocused() {
             if focused {

@@ -7,11 +7,16 @@ struct ActivePathHandles: View {
     var body: some View {
         if let activePath = activePathModel.pendingActivePath {
             ZStack {
-                let segments = activePath.segments
-                ForEach(segments) { s in ActivePathEdgeHandle(segment: s, data: s.data.applying(viewport.toView)) }
-                ForEach(segments) { s in ActivePathNodeHandle(segment: s, data: s.data.applying(viewport.toView)) }
-                ForEach(segments) { s in ActivePathFocusedEdgeHandle(segment: s, data: s.data.applying(viewport.toView)) }
-                ForEach(segments) { s in ActivePathEdgeKindHandle(segment: s, data: s.data.applying(viewport.toView)) }
+                let nodes = activePath.nodes
+                let idAndSegmentInView = nodes.compactMap { n -> (fromId: UUID, toId: UUID, segment: PathSegment)? in
+                    guard let s = activePath.segment(from: n.id) else { return nil }
+                    guard let toId = activePath.node(after: n.id)?.id else { return nil }
+                    return (fromId: n.id, toId: toId, segment: s.applying(viewport.toView))
+                }
+                ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in ActivePathEdgeHandle(fromId: fromId, segment: segment) }
+                ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in ActivePathNodeHandle(nodeId: fromId, position: segment.from) }
+                ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in ActivePathFocusedEdgeHandle(fromId: fromId, segment: segment) }
+                ForEach(idAndSegmentInView, id: \.fromId) { fromId, toId, segment in ActivePathEdgeKindHandle(fromId: fromId, toId: toId, segment: segment) }
             }
         }
     }

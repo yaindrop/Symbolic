@@ -4,11 +4,11 @@ import SwiftUI
 // MARK: - ActivePathNodeHandle
 
 struct ActivePathNodeHandle: View {
-    let segment: PathSegment
-    let data: PathSegment.Data
+    let nodeId: UUID
+    let position: Point2
 
     var body: some View {
-        circle(at: data.node, color: .blue)
+        circle(at: position, color: .blue)
     }
 
     // MARK: private
@@ -19,8 +19,6 @@ struct ActivePathNodeHandle: View {
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
-
-    private var nodeId: UUID { segment.node.id }
 
     private var focused: Bool { activePathModel.focusedNodeId == nodeId }
     private func toggleFocus() {
@@ -45,6 +43,6 @@ struct ActivePathNodeHandle: View {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }
-        return DragGestureWithContext(data.node, onChanged: update(pending: true), onEnded: update())
+        return DragGestureWithContext(position, onChanged: update(pending: true), onEnded: update())
     }
 }

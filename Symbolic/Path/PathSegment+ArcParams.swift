@@ -10,6 +10,7 @@ extension PathSegment.Arc {
         let startAngle: Angle
         let deltaAngle: Angle
 
+        func with(startAngle: Angle) -> Self { Self(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
         func with(deltaAngle: Angle) -> Self { Self(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
 
         var endAngle: Angle { startAngle + deltaAngle }
@@ -98,5 +99,11 @@ extension PathSegment.Arc {
             }
             return CenterParams(center: Point2(c), radius: CGSize(rx, ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
         }
+    }
+}
+
+extension PathEdge.Arc {
+    init(params: PathSegment.Arc.EndpointParams) {
+        self.init(radius: params.radius, rotation: params.rotation, largeArc: params.largeArc, sweep: params.sweep)
     }
 }

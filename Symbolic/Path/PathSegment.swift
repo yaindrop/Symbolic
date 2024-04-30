@@ -3,15 +3,7 @@ import SwiftUI
 
 // MARK: - PathSegment
 
-fileprivate protocol Tessellatable {
-    func tessellated(count: Int) -> Polyline
-}
-
-fileprivate protocol PathAppendable {
-    func append(to: inout SUPath)
-}
-
-fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, PathAppendable {
+fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, PathAppendable, ParamSplittable {
     var from: Point2 { get }
     var to: Point2 { get }
     var edge: PathEdge { get }
@@ -79,12 +71,15 @@ extension PathSegment.Bezier: Parametrizable {
 extension PathSegment.Line: Parametrizable {
     func position(paramT: CGFloat) -> Point2 {
         let t = (0.0 ... 1.0).clamp(paramT)
-        let p0 = Vector2(from), p1 = Vector2(to)
-        return Point2(p0 + (p1 - p0) * t)
+        return Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
     }
 }
 
 // MARK: Tessellatable
+
+fileprivate protocol Tessellatable {
+    func tessellated(count: Int) -> Polyline
+}
 
 extension PathSegment.Arc: Tessellatable {
     func tessellated(count: Int = 16) -> Polyline {
@@ -109,6 +104,10 @@ extension PathSegment.Line: Tessellatable {
 }
 
 // MARK: PathAppendable
+
+fileprivate protocol PathAppendable {
+    func append(to: inout SUPath)
+}
 
 fileprivate func approxMove(_ path: inout SUPath, to point: Point2) {
     if let p = path.currentPoint, p ~== point {
@@ -153,6 +152,44 @@ extension PathSegment.Line: PathAppendable {
     }
 }
 
+// MARK: ParamSplittable
+
+fileprivate protocol ParamSplittable {
+    func split(paramT: CGFloat) -> (Self, Self)
+}
+
+extension PathSegment.Arc: ParamSplittable {
+    func split(paramT t: CGFloat) -> (Self, Self) {
+        let params = self.params.centerParams
+        let params0 = params.with(deltaAngle: params.deltaAngle * t)
+        let params1 = params.with(startAngle: params.deltaAngle * t).with(deltaAngle: params.deltaAngle * (1 - t))
+        let a0 = Self(arc: .init(params: params0.endpointParams), from: from, to: to)
+        let a1 = Self(arc: .init(params: params1.endpointParams), from: from, to: to)
+        return (a0, a1)
+    }
+}
+
+extension PathSegment.Bezier: ParamSplittable {
+    func split(paramT t: CGFloat) -> (Self, Self) {
+        let p0 = Vector2(from), p1 = Vector2(bezier.control0), p2 = Vector2(bezier.control1), p3 = Vector2(to)
+        let p01 = lerp(from: p0, to: p1, at: t), p12 = lerp(from: p1, to: p2, at: t), p23 = lerp(from: p2, to: p3, at: t)
+        let p012 = lerp(from: p01, to: p12, at: t), p123 = lerp(from: p12, to: p23, at: t)
+        let p0123 = lerp(from: p012, to: p123, at: t)
+        let b0 = Self(bezier: .init(control0: Point2(p01), control1: Point2(p012)), from: from, to: Point2(p0123))
+        let b1 = Self(bezier: .init(control0: Point2(p123), control1: Point2(p23)), from: Point2(p0123), to: to)
+        return (b0, b1)
+    }
+}
+
+extension PathSegment.Line: ParamSplittable {
+    func split(paramT t: CGFloat) -> (Self, Self) {
+        let pt = Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
+        let l0 = Self(line: PathEdge.Line(), from: from, to: pt)
+        let l1 = Self(line: PathEdge.Line(), from: pt, to: to)
+        return (l0, l1)
+    }
+}
+
 // MARK: expose PathSegmentImpl
 
 extension PathSegment: PathSegmentImpl {
@@ -170,9 +207,9 @@ extension PathSegment: PathSegmentImpl {
 
     func applying(_ t: CGAffineTransform) -> Self {
         switch self {
-        case let .line(l): .line(l.applying(t))
         case let .arc(a): .arc(a.applying(t))
         case let .bezier(b): .bezier(b.applying(t))
+        case let .line(l): .line(l.applying(t))
         }
     }
 
@@ -181,4 +218,18 @@ extension PathSegment: PathSegmentImpl {
     func tessellated(count: Int = 16) -> Polyline { impl.tessellated(count: count) }
 
     func append(to path: inout SUPath) { impl.append(to: &path) }
+
+    func split(paramT: CGFloat) -> (PathSegment, PathSegment) {
+        switch self {
+        case let .arc(a):
+            let (a0, a1) = a.split(paramT: paramT)
+            return (.arc(a0), .arc(a1))
+        case let .bezier(b):
+            let (b0, b1) = b.split(paramT: paramT)
+            return (.bezier(b0), .bezier(b1))
+        case let .line(l):
+            let (l0, l1) = l.split(paramT: paramT)
+            return (.line(l0), .line(l1))
+        }
+    }
 }

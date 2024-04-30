@@ -78,7 +78,7 @@ extension LineSegment: LineSegmentImpl {
 extension LineSegment.SlopeIntercept: Parametrizable {
     func position(paramT: CGFloat) -> Point2 {
         let t = (0 ... 1).clamp(paramT)
-        let xt = x0 + (x1 - x0) * t
+        let xt = lerp(from: x0, to: x1, at: t)
         let yt = slopeIntercept.y(x: xt)
         return Point2(xt, yt)
     }
@@ -87,7 +87,7 @@ extension LineSegment.SlopeIntercept: Parametrizable {
 extension LineSegment.Vertical: Parametrizable {
     func position(paramT: CGFloat) -> Point2 {
         let t = (0 ... 1).clamp(paramT)
-        let yt = y0 + (y1 - y0) * t
+        let yt = lerp(from: y0, to: y1, at: t)
         return Point2(vertical.x, yt)
     }
 }

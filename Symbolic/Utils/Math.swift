@@ -2,6 +2,19 @@ import CoreGraphics
 import Foundation
 import SwiftUI
 
+protocol ScalarMultiplicable {
+    static func * (lhs: Self, rhs: CGFloat) -> Self
+    static func * (lhs: CGFloat, rhs: Self) -> Self
+}
+
+extension ScalarMultiplicable {
+    static func * (lhs: CGFloat, rhs: Self) -> Self { rhs * lhs }
+}
+
+func lerp<T: AdditiveArithmetic & ScalarMultiplicable>(from: T, to: T, at t: CGFloat) -> T {
+    from + (to - from) * t
+}
+
 protocol Transformable {
     func applying(_ t: CGAffineTransform) -> Self
 }
@@ -16,7 +29,7 @@ protocol InverseParametrizable {
 
 infix operator ~==: ComparisonPrecedence
 
-extension CGFloat {
+extension CGFloat: ScalarMultiplicable {
     static let nearlyEqualEpsilon: CGFloat = 0.001
 
     var shortDescription: String { String(format: "%.3f", self) }
@@ -73,7 +86,7 @@ struct Matrix2 {
 
 public typealias Vector2 = CGVector
 
-extension Vector2: AdditiveArithmetic, Transformable {
+extension Vector2: AdditiveArithmetic, Transformable, ScalarMultiplicable {
     func with(dx: CGFloat) -> Self { Self(dx: dx, dy: dy) }
     func with(dy: CGFloat) -> Self { Self(dx: dx, dy: dy) }
 
@@ -175,7 +188,7 @@ extension Point2 {
     func deltaVector(to point: Point2) -> Vector2 { Vector2(point) - Vector2(self) }
 
     func distance(to point: Point2) -> CGFloat { deltaVector(to: point).length }
-    
+
     func nearlyEqual(_ p: Point2, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
         x.nearlyEqual(p.x, epsilon: epsilon) && y.nearlyEqual(p.y, epsilon: epsilon)
     }

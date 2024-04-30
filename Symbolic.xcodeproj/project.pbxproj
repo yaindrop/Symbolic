@@ -28,8 +28,8 @@
 		5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878D2BDF84310096DDE4 /* AnglePicker.swift */; };
 		572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */; };
 		572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487912BDFA7B80096DDE4 /* DocumentAction.swift */; };
-		57416E382BE08F6900C73434 /* PathTessellation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E372BE08F6900C73434 /* PathTessellation.swift */; };
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
+		57416E3C2BE0C47C00C73434 /* Path+PolyLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3B2BE0C47C00C73434 /* Path+PolyLine.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -94,8 +94,8 @@
 		5724878D2BDF84310096DDE4 /* AnglePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnglePicker.swift; sourceTree = "<group>"; };
 		5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanel.swift; sourceTree = "<group>"; };
 		572487912BDFA7B80096DDE4 /* DocumentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAction.swift; sourceTree = "<group>"; };
-		57416E372BE08F6900C73434 /* PathTessellation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathTessellation.swift; sourceTree = "<group>"; };
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
+		57416E3B2BE0C47C00C73434 /* Path+PolyLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+PolyLine.swift"; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -269,9 +269,9 @@
 				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
 				57416E392BE0BAB600C73434 /* Line.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
+				57416E3B2BE0C47C00C73434 /* Path+PolyLine.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				575C3CFB2BDA14590035B758 /* PathStore.swift */,
-				57416E372BE08F6900C73434 /* PathTessellation.swift */,
 				572487752BDBAF860096DDE4 /* PathUpdater.swift */,
 			);
 			path = Path;
@@ -459,7 +459,6 @@
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* ActivePathModel.swift in Sources */,
 				5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */,
-				57416E382BE08F6900C73434 /* PathTessellation.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */,
 				57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */,
@@ -468,6 +467,7 @@
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
+				57416E3C2BE0C47C00C73434 /* Path+PolyLine.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,

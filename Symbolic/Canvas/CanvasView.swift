@@ -62,8 +62,8 @@ struct CanvasView: View {
 //            .position(x: 300, y: 300)
 //            .transformEffect(viewport.info.worldToView)
 //        SUPath { path in
-//            path.move(to: CGPoint(x: 400, y: 200))
-//            path.addCurve(to: CGPoint(x: 400, y: 400), control1: CGPoint(x: 450, y: 250), control2: CGPoint(x: 350, y: 350))
+//            path.move(to: Point2(x: 400, y: 200))
+//            path.addCurve(to: Point2(x: 400, y: 400), control1: Point2(x: 450, y: 250), control2: Point2(x: 350, y: 350))
 //        }.stroke(lineWidth: 10)
 //            .transformEffect(viewport.info.worldToView)
 //    }
@@ -75,13 +75,13 @@ struct CanvasView: View {
                 let path = SUPath { path in
                     for index in 0 ... 10240 {
                         let vOffset: CGFloat = CGFloat(index) * 10
-                        path.move(to: CGPoint(vOffset, 0))
-                        path.addLine(to: CGPoint(vOffset, 102400))
+                        path.move(to: Point2(vOffset, 0))
+                        path.addLine(to: Point2(vOffset, 102400))
                     }
                     for index in 0 ... 10240 {
                         let hOffset: CGFloat = CGFloat(index) * 10
-                        path.move(to: CGPoint(0, hOffset))
-                        path.addLine(to: CGPoint(102400, hOffset))
+                        path.move(to: Point2(0, hOffset))
+                        path.addLine(to: Point2(102400, hOffset))
                     }
                 }
                 context.stroke(path, with: .color(.red), lineWidth: 0.5)
@@ -90,13 +90,13 @@ struct CanvasView: View {
             //                    Path { path in
             //                        for index in 0 ... 1024 {
             //                            let vOffset: CGFloat = CGFloat(index) * 10
-            //                            path.move(to: CGPoint(x: vOffset, y: 0))
-            //                            path.addLine(to: CGPoint(x: vOffset, y: 10240))
+            //                            path.move(to: Point2(x: vOffset, y: 0))
+            //                            path.addLine(to: Point2(x: vOffset, y: 10240))
             //                        }
             //                        for index in 0 ... 1024 {
             //                            let hOffset: CGFloat = CGFloat(index) * 10
-            //                            path.move(to: CGPoint(x: 0, y: hOffset))
-            //                            path.addLine(to: CGPoint(x: 10240, y: hOffset))
+            //                            path.move(to: Point2(x: 0, y: hOffset))
+            //                            path.addLine(to: Point2(x: 10240, y: hOffset))
             //                        }
             //                    }
             //                    .stroke(.red)

@@ -12,6 +12,7 @@ struct ActivePathEdgeHandle: View {
     }
 
     @EnvironmentObject private var activePathModel: ActivePathModel
+    @EnvironmentObject private var viewport: Viewport
 
     private var segmentId: UUID { segment.id }
 
@@ -30,6 +31,10 @@ struct ActivePathEdgeHandle: View {
             .fill(Color.invisibleSolid)
             .onTapGesture {
                 toggleFocus()
+                if case let .bezier(b) = segment.edge, let nextNode = segment.nextNode {
+                    let pl = b.tessellated(from: segment.node.position, to: nextNode.position)
+                    print("param t", pl.paramT(closestTo: $0.applying(viewport.toWorld)))
+                }
             }
         }
     }
@@ -60,7 +65,7 @@ struct ActivePathFocusedEdgeHandle: View {
 
     private var circlePosition: Point2? {
         if let nextNode = data.nextNode {
-            data.edge.position(from: data.node, to: nextNode, at: 0.5)
+            data.edge.position(from: data.node, to: nextNode, paramT: 0.5)
         } else {
             nil
         }

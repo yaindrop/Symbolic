@@ -168,7 +168,7 @@ extension CGSize: Transformable {
     init(squared size: CGFloat) { self.init(size, size) }
 
     func applying(_ t: CGAffineTransform) -> Self {
-        let v = CGVector(self).applying(t)
+        let v = Vector2(self).applying(t)
         return Self(width: v.dx, height: v.dy)
     }
 }

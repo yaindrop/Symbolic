@@ -20,7 +20,7 @@ fileprivate func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
 
 fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {
     func draw(path: inout SUPath, to: Point2)
-    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2
+    func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2
 }
 
 enum PathEdge {
@@ -33,7 +33,7 @@ enum PathEdge {
             path.addLine(to: to)
         }
 
-        func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+        func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 {
             let t = (0.0 ... 1.0).clamp(t)
             let p0 = Vector2(from)
             let p1 = Vector2(to)
@@ -63,7 +63,7 @@ enum PathEdge {
                 .forEach { appendNonMove(element: $0, to: &path) }
         }
 
-        func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+        func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 {
             let t = (0.0 ... 1.0).clamp(t)
             let param = toParam(from: from, to: to).centerParam
             let tParam = param.with(deltaAngle: param.deltaAngle * t)
@@ -88,16 +88,10 @@ enum PathEdge {
         func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
 
         func draw(path: inout SUPath, to: Point2) {
-            let from = path.currentPoint!
-//            path.addCurve(to: to, control1: control0, control2: control1)
-            for i in 0 ..< 16 {
-                let p = position(from: from, to: to, at: CGFloat(i + 1) / 16)
-                path.addLine(to: p)
-                path.addEllipse(in: CGRect(center: p, size: CGSize(1, 1)))
-            }
+            path.addCurve(to: to, control1: control0, control2: control1)
         }
 
-        func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
+        func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 {
             let t = (0.0 ... 1.0).clamp(t)
             let p0 = Vector2(from)
             let p1 = Vector2(control0)
@@ -133,7 +127,7 @@ extension PathEdge: PathEdgeImpl {
 
     func draw(path: inout SUPath, to: Point2) { impl.draw(path: &path, to: to) }
 
-    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 { impl.position(from: from, to: to, at: t) }
+    func position(from: Point2, to: Point2, paramT t: CGFloat) -> Point2 { impl.position(from: from, to: to, paramT: t) }
 }
 
 // MARK: - PathNode

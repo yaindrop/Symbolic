@@ -29,6 +29,8 @@
 		572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */; };
 		572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487912BDFA7B80096DDE4 /* DocumentAction.swift */; };
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
+		57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathSegment.swift */; };
+		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -94,6 +96,8 @@
 		5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanel.swift; sourceTree = "<group>"; };
 		572487912BDFA7B80096DDE4 /* DocumentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAction.swift; sourceTree = "<group>"; };
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
+		57416E3E2BE12A9500C73434 /* PathSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegment.swift; sourceTree = "<group>"; };
+		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -171,6 +175,7 @@
 				57B5F13D2BD4A314001E1B2E /* Gesture */,
 				5723BF7D2BC39844002209F2 /* Item.swift */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
+				57416E412BE12CF200C73434 /* PathModel */,
 				5723BF812BC39846002209F2 /* Preview Content */,
 				57B5F13B2BD4A2E2001E1B2E /* SVG */,
 				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
@@ -237,6 +242,16 @@
 			path = DataInput;
 			sourceTree = "<group>";
 		};
+		57416E412BE12CF200C73434 /* PathModel */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F13F2BD4A3EF001E1B2E /* ActivePathModel.swift */,
+				575C3CFB2BDA14590035B758 /* PathStore.swift */,
+				572487752BDBAF860096DDE4 /* PathUpdater.swift */,
+			);
+			path = PathModel;
+			sourceTree = "<group>";
+		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
@@ -263,13 +278,12 @@
 		57B5F13C2BD4A2EC001E1B2E /* Path */ = {
 			isa = PBXGroup;
 			children = (
-				57B5F13F2BD4A3EF001E1B2E /* ActivePathModel.swift */,
 				57B5F12B2BCE0FC0001E1B2E /* ArcParam.swift */,
 				57416E392BE0BAB600C73434 /* Line.swift */,
+				57416E422BE12D7100C73434 /* LineSegment.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
-				575C3CFB2BDA14590035B758 /* PathStore.swift */,
-				572487752BDBAF860096DDE4 /* PathUpdater.swift */,
+				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -455,6 +469,7 @@
 				575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* ActivePathModel.swift in Sources */,
+				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
 				5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */,
@@ -463,6 +478,7 @@
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
+				57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,

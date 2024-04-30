@@ -12,7 +12,6 @@ struct ActivePathEdgeHandle: View {
     }
 
     @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var viewport: Viewport
 
     private var focused: Bool { activePathModel.focusedEdgeId == fromId }
     private func toggleFocus() {
@@ -26,7 +25,7 @@ struct ActivePathEdgeHandle: View {
             .onTapGesture {
                 toggleFocus()
                 let polyline = segment.tessellated()
-                print("param t", polyline.paramT(closestTo: $0.applying(viewport.toWorld)))
+                print("param t", polyline.paramT(closestTo: $0))
             }
     }
 }

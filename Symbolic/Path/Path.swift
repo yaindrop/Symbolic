@@ -18,13 +18,13 @@ fileprivate func appendNonMove(element: SUPath.Element, to path: inout SUPath) {
 
 // MARK: - PathEdge
 
-fileprivate protocol PathEdgeProtocol: CustomStringConvertible, Transformable {
+fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {
     func draw(path: inout SUPath, to: Point2)
     func position(from: Point2, to: Point2, at t: CGFloat) -> Point2
 }
 
-enum PathEdge: PathEdgeProtocol {
-    struct Line: PathEdgeProtocol {
+enum PathEdge {
+    struct Line: PathEdgeImpl {
         var description: String { "Line" }
 
         func applying(_ t: CGAffineTransform) -> Self { Self() }
@@ -41,7 +41,7 @@ enum PathEdge: PathEdgeProtocol {
         }
     }
 
-    struct Arc: PathEdgeProtocol {
+    struct Arc: PathEdgeImpl {
         let radius: CGSize
         let rotation: Angle
         let largeArc: Bool
@@ -75,7 +75,7 @@ enum PathEdge: PathEdgeProtocol {
         }
     }
 
-    struct Bezier: PathEdgeProtocol {
+    struct Bezier: PathEdgeImpl {
         let control0: Point2
         let control1: Point2
 
@@ -88,7 +88,13 @@ enum PathEdge: PathEdgeProtocol {
         func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
 
         func draw(path: inout SUPath, to: Point2) {
-            path.addCurve(to: to, control1: control0, control2: control1)
+            let from = path.currentPoint!
+//            path.addCurve(to: to, control1: control0, control2: control1)
+            for i in 0 ..< 16 {
+                let p = position(from: from, to: to, at: CGFloat(i + 1) / 16)
+                path.addLine(to: p)
+                path.addEllipse(in: CGRect(center: p, size: CGSize(1, 1)))
+            }
         }
 
         func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 {
@@ -104,8 +110,10 @@ enum PathEdge: PathEdgeProtocol {
     case line(Line)
     case arc(Arc)
     case bezier(Bezier)
+}
 
-    fileprivate var value: PathEdgeProtocol {
+extension PathEdge: PathEdgeImpl {
+    fileprivate var impl: PathEdgeImpl {
         switch self {
         case let .line(l): l
         case let .arc(a): a
@@ -113,7 +121,7 @@ enum PathEdge: PathEdgeProtocol {
         }
     }
 
-    var description: String { value.description }
+    var description: String { impl.description }
 
     func applying(_ t: CGAffineTransform) -> Self {
         switch self {
@@ -123,9 +131,9 @@ enum PathEdge: PathEdgeProtocol {
         }
     }
 
-    func draw(path: inout SUPath, to: Point2) { value.draw(path: &path, to: to) }
+    func draw(path: inout SUPath, to: Point2) { impl.draw(path: &path, to: to) }
 
-    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 { value.position(from: from, to: to, at: t) }
+    func position(from: Point2, to: Point2, at t: CGFloat) -> Point2 { impl.position(from: from, to: to, at: t) }
 }
 
 // MARK: - PathNode

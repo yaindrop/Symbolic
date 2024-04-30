@@ -3,7 +3,14 @@ import SwiftUI
 
 fileprivate extension DocumentEvent {
     var name: String {
-        "\(action)"
+        switch action {
+        case let .pathAction(pathAction):
+            switch pathAction {
+            case .loadPath: "PathLoad"
+            case let .moveEdge(moveEdge): "\(moveEdge.pathId) MoveEdge \(moveEdge.fromNodeId) offset \(moveEdge.offset)"
+            default: "pathAction"
+            }
+        }
     }
 }
 

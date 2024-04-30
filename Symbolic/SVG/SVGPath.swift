@@ -3,24 +3,24 @@ import SwiftUI
 
 // MARK: - SVGPathCommand
 
-fileprivate protocol SVGPathCommandProtocol {
+fileprivate protocol SVGPathCommandImpl: CustomStringConvertible {
     var position: Point2 { get }
 }
 
-enum SVGPathCommand: SVGPathCommandProtocol {
-    struct LineTo: CustomStringConvertible, SVGPathCommandProtocol {
+enum SVGPathCommand {
+    struct LineTo: SVGPathCommandImpl {
         let position: Point2
 
         public var description: String { return "L \(position.x) \(position.y)" }
     }
 
-    struct ArcTo: CustomStringConvertible, SVGPathCommandProtocol {
+    struct ArcTo: SVGPathCommandImpl {
         let radius: CGSize, rotation: Angle, largeArc: Bool, sweep: Bool, position: Point2
 
         public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
     }
 
-    struct BezierTo: CustomStringConvertible, SVGPathCommandProtocol {
+    struct BezierTo: SVGPathCommandImpl {
         let control0: Point2, control1: Point2, position: Point2
 
         func toQuadratic(current: Point2) -> QuadraticBezierTo? {
@@ -33,7 +33,7 @@ enum SVGPathCommand: SVGPathCommandProtocol {
         public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
     }
 
-    struct QuadraticBezierTo: CustomStringConvertible, SVGPathCommandProtocol {
+    struct QuadraticBezierTo: SVGPathCommandImpl {
         let control: Point2, position: Point2
 
         func toCubic(current: Point2) -> BezierTo {
@@ -49,8 +49,10 @@ enum SVGPathCommand: SVGPathCommandProtocol {
     case arcTo(ArcTo)
     case bezierTo(BezierTo)
     case quadraticBezierTo(QuadraticBezierTo)
+}
 
-    fileprivate var value: SVGPathCommandProtocol {
+extension SVGPathCommand: SVGPathCommandImpl {
+    fileprivate var impl: SVGPathCommandImpl {
         switch self {
         case let .arcTo(c): c
         case let .bezierTo(c): c
@@ -59,7 +61,8 @@ enum SVGPathCommand: SVGPathCommandProtocol {
         }
     }
 
-    var position: Point2 { value.position }
+    var position: Point2 { impl.position }
+    public var description: String { impl.description }
 }
 
 struct SVGPath {
@@ -120,28 +123,17 @@ class SVGPathParser {
         command = try scanCommand()
         parameters = try scanParameters()
         switch command.uppercased() {
-        case "M":
-            try parseMoveTo()
-        case "Z":
-            try parseClosePath()
-        case "L":
-            try parseLineTo()
-        case "H":
-            try parseHorizontalLineTo()
-        case "V":
-            try parseVerticalLineTo()
-        case "C":
-            try parseCurveTo()
-        case "S":
-            try parseSmoothCurveTo()
-        case "Q":
-            try parseQuadraticBezierCurveTo()
-        case "T":
-            try parseSmoothQuadraticBezierCurveTo()
-        case "A":
-            try parseEllipticalArc()
-        default:
-            break
+        case "M": try parseMoveTo()
+        case "Z": try parseClosePath()
+        case "L": try parseLineTo()
+        case "H": try parseHorizontalLineTo()
+        case "V": try parseVerticalLineTo()
+        case "C": try parseCurveTo()
+        case "S": try parseSmoothCurveTo()
+        case "Q": try parseQuadraticBezierCurveTo()
+        case "T": try parseSmoothQuadraticBezierCurveTo()
+        case "A": try parseEllipticalArc()
+        default: break
         }
     }
 
@@ -220,7 +212,7 @@ class SVGPathParser {
 
     private func parseClosePath() throws {
         guard parameters.isEmpty else {
-            throw SVGPathParserError.invalidParameters("Cloth path cannot have parameters \(parameters)")
+            throw SVGPathParserError.invalidParameters("Close path command cannot have parameters \(parameters)")
         }
         appendPath(withClosed: true)
     }
@@ -260,9 +252,9 @@ class SVGPathParser {
             throw SVGPathParserError.invalidParameters("Invalid curve-to parameters \(parameters)")
         }
         for group in groups {
-            let control0 = positionOf(x: group[0], y: group[1])
-            let control1 = positionOf(x: group[2], y: group[3])
-            let position = positionOf(x: group[4], y: group[5])
+            let control0 = positionOf(x: group[0], y: group[1]),
+                control1 = positionOf(x: group[2], y: group[3]),
+                position = positionOf(x: group[4], y: group[5])
             appendCommand(.bezierTo(SVGPathCommand.BezierTo(control0: control0, control1: control1, position: position)))
         }
     }
@@ -276,8 +268,8 @@ class SVGPathParser {
             control0 = lastBezier.position + lastBezier.control1.deltaVector(to: lastBezier.position)
         }
         for group in groups {
-            let control1 = positionOf(x: group[0], y: group[1])
-            let position = positionOf(x: group[2], y: group[3])
+            let control1 = positionOf(x: group[0], y: group[1]),
+                position = positionOf(x: group[2], y: group[3])
             appendCommand(.bezierTo(SVGPathCommand.BezierTo(control0: control0, control1: control1, position: position)))
         }
     }
@@ -287,8 +279,8 @@ class SVGPathParser {
             throw SVGPathParserError.invalidParameters("Invalid quadratic bezier curve-to parameters \(parameters)")
         }
         for group in groups {
-            let control = positionOf(x: group[0], y: group[1])
-            let position = positionOf(x: group[2], y: group[3])
+            let control = positionOf(x: group[0], y: group[1]),
+                position = positionOf(x: group[2], y: group[3])
             appendCommand(.quadraticBezierTo(SVGPathCommand.QuadraticBezierTo(control: control, position: position)))
         }
     }
@@ -312,12 +304,14 @@ class SVGPathParser {
             throw SVGPathParserError.invalidParameters("Invalid arc-to parameters \(parameters)")
         }
         for group in groups {
-            let radius = CGSize(group[0], group[1])
-            let rotation = group[2]
-            guard let largeArc = flagOf(value: group[3]), let sweep = flagOf(value: group[4]) else {
+            let radius = CGSize(group[0], group[1]),
+                rotation = group[2],
+                largeArc = flagOf(value: group[3]),
+                sweep = flagOf(value: group[4]),
+                position = positionOf(x: group[5], y: group[6])
+            guard let largeArc, let sweep else {
                 throw SVGPathParserError.invalidParameters("Invalid arc-to flags in \(group)")
             }
-            let position = positionOf(x: group[5], y: group[6])
             appendCommand(.arcTo(SVGPathCommand.ArcTo(radius: radius, rotation: Angle(degrees: rotation), largeArc: largeArc, sweep: sweep, position: position)))
         }
     }

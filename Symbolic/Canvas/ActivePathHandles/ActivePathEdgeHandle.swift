@@ -24,7 +24,11 @@ struct ActivePathEdgeHandle: View {
         SUPath { p in segment.append(to: &p) }
             .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
             .fill(Color.invisibleSolid)
-            .modifier(TapDragPress())
+            .modifier(TapLongPressDrag(onTap: { _ in print("onTap") },
+                                       onLongPress: { _ in print("onLongPress") },
+                                       onLongPressEnd: { _ in print("onLongPressEnd") },
+                                       onDrag: { _ in print("onDrag") },
+                                       onDragEnd: { _ in print("onDragEnd") }))
     }
 }
 

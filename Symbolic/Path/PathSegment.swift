@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - PathSegment
 
-fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, PathAppendable, ParamSplittable {
+fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, InverseParametrizable, PathAppendable, ParamSplittable {
     var from: Point2 { get }
     var to: Point2 { get }
     var edge: PathEdge { get }
@@ -101,6 +101,20 @@ extension PathSegment.Line: Tessellatable {
         let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
         return Polyline(points: points)
     }
+}
+
+// MARK: InverseParametrizable
+
+extension PathSegment.Arc: InverseParametrizable {
+    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
+}
+
+extension PathSegment.Bezier: InverseParametrizable {
+    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
+}
+
+extension PathSegment.Line: InverseParametrizable {
+    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
 }
 
 // MARK: PathAppendable
@@ -216,6 +230,8 @@ extension PathSegment: PathSegmentImpl {
     func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
 
     func tessellated(count: Int = 16) -> Polyline { impl.tessellated(count: count) }
+
+    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: p) }
 
     func append(to path: inout SUPath) { impl.append(to: &path) }
 

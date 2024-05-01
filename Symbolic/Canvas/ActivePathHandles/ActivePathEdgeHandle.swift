@@ -24,8 +24,7 @@ struct ActivePathEdgeHandle: View {
             .fill(Color.invisibleSolid)
             .onTapGesture {
                 toggleFocus()
-                let polyline = segment.tessellated()
-                print("param t", polyline.paramT(closestTo: $0))
+                print("paramT", segment.paramT(closestTo: $0))
             }
     }
 }

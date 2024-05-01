@@ -178,6 +178,15 @@ extension Polyline: Parametrizable {
 // MARK: InverseParametrizable
 
 extension Polyline: InverseParametrizable {
+    func segmentParam(closestTo point: Point2) -> (param: SegmentParam, distance: CGFloat) {
+        segments.enumerated()
+            .map { i, s in
+                let (t, distance) = s.paramT(closestTo: point)
+                return (param: SegmentParam(i: i, t: t), distance: distance)
+            }
+            .min(by: { $0.distance < $1.distance })!
+    }
+
     func paramT(segmentParam param: SegmentParam) -> CGFloat {
         var cumulated: CGFloat = 0
         for (i, s) in segments.enumerated() {
@@ -191,17 +200,25 @@ extension Polyline: InverseParametrizable {
         return (0 ... 1).clamp(cumulated / length)
     }
 
-    func segmentParam(closestTo point: Point2) -> (param: SegmentParam, distance: CGFloat) {
-        segments.enumerated()
-            .map { i, s in
-                let (t, distance) = s.paramT(closestTo: point)
-                return (param: SegmentParam(i: i, t: t), distance: distance)
-            }
-            .min(by: { $0.distance < $1.distance })!
-    }
-
     func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
         let (segmentParam, distance) = segmentParam(closestTo: point)
         return (t: paramT(segmentParam: segmentParam), distance: distance)
+    }
+}
+
+// MARK: approximate inverse parametrization for tessellated path
+
+extension Polyline {
+    func approxPathParamT(segmentParam param: SegmentParam) -> CGFloat {
+        var cumulated: CGFloat = CGFloat(param.i)
+        let s = segments[param.i]
+        let p = s.position(paramT: param.t)
+        cumulated += p.distance(to: s.start) / s.length
+        return (0 ... 1).clamp(cumulated / CGFloat(segments.count))
+    }
+
+    func approxPathParamT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
+        let (segmentParam, distance) = segmentParam(closestTo: point)
+        return (t: approxPathParamT(segmentParam: segmentParam), distance: distance)
     }
 }

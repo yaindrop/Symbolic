@@ -15,7 +15,7 @@ struct BlurView: UIViewRepresentable {
 
 struct CanvasView: View {
     @StateObject var touchContext: MultipleTouchContext
-    @StateObject var pressDetector: PressDetector
+    @StateObject var pressDetector: MultipleTouchPressDetector
 
     @StateObject var viewport: Viewport
     @StateObject var viewportUpdater: ViewportUpdater
@@ -46,7 +46,7 @@ struct CanvasView: View {
         }
 
         _touchContext = StateObject(wrappedValue: touchContext)
-        _pressDetector = StateObject(wrappedValue: PressDetector(touchContext: touchContext))
+        _pressDetector = StateObject(wrappedValue: MultipleTouchPressDetector(touchContext: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
         _documentModel = StateObject(wrappedValue: documentModel)

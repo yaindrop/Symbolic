@@ -102,8 +102,12 @@ extension PathSegment.Arc {
     }
 }
 
-extension PathEdge.Arc {
-    init(params: PathSegment.Arc.EndpointParams) {
-        self.init(radius: params.radius, rotation: params.rotation, largeArc: params.largeArc, sweep: params.sweep)
+extension PathSegment.Arc.EndpointParams {
+    var edge: PathEdge.Arc {
+        PathEdge.Arc(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+    }
+
+    var segment: PathSegment.Arc {
+        PathSegment.Arc(arc: edge, from: from, to: to)
     }
 }

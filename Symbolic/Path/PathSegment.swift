@@ -177,8 +177,8 @@ extension PathSegment.Arc: ParamSplittable {
         let params = self.params.centerParams
         let params0 = params.with(deltaAngle: params.deltaAngle * t)
         let params1 = params.with(startAngle: params.deltaAngle * t).with(deltaAngle: params.deltaAngle * (1 - t))
-        let a0 = Self(arc: .init(params: params0.endpointParams), from: from, to: to)
-        let a1 = Self(arc: .init(params: params1.endpointParams), from: from, to: to)
+        let a0 = params0.endpointParams.segment
+        let a1 = params1.endpointParams.segment
         return (a0, a1)
     }
 }

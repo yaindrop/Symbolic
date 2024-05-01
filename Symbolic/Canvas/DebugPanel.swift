@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DebugPanel: View {
     @ObservedObject var touchContext: MultipleTouchContext
-    @ObservedObject var pressDetector: PressDetector
+    @ObservedObject var pressDetector: MultipleTouchPressDetector
     @ObservedObject var viewportUpdater: ViewportUpdater
 
     @EnvironmentObject var viewport: Viewport

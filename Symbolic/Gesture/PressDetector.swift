@@ -8,11 +8,13 @@ struct TapInfo {
 
 // MARK: - PressDetector
 
-class PressDetector: ObservableObject {
-    static let pressOffsetThreshold: CGFloat = 10
-    static let tapDurationThreshold: TimeInterval = 1
-    static let repeatedTapIntervalThreshold: TimeInterval = 0.5
-    static let repeatedTapOffsetThreshold: CGFloat = 20
+class MultipleTouchPressDetector: ObservableObject {
+    struct Configs {
+        let pressOffsetThreshold: CGFloat = 10
+        let tapDurationThreshold: TimeInterval = 1
+        let repeatedTapIntervalThreshold: TimeInterval = 0.5
+        let repeatedTapOffsetThreshold: CGFloat = 20
+    }
 
     var pressLocation: Point2? { isPress ? touchContext.panInfo?.origin : nil }
 
@@ -22,21 +24,23 @@ class PressDetector: ObservableObject {
         tapSubject.sink { value in callback(value) }.store(in: &subscriptions)
     }
 
-    init(touchContext: MultipleTouchContext) {
+    init(touchContext: MultipleTouchContext, configs: Configs = Configs()) {
         self.touchContext = touchContext
+        self.configs = configs
         touchContext.$active.sink { active in if !active { self.onTouchEnded() }}.store(in: &subscriptions)
     }
 
     // MARK: private
 
     private let touchContext: MultipleTouchContext
+    private let configs: Configs
     private var subscriptions = Set<AnyCancellable>()
 
-    private var isPress: Bool { return touchContext.maxTouchesCount == 1 && touchContext.maxPanOffset < PressDetector.pressOffsetThreshold }
+    private var isPress: Bool { return touchContext.maxTouchesCount == 1 && touchContext.maxPanOffset < configs.pressOffsetThreshold }
 
     private var canEndAsTap: Bool {
         guard let beganTime = touchContext.firstTouchBeganTime else { return false }
-        return Date().timeIntervalSince(beganTime) < PressDetector.tapDurationThreshold
+        return Date().timeIntervalSince(beganTime) < configs.tapDurationThreshold
     }
 
     private struct RepeatedTapInfo {
@@ -49,7 +53,7 @@ class PressDetector: ObservableObject {
     private var canEndAsRepeatedTap: Bool {
         guard let info = pendingRepeatedTapInfo,
               let currLocation = pressLocation else { return false }
-        return Date().timeIntervalSince(info.time) < PressDetector.repeatedTapIntervalThreshold && info.location.distance(to: currLocation) < PressDetector.repeatedTapOffsetThreshold
+        return Date().timeIntervalSince(info.time) < configs.repeatedTapIntervalThreshold && info.location.distance(to: currLocation) < configs.repeatedTapOffsetThreshold
     }
 
     private func onTouchEnded() {

@@ -11,6 +11,8 @@ struct ActivePathEdgeHandle: View {
         outline
     }
 
+    @State private var isLongPressDown = false
+
     @EnvironmentObject private var activePathModel: ActivePathModel
 
     private var focused: Bool { activePathModel.focusedEdgeId == fromId }
@@ -22,10 +24,7 @@ struct ActivePathEdgeHandle: View {
         SUPath { p in segment.append(to: &p) }
             .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
             .fill(Color.invisibleSolid)
-            .onTapGesture {
-                toggleFocus()
-                print("paramT", segment.paramT(closestTo: $0))
-            }
+            .modifier(TapDragPress())
     }
 }
 

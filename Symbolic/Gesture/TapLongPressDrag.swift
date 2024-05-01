@@ -144,6 +144,7 @@ struct TapLongPressDrag: ViewModifier {
 
     private func resetLongPress() {
         if context.longPressStarted {
+            context.longPressStarted = false
             onLongPressEnd(context.lastLocation)
         }
         if let timeout = context.longPressTimeout {

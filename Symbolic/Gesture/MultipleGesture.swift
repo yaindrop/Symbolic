@@ -79,31 +79,30 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
         guard let context else { return }
         let longPressTimeout = DispatchWorkItem {
             onLongPress(context.lastValue, context.externalContext)
-            _context.wrappedValue?.longPressStarted = true
+            self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
-        _context.wrappedValue?.longPressTimeout = longPressTimeout
+        self.context?.longPressTimeout = longPressTimeout
     }
 
     private func resetLongPress() {
         guard let context else { return }
         if context.longPressStarted {
-            _context.wrappedValue?.longPressStarted = false
+            self.context?.longPressStarted = false
             onLongPressEnd(context.lastValue, context.externalContext)
         }
-        context.longPressTimeout?.cancel()
-        _context.wrappedValue?.longPressTimeout = nil
+        self.context?.longPressTimeout?.cancel()
+        self.context?.longPressTimeout = nil
     }
 
     private var gesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .updating(flag: $active)
             .onChanged { v in
+                context?.onValue(v)
                 if context == nil {
                     context = Context(externalContext: getExternalContext(), value: v)
                     setupLongPress()
-                } else {
-                    _context.wrappedValue?.onValue(v)
                 }
                 guard let context else { return }
                 if isDrag {
@@ -112,8 +111,8 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
                 }
             }
             .onEnded { v in
+                context?.onValue(v)
                 guard let context else { return }
-                _context.wrappedValue?.onValue(v)
                 if isDrag {
                     onDragEnd(v, context.externalContext)
                 } else if context.longPressStarted {

@@ -37,20 +37,9 @@ enum LineSegment {
     case vertical(Vertical)
 
     init(p0: Point2, p1: Point2) {
-        let line = Line(p0: p0, p1: p1)
-        switch line {
-        case let .slopeIntercept(slopeIntercept):
-            var x0 = p0.x, x1 = p1.x
-            if x0 > x1 {
-                swap(&x0, &x1)
-            }
-            self = .slopeIntercept(.init(slopeIntercept: slopeIntercept, x0: x0, x1: x1))
-        case let .vertical(vertical):
-            var y0 = p0.y, y1 = p1.y
-            if y0 > y1 {
-                swap(&y0, &y1)
-            }
-            self = .vertical(.init(vertical: vertical, y0: y0, y1: y1))
+        switch Line(p0: p0, p1: p1) {
+        case let .slopeIntercept(slopeIntercept): self = .slopeIntercept(.init(slopeIntercept: slopeIntercept, x0: p0.x, x1: p1.x))
+        case let .vertical(vertical): self = .vertical(.init(vertical: vertical, y0: p0.y, y1: p1.y))
         }
     }
 }
@@ -96,25 +85,19 @@ extension LineSegment.Vertical: Parametrizable {
 
 extension LineSegment.SlopeIntercept: InverseParametrizable {
     func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
-        let p = line.projected(from: point)
-        if p.x < x0 {
-            return (t: 0, distance: start.distance(to: point))
-        } else if p.x > x1 {
-            return (t: 1, distance: end.distance(to: point))
-        }
-        return (t: (p.x - x0) / (x1 - x0), p.distance(to: point))
+        var p = line.projected(from: point)
+        let x = ClosedRange(start: x0, end: x1).clamp(p.x)
+        p = CGPoint(x: x, y: slopeIntercept.y(x: x))
+        return (t: (x - x0) / (x1 - x0), p.distance(to: point))
     }
 }
 
 extension LineSegment.Vertical: InverseParametrizable {
     func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
-        let p = line.projected(from: point)
-        if p.y < y0 {
-            return (t: 0, distance: start.distance(to: point))
-        } else if p.y > y1 {
-            return (t: 1, distance: end.distance(to: point))
-        }
-        return (t: (p.y - y0) / (y1 - y0), p.distance(to: point))
+        var p = line.projected(from: point)
+        let y = ClosedRange(start: y0, end: y1).clamp(p.y)
+        p = CGPoint(x: vertical.x, y: y)
+        return (t: (y - y0) / (y1 - y0), p.distance(to: point))
     }
 }
 

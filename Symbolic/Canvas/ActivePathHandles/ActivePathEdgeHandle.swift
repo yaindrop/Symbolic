@@ -9,9 +9,18 @@ struct ActivePathEdgeHandle: View {
 
     var body: some View {
         outline
+        if let longPressPosition {
+            let t = segment.paramT(closestTo: longPressPosition).t
+            let p = segment.position(paramT: t)
+            circle(at: p, color: .teal)
+            SUPath {
+                $0.move(to: longPressPosition)
+                $0.addLine(to: p)
+            }.stroke(.red)
+        }
     }
 
-    @State private var isLongPressDown = false
+    @State private var longPressPosition: Point2?
 
     @EnvironmentObject private var activePathModel: ActivePathModel
 
@@ -24,7 +33,23 @@ struct ActivePathEdgeHandle: View {
         SUPath { p in segment.append(to: &p) }
             .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
             .fill(Color.invisibleSolid)
-            .modifier(MultipleGestureModifier((), onTap: { _, _ in toggleFocus() }))
+            .modifier(MultipleGestureModifier((),
+                                              onTap: { _, _ in toggleFocus() },
+                                              onLongPress: { v, _ in longPressPosition = v.location },
+                                              onLongPressEnd: { _, _ in longPressPosition = nil },
+                                              onDrag: { v, _ in if longPressPosition != nil { longPressPosition = v.location }}))
+    }
+
+    private static let circleSize: CGFloat = 16
+    private static let lineWidth: CGFloat = 2
+
+    @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
+        Circle()
+            .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
+            .fill(color.opacity(0.5))
+            .frame(width: Self.circleSize, height: Self.circleSize)
+            .invisibleSoildOverlay()
+            .position(point)
     }
 }
 

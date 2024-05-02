@@ -42,6 +42,14 @@ extension CGFloat: ScalarMultiplicable {
 }
 
 extension ClosedRange {
+    init(start: Bound, end: Bound) {
+        if start < end {
+            self = start ... end
+        } else {
+            self = end ... start
+        }
+    }
+
     func clamp(_ value: Bound) -> Bound {
         return lowerBound > value ? lowerBound : upperBound < value ? upperBound : value
     }

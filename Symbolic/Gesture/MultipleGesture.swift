@@ -3,14 +3,15 @@ import SwiftUI
 
 // MARK: - MultipleGestureModifier
 
-struct MultipleGestureModifier<ExternalContext>: ViewModifier {
+struct MultipleGestureModifier<Origin>: ViewModifier {
     struct Configs {
         let distanceThreshold: CGFloat = 10 // tap or long press when smaller, drag when greater
         let durationThreshold: TimeInterval = 1 // tap when smaller, long press when greater
+        let allowLongPressDuringDrag: Bool = true // whether to continue long press after drag start
     }
 
-    struct Context {
-        let externalContext: ExternalContext
+    private struct Context {
+        let origin: Origin
         let startTime: Date = .now
 
         private(set) var lastValue: DragGesture.Value
@@ -24,8 +25,8 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
             maxDistance = max(maxDistance, Vector2(value.translation).length)
         }
 
-        init(externalContext: ExternalContext, value: DragGesture.Value) {
-            self.externalContext = externalContext
+        init(origin: Origin, value: DragGesture.Value) {
+            self.origin = origin
             lastValue = value
         }
     }
@@ -41,14 +42,14 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
             }
     }
 
-    init(_ getExternalContext: @autoclosure @escaping () -> ExternalContext,
+    init(_ getOrigin: @autoclosure @escaping () -> Origin,
          configs: Configs = Configs(),
-         onTap: @escaping (DragGesture.Value, ExternalContext) -> Void = { _, _ in },
-         onLongPress: @escaping (DragGesture.Value, ExternalContext) -> Void = { _, _ in },
-         onLongPressEnd: @escaping (DragGesture.Value, ExternalContext) -> Void = { _, _ in },
-         onDrag: @escaping (DragGesture.Value, ExternalContext) -> Void = { _, _ in },
-         onDragEnd: @escaping (DragGesture.Value, ExternalContext) -> Void = { _, _ in }) {
-        self.getExternalContext = getExternalContext
+         onTap: ((DragGesture.Value, Origin) -> Void)? = nil,
+         onLongPress: ((DragGesture.Value, Origin) -> Void)? = nil,
+         onLongPressEnd: ((DragGesture.Value, Origin) -> Void)? = nil,
+         onDrag: ((DragGesture.Value, Origin) -> Void)? = nil,
+         onDragEnd: ((DragGesture.Value, Origin) -> Void)? = nil) {
+        self.getOrigin = getOrigin
         self.configs = configs
         self.onTap = onTap
         self.onLongPress = onLongPress
@@ -59,13 +60,13 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
 
     // MARK: private
 
-    private let getExternalContext: () -> ExternalContext
+    private let getOrigin: () -> Origin
     private let configs: Configs
-    private let onTap: (DragGesture.Value, ExternalContext) -> Void
-    private let onLongPress: (DragGesture.Value, ExternalContext) -> Void
-    private let onLongPressEnd: (DragGesture.Value, ExternalContext) -> Void
-    private let onDrag: (DragGesture.Value, ExternalContext) -> Void
-    private let onDragEnd: (DragGesture.Value, ExternalContext) -> Void
+    private let onTap: ((DragGesture.Value, Origin) -> Void)?
+    private let onLongPress: ((DragGesture.Value, Origin) -> Void)?
+    private let onLongPressEnd: ((DragGesture.Value, Origin) -> Void)?
+    private let onDrag: ((DragGesture.Value, Origin) -> Void)?
+    private let onDragEnd: ((DragGesture.Value, Origin) -> Void)?
 
     @State private var context: Context?
     @GestureState private var active: Bool = false
@@ -78,7 +79,7 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
     private func setupLongPress() {
         guard let context else { return }
         let longPressTimeout = DispatchWorkItem {
-            onLongPress(context.lastValue, context.externalContext)
+            onLongPress?(context.lastValue, context.origin)
             self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
@@ -89,7 +90,7 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
         guard let context else { return }
         if context.longPressStarted {
             self.context?.longPressStarted = false
-            onLongPressEnd(context.lastValue, context.externalContext)
+            onLongPressEnd?(context.lastValue, context.origin)
         }
         self.context?.longPressTimeout?.cancel()
         self.context?.longPressTimeout = nil
@@ -101,24 +102,31 @@ struct MultipleGestureModifier<ExternalContext>: ViewModifier {
             .onChanged { v in
                 context?.onValue(v)
                 if context == nil {
-                    context = Context(externalContext: getExternalContext(), value: v)
+                    context = Context(origin: getOrigin(), value: v)
                     setupLongPress()
                 }
                 guard let context else { return }
                 if isDrag {
-                    resetLongPress()
-                    onDrag(v, context.externalContext)
+                    if !context.longPressStarted || !configs.allowLongPressDuringDrag {
+                        resetLongPress()
+                    }
+                    onDrag?(v, context.origin)
                 }
             }
             .onEnded { v in
                 context?.onValue(v)
                 guard let context else { return }
                 if isDrag {
-                    onDragEnd(v, context.externalContext)
-                } else if context.longPressStarted {
-                    onLongPressEnd(v, context.externalContext)
+                    onDragEnd?(v, context.origin)
+                    if context.longPressStarted && configs.allowLongPressDuringDrag {
+                        onLongPressEnd?(v, context.origin)
+                    }
                 } else {
-                    onTap(v, context.externalContext)
+                    if context.longPressStarted {
+                        onLongPressEnd?(v, context.origin)
+                    } else {
+                        onTap?(v, context.origin)
+                    }
                 }
             }
     }

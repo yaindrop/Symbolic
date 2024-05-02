@@ -77,12 +77,14 @@ extension PathSegment.Line: Parametrizable {
 
 // MARK: Tessellatable
 
+fileprivate let defaultTessellationCount: Int = 64
+
 fileprivate protocol Tessellatable {
     func tessellated(count: Int) -> Polyline
 }
 
 extension PathSegment.Arc: Tessellatable {
-    func tessellated(count: Int = 16) -> Polyline {
+    func tessellated(count: Int = defaultTessellationCount) -> Polyline {
         let params = params.centerParams
         let points = (0 ... count).map { i -> Point2 in params.position(paramT: CGFloat(i) / CGFloat(count)) }
         return Polyline(points: points)
@@ -90,14 +92,14 @@ extension PathSegment.Arc: Tessellatable {
 }
 
 extension PathSegment.Bezier: Tessellatable {
-    func tessellated(count: Int = 16) -> Polyline {
+    func tessellated(count: Int = defaultTessellationCount) -> Polyline {
         let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
         return Polyline(points: points)
     }
 }
 
 extension PathSegment.Line: Tessellatable {
-    func tessellated(count: Int = 16) -> Polyline {
+    func tessellated(count: Int = defaultTessellationCount) -> Polyline {
         let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
         return Polyline(points: points)
     }
@@ -229,7 +231,7 @@ extension PathSegment: PathSegmentImpl {
 
     func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
 
-    func tessellated(count: Int = 16) -> Polyline { impl.tessellated(count: count) }
+    func tessellated(count: Int = defaultTessellationCount) -> Polyline { impl.tessellated(count: count) }
 
     func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: p) }
 

@@ -31,7 +31,7 @@
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
 		57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathSegment.swift */; };
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
-		57416E472BE2851D00C73434 /* TapLongPressDrag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E462BE2851D00C73434 /* TapLongPressDrag.swift */; };
+		57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E462BE2851D00C73434 /* MultipleGesture.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -49,7 +49,6 @@
 		57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift */; };
 		57B5F1402BD4A3EF001E1B2E /* ActivePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* ActivePathModel.swift */; };
 		57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* Utils.swift */; };
-		57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1452BD4DDC1001E1B2E /* Box.swift */; };
 		57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1482BD54279001E1B2E /* DocumentEvent.swift */; };
 		57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F14A2BD54AA5001E1B2E /* Document.swift */; };
 /* End PBXBuildFile section */
@@ -99,7 +98,7 @@
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		57416E3E2BE12A9500C73434 /* PathSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegment.swift; sourceTree = "<group>"; };
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
-		57416E462BE2851D00C73434 /* TapLongPressDrag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapLongPressDrag.swift; sourceTree = "<group>"; };
+		57416E462BE2851D00C73434 /* MultipleGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleGesture.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -117,7 +116,6 @@
 		57B5F12B2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathSegment+ArcParams.swift"; sourceTree = "<group>"; };
 		57B5F13F2BD4A3EF001E1B2E /* ActivePathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathModel.swift; sourceTree = "<group>"; };
 		57B5F1432BD4A621001E1B2E /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		57B5F1452BD4DDC1001E1B2E /* Box.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Box.swift; sourceTree = "<group>"; };
 		57B5F1482BD54279001E1B2E /* DocumentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEvent.swift; sourceTree = "<group>"; };
 		57B5F14A2BD54AA5001E1B2E /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -293,9 +291,9 @@
 		57B5F13D2BD4A314001E1B2E /* Gesture */ = {
 			isa = PBXGroup;
 			children = (
+				57416E462BE2851D00C73434 /* MultipleGesture.swift */,
 				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
 				57B5F1192BC62FA3001E1B2E /* PressDetector.swift */,
-				57416E462BE2851D00C73434 /* TapLongPressDrag.swift */,
 				57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */,
 			);
 			path = Gesture;
@@ -304,7 +302,6 @@
 		57B5F13E2BD4A32E001E1B2E /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				57B5F1452BD4DDC1001E1B2E /* Box.swift */,
 				57B5F1132BC62CFB001E1B2E /* Math.swift */,
 				57B5F1432BD4A621001E1B2E /* Utils.swift */,
 			);
@@ -476,7 +473,6 @@
 				5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */,
-				57B5F1462BD4DDC1001E1B2E /* Box.swift in Sources */,
 				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* PressDetector.swift in Sources */,
@@ -484,7 +480,7 @@
 				57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
-				57416E472BE2851D00C73434 /* TapLongPressDrag.swift in Sources */,
+				57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,
 				5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */,

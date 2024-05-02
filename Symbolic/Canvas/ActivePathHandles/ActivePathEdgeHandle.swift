@@ -24,11 +24,7 @@ struct ActivePathEdgeHandle: View {
         SUPath { p in segment.append(to: &p) }
             .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
             .fill(Color.invisibleSolid)
-            .modifier(TapLongPressDrag(onTap: { _ in print("onTap") },
-                                       onLongPress: { _ in print("onLongPress") },
-                                       onLongPressEnd: { _ in print("onLongPressEnd") },
-                                       onDrag: { _ in print("onDrag") },
-                                       onDragEnd: { _ in print("onDragEnd") }))
+            .modifier(MultipleGestureModifier((), onTap: { _, _ in toggleFocus() }))
     }
 }
 
@@ -66,10 +62,10 @@ struct ActivePathFocusedEdgeHandle: View {
             .modifier(drag(origin: point))
     }
 
-    private func drag(origin: Point2) -> DragGestureWithContext<Point2> {
+    private func drag(origin: Point2) -> MultipleGestureModifier<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveEdge: fromId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }
-        return DragGestureWithContext(origin, onChanged: update(pending: true), onEnded: update())
+        return MultipleGestureModifier(origin, onDrag: update(pending: true), onDragEnd: update())
     }
 }

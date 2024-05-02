@@ -39,10 +39,10 @@ struct ActivePathNodeHandle: View {
             }
     }
 
-    private var drag: DragGestureWithContext<Point2> {
+    private var drag: MultipleGestureModifier<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }
-        return DragGestureWithContext(position, onChanged: update(pending: true), onEnded: update())
+        return MultipleGestureModifier(position, onDrag: update(pending: true), onDragEnd: update())
     }
 }

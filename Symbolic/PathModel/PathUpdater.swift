@@ -92,6 +92,8 @@ class PathUpdater: ObservableObject {
 
     private var activePath: Path? { activePathModel.activePath }
 
+    // MARK: handle action
+
     private func handle(_ action: DocumentAction, pending: Bool) {
         switch action {
         case let .pathAction(pathAction):
@@ -113,6 +115,8 @@ class PathUpdater: ObservableObject {
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         (pending ? pendingEventSubject : eventSubject).send(event)
     }
+
+    // MARK: collect events for action
 
     private func collectEvents(to events: inout [PathEvent], _ pathAction: PathAction) {
         switch pathAction {

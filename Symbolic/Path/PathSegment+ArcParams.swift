@@ -10,8 +10,8 @@ extension PathSegment.Arc {
         let startAngle: Angle
         let deltaAngle: Angle
 
-        func with(startAngle: Angle) -> Self { Self(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
-        func with(deltaAngle: Angle) -> Self { Self(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
+        func with(startAngle: Angle) -> Self { .init(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
+        func with(deltaAngle: Angle) -> Self { .init(center: center, radius: radius, rotation: rotation, startAngle: startAngle, deltaAngle: deltaAngle) }
 
         var endAngle: Angle { startAngle + deltaAngle }
         var clockwise: Bool { deltaAngle < .zero }

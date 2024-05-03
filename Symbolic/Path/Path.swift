@@ -16,36 +16,36 @@ enum PathEdge {
         let largeArc: Bool
         let sweep: Bool
 
-        func with(radius: CGSize) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-        func with(rotation: Angle) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-        func with(largeArc: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-        func with(sweep: Bool) -> Self { Self(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(radius: CGSize) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(rotation: Angle) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(largeArc: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func with(sweep: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
 
         var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
 
-        func applying(_ t: CGAffineTransform) -> Self { Self(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
+        func applying(_ t: CGAffineTransform) -> Self { .init(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
     }
 
     struct Bezier: Impl {
         let control0: Point2
         let control1: Point2
 
-        func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
-        func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
+        func with(control0: Point2) -> Self { .init(control0: control0, control1: control1) }
+        func with(control1: Point2) -> Self { .init(control0: control0, control1: control1) }
 
-        func with(offset: Vector2) -> Self { Self(control0: control0 + offset, control1: control1 + offset) }
-        func with(offset0: Vector2) -> Self { Self(control0: control0 + offset0, control1: control1) }
-        func with(offset1: Vector2) -> Self { Self(control0: control0, control1: control1 + offset1) }
+        func with(offset: Vector2) -> Self { .init(control0: control0 + offset, control1: control1 + offset) }
+        func with(offset0: Vector2) -> Self { .init(control0: control0 + offset0, control1: control1) }
+        func with(offset1: Vector2) -> Self { .init(control0: control0, control1: control1 + offset1) }
 
         var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 
-        func applying(_ t: CGAffineTransform) -> Self { Self(control0: control0.applying(t), control1: control1.applying(t)) }
+        func applying(_ t: CGAffineTransform) -> Self { .init(control0: control0.applying(t), control1: control1.applying(t)) }
     }
 
     struct Line: Impl {
         var description: String { "Line" }
 
-        func applying(_ t: CGAffineTransform) -> Self { Self() }
+        func applying(_ t: CGAffineTransform) -> Self { .init() }
     }
 
     case line(Line)
@@ -79,8 +79,8 @@ struct PathNode: Identifiable {
     let id: UUID
     let position: Point2
 
-    func with(position: Point2) -> Self { Self(id: id, position: position) }
-    func with(offset: Vector2) -> Self { Self(id: id, position: position + offset) }
+    func with(position: Point2) -> Self { .init(id: id, position: position) }
+    func with(offset: Vector2) -> Self { .init(id: id, position: position + offset) }
 
     init(position: Point2) {
         id = UUID()

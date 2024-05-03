@@ -20,7 +20,7 @@ enum PathSegment {
             EndpointParams(from: from, to: to, radius: arc.radius, rotation: arc.rotation, largeArc: arc.largeArc, sweep: arc.sweep)
         }
 
-        func applying(_ t: CGAffineTransform) -> Self { Self(arc: arc.applying(t), from: from.applying(t), to: to.applying(t)) }
+        func applying(_ t: CGAffineTransform) -> Self { .init(arc: arc.applying(t), from: from.applying(t), to: to.applying(t)) }
     }
 
     struct Bezier: Impl {
@@ -28,7 +28,7 @@ enum PathSegment {
         let from: Point2, to: Point2
         var edge: PathEdge { .bezier(bezier) }
 
-        func applying(_ t: CGAffineTransform) -> Self { Self(bezier: bezier.applying(t), from: from.applying(t), to: to.applying(t)) }
+        func applying(_ t: CGAffineTransform) -> Self { .init(bezier: bezier.applying(t), from: from.applying(t), to: to.applying(t)) }
     }
 
     struct Line: Impl {
@@ -36,7 +36,7 @@ enum PathSegment {
         let from: Point2, to: Point2
         var edge: PathEdge { .line(line) }
 
-        func applying(_ t: CGAffineTransform) -> Self { Self(line: line.applying(t), from: from.applying(t), to: to.applying(t)) }
+        func applying(_ t: CGAffineTransform) -> Self { .init(line: line.applying(t), from: from.applying(t), to: to.applying(t)) }
     }
 
     case arc(Arc)
@@ -194,9 +194,10 @@ extension PathSegment.Bezier: ParamSplittable {
         let p01 = lerp(from: p0, to: p1, at: t), p12 = lerp(from: p1, to: p2, at: t), p23 = lerp(from: p2, to: p3, at: t)
         let p012 = lerp(from: p01, to: p12, at: t), p123 = lerp(from: p12, to: p23, at: t)
         let p0123 = lerp(from: p012, to: p123, at: t)
-        let b0 = Self(bezier: .init(control0: Point2(p01), control1: Point2(p012)), from: from, to: Point2(p0123))
-        let b1 = Self(bezier: .init(control0: Point2(p123), control1: Point2(p23)), from: Point2(p0123), to: to)
-        return (b0, b1)
+        return (
+            .init(bezier: .init(control0: Point2(p01), control1: Point2(p012)), from: from, to: Point2(p0123)),
+            .init(bezier: .init(control0: Point2(p123), control1: Point2(p23)), from: Point2(p0123), to: to)
+        )
     }
 
     func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
@@ -210,9 +211,10 @@ extension PathSegment.Bezier: ParamSplittable {
 extension PathSegment.Line: ParamSplittable {
     func split(paramT t: CGFloat) -> (Self, Self) {
         let pt = Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
-        let l0 = Self(line: PathEdge.Line(), from: from, to: pt)
-        let l1 = Self(line: PathEdge.Line(), from: pt, to: to)
-        return (l0, l1)
+        return (
+            .init(line: PathEdge.Line(), from: from, to: pt),
+            .init(line: PathEdge.Line(), from: pt, to: to)
+        )
     }
 
     func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {

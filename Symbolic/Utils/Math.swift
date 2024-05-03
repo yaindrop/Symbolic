@@ -95,8 +95,8 @@ struct Matrix2 {
 public typealias Vector2 = CGVector
 
 extension Vector2: AdditiveArithmetic, Transformable, ScalarMultiplicable {
-    func with(dx: CGFloat) -> Self { Self(dx: dx, dy: dy) }
-    func with(dy: CGFloat) -> Self { Self(dx: dx, dy: dy) }
+    func with(dx: CGFloat) -> Self { .init(dx: dx, dy: dy) }
+    func with(dy: CGFloat) -> Self { .init(dx: dx, dy: dy) }
 
     var shortDescription: String { String(format: "(%.1f, %.1f)", dx, dy) }
 
@@ -157,7 +157,7 @@ extension Vector2: AdditiveArithmetic, Transformable, ScalarMultiplicable {
         var translationCancelled = t
         translationCancelled.tx = 0
         translationCancelled.ty = 0
-        return Self(Point2(self).applying(translationCancelled))
+        return .init(Point2(self).applying(translationCancelled))
     }
 
     func nearlyEqual(_ v: Vector2, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
@@ -172,8 +172,8 @@ extension Vector2: AdditiveArithmetic, Transformable, ScalarMultiplicable {
 public typealias Point2 = CGPoint
 
 extension Point2 {
-    func with(x: CGFloat) -> Self { Self(x: x, y: y) }
-    func with(y: CGFloat) -> Self { Self(x: x, y: y) }
+    func with(x: CGFloat) -> Self { .init(x: x, y: y) }
+    func with(y: CGFloat) -> Self { .init(x: x, y: y) }
 
     var shortDescription: String { String(format: "(%.1f, %.1f)", x, y) }
 
@@ -207,8 +207,8 @@ extension Point2 {
 // MARK: - CGSize
 
 extension CGSize: Transformable {
-    func with(width: CGFloat) -> Self { Self(width: width, height: height) }
-    func with(height: CGFloat) -> Self { Self(width: width, height: height) }
+    func with(width: CGFloat) -> Self { .init(width: width, height: height) }
+    func with(height: CGFloat) -> Self { .init(width: width, height: height) }
 
     var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
 
@@ -220,7 +220,7 @@ extension CGSize: Transformable {
 
     func applying(_ t: CGAffineTransform) -> Self {
         let v = Vector2(self).applying(t)
-        return Self(width: v.dx, height: v.dy)
+        return .init(width: v.dx, height: v.dy)
     }
 }
 

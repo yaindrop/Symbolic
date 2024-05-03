@@ -6,7 +6,7 @@ fileprivate extension DocumentEvent {
         switch action {
         case let .pathAction(pathAction):
             switch pathAction {
-            case .loadPath: "PathLoad"
+            case .load: "PathLoad"
             case let .moveEdge(moveEdge): "\(moveEdge.pathId) MoveEdge \(moveEdge.fromNodeId) offset \(moveEdge.offset)"
             default: "pathAction"
             }

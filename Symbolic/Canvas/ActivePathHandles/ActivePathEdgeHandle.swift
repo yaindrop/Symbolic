@@ -9,20 +9,15 @@ struct ActivePathEdgeHandle: View {
 
     var body: some View {
         outline
-        if let longPressPosition {
-            let t = segment.paramT(closestTo: longPressPosition).t
-            let p = segment.position(paramT: t)
-            circle(at: p, color: .teal)
-            SUPath {
-                $0.move(to: longPressPosition)
-                $0.addLine(to: p)
-            }.stroke(.red)
-        }
+//        if let longPressPosition {
+//            circle(at: p, color: .teal)
+//        }
     }
 
-    @State private var longPressPosition: Point2?
+    @State private var longPressParamT: CGFloat?
 
     @EnvironmentObject private var activePathModel: ActivePathModel
+    @EnvironmentObject private var updater: PathUpdater
 
     private var focused: Bool { activePathModel.focusedEdgeId == fromId }
     private func toggleFocus() {
@@ -33,11 +28,30 @@ struct ActivePathEdgeHandle: View {
         SUPath { p in segment.append(to: &p) }
             .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
             .fill(Color.invisibleSolid)
-            .modifier(MultipleGestureModifier((),
-                                              onTap: { _, _ in toggleFocus() },
-                                              onLongPress: { v, _ in longPressPosition = v.location },
-                                              onLongPressEnd: { _, _ in longPressPosition = nil },
-                                              onDrag: { v, _ in if longPressPosition != nil { longPressPosition = v.location }}))
+            .modifier(gesture)
+    }
+
+    private var gesture: MultipleGestureModifier<PathSegment> {
+        func split(at p: CGPoint, pending: Bool = false) {
+            guard let longPressParamT else { return }
+            updater.updateActivePath(splitSegment: fromId, paramT: longPressParamT, positionInView: p, pending: pending)
+            if !pending {
+                self.longPressParamT = nil
+            }
+        }
+        return MultipleGestureModifier(segment,
+                                       onTap: { _, _ in toggleFocus() },
+                                       onLongPress: { v, s in
+                                           let t = s.paramT(closestTo: v.location).t
+                                           longPressParamT = t
+                                           split(at: s.position(paramT: t), pending: true)
+                                       },
+                                       onLongPressEnd: { _, s in
+                                           guard let longPressParamT else { return }
+                                           split(at: s.position(paramT: longPressParamT))
+                                       },
+                                       onDrag: { v, _ in split(at: v.location, pending: true) },
+                                       onDragEnd: { v, _ in split(at: v.location) })
     }
 
     private static let circleSize: CGFloat = 16
@@ -84,10 +98,10 @@ struct ActivePathFocusedEdgeHandle: View {
             .padding(Self.touchablePadding)
             .invisibleSoildOverlay()
             .position(point)
-            .modifier(drag(origin: point))
+            .modifier(gesture(origin: point))
     }
 
-    private func drag(origin: Point2) -> MultipleGestureModifier<Point2> {
+    private func gesture(origin: Point2) -> MultipleGestureModifier<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveEdge: fromId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }

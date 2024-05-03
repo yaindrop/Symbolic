@@ -24,7 +24,7 @@ struct Document: Equatable {
         delegate.onPath {
             let path = Path(from: $0)
             let pathEvent: PathEvent = .create(.init(path: path))
-            let event = DocumentEvent(kind: .pathEvent(pathEvent), action: .pathAction(.loadPath))
+            let event = DocumentEvent(kind: .pathEvent(pathEvent), action: .pathAction(.load(.init(path: path))))
             events.append(event)
         }
         parser.parse()

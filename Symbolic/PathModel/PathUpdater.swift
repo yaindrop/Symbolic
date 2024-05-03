@@ -9,6 +9,15 @@ class PathUpdater: ObservableObject {
     let activePathModel: ActivePathModel
     let viewport: Viewport
 
+    func updateActivePath(splitSegment fromNodeId: UUID, paramT: CGFloat, position: Point2, pending: Bool = false) {
+        guard let activePath else { return }
+        handle(.pathAction(.splitSegment(.init(pathId: activePath.id, fromNodeId: fromNodeId, paramT: paramT, newNode: PathNode(position: position)))), pending: pending)
+    }
+
+    func updateActivePath(splitSegment fromNodeId: UUID, paramT: CGFloat, positionInView: Point2, pending: Bool = false) {
+        updateActivePath(splitSegment: fromNodeId, paramT: paramT, position: positionInView.applying(viewport.toWorld), pending: pending)
+    }
+
     // MARK: single update
 
     func updateActivePath(node id: UUID, position: Point2, pending: Bool = false) {
@@ -97,6 +106,7 @@ class PathUpdater: ObservableObject {
 
     private func getEventKind(_ pathAction: PathAction) -> DocumentEvent.Kind? {
         switch pathAction {
+        case let .splitSegment(splitSegment): getEventKind(splitSegment)
         case let .moveEdge(moveEdge): getEventKind(moveEdge)
         case let .moveNode(moveNode): getEventKind(moveNode)
         case let .setEdgeArc(setEdgeArc): getEventKind(setEdgeArc)
@@ -105,6 +115,19 @@ class PathUpdater: ObservableObject {
         case .setEdgeLine: nil
         default: nil
         }
+    }
+
+    private func getEventKind(_ splitSegment: PathAction.SplitSegment) -> DocumentEvent.Kind? {
+        let pathId = splitSegment.pathId, fromNodeId = splitSegment.fromNodeId, paramT = splitSegment.paramT, newNode = splitSegment.newNode
+        guard let path = pathStore.pathIdToPath[pathId],
+              let curr = path.pair(id: fromNodeId),
+              let segment = path.segment(from: fromNodeId) else { return nil }
+        let (first, second) = segment.split(paramT: paramT)
+        var events: [CompoundEvent.Kind] = []
+        events.append(.pathEvent(.init(in: pathId, createNodeAfter: fromNodeId, newNode)))
+        events.append(.pathEvent(.init(in: pathId, updateEdgeFrom: fromNodeId, first.edge)))
+        events.append(.pathEvent(.init(in: pathId, updateEdgeFrom: newNode.id, second.edge)))
+        return .compoundEvent(.init(events: events))
     }
 
     private func getEventKind(_ setNodePosition: PathAction.SetNodePosition) -> DocumentEvent.Kind? {

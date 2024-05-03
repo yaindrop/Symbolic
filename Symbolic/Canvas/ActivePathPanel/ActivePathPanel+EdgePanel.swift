@@ -18,8 +18,9 @@ extension ActivePathPanel {
                         } label: {
                             Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                             Text(name)
-                                .font(.body)
+                                .font(.subheadline)
                         }
+                        .if(focused) { $0.foregroundStyle(.cyan) }
                         .buttonStyle(PlainButtonStyle())
                         Spacer()
                     }
@@ -47,7 +48,7 @@ extension ActivePathPanel {
         @EnvironmentObject private var activePathModel: ActivePathModel
         @State private var expanded = false
 
-        private var focused: Bool { activePathModel.focusedPart?.id == fromNodeId }
+        private var focused: Bool { activePathModel.focusedPart == .edge(fromNodeId) }
 
         private var name: String {
             switch edge {
@@ -105,26 +106,30 @@ fileprivate struct ArcPanel: View {
         VStack(spacing: 12) {
             HStack {
                 Text("Radius")
+                    .font(.callout)
                 Spacer()
                 SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
             }
             Divider()
             HStack {
                 Text("Rotation")
+                    .font(.callout)
                 Spacer()
                 AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
             }
             Divider()
             HStack {
                 Text("Large Arc")
+                    .font(.callout)
                 Spacer()
-                Text("\(arc.largeArc)")
+                FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
             }
             Divider()
             HStack {
                 Text("Sweep")
+                    .font(.callout)
                 Spacer()
-                Text("\(arc.sweep)")
+                FlagInput(flag: arc.sweep, onChange: updateSweep)
             }
         }
         .padding(12)
@@ -140,5 +145,13 @@ fileprivate struct ArcPanel: View {
 
     private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
         { updater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
+    }
+
+    private var updateLargeArc: (Bool) -> Void {
+        { updater.updateActivePath(edge: fromNodeId, arc: arc.with(largeArc: $0)) }
+    }
+
+    private var updateSweep: (Bool) -> Void {
+        { updater.updateActivePath(edge: fromNodeId, arc: arc.with(sweep: $0)) }
     }
 }

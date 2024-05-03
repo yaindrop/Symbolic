@@ -22,7 +22,9 @@ struct ActivePathEdgeHandle: View {
 
     private var focused: Bool { activePathModel.focusedEdgeId == fromId }
     private func toggleFocus() {
-        activePathModel.focusedPart = focused ? nil : .edge(fromId)
+        withAnimation {
+            activePathModel.focusedPart = focused ? nil : .edge(fromId)
+        }
     }
 
     @ViewBuilder private var outline: some View {
@@ -43,12 +45,14 @@ struct ActivePathEdgeHandle: View {
         return MultipleGestureModifier(segment,
                                        onTap: { _, _ in toggleFocus() },
                                        onLongPress: { v, s in
-                                           let t = s.paramT(closestTo: v.location).t
-                                           longPressParamT = t
-                                           let id = UUID()
-                                           longPressSplitNodeId = id
-                                           split(at: s.position(paramT: t), pending: true)
-                                           activePathModel.focusedPart = .node(id)
+                                           withAnimation {
+                                               let t = s.paramT(closestTo: v.location).t
+                                               longPressParamT = t
+                                               let id = UUID()
+                                               longPressSplitNodeId = id
+                                               split(at: s.position(paramT: t), pending: true)
+                                               activePathModel.focusedPart = .node(id)
+                                           }
                                        },
                                        onLongPressEnd: { _, s in
                                            guard let longPressParamT else { return }

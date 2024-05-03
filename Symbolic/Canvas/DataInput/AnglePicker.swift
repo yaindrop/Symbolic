@@ -46,7 +46,7 @@ struct AnglePicker: View {
     private var inputAngle: Angle { isRadians ? Angle(radians: inputNumber) : Angle(degrees: inputNumber) }
 
     private var content: some View {
-        Group {
+        HStack(spacing: 0) {
             if isInputMode {
                 Button { endInput() } label: { Image(systemName: "checkmark.circle") }
             }
@@ -62,7 +62,7 @@ struct AnglePicker: View {
                 inputNumber = isRadians ? angle.radians : angle.degrees
             } label: { Text(isRadians ? "rad" : " ° ") }
         }
-        .font(.callout.monospacedDigit())
+        .font(.footnote.monospacedDigit())
     }
 
     private func startInput() {

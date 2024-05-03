@@ -44,7 +44,7 @@ struct SizePicker: View {
     private var inputSize: CGSize { CGSize(inputW, inputH) }
 
     private var content: some View {
-        Group {
+        HStack(spacing: 0) {
             if isInputMode {
                 Button { endInput() } label: { Image(systemName: "checkmark.circle") }
             }
@@ -54,7 +54,7 @@ struct SizePicker: View {
             } else {
                 Text(size.width.formatted(decimalFormatStyle()))
             }
-            Rectangle().frame(width: 1).background(Color.label)
+            Rectangle().frame(width: 1).background(Color.label).padding(.horizontal, 4)
             Image(systemName: "arrow.up.and.down")
             if isInputMode {
                 DecimalInput(title: "Height", inputNumber: $inputH)
@@ -62,7 +62,7 @@ struct SizePicker: View {
                 Text(size.height.formatted(decimalFormatStyle()))
             }
         }
-        .font(.callout.monospacedDigit())
+        .font(.footnote.monospacedDigit())
     }
 
     private func startInput() {

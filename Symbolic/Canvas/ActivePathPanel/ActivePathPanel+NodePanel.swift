@@ -10,9 +10,12 @@ extension ActivePathPanel {
 
         var body: some View {
             HStack {
-                Image(systemName: "smallcircle.filled.circle")
-                Text("\(index)")
-                    .font(.headline)
+                Group {
+                    Image(systemName: "smallcircle.filled.circle")
+                    Text("\(index)")
+                        .font(.callout)
+                }
+                .if(focused) { $0.foregroundStyle(.blue)}
                 Spacer()
                 PositionPicker(position: node.position, onChange: updatePosition(pending: true), onDone: updatePosition())
             }
@@ -21,7 +24,10 @@ extension ActivePathPanel {
             .cornerRadius(12)
         }
 
+        @EnvironmentObject private var activePathModel: ActivePathModel
         @EnvironmentObject private var updater: PathUpdater
+
+        private var focused: Bool { activePathModel.focusedPart == .node(node.id) }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
             { updater.updateActivePath(node: node.id, position: $0, pending: pending) }

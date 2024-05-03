@@ -14,7 +14,7 @@ struct ActivePathPanel: View {
             .background(.regularMaterial)
             .cornerRadius(12)
         }
-        .frame(maxWidth: 360, maxHeight: 480)
+        .frame(maxWidth: 320, maxHeight: 480)
         .padding(24)
         .atCornerPosition(.bottomRight)
     }

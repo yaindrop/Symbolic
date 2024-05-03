@@ -44,7 +44,7 @@ struct PositionPicker: View {
     private var inputPosition: Point2 { Point2(inputX, inputY) }
 
     private var content: some View {
-        Group {
+        HStack(spacing: 0) {
             if isInputMode {
                 Button { endInput() } label: { Image(systemName: "checkmark.circle") }
             }
@@ -54,7 +54,7 @@ struct PositionPicker: View {
             } else {
                 Text(position.x.formatted(decimalFormatStyle()))
             }
-            Rectangle().frame(width: 1).background(Color.label)
+            Rectangle().frame(width: 1).background(Color.label).padding(.horizontal, 4)
             Image(systemName: "arrow.down")
             if isInputMode {
                 DecimalInput(title: "Y", inputNumber: $inputY)
@@ -62,7 +62,7 @@ struct PositionPicker: View {
                 Text(position.y.formatted(decimalFormatStyle()))
             }
         }
-        .font(.callout.monospacedDigit())
+        .font(.footnote.monospacedDigit())
     }
 
     private func startInput() {

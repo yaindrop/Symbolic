@@ -74,7 +74,7 @@ struct ActivePathFocusedEdgeHandle: View {
 
     private var focused: Bool { activePathModel.focusedEdgeId == fromId }
 
-    private var circlePosition: Point2? { segment.position(paramT: 0.5) }
+    private var circlePosition: Point2? { segment.tessellated().position(paramT: 0.5) }
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
         Circle()

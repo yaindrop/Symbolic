@@ -144,9 +144,8 @@ extension Polyline: Parametrizable {
         var cumulated: CGFloat = 0
         for (i, s) in segments.enumerated() {
             let curr = cumulated + s.length
-            let diff = curr - target
-            if diff > 0 {
-                return SegmentParam(i: i, t: diff / s.length)
+            if curr > target {
+                return SegmentParam(i: i, t: (target - cumulated) / s.length)
             }
             cumulated = curr
         }

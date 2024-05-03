@@ -55,14 +55,14 @@ class ActivePathModel: ObservableObject {
     @ViewBuilder var inactivePathsView: some View {
         ForEach(pathStore.paths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
-                .stroke(Color(UIColor.label), lineWidth: 1)
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
     }
 
     @ViewBuilder var activePathView: some View {
         if let pendingActivePath {
             SUPath { path in pendingActivePath.append(to: &path) }
-                .stroke(Color(UIColor.label), lineWidth: 1)
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
         }
     }

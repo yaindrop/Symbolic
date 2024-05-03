@@ -33,16 +33,13 @@ struct ActivePathNodeHandle: View {
             .padding(Self.touchablePadding)
             .invisibleSoildOverlay()
             .position(point)
-            .modifier(drag)
-            .onTapGesture {
-                toggleFocus()
-            }
+            .modifier(gesture)
     }
 
-    private var drag: MultipleGestureModifier<Point2> {
+    private var gesture: MultipleGestureModifier<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveNode: nodeId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
         }
-        return MultipleGestureModifier(position, onDrag: update(pending: true), onDragEnd: update())
+        return MultipleGestureModifier(position, onTap: { _, _ in toggleFocus() }, onDrag: update(pending: true), onDragEnd: update())
     }
 }

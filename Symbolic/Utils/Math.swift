@@ -193,9 +193,9 @@ extension Point2 {
 
     // MARK: geometric operation
 
-    func deltaVector(to point: Point2) -> Vector2 { Vector2(point) - Vector2(self) }
+    func offset(to point: Point2) -> Vector2 { Vector2(point) - Vector2(self) }
 
-    func distance(to point: Point2) -> CGFloat { deltaVector(to: point).length }
+    func distance(to point: Point2) -> CGFloat { offset(to: point).length }
 
     func nearlyEqual(_ p: Point2, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
         x.nearlyEqual(p.x, epsilon: epsilon) && y.nearlyEqual(p.y, epsilon: epsilon)

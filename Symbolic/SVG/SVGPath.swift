@@ -24,8 +24,8 @@ enum SVGPathCommand {
         let control0: Point2, control1: Point2, position: Point2
 
         func toQuadratic(current: Point2) -> QuadraticBezierTo? {
-            let quadraticControl0 = current + current.deltaVector(to: control0) * 3 / 2
-            let quadraticControl1 = position + position.deltaVector(to: control1) * 3 / 2
+            let quadraticControl0 = current + current.offset(to: control0) * 3 / 2
+            let quadraticControl1 = position + position.offset(to: control1) * 3 / 2
             guard quadraticControl0 == quadraticControl1 else { return nil }
             return QuadraticBezierTo(control: quadraticControl0, position: position)
         }
@@ -37,8 +37,8 @@ enum SVGPathCommand {
         let control: Point2, position: Point2
 
         func toCubic(current: Point2) -> BezierTo {
-            let control0 = current + (current.deltaVector(to: control)) * 2 / 3
-            let control1 = position + (position.deltaVector(to: control)) * 2 / 3
+            let control0 = current + (current.offset(to: control)) * 2 / 3
+            let control1 = position + (position.offset(to: control)) * 2 / 3
             return BezierTo(control0: control0, control1: control1, position: position)
         }
 
@@ -265,7 +265,7 @@ class SVGPathParser {
         }
         var control0 = path.last
         if let lastCommand = path.commands.last, case let .bezierTo(lastBezier) = lastCommand {
-            control0 = lastBezier.position + lastBezier.control1.deltaVector(to: lastBezier.position)
+            control0 = lastBezier.position + lastBezier.control1.offset(to: lastBezier.position)
         }
         for group in groups {
             let control1 = positionOf(x: group[0], y: group[1]),
@@ -291,7 +291,7 @@ class SVGPathParser {
         }
         var control = path.last
         if let lastCommand = path.commands.last, case let .quadraticBezierTo(lastQuadraticBezier) = lastCommand {
-            control = lastQuadraticBezier.position + lastQuadraticBezier.control.deltaVector(to: lastQuadraticBezier.position)
+            control = lastQuadraticBezier.position + lastQuadraticBezier.control.offset(to: lastQuadraticBezier.position)
         }
         for group in groups {
             let position = positionOf(x: group[0], y: group[1])

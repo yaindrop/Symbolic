@@ -120,13 +120,19 @@ class PathUpdater: ObservableObject {
     private func getEventKind(_ splitSegment: PathAction.SplitSegment) -> DocumentEvent.Kind? {
         let pathId = splitSegment.pathId, fromNodeId = splitSegment.fromNodeId, paramT = splitSegment.paramT, newNode = splitSegment.newNode
         guard let path = pathStore.pathIdToPath[pathId],
-              let curr = path.pair(id: fromNodeId),
               let segment = path.segment(from: fromNodeId) else { return nil }
-        let (first, second) = segment.split(paramT: paramT)
         var events: [CompoundEvent.Kind] = []
         events.append(.pathEvent(.init(in: pathId, createNodeAfter: fromNodeId, newNode)))
-        events.append(.pathEvent(.init(in: pathId, updateEdgeFrom: fromNodeId, first.edge)))
-        events.append(.pathEvent(.init(in: pathId, updateEdgeFrom: newNode.id, second.edge)))
+        var (before, after) = segment.split(paramT: paramT)
+        let offset = segment.position(paramT: paramT).offset(to: newNode.position)
+        if case let .bezier(b) = before.edge {
+            before = before.with(edge: .bezier(b.with(control1: b.control1 + offset)))
+        }
+        events.append(.pathEvent(.init(in: pathId, updateEdgeFrom: fromNodeId, before.edge)))
+        if case let .bezier(b) = after.edge {
+            after = after.with(edge: .bezier(b.with(control0: b.control0 + offset)))
+        }
+        events.append(.pathEvent(.init(in: pathId, updateEdgeFrom: newNode.id, after.edge)))
         return .compoundEvent(.init(events: events))
     }
 
@@ -151,14 +157,14 @@ class PathUpdater: ObservableObject {
         guard let path = pathStore.pathIdToPath[pathId],
               let curr = path.pair(id: nodeId) else { return nil }
         var events: [CompoundEvent.Kind] = []
-        if let prev = path.pair(before: nodeId), case let .bezier(bezier) = prev.edge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prev.node.id, .bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let prev = path.pair(before: nodeId), case let .bezier(b) = prev.edge {
+            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + offset)))
             events.append(.pathEvent(pathEvent))
         }
         let pathEvent = PathEvent(in: pathId, updateNode: curr.node.with(offset: offset))
         events.append(.pathEvent(pathEvent))
-        if case let .bezier(bezier) = curr.edge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: nodeId, .bezier(bezier.with(control0: bezier.control0 + offset)))
+        if case let .bezier(b) = curr.edge {
+            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: nodeId, .bezier(b.with(control0: b.control0 + offset)))
             events.append(.pathEvent(pathEvent))
         }
         return .compoundEvent(.init(events: events))
@@ -169,21 +175,21 @@ class PathUpdater: ObservableObject {
         guard let path = pathStore.pathIdToPath[pathId],
               let curr = path.pair(id: fromNodeId) else { return nil }
         var events: [CompoundEvent.Kind] = []
-        if let prev = path.pair(before: fromNodeId), case let .bezier(bezier) = prev.edge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prev.node.id, .bezier(bezier.with(control1: bezier.control1 + offset)))
+        if let prev = path.pair(before: fromNodeId), case let .bezier(b) = prev.edge {
+            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + offset)))
             events.append(.pathEvent(pathEvent))
         }
         let pathEvent = PathEvent(in: pathId, updateNode: curr.node.with(offset: offset))
         events.append(.pathEvent(pathEvent))
-        if case let .bezier(bezier) = curr.edge {
-            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier.with(offset: offset)))
+        if case let .bezier(b) = curr.edge {
+            let pathEvent = PathEvent(in: pathId, updateEdgeFrom: fromNodeId, .bezier(b.with(offset: offset)))
             events.append(.pathEvent(pathEvent))
         }
         if let next = path.pair(after: fromNodeId) {
             let pathEvent = PathEvent(in: pathId, updateNode: next.node.with(offset: offset))
             events.append(.pathEvent(pathEvent))
-            if case let .bezier(bezier) = next.edge {
-                let pathEvent = PathEvent(in: pathId, updateEdgeFrom: next.node.id, .bezier(bezier.with(control1: bezier.control1 + offset)))
+            if case let .bezier(b) = next.edge {
+                let pathEvent = PathEvent(in: pathId, updateEdgeFrom: next.node.id, .bezier(b.with(control1: b.control1 + offset)))
                 events.append(.pathEvent(pathEvent))
             }
         }

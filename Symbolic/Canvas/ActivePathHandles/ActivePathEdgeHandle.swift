@@ -103,7 +103,7 @@ struct ActivePathFocusedEdgeHandle: View {
 
     private func gesture(origin: Point2) -> MultipleGestureModifier<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { value, origin in updater.updateActivePath(moveEdge: fromId, offsetInView: origin.deltaVector(to: value.location), pending: pending) }
+            { value, origin in updater.updateActivePath(moveEdge: fromId, offsetInView: origin.offset(to: value.location), pending: pending) }
         }
         return MultipleGestureModifier(origin, onDrag: update(pending: true), onDragEnd: update())
     }

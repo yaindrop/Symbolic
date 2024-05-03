@@ -43,6 +43,8 @@ enum PathSegment {
     case bezier(Bezier)
     case line(Line)
 
+    func with(edge: PathEdge) -> Self { .init(from: from, to: to, edge: edge) }
+
     init(from: Point2, to: Point2, edge: PathEdge) {
         switch edge {
         case let .line(line): self = .line(.init(line: line, from: from, to: to))
@@ -125,13 +127,6 @@ fileprivate protocol PathAppendable {
     func append(to: inout SUPath)
 }
 
-fileprivate func approxMove(_ path: inout SUPath, to point: Point2) {
-    if let p = path.currentPoint, p ~== point {
-        return
-    }
-    path.move(to: point)
-}
-
 fileprivate func appendNonMove(_ element: SUPath.Element, to path: inout SUPath) {
     switch element {
     case let .curve(to, control1, control2):
@@ -147,7 +142,7 @@ fileprivate func appendNonMove(_ element: SUPath.Element, to path: inout SUPath)
 
 extension PathSegment.Arc: PathAppendable {
     func append(to path: inout SUPath) {
-        approxMove(&path, to: from)
+        if path.isEmpty { path.move(to: from) }
         let params = params.centerParams
         SUPath { $0.addRelativeArc(center: params.center, radius: 1, startAngle: params.startAngle, delta: params.deltaAngle, transform: params.transform) }
             .forEach { appendNonMove($0, to: &path) }
@@ -156,14 +151,14 @@ extension PathSegment.Arc: PathAppendable {
 
 extension PathSegment.Bezier: PathAppendable {
     func append(to path: inout SUPath) {
-        approxMove(&path, to: from)
+        if path.isEmpty { path.move(to: from) }
         path.addCurve(to: to, control1: bezier.control0, control2: bezier.control1)
     }
 }
 
 extension PathSegment.Line: PathAppendable {
     func append(to path: inout SUPath) {
-        approxMove(&path, to: from)
+        if path.isEmpty { path.move(to: from) }
         path.addLine(to: to)
     }
 }

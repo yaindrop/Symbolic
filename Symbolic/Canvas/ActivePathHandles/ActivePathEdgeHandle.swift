@@ -79,7 +79,7 @@ struct ActivePathFocusedEdgeHandle: View {
 
     var body: some View {
         if let circlePosition, focused {
-            circle(at: circlePosition, color: .teal)
+            circle(at: circlePosition, color: .cyan)
         }
     }
 
@@ -110,20 +110,18 @@ struct ActivePathFocusedEdgeHandle: View {
             .padding(Self.touchablePadding)
             .invisibleSoildOverlay()
             .position(point)
-            .if(focused) {
-                $0.overlay {
-                    SUPath { p in
-                        let tessellated = segment.tessellated()
-                        let fromT = tessellated.approxPathParamT(lineParamT: 0.1).t
-                        let toT = tessellated.approxPathParamT(lineParamT: 0.9).t
-                        segment.subsegment(fromT: fromT, toT: toT).append(to: &p)
-                    }
-                    .strokedPath(StrokeStyle(lineWidth: 2, lineCap: .round))
-                    .subtracting(subtractingCircle(at: point))
-                    .fill(.teal)
-                    .allowsHitTesting(false)
+            .if(focused) { $0.overlay {
+                SUPath { p in
+                    let tessellated = segment.tessellated()
+                    let fromT = tessellated.approxPathParamT(lineParamT: 0.1).t
+                    let toT = tessellated.approxPathParamT(lineParamT: 0.9).t
+                    segment.subsegment(fromT: fromT, toT: toT).append(to: &p)
                 }
-            }
+                .strokedPath(StrokeStyle(lineWidth: 2, lineCap: .round))
+                .subtracting(subtractingCircle(at: point))
+                .fill(color)
+                .allowsHitTesting(false)
+            }}
             .modifier(gesture(origin: point))
     }
 

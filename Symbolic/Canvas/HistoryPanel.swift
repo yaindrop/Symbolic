@@ -79,6 +79,13 @@ struct HistoryPanel: View {
     @ViewBuilder var content: some View {
         let document = documentModel.activeDocument
         VStack(spacing: 4) {
+            Button {
+                var events = document.events
+                events.removeLast()
+                documentModel.activeDocument = Document(events: events)
+            } label: {
+                Text("Undo")
+            }
             sectionTitle("Events")
             VStack(spacing: 12) {
 //                        ForEach(activePath.segments) { segment in

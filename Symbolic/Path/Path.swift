@@ -32,7 +32,10 @@ enum PathEdge {
 
         func with(control0: Point2) -> Self { Self(control0: control0, control1: control1) }
         func with(control1: Point2) -> Self { Self(control0: control0, control1: control1) }
+
         func with(offset: Vector2) -> Self { Self(control0: control0 + offset, control1: control1 + offset) }
+        func with(offset0: Vector2) -> Self { Self(control0: control0 + offset0, control1: control1) }
+        func with(offset1: Vector2) -> Self { Self(control0: control0, control1: control1 + offset1) }
 
         var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 

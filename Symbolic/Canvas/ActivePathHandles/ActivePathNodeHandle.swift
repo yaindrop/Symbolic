@@ -30,14 +30,12 @@ struct ActivePathNodeHandle: View {
             .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
             .fill(color.opacity(0.5))
             .frame(width: Self.circleSize, height: Self.circleSize)
-            .if(focused) {
-                $0.overlay {
-                    Circle()
-                        .fill(color)
-                        .scaleEffect(0.5)
-                        .allowsHitTesting(false)
-                }
-            }
+            .if(focused) { $0.overlay {
+                Circle()
+                    .fill(color)
+                    .scaleEffect(0.5)
+                    .allowsHitTesting(false)
+            }}
             .padding(Self.touchablePadding)
             .invisibleSoildOverlay()
             .position(point)

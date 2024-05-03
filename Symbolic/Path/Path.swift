@@ -84,7 +84,7 @@ struct PathNode: Identifiable {
         self.position = position
     }
 
-    private init(id: UUID, position: Point2) {
+    init(id: UUID, position: Point2) {
         self.id = id
         self.position = position
     }

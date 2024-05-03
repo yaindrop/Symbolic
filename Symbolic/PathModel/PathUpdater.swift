@@ -9,13 +9,14 @@ class PathUpdater: ObservableObject {
     let activePathModel: ActivePathModel
     let viewport: Viewport
 
-    func updateActivePath(splitSegment fromNodeId: UUID, paramT: CGFloat, position: Point2, pending: Bool = false) {
+    func updateActivePath(splitSegment fromNodeId: UUID, paramT: CGFloat, newNodeId: UUID, position: Point2, pending: Bool = false) {
         guard let activePath else { return }
-        handle(.pathAction(.splitSegment(.init(pathId: activePath.id, fromNodeId: fromNodeId, paramT: paramT, newNode: PathNode(position: position)))), pending: pending)
+        let newNode = PathNode(id: newNodeId, position: position)
+        handle(.pathAction(.splitSegment(.init(pathId: activePath.id, fromNodeId: fromNodeId, paramT: paramT, newNode: newNode))), pending: pending)
     }
 
-    func updateActivePath(splitSegment fromNodeId: UUID, paramT: CGFloat, positionInView: Point2, pending: Bool = false) {
-        updateActivePath(splitSegment: fromNodeId, paramT: paramT, position: positionInView.applying(viewport.toWorld), pending: pending)
+    func updateActivePath(splitSegment fromNodeId: UUID, paramT: CGFloat, newNodeId: UUID, positionInView: Point2, pending: Bool = false) {
+        updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: newNodeId, position: positionInView.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: single update

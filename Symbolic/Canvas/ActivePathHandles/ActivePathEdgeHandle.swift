@@ -15,6 +15,7 @@ struct ActivePathEdgeHandle: View {
     }
 
     @State private var longPressParamT: CGFloat?
+    @State private var longPressSplitNodeId: UUID?
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
@@ -33,8 +34,8 @@ struct ActivePathEdgeHandle: View {
 
     private var gesture: MultipleGestureModifier<PathSegment> {
         func split(at p: CGPoint, pending: Bool = false) {
-            guard let longPressParamT else { return }
-            updater.updateActivePath(splitSegment: fromId, paramT: longPressParamT, positionInView: p, pending: pending)
+            guard let longPressParamT, let longPressSplitNodeId else { return }
+            updater.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, positionInView: p, pending: pending)
             if !pending {
                 self.longPressParamT = nil
             }
@@ -44,7 +45,10 @@ struct ActivePathEdgeHandle: View {
                                        onLongPress: { v, s in
                                            let t = s.paramT(closestTo: v.location).t
                                            longPressParamT = t
+                                           let id = UUID()
+                                           longPressSplitNodeId = id
                                            split(at: s.position(paramT: t), pending: true)
+                                           activePathModel.focusedPart = .node(id)
                                        },
                                        onLongPressEnd: { _, s in
                                            guard let longPressParamT else { return }

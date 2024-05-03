@@ -167,16 +167,24 @@ extension PathSegment.Line: PathAppendable {
 
 fileprivate protocol ParamSplittable {
     func split(paramT: CGFloat) -> (Self, Self)
+    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self
 }
 
 extension PathSegment.Arc: ParamSplittable {
     func split(paramT t: CGFloat) -> (Self, Self) {
         let params = self.params.centerParams
         let params0 = params.with(deltaAngle: params.deltaAngle * t)
-        let params1 = params.with(startAngle: params.deltaAngle * t).with(deltaAngle: params.deltaAngle * (1 - t))
+        let params1 = params.with(startAngle: params.startAngle + params.deltaAngle * t).with(deltaAngle: params.deltaAngle * (1 - t))
         let a0 = params0.endpointParams.segment
         let a1 = params1.endpointParams.segment
         return (a0, a1)
+    }
+
+    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
+        assert((0.0 ... 1.0).contains(fromT) && (0.0 ... 1.0).contains(toT) && fromT < toT)
+        let params = self.params.centerParams
+        let params0 = params.with(startAngle: params.startAngle + params.deltaAngle * fromT).with(deltaAngle: params.deltaAngle * (toT - fromT))
+        return params0.endpointParams.segment
     }
 }
 
@@ -190,6 +198,13 @@ extension PathSegment.Bezier: ParamSplittable {
         let b1 = Self(bezier: .init(control0: Point2(p123), control1: Point2(p23)), from: Point2(p0123), to: to)
         return (b0, b1)
     }
+
+    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
+        assert((0.0 ... 1.0).contains(fromT) && (0.0 ... 1.0).contains(toT) && fromT < toT)
+        let (s0, _) = split(paramT: toT)
+        let (_, s1) = s0.split(paramT: fromT / toT)
+        return s1
+    }
 }
 
 extension PathSegment.Line: ParamSplittable {
@@ -198,6 +213,12 @@ extension PathSegment.Line: ParamSplittable {
         let l0 = Self(line: PathEdge.Line(), from: from, to: pt)
         let l1 = Self(line: PathEdge.Line(), from: pt, to: to)
         return (l0, l1)
+    }
+
+    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
+        let pt0 = Point2(lerp(from: Vector2(from), to: Vector2(to), at: fromT))
+        let pt1 = Point2(lerp(from: Vector2(from), to: Vector2(to), at: toT))
+        return .init(line: PathEdge.Line(), from: pt0, to: pt1)
     }
 }
 
@@ -243,6 +264,14 @@ extension PathSegment: PathSegmentImpl {
         case let .line(l):
             let (l0, l1) = l.split(paramT: paramT)
             return (.line(l0), .line(l1))
+        }
+    }
+
+    func subsegment(fromT: CGFloat, toT: CGFloat) -> PathSegment {
+        switch self {
+        case let .arc(a): .arc(a.subsegment(fromT: fromT, toT: toT))
+        case let .bezier(b): .bezier(b.subsegment(fromT: fromT, toT: toT))
+        case let .line(l): .line(l.subsegment(fromT: fromT, toT: toT))
         }
     }
 }

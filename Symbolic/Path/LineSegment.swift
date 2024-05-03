@@ -203,4 +203,8 @@ extension Polyline {
         let (segmentParam, distance) = segmentParam(closestTo: point)
         return (t: approxPathParamT(segmentParam: segmentParam), distance: distance)
     }
+
+    func approxPathParamT(lineParamT t: CGFloat) -> (t: CGFloat, distance: CGFloat) {
+        approxPathParamT(closestTo: position(paramT: t))
+    }
 }

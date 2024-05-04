@@ -88,10 +88,10 @@ extension PathSegment.Arc {
             let u = Vector2(1, 0)
             let v = Vector2((x1p - cxp) / rx, (y1p - cyp) / ry)
             let w = Vector2((-x1p - cxp) / rx, (-y1p - cyp) / ry)
-            let theta1 = u.radian(v)
+            let theta1 = u.radian(to: v)
 
             // F.6.5.6
-            var deltaTheta = fmod(v.radian(w), 2 * CGFloat.pi)
+            var deltaTheta = fmod(v.radian(to: w), 2 * CGFloat.pi)
             if !sweep && deltaTheta > 0 {
                 deltaTheta -= 2 * CGFloat.pi
             } else if sweep && deltaTheta < 0 {

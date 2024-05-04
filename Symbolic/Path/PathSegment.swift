@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - PathSegment
 
-fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, InverseParametrizable, PathAppendable, ParamSplittable {
+fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, InverseParametrizable, SUPathAppendable, ParamSplittable {
     var from: Point2 { get }
     var to: Point2 { get }
     var edge: PathEdge { get }
@@ -183,10 +183,6 @@ extension PathSegment: InverseParametrizable {
 
 // MARK: PathAppendable
 
-fileprivate protocol PathAppendable {
-    func append(to: inout SUPath)
-}
-
 fileprivate func appendNonMove(_ element: SUPath.Element, to path: inout SUPath) {
     switch element {
     case let .curve(to, control1, control2):
@@ -200,7 +196,7 @@ fileprivate func appendNonMove(_ element: SUPath.Element, to path: inout SUPath)
     }
 }
 
-extension PathSegment.Arc: PathAppendable {
+extension PathSegment.Arc: SUPathAppendable {
     func append(to path: inout SUPath) {
         if path.isEmpty { path.move(to: from) }
         let params = params.centerParams
@@ -209,21 +205,21 @@ extension PathSegment.Arc: PathAppendable {
     }
 }
 
-extension PathSegment.Bezier: PathAppendable {
+extension PathSegment.Bezier: SUPathAppendable {
     func append(to path: inout SUPath) {
         if path.isEmpty { path.move(to: from) }
         path.addCurve(to: to, control1: bezier.control0, control2: bezier.control1)
     }
 }
 
-extension PathSegment.Line: PathAppendable {
+extension PathSegment.Line: SUPathAppendable {
     func append(to path: inout SUPath) {
         if path.isEmpty { path.move(to: from) }
         path.addLine(to: to)
     }
 }
 
-extension PathSegment: PathAppendable {
+extension PathSegment: SUPathAppendable {
     func append(to path: inout SUPath) { impl.append(to: &path) }
 }
 

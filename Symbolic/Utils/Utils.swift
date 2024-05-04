@@ -5,6 +5,16 @@ extension UUID: Identifiable {
     public var id: UUID { self }
 }
 
+// MARK: - SelfTransformable
+
+protocol SelfTransformable {
+    func apply<T>(_ mapper: (Self) -> T) -> T
+}
+
+extension SelfTransformable {
+    func apply<T>(_ mapper: (Self) -> T) -> T { mapper(self) }
+}
+
 // MARK: - ReflectedStringConvertible
 
 public protocol ReflectedStringConvertible: CustomStringConvertible { }

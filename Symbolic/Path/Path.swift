@@ -3,6 +3,10 @@ import SwiftUI
 
 typealias SUPath = SwiftUI.Path
 
+protocol SUPathAppendable {
+    func append(to: inout SUPath)
+}
+
 // MARK: - PathEdge
 
 fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {}
@@ -175,16 +179,16 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
     func edge(before: UUID) -> PathEdge? { pair(before: before)?.edge }
     func edge(after: UUID) -> PathEdge? { pair(after: after)?.edge }
 
-    lazy var path: SUPath = {
+    var path: SUPath {
         SUPath { p in
             segments.forEach { $0.append(to: &p) }
             if isClosed {
                 p.closeSubpath()
             }
         }
-    }()
+    }
 
-    lazy var boundingRect: CGRect = { path.boundingRect }()
+    var boundingRect: CGRect { path.boundingRect }
 
     lazy var hitPath: SUPath = {
         path.strokedPath(StrokeStyle(lineWidth: 12, lineCap: .round))
@@ -204,11 +208,13 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
 
     convenience init(pairs: [NodeEdgePair], isClosed: Bool) { self.init(id: UUID(), pairs: pairs, isClosed: isClosed) }
 
+    static func == (lhs: Path, rhs: Path) -> Bool { ObjectIdentifier(lhs) == ObjectIdentifier(rhs) }
+}
+
+extension Path: SUPathAppendable {
     func append(to path: inout SUPath) {
         path.addPath(self.path)
     }
-
-    static func == (lhs: Path, rhs: Path) -> Bool { ObjectIdentifier(lhs) == ObjectIdentifier(rhs) }
 }
 
 // MARK: - clone with path update event

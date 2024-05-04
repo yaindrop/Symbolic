@@ -3,11 +3,11 @@ import Foundation
 
 struct ViewportInfo: CustomStringConvertible {
     let origin: Point2 // world position of the view origin (top left corner)
-    let scale: CGFloat
+    let scale: Scalar
     let worldToView: CGAffineTransform
     let viewToWorld: CGAffineTransform
 
-    init(origin: Point2, scale: CGFloat) {
+    init(origin: Point2, scale: Scalar) {
         self.origin = origin
         self.scale = scale
         worldToView = CGAffineTransform(scale: scale).translatedBy(-Vector2(origin))

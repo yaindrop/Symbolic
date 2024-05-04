@@ -74,12 +74,12 @@ struct CanvasView: View {
                 context.concatenate(viewport.toView)
                 let path = SUPath { path in
                     for index in 0 ... 10240 {
-                        let vOffset: CGFloat = CGFloat(index) * 10
+                        let vOffset: Scalar = Scalar(index) * 10
                         path.move(to: Point2(vOffset, 0))
                         path.addLine(to: Point2(vOffset, 102400))
                     }
                     for index in 0 ... 10240 {
-                        let hOffset: CGFloat = CGFloat(index) * 10
+                        let hOffset: Scalar = Scalar(index) * 10
                         path.move(to: Point2(0, hOffset))
                         path.addLine(to: Point2(102400, hOffset))
                     }
@@ -89,12 +89,12 @@ struct CanvasView: View {
             //                Group {
             //                    Path { path in
             //                        for index in 0 ... 1024 {
-            //                            let vOffset: CGFloat = CGFloat(index) * 10
+            //                            let vOffset: Scalar = Scalar(index) * 10
             //                            path.move(to: Point2(x: vOffset, y: 0))
             //                            path.addLine(to: Point2(x: vOffset, y: 10240))
             //                        }
             //                        for index in 0 ... 1024 {
-            //                            let hOffset: CGFloat = CGFloat(index) * 10
+            //                            let hOffset: Scalar = Scalar(index) * 10
             //                            path.move(to: Point2(x: 0, y: hOffset))
             //                            path.addLine(to: Point2(x: 10240, y: hOffset))
             //                        }

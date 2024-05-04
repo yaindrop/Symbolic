@@ -6,7 +6,7 @@ fileprivate protocol LineSegmentImpl: Parametrizable, InverseParametrizable {
     var line: Line { get }
     var start: Point2 { get }
     var end: Point2 { get }
-    var length: CGFloat { get }
+    var length: Scalar { get }
 }
 
 enum LineSegment {
@@ -16,24 +16,24 @@ enum LineSegment {
 
     struct SlopeIntercept: Impl {
         let slopeIntercept: Line.SlopeIntercept
-        let x0: CGFloat, x1: CGFloat
+        let x0: Scalar, x1: Scalar
 
         var line: Line { .slopeIntercept(slopeIntercept) }
         var start: Point2 { Point2(x0, slopeIntercept.y(x: x0)) }
         var end: Point2 { Point2(x1, slopeIntercept.y(x: x1)) }
-        var length: CGFloat { start.distance(to: end) }
+        var length: Scalar { start.distance(to: end) }
     }
 
     // MARK: Vertical
 
     struct Vertical: Impl {
         let vertical: Line.Vertical
-        let y0: CGFloat, y1: CGFloat
+        let y0: Scalar, y1: Scalar
 
         var line: Line { .vertical(vertical) }
         var start: Point2 { Point2(vertical.x, y0) }
         var end: Point2 { Point2(vertical.x, y1) }
-        var length: CGFloat { abs(y0 - y1) }
+        var length: Scalar { abs(y0 - y1) }
     }
 
     case slopeIntercept(SlopeIntercept)
@@ -51,7 +51,7 @@ extension LineSegment: LineSegmentImpl {
     var line: Line { impl.line }
     var start: Point2 { impl.start }
     var end: Point2 { impl.end }
-    var length: CGFloat { impl.length }
+    var length: Scalar { impl.length }
 
     private var impl: Impl {
         switch self {
@@ -64,7 +64,7 @@ extension LineSegment: LineSegmentImpl {
 // MARK: Parametrizable
 
 extension LineSegment.SlopeIntercept: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 {
+    func position(paramT: Scalar) -> Point2 {
         let t = (0 ... 1).clamp(paramT)
         let xt = lerp(from: x0, to: x1, at: t)
         let yt = slopeIntercept.y(x: xt)
@@ -73,7 +73,7 @@ extension LineSegment.SlopeIntercept: Parametrizable {
 }
 
 extension LineSegment.Vertical: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 {
+    func position(paramT: Scalar) -> Point2 {
         let t = (0 ... 1).clamp(paramT)
         let yt = lerp(from: y0, to: y1, at: t)
         return Point2(vertical.x, yt)
@@ -81,31 +81,31 @@ extension LineSegment.Vertical: Parametrizable {
 }
 
 extension LineSegment: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
+    func position(paramT: Scalar) -> Point2 { impl.position(paramT: paramT) }
 }
 
 // MARK: InverseParametrizable
 
 extension LineSegment.SlopeIntercept: InverseParametrizable {
-    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
+    func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) {
         var p = line.projected(from: point)
         let x = ClosedRange(start: x0, end: x1).clamp(p.x)
-        p = CGPoint(x: x, y: slopeIntercept.y(x: x))
+        p = Point2(x, slopeIntercept.y(x: x))
         return (t: (x - x0) / (x1 - x0), p.distance(to: point))
     }
 }
 
 extension LineSegment.Vertical: InverseParametrizable {
-    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
+    func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) {
         var p = line.projected(from: point)
         let y = ClosedRange(start: y0, end: y1).clamp(p.y)
-        p = CGPoint(x: vertical.x, y: y)
+        p = Point2(vertical.x, y)
         return (t: (y - y0) / (y1 - y0), p.distance(to: point))
     }
 }
 
 extension LineSegment: InverseParametrizable {
-    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: point) }
+    func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) { impl.paramT(closestTo: point) }
 }
 
 // MARK: - Polyline
@@ -113,7 +113,7 @@ extension LineSegment: InverseParametrizable {
 struct Polyline {
     let points: [Point2]
     let segments: [LineSegment]
-    let length: CGFloat
+    let length: Scalar
 
     var count: Int { points.count }
 
@@ -137,10 +137,10 @@ struct Polyline {
 extension Polyline: Parametrizable {
     struct SegmentParam {
         let i: Int // segment index
-        let t: CGFloat // segment param t
+        let t: Scalar // segment param t
     }
 
-    func segmentParam(paramT: CGFloat) -> SegmentParam {
+    func segmentParam(paramT: Scalar) -> SegmentParam {
         let t = (0 ... 1).clamp(paramT)
         if t == 0 {
             return SegmentParam(i: 0, t: 0)
@@ -148,7 +148,7 @@ extension Polyline: Parametrizable {
             return SegmentParam(i: segments.count - 1, t: 1)
         }
         let target = length * t
-        var cumulated: CGFloat = 0
+        var cumulated: Scalar = 0
         for (i, s) in segments.enumerated() {
             let curr = cumulated + s.length
             if curr > target {
@@ -161,13 +161,13 @@ extension Polyline: Parametrizable {
 
     func position(segmentParam param: SegmentParam) -> Point2 { segments[param.i].position(paramT: param.t) }
 
-    func position(paramT: CGFloat) -> Point2 { position(segmentParam: segmentParam(paramT: paramT)) }
+    func position(paramT: Scalar) -> Point2 { position(segmentParam: segmentParam(paramT: paramT)) }
 }
 
 // MARK: InverseParametrizable
 
 extension Polyline: InverseParametrizable {
-    func segmentParam(closestTo point: Point2) -> (param: SegmentParam, distance: CGFloat) {
+    func segmentParam(closestTo point: Point2) -> (param: SegmentParam, distance: Scalar) {
         segments.enumerated()
             .map { i, s in
                 let (t, distance) = s.paramT(closestTo: point)
@@ -176,8 +176,8 @@ extension Polyline: InverseParametrizable {
             .min(by: { $0.distance < $1.distance })!
     }
 
-    func paramT(segmentParam param: SegmentParam) -> CGFloat {
-        var cumulated: CGFloat = 0
+    func paramT(segmentParam param: SegmentParam) -> Scalar {
+        var cumulated: Scalar = 0
         for (i, s) in segments.enumerated() {
             if i == param.i {
                 let p = s.position(paramT: param.t)
@@ -189,7 +189,7 @@ extension Polyline: InverseParametrizable {
         return (0 ... 1).clamp(cumulated / length)
     }
 
-    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
+    func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) {
         let (segmentParam, distance) = segmentParam(closestTo: point)
         return (t: paramT(segmentParam: segmentParam), distance: distance)
     }
@@ -198,20 +198,20 @@ extension Polyline: InverseParametrizable {
 // MARK: approximate inverse parametrization for tessellated path
 
 extension Polyline {
-    func approxPathParamT(segmentParam param: SegmentParam) -> CGFloat {
-        var cumulated: CGFloat = CGFloat(param.i)
+    func approxPathParamT(segmentParam param: SegmentParam) -> Scalar {
+        var cumulated: Scalar = Scalar(param.i)
         let s = segments[param.i]
         let p = s.position(paramT: param.t)
         cumulated += p.distance(to: s.start) / s.length
-        return (0 ... 1).clamp(cumulated / CGFloat(segments.count))
+        return (0 ... 1).clamp(cumulated / Scalar(segments.count))
     }
 
-    func approxPathParamT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) {
+    func approxPathParamT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) {
         let (segmentParam, distance) = segmentParam(closestTo: point)
         return (t: approxPathParamT(segmentParam: segmentParam), distance: distance)
     }
 
-    func approxPathParamT(lineParamT t: CGFloat) -> (t: CGFloat, distance: CGFloat) {
+    func approxPathParamT(lineParamT t: Scalar) -> (t: Scalar, distance: Scalar) {
         approxPathParamT(closestTo: position(paramT: t))
     }
 }

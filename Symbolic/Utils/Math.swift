@@ -2,15 +2,16 @@ import CoreGraphics
 import Foundation
 import SwiftUI
 
+public typealias Scalar = CGFloat
 public typealias Vector2 = CGVector
 public typealias Point2 = CGPoint
 
 protocol Parametrizable {
-    func position(paramT: CGFloat) -> Point2
+    func position(paramT: Scalar) -> Point2
 }
 
 protocol InverseParametrizable {
-    func paramT(closestTo: Point2) -> (t: CGFloat, distance: CGFloat)
+    func paramT(closestTo: Point2) -> (t: Scalar, distance: Scalar)
 }
 
 // MARK: - AdditiveArithmetic
@@ -26,39 +27,39 @@ extension Vector2: AdditiveArithmetic {
 // MARK: - ScalarMultiplicable
 
 protocol ScalarMultiplicable {
-    static func * (lhs: Self, rhs: CGFloat) -> Self
-    static func * (lhs: CGFloat, rhs: Self) -> Self
-    static func *= (lhs: inout Self, rhs: CGFloat)
+    static func * (lhs: Self, rhs: Scalar) -> Self
+    static func * (lhs: Scalar, rhs: Self) -> Self
+    static func *= (lhs: inout Self, rhs: Scalar)
 }
 
 extension ScalarMultiplicable {
-    public static func * (lhs: CGFloat, rhs: Self) -> Self { rhs * lhs }
-    public static func *= (lhs: inout Self, rhs: CGFloat) { lhs = lhs * rhs }
+    public static func * (lhs: Scalar, rhs: Self) -> Self { rhs * lhs }
+    public static func *= (lhs: inout Self, rhs: Scalar) { lhs = lhs * rhs }
 }
 
-extension CGFloat: ScalarMultiplicable {}
+extension Scalar: ScalarMultiplicable {}
 
 extension Vector2: ScalarMultiplicable {
-    public static func * (lhs: Self, rhs: CGFloat) -> Self { .init(lhs.dx * rhs, lhs.dy * rhs) }
+    public static func * (lhs: Self, rhs: Scalar) -> Self { .init(lhs.dx * rhs, lhs.dy * rhs) }
 }
 
-func lerp<T: AdditiveArithmetic & ScalarMultiplicable>(from: T, to: T, at t: CGFloat) -> T {
+func lerp<T: AdditiveArithmetic & ScalarMultiplicable>(from: T, to: T, at t: Scalar) -> T {
     from + (to - from) * t
 }
 
 // MARK: - ScalarDivisable
 
 protocol ScalarDivisable {
-    static func / (lhs: Self, rhs: CGFloat) -> Self
-    static func /= (lhs: inout Self, rhs: CGFloat)
+    static func / (lhs: Self, rhs: Scalar) -> Self
+    static func /= (lhs: inout Self, rhs: Scalar)
 }
 
 extension ScalarDivisable {
-    public static func /= (lhs: inout Self, rhs: CGFloat) { lhs = lhs / rhs }
+    public static func /= (lhs: inout Self, rhs: Scalar) { lhs = lhs / rhs }
 }
 
 extension Vector2: ScalarDivisable {
-    public static func / (lhs: Self, rhs: CGFloat) -> Self { .init(lhs.dx / rhs, lhs.dy / rhs) }
+    public static func / (lhs: Self, rhs: Scalar) -> Self { .init(lhs.dx / rhs, lhs.dy / rhs) }
 }
 
 // MARK: - NearlyEquatable
@@ -69,10 +70,10 @@ protocol NearlyEquatable {
     static func ~== (lhs: Self, rhs: Self) -> Bool
 }
 
-extension CGFloat: NearlyEquatable {
-    static let nearlyEqualEpsilon: CGFloat = 0.001
+extension Scalar: NearlyEquatable {
+    static let nearlyEqualEpsilon: Scalar = 0.001
 
-    func nearlyEqual(_ n: Self, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
+    func nearlyEqual(_ n: Self, epsilon: Scalar = Scalar.nearlyEqualEpsilon) -> Bool {
         abs(self - n) < epsilon
     }
 
@@ -80,7 +81,7 @@ extension CGFloat: NearlyEquatable {
 }
 
 extension Vector2: NearlyEquatable {
-    func nearlyEqual(_ v: Self, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
+    func nearlyEqual(_ v: Self, epsilon: Scalar = Scalar.nearlyEqualEpsilon) -> Bool {
         dx.nearlyEqual(v.dx, epsilon: epsilon) && dy.nearlyEqual(v.dy, epsilon: epsilon)
     }
 
@@ -88,7 +89,7 @@ extension Vector2: NearlyEquatable {
 }
 
 extension Point2: NearlyEquatable {
-    func nearlyEqual(_ p: Self, epsilon: CGFloat = CGFloat.nearlyEqualEpsilon) -> Bool {
+    func nearlyEqual(_ p: Self, epsilon: Scalar = Scalar.nearlyEqualEpsilon) -> Bool {
         x.nearlyEqual(p.x, epsilon: epsilon) && y.nearlyEqual(p.y, epsilon: epsilon)
     }
 
@@ -127,7 +128,7 @@ protocol ShortDescribable {
     var shortDescription: String { get }
 }
 
-extension CGFloat {
+extension Scalar {
     var shortDescription: String { String(format: "%.3f", self) }
 }
 
@@ -164,10 +165,10 @@ extension ClosedRange {
 // MARK: - Matrix2
 
 struct Matrix2 {
-    var a: CGFloat
-    var b: CGFloat
-    var c: CGFloat
-    var d: CGFloat
+    var a: Scalar
+    var b: Scalar
+    var c: Scalar
+    var d: Scalar
 
     var rows: (Vector2, Vector2) { (Vector2(a, b), Vector2(c, d)) }
     var cols: (Vector2, Vector2) { (Vector2(a, c), Vector2(b, d)) }
@@ -182,7 +183,7 @@ struct Matrix2 {
         return .init(col0: lhs * cols.0, col1: lhs * cols.1)
     }
 
-    init(a: CGFloat, b: CGFloat, c: CGFloat, d: CGFloat) {
+    init(a: Scalar, b: Scalar, c: Scalar, d: Scalar) {
         self.a = a
         self.b = b
         self.c = c
@@ -193,7 +194,7 @@ struct Matrix2 {
 
     init(col0: Vector2, col1: Vector2) { self.init(a: col0.dx, b: col1.dx, c: col0.dy, d: col1.dy) }
 
-    init(_ row0: (CGFloat, CGFloat), _ row1: (CGFloat, CGFloat)) { self.init(row0: Vector2(row0.0, row0.1), row1: Vector2(row1.0, row1.1)) }
+    init(_ row0: (Scalar, Scalar), _ row1: (Scalar, Scalar)) { self.init(row0: Vector2(row0.0, row0.1), row1: Vector2(row1.0, row1.1)) }
 }
 
 // MARK: - Vector2
@@ -203,19 +204,19 @@ extension Vector2 {
 
     static let unitY: Self = .init(0, 1)
 
-    var length: CGFloat { hypot(dx, dy) }
+    var length: Scalar { hypot(dx, dy) }
 
-    func with(dx: CGFloat) -> Self { .init(dx: dx, dy: dy) }
+    func with(dx: Scalar) -> Self { .init(dx: dx, dy: dy) }
 
-    func with(dy: CGFloat) -> Self { .init(dx: dx, dy: dy) }
+    func with(dy: Scalar) -> Self { .init(dx: dx, dy: dy) }
 
     // MARK: geometric operation
 
-    func dotProduct(_ rhs: Self) -> CGFloat { dx * rhs.dx + dy * rhs.dy }
+    func dotProduct(_ rhs: Self) -> Scalar { dx * rhs.dx + dy * rhs.dy }
 
-    func crossProduct(_ rhs: Self) -> CGFloat { dx * rhs.dy - dy * rhs.dx }
+    func crossProduct(_ rhs: Self) -> Scalar { dx * rhs.dy - dy * rhs.dx }
 
-    func radian(to v: Self) -> CGFloat {
+    func radian(to v: Self) -> Scalar {
         let dot = dotProduct(v)
         let mod = length * v.length
         var rad = acos((-1.0 ... 1.0).clamp(dot / mod))
@@ -225,7 +226,7 @@ extension Vector2 {
         return rad
     }
 
-    init(_ x: CGFloat, _ y: CGFloat) { self.init(dx: x, dy: y) }
+    init(_ x: Scalar, _ y: Scalar) { self.init(dx: x, dy: y) }
 
     init(_ point: Point2) { self.init(point.x, point.y) }
 
@@ -235,15 +236,15 @@ extension Vector2 {
 // MARK: - Point2
 
 extension Point2 {
-    func with(x: CGFloat) -> Self { .init(x: x, y: y) }
+    func with(x: Scalar) -> Self { .init(x: x, y: y) }
 
-    func with(y: CGFloat) -> Self { .init(x: x, y: y) }
+    func with(y: Scalar) -> Self { .init(x: x, y: y) }
 
     // MARK: geometric operation
 
     func offset(to point: Self) -> Vector2 { Vector2(point) - Vector2(self) }
 
-    func distance(to point: Self) -> CGFloat { offset(to: point).length }
+    func distance(to point: Self) -> Scalar { offset(to: point).length }
 
     // MARK: operator
 
@@ -255,7 +256,7 @@ extension Point2 {
 
     public static func -= (lhs: inout Self, rhs: Vector2) { lhs = lhs - rhs }
 
-    init(_ x: CGFloat, _ y: CGFloat) { self.init(x: x, y: y) }
+    init(_ x: Scalar, _ y: Scalar) { self.init(x: x, y: y) }
 
     init(_ vector: Vector2) { self.init(vector.dx, vector.dy) }
 }
@@ -265,13 +266,13 @@ extension Point2 {
 extension CGSize {
     var flipped: Self { .init(height, width) }
 
-    func with(width: CGFloat) -> Self { .init(width: width, height: height) }
+    func with(width: Scalar) -> Self { .init(width: width, height: height) }
 
-    func with(height: CGFloat) -> Self { .init(width: width, height: height) }
+    func with(height: Scalar) -> Self { .init(width: width, height: height) }
 
-    init(_ width: CGFloat, _ height: CGFloat) { self.init(width: width, height: height) }
+    init(_ width: Scalar, _ height: Scalar) { self.init(width: width, height: height) }
 
-    init(squared size: CGFloat) { self.init(size, size) }
+    init(squared size: Scalar) { self.init(size, size) }
 }
 
 // MARK: - CGRect
@@ -297,9 +298,9 @@ extension CGAffineTransform: SelfTransformable {
 
     func translatedBy(_ vector: Vector2) -> Self { translatedBy(x: vector.dx, y: vector.dy) }
 
-    func scaledBy(_ scale: CGFloat) -> Self { scaledBy(x: scale, y: scale) }
+    func scaledBy(_ scale: Scalar) -> Self { scaledBy(x: scale, y: scale) }
 
     init(translation vector: Vector2) { self.init(translationX: vector.dx, y: vector.dy) }
 
-    init(scale: CGFloat) { self.init(scaleX: scale, y: scale) }
+    init(scale: Scalar) { self.init(scaleX: scale, y: scale) }
 }

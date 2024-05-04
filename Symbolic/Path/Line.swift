@@ -9,9 +9,9 @@ fileprivate protocol LineImpl {
 enum Line {
     fileprivate typealias Impl = LineImpl
     struct SlopeIntercept: Impl {
-        let m: CGFloat, b: CGFloat
+        let m: Scalar, b: Scalar
 
-        func y(x: CGFloat) -> CGFloat { m * x + b }
+        func y(x: Scalar) -> Scalar { m * x + b }
 
         func projected(from point: Point2) -> Point2 {
             let x = (m * (point.y - b) + point.x) / (m * m + 1)
@@ -20,7 +20,7 @@ enum Line {
     }
 
     struct Vertical: Impl {
-        let x: CGFloat
+        let x: Scalar
 
         func projected(from point: Point2) -> Point2 { Point2(x, point.y) }
     }

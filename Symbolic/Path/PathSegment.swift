@@ -49,8 +49,8 @@ enum PathSegment {
 }
 
 extension PathSegment: PathSegmentImpl {
-    var from: CGPoint { impl.from }
-    var to: CGPoint { impl.to }
+    var from: Point2 { impl.from }
+    var to: Point2 { impl.to }
     var edge: PathEdge { impl.edge }
 
     private var impl: Impl {
@@ -105,13 +105,13 @@ extension PathSegment: Transformable {
 // MARK: Parametrizable
 
 extension PathSegment.Arc: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 {
+    func position(paramT: Scalar) -> Point2 {
         params.centerParams.position(paramT: paramT)
     }
 }
 
 extension PathSegment.Bezier: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 {
+    func position(paramT: Scalar) -> Point2 {
         let t = (0.0 ... 1.0).clamp(paramT)
         let p0 = Vector2(from), p1 = Vector2(bezier.control0), p2 = Vector2(bezier.control1), p3 = Vector2(to)
         return Point2(pow(1 - t, 3) * p0 + 3 * pow(1 - t, 2) * t * p1 + 3 * (1 - t) * pow(t, 2) * p2 + pow(t, 3) * p3)
@@ -119,14 +119,14 @@ extension PathSegment.Bezier: Parametrizable {
 }
 
 extension PathSegment.Line: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 {
+    func position(paramT: Scalar) -> Point2 {
         let t = (0.0 ... 1.0).clamp(paramT)
         return Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
     }
 }
 
 extension PathSegment: Parametrizable {
-    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
+    func position(paramT: Scalar) -> Point2 { impl.position(paramT: paramT) }
 }
 
 // MARK: Tessellatable
@@ -140,21 +140,21 @@ fileprivate protocol Tessellatable {
 extension PathSegment.Arc: Tessellatable {
     func tessellated(count: Int = defaultTessellationCount) -> Polyline {
         let params = params.centerParams
-        let points = (0 ... count).map { i -> Point2 in params.position(paramT: CGFloat(i) / CGFloat(count)) }
+        let points = (0 ... count).map { i -> Point2 in params.position(paramT: Scalar(i) / Scalar(count)) }
         return Polyline(points: points)
     }
 }
 
 extension PathSegment.Bezier: Tessellatable {
     func tessellated(count: Int = defaultTessellationCount) -> Polyline {
-        let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
+        let points = (0 ... count).map { i in position(paramT: Scalar(i) / Scalar(count)) }
         return Polyline(points: points)
     }
 }
 
 extension PathSegment.Line: Tessellatable {
     func tessellated(count: Int = defaultTessellationCount) -> Polyline {
-        let points = (0 ... count).map { i in position(paramT: CGFloat(i) / CGFloat(count)) }
+        let points = (0 ... count).map { i in position(paramT: Scalar(i) / Scalar(count)) }
         return Polyline(points: points)
     }
 }
@@ -166,19 +166,19 @@ extension PathSegment: Tessellatable {
 // MARK: InverseParametrizable
 
 extension PathSegment.Arc: InverseParametrizable {
-    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
+    func paramT(closestTo p: Point2) -> (t: Scalar, distance: Scalar) { tessellated().approxPathParamT(closestTo: p) }
 }
 
 extension PathSegment.Bezier: InverseParametrizable {
-    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
+    func paramT(closestTo p: Point2) -> (t: Scalar, distance: Scalar) { tessellated().approxPathParamT(closestTo: p) }
 }
 
 extension PathSegment.Line: InverseParametrizable {
-    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
+    func paramT(closestTo p: Point2) -> (t: Scalar, distance: Scalar) { tessellated().approxPathParamT(closestTo: p) }
 }
 
 extension PathSegment: InverseParametrizable {
-    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: p) }
+    func paramT(closestTo p: Point2) -> (t: Scalar, distance: Scalar) { impl.paramT(closestTo: p) }
 }
 
 // MARK: PathAppendable
@@ -226,12 +226,12 @@ extension PathSegment: SUPathAppendable {
 // MARK: ParamSplittable
 
 fileprivate protocol ParamSplittable {
-    func split(paramT: CGFloat) -> (Self, Self)
-    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self
+    func split(paramT: Scalar) -> (Self, Self)
+    func subsegment(fromT: Scalar, toT: Scalar) -> Self
 }
 
 extension PathSegment.Arc: ParamSplittable {
-    func split(paramT t: CGFloat) -> (Self, Self) {
+    func split(paramT t: Scalar) -> (Self, Self) {
         let params = self.params.centerParams
         let params0 = params.with(deltaAngle: params.deltaAngle * t)
         let params1 = params.with(startAngle: params.startAngle + params.deltaAngle * t).with(deltaAngle: params.deltaAngle * (1 - t))
@@ -240,7 +240,7 @@ extension PathSegment.Arc: ParamSplittable {
         return (a0, a1)
     }
 
-    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
+    func subsegment(fromT: Scalar, toT: Scalar) -> Self {
         assert((0.0 ... 1.0).contains(fromT) && (0.0 ... 1.0).contains(toT) && fromT < toT)
         let params = self.params.centerParams
         let params0 = params.with(startAngle: params.startAngle + params.deltaAngle * fromT).with(deltaAngle: params.deltaAngle * (toT - fromT))
@@ -249,7 +249,7 @@ extension PathSegment.Arc: ParamSplittable {
 }
 
 extension PathSegment.Bezier: ParamSplittable {
-    func split(paramT t: CGFloat) -> (Self, Self) {
+    func split(paramT t: Scalar) -> (Self, Self) {
         let p0 = Vector2(from), p1 = Vector2(bezier.control0), p2 = Vector2(bezier.control1), p3 = Vector2(to)
         let p01 = lerp(from: p0, to: p1, at: t), p12 = lerp(from: p1, to: p2, at: t), p23 = lerp(from: p2, to: p3, at: t)
         let p012 = lerp(from: p01, to: p12, at: t), p123 = lerp(from: p12, to: p23, at: t)
@@ -260,7 +260,7 @@ extension PathSegment.Bezier: ParamSplittable {
         )
     }
 
-    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
+    func subsegment(fromT: Scalar, toT: Scalar) -> Self {
         assert((0.0 ... 1.0).contains(fromT) && (0.0 ... 1.0).contains(toT) && fromT < toT)
         let (s0, _) = split(paramT: toT)
         let (_, s1) = s0.split(paramT: fromT / toT)
@@ -269,7 +269,7 @@ extension PathSegment.Bezier: ParamSplittable {
 }
 
 extension PathSegment.Line: ParamSplittable {
-    func split(paramT t: CGFloat) -> (Self, Self) {
+    func split(paramT t: Scalar) -> (Self, Self) {
         let pt = Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
         return (
             .init(line: PathEdge.Line(), from: from, to: pt),
@@ -277,7 +277,7 @@ extension PathSegment.Line: ParamSplittable {
         )
     }
 
-    func subsegment(fromT: CGFloat, toT: CGFloat) -> Self {
+    func subsegment(fromT: Scalar, toT: Scalar) -> Self {
         let pt0 = Point2(lerp(from: Vector2(from), to: Vector2(to), at: fromT))
         let pt1 = Point2(lerp(from: Vector2(from), to: Vector2(to), at: toT))
         return .init(line: PathEdge.Line(), from: pt0, to: pt1)
@@ -285,7 +285,7 @@ extension PathSegment.Line: ParamSplittable {
 }
 
 extension PathSegment: ParamSplittable {
-    func split(paramT: CGFloat) -> (PathSegment, PathSegment) { impl { $0.split(paramT: paramT) } }
+    func split(paramT: Scalar) -> (PathSegment, PathSegment) { impl { $0.split(paramT: paramT) } }
 
-    func subsegment(fromT: CGFloat, toT: CGFloat) -> PathSegment { impl { $0.subsegment(fromT: fromT, toT: toT) }}
+    func subsegment(fromT: Scalar, toT: Scalar) -> PathSegment { impl { $0.subsegment(fromT: fromT, toT: toT) }}
 }

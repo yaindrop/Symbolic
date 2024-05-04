@@ -131,7 +131,7 @@ class SVGPathParser {
     // parsing command context
     private var command: Character = "M"
     private var isRelative: Bool { command.isLowercase }
-    private var parameters: [CGFloat] = []
+    private var parameters: [Scalar] = []
 
     // MARK: scan
 
@@ -160,10 +160,10 @@ class SVGPathParser {
         return command
     }
 
-    private func scanParameters() throws -> [CGFloat] {
+    private func scanParameters() throws -> [Scalar] {
         guard let parametersStr = scanner.scanUpToCharacters(from: SVGPathParser.commandCharacterSet) else { return [] }
         let parameterStrList = parametersStr.components(separatedBy: SVGPathParser.separatorCharacterSet).filter { !$0.isEmpty }
-        let parameters = parameterStrList.compactMap { Double($0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)) }.map { CGFloat($0) }
+        let parameters = parameterStrList.compactMap { Double($0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)) }.map { Scalar($0) }
         guard parameters.count == parameterStrList.count else {
             throw SVGPathParserError.invalidParameters("Nonnumerical parameter in \(parametersStr)")
         }
@@ -186,16 +186,16 @@ class SVGPathParser {
 
     // MARK: parameter getter
 
-    private func parameterGroups(of n: Int) -> [[CGFloat]]? {
+    private func parameterGroups(of n: Int) -> [[Scalar]]? {
         guard parameters.count % n == 0 else { return nil }
-        var groups: [[CGFloat]] = []
+        var groups: [[Scalar]] = []
         for i in stride(from: 0, to: parameters.count, by: n) {
             groups.append(Array(parameters[i ..< i + n]))
         }
         return groups
     }
 
-    private func positionOf(x: CGFloat, y: CGFloat) -> Point2 {
+    private func positionOf(x: Scalar, y: Scalar) -> Point2 {
         if isRelative {
             return path.last + Vector2(x, y)
         } else {
@@ -203,7 +203,7 @@ class SVGPathParser {
         }
     }
 
-    private func flagOf(value: CGFloat) -> Bool? {
+    private func flagOf(value: Scalar) -> Bool? {
         if value == 0 {
             return false
         } else if value == 1 {

@@ -3,7 +3,7 @@ import Foundation
 enum PathAction {
     struct Load { let path: Path }
 
-    struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: CGFloat, newNode: PathNode }
+    struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: Scalar, newNode: PathNode }
 
     struct SetNodePosition { let pathId: UUID, nodeId: UUID, position: Point2 }
     struct SetEdgeLine { let pathId: UUID, fromNodeId: UUID }

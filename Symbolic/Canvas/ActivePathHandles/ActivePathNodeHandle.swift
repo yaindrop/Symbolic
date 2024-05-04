@@ -13,9 +13,9 @@ struct ActivePathNodeHandle: View {
 
     // MARK: private
 
-    private static let lineWidth: CGFloat = 2
-    private static let circleSize: CGFloat = 16
-    private static let touchablePadding: CGFloat = 16
+    private static let lineWidth: Scalar = 2
+    private static let circleSize: Scalar = 16
+    private static let touchablePadding: Scalar = 16
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater

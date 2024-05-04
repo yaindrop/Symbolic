@@ -50,14 +50,14 @@ struct PinchInfo: CustomStringConvertible {
         return PanInfo(origin: Point2(originVector), offset: currentVector - originVector)
     }
 
-    var originDistance: CGFloat { origin.0.distance(to: origin.1) }
+    var originDistance: Scalar { origin.0.distance(to: origin.1) }
 
-    var currentDistance: CGFloat {
+    var currentDistance: Scalar {
         let current = self.current
         return current.0.distance(to: current.1)
     }
 
-    var scale: CGFloat { currentDistance / originDistance }
+    var scale: Scalar { currentDistance / originDistance }
 
     public var description: String {
         "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))"
@@ -74,7 +74,7 @@ struct PinchInfo: CustomStringConvertible {
 class MultipleTouchContext: ObservableObject {
     @Published var active: Bool = false
     @Published var maxTouchesCount: Int = 0
-    @Published var maxPanOffset: CGFloat = 0
+    @Published var maxPanOffset: Scalar = 0
     @Published var firstTouchBeganTime: Date?
 
     @Published var panInfo: PanInfo?

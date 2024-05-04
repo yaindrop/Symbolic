@@ -10,10 +10,10 @@ struct TapInfo {
 
 class MultipleTouchPressDetector: ObservableObject {
     struct Configs {
-        let pressOffsetThreshold: CGFloat = 10
+        let pressOffsetThreshold: Scalar = 10
         let tapDurationThreshold: TimeInterval = 1
         let repeatedTapIntervalThreshold: TimeInterval = 0.5
-        let repeatedTapOffsetThreshold: CGFloat = 20
+        let repeatedTapOffsetThreshold: Scalar = 20
     }
 
     var pressLocation: Point2? { isPress ? touchContext.panInfo?.origin : nil }

@@ -8,11 +8,11 @@ extension UUID: Identifiable {
 // MARK: - SelfTransformable
 
 protocol SelfTransformable {
-    func apply<T>(_ mapper: (Self) -> T) -> T
+    func apply<T>(_ transform: (Self) -> T) -> T
 }
 
 extension SelfTransformable {
-    func apply<T>(_ mapper: (Self) -> T) -> T { mapper(self) }
+    func apply<T>(_ transform: (Self) -> T) -> T { transform(self) }
 }
 
 // MARK: - ReflectedStringConvertible
@@ -96,15 +96,15 @@ extension View {
 // MARK: - ScrollOffset
 
 class ScrollOffsetModel: ObservableObject {
-    @Published var offset: CGFloat = 0
+    @Published var offset: Scalar = 0
     let coordinateSpaceName = UUID().uuidString
 
     var scrolled: Bool { offset > 0 }
 }
 
 struct ScrollOffsetKey: PreferenceKey {
-    typealias Value = CGFloat
-    static var defaultValue: CGFloat = .zero
+    typealias Value = Scalar
+    static var defaultValue: Scalar = .zero
     static func reduce(value: inout Value, nextValue: () -> Value) { value += nextValue() }
 }
 

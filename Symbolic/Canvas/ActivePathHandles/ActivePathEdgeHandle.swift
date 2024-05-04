@@ -14,7 +14,7 @@ struct ActivePathEdgeHandle: View {
 //        }
     }
 
-    @State private var longPressParamT: CGFloat?
+    @State private var longPressParamT: Scalar?
     @State private var longPressSplitNodeId: UUID?
 
     @EnvironmentObject private var activePathModel: ActivePathModel
@@ -35,7 +35,7 @@ struct ActivePathEdgeHandle: View {
     }
 
     private var gesture: MultipleGestureModifier<PathSegment> {
-        func split(at p: CGPoint, pending: Bool = false) {
+        func split(at p: Point2, pending: Bool = false) {
             guard let longPressParamT, let longPressSplitNodeId else { return }
             updater.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, positionInView: p, pending: pending)
             if !pending {
@@ -62,8 +62,8 @@ struct ActivePathEdgeHandle: View {
                                        onDragEnd: { v, _ in split(at: v.location) })
     }
 
-    private static let circleSize: CGFloat = 16
-    private static let lineWidth: CGFloat = 2
+    private static let circleSize: Scalar = 16
+    private static let lineWidth: Scalar = 2
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
         Circle()
@@ -87,9 +87,9 @@ struct ActivePathFocusedEdgeHandle: View {
         }
     }
 
-    private static let lineWidth: CGFloat = 2
-    private static let circleSize: CGFloat = 16
-    private static let touchablePadding: CGFloat = 16
+    private static let lineWidth: Scalar = 2
+    private static let circleSize: Scalar = 16
+    private static let touchablePadding: Scalar = 16
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater

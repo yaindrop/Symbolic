@@ -17,7 +17,7 @@ extension PathSegment.Arc {
         var clockwise: Bool { deltaAngle < .zero }
         var transform: CGAffineTransform { CGAffineTransform.identity.centered(at: center) { $0.rotated(by: rotation.radians).scaledBy(x: radius.width, y: radius.height) } }
 
-        func position(paramT: CGFloat) -> Point2 {
+        func position(paramT: Scalar) -> Point2 {
             let t = (0 ... 1).clamp(paramT)
             let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
             let theta = (startAngle + deltaAngle * t).radians
@@ -33,7 +33,7 @@ extension PathSegment.Arc {
             let mat = Matrix2((cosPhi, -sinPhi), (sinPhi, cosPhi))
             let from = center + mat * Vector2(radius.width * cosTheta1, radius.height * sinTheta1)
             let to = center + mat * Vector2(radius.width * cosTheta2, radius.height * sinTheta2)
-            let largeArc = abs(deltaAngle.radians) > CGFloat.pi
+            let largeArc = abs(deltaAngle.radians) > Scalar.pi
             let sweep = deltaAngle > .zero
             return EndpointParams(from: from, to: to, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
         }
@@ -75,7 +75,7 @@ extension PathSegment.Arc {
                 return CenterParams(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 
-            let coefficientSign: CGFloat = largeArc == sweep ? -1 : 1
+            let coefficientSign: Scalar = largeArc == sweep ? -1 : 1
             let coefficient = coefficientSign * sqrt(abs((rx * rx * ry * ry - sumOfSquare) / sumOfSquare))
 
             let cPrime = coefficient * Vector2(rx * y1p / ry, -ry * x1p / rx)
@@ -91,11 +91,11 @@ extension PathSegment.Arc {
             let theta1 = u.radian(to: v)
 
             // F.6.5.6
-            var deltaTheta = fmod(v.radian(to: w), 2 * CGFloat.pi)
+            var deltaTheta = fmod(v.radian(to: w), 2 * Scalar.pi)
             if !sweep && deltaTheta > 0 {
-                deltaTheta -= 2 * CGFloat.pi
+                deltaTheta -= 2 * Scalar.pi
             } else if sweep && deltaTheta < 0 {
-                deltaTheta += 2 * CGFloat.pi
+                deltaTheta += 2 * Scalar.pi
             }
             return CenterParams(center: Point2(c), radius: CGSize(rx, ry), rotation: rotation, startAngle: Angle(radians: theta1), deltaAngle: Angle(radians: deltaTheta))
         }

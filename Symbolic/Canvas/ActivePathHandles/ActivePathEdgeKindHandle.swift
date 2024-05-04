@@ -41,9 +41,9 @@ struct ActivePathBezierHandle: View {
 
     // MARK: private
 
-    private static let lineWidth: CGFloat = 1
-    private static let circleSize: CGFloat = 12
-    private static let touchablePadding: CGFloat = 12
+    private static let lineWidth: Scalar = 1
+    private static let circleSize: Scalar = 12
+    private static let touchablePadding: Scalar = 12
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
@@ -108,10 +108,10 @@ struct ActivePathArcHandle: View {
 
     // MARK: private
 
-    private static let lineWidth: CGFloat = 1
-    private static let circleSize: CGFloat = 12
+    private static let lineWidth: Scalar = 1
+    private static let circleSize: Scalar = 12
     private static let rectSize: CGSize = CGSize(16, 9)
-    private static let touchablePadding: CGFloat = 12
+    private static let touchablePadding: Scalar = 12
 
     @EnvironmentObject private var activePathModel: ActivePathModel
     @EnvironmentObject private var updater: PathUpdater
@@ -202,7 +202,7 @@ struct ActivePathArcHandle: View {
             .modifier(dragRadius { arc.with(radius: radius.with(height: $0)) })
     }
 
-    private func dragRadius(getArc: @escaping (CGFloat) -> PathEdge.Arc) -> MultipleGestureModifier<Point2> {
+    private func dragRadius(getArc: @escaping (Scalar) -> PathEdge.Arc) -> MultipleGestureModifier<Point2> {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(edge: fromId, arcInView: getArc(value.location.distance(to: origin) * 2), pending: pending) }
         }

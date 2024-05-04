@@ -5,7 +5,7 @@ import SwiftUI
 
 struct MultipleGestureModifier<Origin>: ViewModifier {
     struct Configs {
-        let distanceThreshold: CGFloat = 10 // tap or long press when smaller, drag when greater
+        let distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
         let durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
         let allowLongPressDuringDrag: Bool = true // whether to continue long press after drag start
     }
@@ -15,7 +15,7 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
         let startTime: Date = .now
 
         private(set) var lastValue: DragGesture.Value
-        private(set) var maxDistance: CGFloat = 0
+        private(set) var maxDistance: Scalar = 0
 
         var longPressTimeout: DispatchWorkItem?
         var longPressStarted = false

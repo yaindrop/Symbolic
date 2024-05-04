@@ -17,7 +17,7 @@ enum ActivePathFocusedPart: Equatable {
 
 class ActivePathModel: ObservableObject {
     @Published var activePathId: UUID?
-    @Published var focusedPart: ActivePathFocusedPart?
+    @Published private(set) var focusedPart: ActivePathFocusedPart?
 
     var focusedEdgeId: UUID? {
         guard let focusedPart,
@@ -30,6 +30,12 @@ class ActivePathModel: ObservableObject {
               case let .node(id) = focusedPart else { return nil }
         return id
     }
+
+    func setFocus(node id: UUID) { withAnimation { focusedPart = .node(id) } }
+
+    func setFocus(edge fromNodeId: UUID) { withAnimation { focusedPart = .edge(fromNodeId) } }
+
+    func clearFocus() { withAnimation { focusedPart = nil } }
 
     var activePath: Path? {
         pathStore.paths.first { $0.id == activePathId }

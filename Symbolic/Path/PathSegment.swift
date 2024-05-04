@@ -41,9 +41,9 @@ enum PathSegment {
 
     init(from: Point2, to: Point2, edge: PathEdge) {
         switch edge {
-        case let .line(line): self = .line(.init(line: line, from: from, to: to))
-        case let .arc(arc): self = .arc(.init(arc: arc, from: from, to: to))
-        case let .bezier(bezier): self = .bezier(.init(bezier: bezier, from: from, to: to))
+        case let .arc(a): self = .arc(.init(arc: a, from: from, to: to))
+        case let .bezier(b): self = .bezier(.init(bezier: b, from: from, to: to))
+        case let .line(l): self = .line(.init(line: l, from: from, to: to))
         }
     }
 }
@@ -55,9 +55,9 @@ extension PathSegment: PathSegmentImpl {
 
     private var impl: Impl {
         switch self {
-        case let .arc(arc): arc
-        case let .bezier(bezier): bezier
-        case let .line(line): line
+        case let .arc(a): a
+        case let .bezier(b): b
+        case let .line(l): l
         }
     }
 

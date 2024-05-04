@@ -19,12 +19,16 @@ extension PathEvent.Update {
     struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
     struct NodeUpdate { let node: PathNode }
     struct NodeDelete { let nodeId: UUID }
+    struct BreakUntil { let nodeId: UUID } // delete nodes (inclusively) till id
+    struct BreakAfter { let nodeId: UUID } // delete nodes (exclusively) after id
 
     enum Kind {
         case edgeUpdate(EdgeUpdate)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
+        case breakUntil(BreakUntil)
+        case breakAfter(BreakAfter)
     }
 }
 
@@ -53,27 +57,33 @@ struct DocumentEvent: Identifiable {
 }
 
 extension PathEvent {
+    init(in pathId: UUID, breakAfter nodeId: UUID) {
+        self = .update(.init(pathId: pathId,
+                             kind: .breakAfter(.init(nodeId: nodeId))))
+    }
+
+    init(in pathId: UUID, breakUntil nodeId: UUID) {
+        self = .update(.init(pathId: pathId,
+                             kind: .breakUntil(.init(nodeId: nodeId))))
+    }
+
     init(in pathId: UUID, updateEdgeFrom fromNodeId: UUID, _ edge: PathEdge) {
-        let edgeUpdate = PathEvent.Update.EdgeUpdate(fromNodeId: fromNodeId, edge: edge)
-        let update = PathEvent.Update(pathId: pathId, kind: .edgeUpdate(edgeUpdate))
-        self = .update(update)
+        self = .update(.init(pathId: pathId,
+                             kind: .edgeUpdate(.init(fromNodeId: fromNodeId, edge: edge))))
     }
 
     init(in pathId: UUID, createNodeAfter prevNodeId: UUID?, _ node: PathNode) {
-        let nodeCreate = PathEvent.Update.NodeCreate(prevNodeId: prevNodeId, node: node)
-        let update = PathEvent.Update(pathId: pathId, kind: .nodeCreate(nodeCreate))
-        self = .update(update)
+        self = .update(.init(pathId: pathId,
+                             kind: .nodeCreate(.init(prevNodeId: prevNodeId, node: node))))
     }
 
     init(in pathId: UUID, updateNode node: PathNode) {
-        let nodeUpdate = PathEvent.Update.NodeUpdate(node: node)
-        let update = PathEvent.Update(pathId: pathId, kind: .nodeUpdate(nodeUpdate))
-        self = .update(update)
+        self = .update(.init(pathId: pathId,
+                             kind: .nodeUpdate(.init(node: node))))
     }
 
     init(in pathId: UUID, deleteNode nodeId: UUID) {
-        let nodeDelete = PathEvent.Update.NodeDelete(nodeId: nodeId)
-        let update = PathEvent.Update(pathId: pathId, kind: .nodeDelete(nodeDelete))
-        self = .update(update)
+        self = .update(.init(pathId: pathId,
+                             kind: .nodeDelete(.init(nodeId: nodeId))))
     }
 }

@@ -1,11 +1,13 @@
 import Combine
 import Foundation
 
-struct ViewportInfo: CustomStringConvertible {
+struct ViewportInfo {
     let origin: Point2 // world position of the view origin (top left corner)
     let scale: Scalar
     let worldToView: CGAffineTransform
     let viewToWorld: CGAffineTransform
+
+    func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
 
     init(origin: Point2, scale: Scalar) {
         self.origin = origin
@@ -14,17 +16,17 @@ struct ViewportInfo: CustomStringConvertible {
         viewToWorld = worldToView.inverted()
     }
 
-    init() { self.init(origin: .zero, scale: 1) }
-
     init(origin: Point2) { self.init(origin: origin, scale: 1) }
 
-    func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
+    init() { self.init(origin: .zero, scale: 1) }
+}
 
-    public var description: String { return "ViewportInfo(\(origin.shortDescription), \(scale.shortDescription))" }
+extension ViewportInfo: CustomStringConvertible {
+    public var description: String { return "(\(origin.shortDescription), \(scale.shortDescription))" }
 }
 
 class Viewport: ObservableObject {
-    @Published var info: ViewportInfo = ViewportInfo()
+    @Published var info: ViewportInfo = .init()
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
@@ -33,7 +35,7 @@ class Viewport: ObservableObject {
 // MARK: - ViewportUpdater
 
 class ViewportUpdater: ObservableObject {
-    @Published var previousInfo: ViewportInfo = ViewportInfo()
+    @Published var previousInfo: ViewportInfo = .init()
 
     init(viewport: Viewport, touchContext: MultipleTouchContext) {
         self.viewport = viewport
@@ -55,7 +57,7 @@ class ViewportUpdater: ObservableObject {
     private func onPanInfo(_ pan: PanInfo) {
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
-        viewport.info = ViewportInfo(origin: origin, scale: scale)
+        viewport.info = .init(origin: origin, scale: scale)
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
@@ -63,7 +65,7 @@ class ViewportUpdater: ObservableObject {
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
         let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
-        viewport.info = ViewportInfo(origin: origin, scale: scale)
+        viewport.info = .init(origin: origin, scale: scale)
     }
 
     private func onCommit() {

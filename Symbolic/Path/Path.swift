@@ -129,6 +129,8 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
     let isClosed: Bool
     let nodeIdToIndex: [UUID: Int]
 
+    var count: Int { pairs.count }
+
     var nodes: [PathNode] { pairs.map { $0.node } }
     var segments: [PathSegment] { pairs.compactMap { segment(from: $0.node.id) } }
 
@@ -194,7 +196,7 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
         path.strokedPath(StrokeStyle(lineWidth: 12, lineCap: .round))
     }()
 
-    private init(id: UUID, pairs: [NodeEdgePair], isClosed: Bool) {
+    required init(id: UUID, pairs: [NodeEdgePair], isClosed: Bool) {
         var nodeIdToIndex: [UUID: Int] = [:]
         for (i, p) in pairs.enumerated() {
             nodeIdToIndex[p.node.id] = i
@@ -220,37 +222,47 @@ extension Path: SUPathAppendable {
 // MARK: - clone with path update event
 
 extension Path {
-    func with(pairs: [NodeEdgePair]) -> Path { Path(id: id, pairs: pairs, isClosed: isClosed) }
+    func with(pairs: [NodeEdgePair]) -> Self { .init(id: id, pairs: pairs, isClosed: isClosed) }
 
-    func with(edgeUpdate: PathEvent.Update.EdgeUpdate) -> Path {
-        guard let i = (pairs.firstIndex { node, _ in node.id == edgeUpdate.fromNodeId }) else { return self }
-        var pairs: [NodeEdgePair] = pairs
-        pairs[i].1 = edgeUpdate.edge
-        return with(pairs: pairs)
+    func with(pairs: [NodeEdgePair], isClosed: Bool) -> Self { .init(id: id, pairs: pairs, isClosed: isClosed) }
+
+    func with(breakAfter: PathEvent.Update.BreakAfter) -> Self {
+        guard let i = nodeIdToIndex[breakAfter.nodeId] else { return self }
+        if isClosed {
+            return with(pairs: Array(pairs[(i + 1)...]) + Array(pairs[...i]), isClosed: false)
+        }
+        return with(pairs: Array(pairs[...i]))
     }
 
-    func with(nodeCreate: PathEvent.Update.NodeCreate) -> Path {
+    func with(breakUntil: PathEvent.Update.BreakUntil) -> Self {
+        guard let i = nodeIdToIndex[breakUntil.nodeId] else { return self }
+        if isClosed {
+            return with(pairs: Array(pairs[(i + 1)...]) + Array(pairs[...i]), isClosed: false)
+        }
+        return with(pairs: Array(pairs[(i + 1)...]))
+    }
+
+    func with(edgeUpdate: PathEvent.Update.EdgeUpdate) -> Self {
+        guard let i = nodeIdToIndex[edgeUpdate.fromNodeId] else { return self }
+        return with(pairs: pairs.with { $0[i].1 = edgeUpdate.edge })
+    }
+
+    func with(nodeCreate: PathEvent.Update.NodeCreate) -> Self {
         var i = 0
         if let id = nodeCreate.prevNodeId {
-            guard let prevNodeIndex = (pairs.firstIndex { node, _ in node.id == id }) else { return self }
-            i = prevNodeIndex + 1
+            guard let prev = nodeIdToIndex[id] else { return self }
+            i = prev + 1
         }
-        var pairs: [NodeEdgePair] = pairs
-        pairs.insert((nodeCreate.node, .line(PathEdge.Line())), at: i)
-        return with(pairs: pairs)
+        return with(pairs: pairs.with { $0.insert((nodeCreate.node, .line(PathEdge.Line())), at: i) })
     }
 
-    func with(nodeDelete: PathEvent.Update.NodeDelete) -> Path {
-        guard let i = (pairs.firstIndex { node, _ in node.id == nodeDelete.nodeId }) else { return self }
-        var pairs: [NodeEdgePair] = pairs
-        pairs.remove(at: i)
-        return with(pairs: pairs)
+    func with(nodeDelete: PathEvent.Update.NodeDelete) -> Self {
+        guard let i = nodeIdToIndex[nodeDelete.nodeId] else { return self }
+        return with(pairs: pairs.with { $0.remove(at: i) })
     }
 
-    func with(nodeUpdate: PathEvent.Update.NodeUpdate) -> Path {
-        guard let i = (pairs.firstIndex { node, _ in node.id == nodeUpdate.node.id }) else { return self }
-        var pairs: [NodeEdgePair] = pairs
-        pairs[i].node = nodeUpdate.node
-        return with(pairs: pairs)
+    func with(nodeUpdate: PathEvent.Update.NodeUpdate) -> Self {
+        guard let i = nodeIdToIndex[nodeUpdate.node.id] else { return self }
+        return with(pairs: pairs.with { $0[i].node = nodeUpdate.node })
     }
 }

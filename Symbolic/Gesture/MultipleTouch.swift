@@ -21,15 +21,13 @@ struct MultipleTouchModifier: ViewModifier {
     }
 }
 
-// MARK: - multiple touch info
+// MARK: - PanInfo
 
-struct PanInfo: CustomStringConvertible {
+struct PanInfo {
     let origin: Point2
     let offset: Vector2
 
     var current: Point2 { origin + offset }
-
-    public var description: String { "(\(origin.shortDescription), \(offset.shortDescription)" }
 
     init(origin: Point2, offset: Vector2 = Vector2.zero) {
         self.origin = origin
@@ -37,35 +35,47 @@ struct PanInfo: CustomStringConvertible {
     }
 }
 
-struct PinchInfo: CustomStringConvertible {
+extension PanInfo: CustomStringConvertible {
+    public var description: String { "(\(origin.shortDescription), \(offset.shortDescription)" }
+}
+
+// MARK: - PinchInfo
+
+struct PinchInfo {
     let origin: (Point2, Point2)
     let offset: (Vector2, Vector2)
 
     var current: (Point2, Point2) { (origin.0 + offset.0, origin.1 + offset.1) }
 
     var center: PanInfo {
-        let originVector = (Vector2(origin.0) + Vector2(origin.1)) / 2
-        let current = self.current
-        let currentVector = (Vector2(current.0) + Vector2(current.1)) / 2
-        return PanInfo(origin: Point2(originVector), offset: currentVector - originVector)
+        let (o0, o1) = origin
+        let originMid = o0.midPoint(to: o1)
+        let (c0, c1) = current
+        let currentMid = c0.midPoint(to: originMid)
+        return .init(origin: originMid, offset: originMid.offset(to: currentMid))
     }
 
-    var originDistance: Scalar { origin.0.distance(to: origin.1) }
+    var originDistance: Scalar {
+        let (o0, o1) = origin
+        return o0.distance(to: o1)
+    }
 
     var currentDistance: Scalar {
-        let current = self.current
-        return current.0.distance(to: current.1)
+        let (c0, c1) = current
+        return c0.distance(to: c1)
     }
 
     var scale: Scalar { currentDistance / originDistance }
 
-    public var description: String {
-        "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))"
-    }
-
     init(origin: (Point2, Point2), offset: (Vector2, Vector2) = (Vector2.zero, Vector2.zero)) {
         self.origin = origin
         self.offset = offset
+    }
+}
+
+extension PinchInfo: CustomStringConvertible {
+    public var description: String {
+        "((\(origin.0.shortDescription), \(origin.1.shortDescription)), (\(offset.0.shortDescription), \(offset.1.shortDescription)))"
     }
 }
 

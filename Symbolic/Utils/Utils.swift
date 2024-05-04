@@ -15,6 +15,22 @@ extension SelfTransformable {
     func apply<T>(_ transform: (Self) -> T) -> T { transform(self) }
 }
 
+// MARK: - Cloneable
+
+protocol Cloneable {
+    init(_: Self)
+}
+
+extension Cloneable {
+    func with(_ transform: (inout Self) -> Void) -> Self {
+        var cloned = Self(self)
+        transform(&cloned)
+        return cloned
+    }
+}
+
+extension Array: Cloneable {}
+
 // MARK: - ReflectedStringConvertible
 
 public protocol ReflectedStringConvertible: CustomStringConvertible { }

@@ -41,8 +41,8 @@ enum LineSegment {
 
     init(p0: Point2, p1: Point2) {
         switch Line(p0: p0, p1: p1) {
-        case let .slopeIntercept(slopeIntercept): self = .slopeIntercept(.init(slopeIntercept: slopeIntercept, x0: p0.x, x1: p1.x))
-        case let .vertical(vertical): self = .vertical(.init(vertical: vertical, y0: p0.y, y1: p1.y))
+        case let .slopeIntercept(si): self = .slopeIntercept(.init(slopeIntercept: si, x0: p0.x, x1: p1.x))
+        case let .vertical(v): self = .vertical(.init(vertical: v, y0: p0.y, y1: p1.y))
         }
     }
 }

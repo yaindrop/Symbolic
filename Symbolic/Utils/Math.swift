@@ -246,6 +246,8 @@ extension Point2 {
 
     func distance(to point: Self) -> Scalar { offset(to: point).length }
 
+    func midPoint(to point: Self) -> Self { .init((Vector2(self) + Vector2(point)) / 2) }
+
     // MARK: operator
 
     public static func + (lhs: Self, rhs: Vector2) -> Self { .init(Vector2(lhs) + rhs) }

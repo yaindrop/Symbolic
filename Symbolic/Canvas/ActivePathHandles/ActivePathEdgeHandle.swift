@@ -22,9 +22,7 @@ struct ActivePathEdgeHandle: View {
 
     private var focused: Bool { activePathModel.focusedEdgeId == fromId }
     private func toggleFocus() {
-        withAnimation {
-            activePathModel.focusedPart = focused ? nil : .edge(fromId)
-        }
+        focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromId)
     }
 
     @ViewBuilder private var outline: some View {
@@ -51,7 +49,7 @@ struct ActivePathEdgeHandle: View {
                                                let id = UUID()
                                                longPressSplitNodeId = id
                                                split(at: s.position(paramT: t), pending: true)
-                                               activePathModel.focusedPart = .node(id)
+                                               activePathModel.setFocus(node: id)
                                            }
                                        },
                                        onLongPressEnd: { _, s in

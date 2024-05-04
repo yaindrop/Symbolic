@@ -22,9 +22,7 @@ struct ActivePathNodeHandle: View {
 
     private var focused: Bool { activePathModel.focusedNodeId == nodeId }
     private func toggleFocus() {
-        withAnimation {
-            activePathModel.focusedPart = focused ? nil : .node(nodeId)
-        }
+        focused ? activePathModel.clearFocus() : activePathModel.setFocus(node: nodeId)
     }
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {

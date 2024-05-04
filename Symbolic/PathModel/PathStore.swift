@@ -18,6 +18,7 @@ class PathStore: ObservableObject {
     var nodes: [PathNode] { pathIds.compactMap { nid in nodeIdToNode[nid] } }
 
     func add(path: Path) {
+        guard !path.pairs.isEmpty else { return }
         if loadingPendingEvent {
             pendingPaths?.append(path)
             return
@@ -141,33 +142,47 @@ extension PathStore {
 
     func loadPathEvent(_ event: PathEvent.Update) {
         switch event.kind {
-        case let .edgeUpdate(v):
-            loadPathUpdate(pathId: event.pathId, edgeUpdate: v)
-        case let .nodeCreate(v):
-            loadPathUpdate(pathId: event.pathId, nodeCreate: v)
-        case let .nodeDelete(v):
-            loadPathUpdate(pathId: event.pathId, nodeDelete: v)
-        case let .nodeUpdate(v):
-            loadPathUpdate(pathId: event.pathId, nodeUpdate: v)
+        case let .breakAfter(breakAfter):
+            loadPathUpdate(pathId: event.pathId, breakAfter)
+        case let .breakUntil(breakUntil):
+            loadPathUpdate(pathId: event.pathId, breakUntil)
+        case let .edgeUpdate(edgeUpdate):
+            loadPathUpdate(pathId: event.pathId, edgeUpdate)
+        case let .nodeCreate(nodeCreate):
+            loadPathUpdate(pathId: event.pathId, nodeCreate)
+        case let .nodeDelete(nodeDelete):
+            loadPathUpdate(pathId: event.pathId, nodeDelete)
+        case let .nodeUpdate(nodeUpdate):
+            loadPathUpdate(pathId: event.pathId, nodeUpdate)
         }
     }
 
-    func loadPathUpdate(pathId: UUID, edgeUpdate: PathEvent.Update.EdgeUpdate) {
+    func loadPathUpdate(pathId: UUID, _ breakAfter: PathEvent.Update.BreakAfter) {
+        guard let path = getEventPath(id: pathId) else { return }
+        update(path: path.with(breakAfter: breakAfter))
+    }
+
+    func loadPathUpdate(pathId: UUID, _ breakUntil: PathEvent.Update.BreakUntil) {
+        guard let path = getEventPath(id: pathId) else { return }
+        update(path: path.with(breakUntil: breakUntil))
+    }
+
+    func loadPathUpdate(pathId: UUID, _ edgeUpdate: PathEvent.Update.EdgeUpdate) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(edgeUpdate: edgeUpdate))
     }
 
-    func loadPathUpdate(pathId: UUID, nodeCreate: PathEvent.Update.NodeCreate) {
+    func loadPathUpdate(pathId: UUID, _ nodeCreate: PathEvent.Update.NodeCreate) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeCreate: nodeCreate))
     }
 
-    func loadPathUpdate(pathId: UUID, nodeDelete: PathEvent.Update.NodeDelete) {
+    func loadPathUpdate(pathId: UUID, _ nodeDelete: PathEvent.Update.NodeDelete) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeDelete: nodeDelete))
     }
 
-    func loadPathUpdate(pathId: UUID, nodeUpdate: PathEvent.Update.NodeUpdate) {
+    func loadPathUpdate(pathId: UUID, _ nodeUpdate: PathEvent.Update.NodeUpdate) {
         guard let path = getEventPath(id: pathId) else { return }
         update(path: path.with(nodeUpdate: nodeUpdate))
     }

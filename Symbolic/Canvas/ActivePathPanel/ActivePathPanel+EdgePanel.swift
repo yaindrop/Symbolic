@@ -13,28 +13,11 @@ extension ActivePathPanel {
                 Spacer(minLength: 24)
                 VStack(spacing: 0) {
                     HStack {
-                        Button {
-                            withAnimation { expanded.toggle() }
-                        } label: {
-                            Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
-                            Text(name)
-                                .font(.subheadline)
-                        }
-                        .if(focused) { $0.foregroundStyle(.cyan) }
-                        .buttonStyle(PlainButtonStyle())
+                        titleMenu
                         Spacer()
+                        expandButton
                     }
-                    .padding(6)
-                    Group {
-                        if case let .bezier(bezier) = edge {
-                            BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
-                        } else if case let .arc(arc) = edge {
-                            ArcPanel(fromNodeId: fromNodeId, arc: arc)
-                        }
-                    }
-                    .padding(.top, 6)
-                    .frame(height: expanded ? nil : 0, alignment: .top)
-                    .clipped()
+                    edgeKindPanel
                 }
                 .padding(12)
                 .background(.ultraThinMaterial)
@@ -46,6 +29,7 @@ extension ActivePathPanel {
         }
 
         @EnvironmentObject private var activePathModel: ActivePathModel
+        @EnvironmentObject private var updater: PathUpdater
         @State private var expanded = false
 
         private var focused: Bool { activePathModel.focusedPart == .edge(fromNodeId) }
@@ -56,6 +40,58 @@ extension ActivePathPanel {
             case .bezier: "Bezier"
             case .line: "Line"
             }
+        }
+
+        private func deleteEdge() {
+            updater.updateActivePath(deleteEdge: fromNodeId)
+        }
+
+        @ViewBuilder private var title: some View {
+            HStack(spacing: 6) {
+                Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
+                Text(name)
+                    .font(.subheadline)
+            }
+            .if(focused) { $0.foregroundStyle(.cyan) }
+            .padding(6)
+        }
+
+        @ViewBuilder private var titleMenu: some View {
+            Menu {
+                Button(focused ? "Unfocus" : "Focus") {
+                    focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromNodeId)
+                }
+                Divider()
+                Button("Delete", role: .destructive) {
+                    deleteEdge()
+                }
+            } label: {
+                title
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+
+        @ViewBuilder private var expandButton: some View {
+            Button {
+                withAnimation { expanded.toggle() }
+            } label: {
+                Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                    .padding(6)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+
+        @ViewBuilder private var edgeKindPanel: some View {
+            Group {
+                if case let .bezier(bezier) = edge {
+                    BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
+                } else if case let .arc(arc) = edge {
+                    ArcPanel(fromNodeId: fromNodeId, arc: arc)
+                }
+            }
+            .padding(.top, 6)
+            .frame(height: expanded ? nil : 0, alignment: .top)
+            .clipped()
         }
     }
 }

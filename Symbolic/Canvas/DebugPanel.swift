@@ -33,7 +33,7 @@ struct DebugPanel: View {
             .background(.regularMaterial)
             .cornerRadius(12)
         }
-        .frame(maxWidth: 360)
+        .frame(maxWidth: 320)
         .padding(24)
         .atCornerPosition(.topRight)
     }

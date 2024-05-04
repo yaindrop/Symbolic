@@ -19,24 +19,18 @@ enum PathSegment {
         var params: EndpointParams {
             EndpointParams(from: from, to: to, radius: arc.radius, rotation: arc.rotation, largeArc: arc.largeArc, sweep: arc.sweep)
         }
-
-        func applying(_ t: CGAffineTransform) -> Self { .init(arc: arc.applying(t), from: from.applying(t), to: to.applying(t)) }
     }
 
     struct Bezier: Impl {
         let bezier: PathEdge.Bezier
         let from: Point2, to: Point2
         var edge: PathEdge { .bezier(bezier) }
-
-        func applying(_ t: CGAffineTransform) -> Self { .init(bezier: bezier.applying(t), from: from.applying(t), to: to.applying(t)) }
     }
 
     struct Line: Impl {
         let line: PathEdge.Line
         let from: Point2, to: Point2
         var edge: PathEdge { .line(line) }
-
-        func applying(_ t: CGAffineTransform) -> Self { .init(line: line.applying(t), from: from.applying(t), to: to.applying(t)) }
     }
 
     case arc(Arc)
@@ -52,6 +46,60 @@ enum PathSegment {
         case let .bezier(bezier): self = .bezier(.init(bezier: bezier, from: from, to: to))
         }
     }
+}
+
+extension PathSegment: PathSegmentImpl {
+    var from: CGPoint { impl.from }
+    var to: CGPoint { impl.to }
+    var edge: PathEdge { impl.edge }
+
+    private var impl: Impl {
+        switch self {
+        case let .arc(arc): arc
+        case let .bezier(bezier): bezier
+        case let .line(line): line
+        }
+    }
+
+    private func impl(_ transform: (Impl) -> Impl) -> Self {
+        switch self {
+        case let .arc(a): .arc(transform(a) as! Arc)
+        case let .bezier(b): .bezier(transform(b) as! Bezier)
+        case let .line(l): .line(transform(l) as! Line)
+        }
+    }
+
+    private func impl(_ transform: (Impl) -> (Impl, Impl)) -> (Self, Self) {
+        switch self {
+        case let .arc(a):
+            let (a0, a1) = transform(a) as! (Arc, Arc)
+            return (.arc(a0), .arc(a1))
+        case let .bezier(b):
+            let (b0, b1) = transform(b) as! (Bezier, Bezier)
+            return (.bezier(b0), .bezier(b1))
+        case let .line(l):
+            let (l0, l1) = transform(l) as! (Line, Line)
+            return (.line(l0), .line(l1))
+        }
+    }
+}
+
+// MARK: Transformable
+
+extension PathSegment.Arc: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { .init(arc: arc.applying(t), from: from.applying(t), to: to.applying(t)) }
+}
+
+extension PathSegment.Bezier: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { .init(bezier: bezier.applying(t), from: from.applying(t), to: to.applying(t)) }
+}
+
+extension PathSegment.Line: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { .init(line: line.applying(t), from: from.applying(t), to: to.applying(t)) }
+}
+
+extension PathSegment: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { impl { $0.applying(t) }}
 }
 
 // MARK: Parametrizable
@@ -75,6 +123,10 @@ extension PathSegment.Line: Parametrizable {
         let t = (0.0 ... 1.0).clamp(paramT)
         return Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
     }
+}
+
+extension PathSegment: Parametrizable {
+    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
 }
 
 // MARK: Tessellatable
@@ -107,6 +159,10 @@ extension PathSegment.Line: Tessellatable {
     }
 }
 
+extension PathSegment: Tessellatable {
+    func tessellated(count: Int = defaultTessellationCount) -> Polyline { impl.tessellated(count: count) }
+}
+
 // MARK: InverseParametrizable
 
 extension PathSegment.Arc: InverseParametrizable {
@@ -119,6 +175,10 @@ extension PathSegment.Bezier: InverseParametrizable {
 
 extension PathSegment.Line: InverseParametrizable {
     func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { tessellated().approxPathParamT(closestTo: p) }
+}
+
+extension PathSegment: InverseParametrizable {
+    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: p) }
 }
 
 // MARK: PathAppendable
@@ -161,6 +221,10 @@ extension PathSegment.Line: PathAppendable {
         if path.isEmpty { path.move(to: from) }
         path.addLine(to: to)
     }
+}
+
+extension PathSegment: PathAppendable {
+    func append(to path: inout SUPath) { impl.append(to: &path) }
 }
 
 // MARK: ParamSplittable
@@ -224,56 +288,8 @@ extension PathSegment.Line: ParamSplittable {
     }
 }
 
-// MARK: expose PathSegmentImpl
+extension PathSegment: ParamSplittable {
+    func split(paramT: CGFloat) -> (PathSegment, PathSegment) { impl { $0.split(paramT: paramT) } }
 
-extension PathSegment: PathSegmentImpl {
-    private var impl: Impl {
-        switch self {
-        case let .line(line): line
-        case let .arc(arc): arc
-        case let .bezier(bezier): bezier
-        }
-    }
-
-    var from: CGPoint { impl.from }
-    var to: CGPoint { impl.to }
-    var edge: PathEdge { impl.edge }
-
-    func applying(_ t: CGAffineTransform) -> Self {
-        switch self {
-        case let .arc(a): .arc(a.applying(t))
-        case let .bezier(b): .bezier(b.applying(t))
-        case let .line(l): .line(l.applying(t))
-        }
-    }
-
-    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
-
-    func tessellated(count: Int = defaultTessellationCount) -> Polyline { impl.tessellated(count: count) }
-
-    func paramT(closestTo p: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: p) }
-
-    func append(to path: inout SUPath) { impl.append(to: &path) }
-
-    func split(paramT: CGFloat) -> (PathSegment, PathSegment) {
-        switch self {
-        case let .arc(a):
-            let (a0, a1) = a.split(paramT: paramT)
-            return (.arc(a0), .arc(a1))
-        case let .bezier(b):
-            let (b0, b1) = b.split(paramT: paramT)
-            return (.bezier(b0), .bezier(b1))
-        case let .line(l):
-            let (l0, l1) = l.split(paramT: paramT)
-            return (.line(l0), .line(l1))
-        }
-    }
-
-    func subsegment(fromT: CGFloat, toT: CGFloat) -> PathSegment {
-        switch self {
-        case let .arc(a): .arc(a.subsegment(fromT: fromT, toT: toT))
-        case let .bezier(b): .bezier(b.subsegment(fromT: fromT, toT: toT))
-        case let .line(l): .line(l.subsegment(fromT: fromT, toT: toT))
-        }
-    }
+    func subsegment(fromT: CGFloat, toT: CGFloat) -> PathSegment { impl { $0.subsegment(fromT: fromT, toT: toT) }}
 }

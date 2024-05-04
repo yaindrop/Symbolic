@@ -69,13 +69,15 @@ fileprivate struct BezierPanel: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Image(systemName: "1.square")
+                Text("C₁")
+                    .font(.callout.monospacedDigit())
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
             }
             Divider()
             HStack {
-                Image(systemName: "2.square")
+                Text("C₂")
+                    .font(.callout.monospacedDigit())
                 Spacer(minLength: 12)
                 PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
             }
@@ -106,28 +108,28 @@ fileprivate struct ArcPanel: View {
         VStack(spacing: 12) {
             HStack {
                 Text("Radius")
-                    .font(.callout)
+                    .font(.subheadline)
                 Spacer()
                 SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
             }
             Divider()
             HStack {
                 Text("Rotation")
-                    .font(.callout)
+                    .font(.subheadline)
                 Spacer()
                 AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
             }
             Divider()
             HStack {
                 Text("Large Arc")
-                    .font(.callout)
+                    .font(.subheadline)
                 Spacer()
                 FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
             }
             Divider()
             HStack {
                 Text("Sweep")
-                    .font(.callout)
+                    .font(.subheadline)
                 Spacer()
                 FlagInput(flag: arc.sweep, onChange: updateSweep)
             }

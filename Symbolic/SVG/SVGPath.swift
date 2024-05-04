@@ -8,19 +8,12 @@ fileprivate protocol SVGPathCommandImpl: CustomStringConvertible {
 }
 
 enum SVGPathCommand {
-    struct LineTo: SVGPathCommandImpl {
-        let position: Point2
-
-        public var description: String { return "L \(position.x) \(position.y)" }
-    }
-
-    struct ArcTo: SVGPathCommandImpl {
+    fileprivate typealias Impl = SVGPathCommandImpl
+    struct ArcTo: Impl {
         let radius: CGSize, rotation: Angle, largeArc: Bool, sweep: Bool, position: Point2
-
-        public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
     }
 
-    struct BezierTo: SVGPathCommandImpl {
+    struct BezierTo: Impl {
         let control0: Point2, control1: Point2, position: Point2
 
         func toQuadratic(current: Point2) -> QuadraticBezierTo? {
@@ -29,11 +22,13 @@ enum SVGPathCommand {
             guard quadraticControl0 == quadraticControl1 else { return nil }
             return QuadraticBezierTo(control: quadraticControl0, position: position)
         }
-
-        public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
     }
 
-    struct QuadraticBezierTo: SVGPathCommandImpl {
+    struct LineTo: Impl {
+        let position: Point2
+    }
+
+    struct QuadraticBezierTo: Impl {
         let control: Point2, position: Point2
 
         func toCubic(current: Point2) -> BezierTo {
@@ -41,8 +36,6 @@ enum SVGPathCommand {
             let control1 = position + (position.offset(to: control)) * 2 / 3
             return BezierTo(control0: control0, control1: control1, position: position)
         }
-
-        public var description: String { return "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
     }
 
     case lineTo(LineTo)
@@ -52,7 +45,9 @@ enum SVGPathCommand {
 }
 
 extension SVGPathCommand: SVGPathCommandImpl {
-    fileprivate var impl: SVGPathCommandImpl {
+    var position: Point2 { impl.position }
+
+    private var impl: Impl {
         switch self {
         case let .arcTo(c): c
         case let .bezierTo(c): c
@@ -60,10 +55,31 @@ extension SVGPathCommand: SVGPathCommandImpl {
         case let .quadraticBezierTo(c): c
         }
     }
+}
 
-    var position: Point2 { impl.position }
+// MARK: CustomStringConvertible
+
+extension SVGPathCommand.ArcTo: CustomStringConvertible {
+    public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
+}
+
+extension SVGPathCommand.BezierTo: CustomStringConvertible {
+    public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
+}
+
+extension SVGPathCommand.LineTo: CustomStringConvertible {
+    public var description: String { return "L \(position.x) \(position.y)" }
+}
+
+extension SVGPathCommand.QuadraticBezierTo: CustomStringConvertible {
+    public var description: String { return "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
+}
+
+extension SVGPathCommand: CustomStringConvertible {
     public var description: String { impl.description }
 }
+
+// MARK: - SVGPath
 
 struct SVGPath {
     var initial: Point2 = Point2.zero

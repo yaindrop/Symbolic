@@ -20,10 +20,6 @@ enum PathEdge {
         func with(rotation: Angle) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
         func with(largeArc: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
         func with(sweep: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-
-        var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
-
-        func applying(_ t: CGAffineTransform) -> Self { .init(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
     }
 
     struct Bezier: Impl {
@@ -36,41 +32,67 @@ enum PathEdge {
         func with(offset: Vector2) -> Self { .init(control0: control0 + offset, control1: control1 + offset) }
         func with(offset0: Vector2) -> Self { .init(control0: control0 + offset0, control1: control1) }
         func with(offset1: Vector2) -> Self { .init(control0: control0, control1: control1 + offset1) }
-
-        var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
-
-        func applying(_ t: CGAffineTransform) -> Self { .init(control0: control0.applying(t), control1: control1.applying(t)) }
     }
 
-    struct Line: Impl {
-        var description: String { "Line" }
+    struct Line: Impl {}
 
-        func applying(_ t: CGAffineTransform) -> Self { .init() }
-    }
-
-    case line(Line)
     case arc(Arc)
     case bezier(Bezier)
+    case line(Line)
 }
 
 extension PathEdge: PathEdgeImpl {
-    var description: String { impl.description }
-
-    func applying(_ t: CGAffineTransform) -> Self {
-        switch self {
-        case let .line(l): .line(l.applying(t))
-        case let .arc(a): .arc(a.applying(t))
-        case let .bezier(b): .bezier(b.applying(t))
-        }
-    }
-
     private var impl: Impl {
         switch self {
-        case let .line(l): l
         case let .arc(a): a
         case let .bezier(b): b
+        case let .line(l): l
         }
     }
+
+    private func impl(_ transform: (Impl) -> Impl) -> Self {
+        switch self {
+        case let .arc(a): .arc(transform(a) as! Arc)
+        case let .bezier(b): .bezier(transform(b) as! Bezier)
+        case let .line(l): .line(transform(l) as! Line)
+        }
+    }
+}
+
+// MARK: CustomStringConvertible
+
+extension PathEdge.Arc: CustomStringConvertible {
+    var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
+}
+
+extension PathEdge.Bezier: CustomStringConvertible {
+    var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
+}
+
+extension PathEdge.Line: CustomStringConvertible {
+    var description: String { "Line" }
+}
+
+extension PathEdge: CustomStringConvertible {
+    var description: String { impl.description }
+}
+
+// MARK: Transformable
+
+extension PathEdge.Arc: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { .init(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
+}
+
+extension PathEdge.Bezier: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { .init(control0: control0.applying(t), control1: control1.applying(t)) }
+}
+
+extension PathEdge.Line: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { .init() }
+}
+
+extension PathEdge: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self { impl { $0.applying(t) } }
 }
 
 // MARK: - PathNode

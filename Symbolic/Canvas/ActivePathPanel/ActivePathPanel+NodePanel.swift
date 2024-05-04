@@ -12,10 +12,10 @@ extension ActivePathPanel {
             HStack {
                 Group {
                     Image(systemName: "smallcircle.filled.circle")
-                    Text("\(index)")
-                        .font(.callout)
+                    Text("Node \(index)")
+                        .font(.subheadline)
                 }
-                .if(focused) { $0.foregroundStyle(.blue)}
+                .if(focused) { $0.foregroundStyle(.blue) }
                 Spacer()
                 PositionPicker(position: node.position, onChange: updatePosition(pending: true), onDone: updatePosition())
             }

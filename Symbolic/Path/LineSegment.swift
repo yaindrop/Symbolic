@@ -6,6 +6,7 @@ fileprivate protocol LineSegmentImpl: Parametrizable, InverseParametrizable {
     var line: Line { get }
     var start: Point2 { get }
     var end: Point2 { get }
+    var length: CGFloat { get }
 }
 
 enum LineSegment {
@@ -20,6 +21,7 @@ enum LineSegment {
         var line: Line { .slopeIntercept(slopeIntercept) }
         var start: Point2 { Point2(x0, slopeIntercept.y(x: x0)) }
         var end: Point2 { Point2(x1, slopeIntercept.y(x: x1)) }
+        var length: CGFloat { start.distance(to: end) }
     }
 
     // MARK: Vertical
@@ -31,6 +33,7 @@ enum LineSegment {
         var line: Line { .vertical(vertical) }
         var start: Point2 { Point2(vertical.x, y0) }
         var end: Point2 { Point2(vertical.x, y1) }
+        var length: CGFloat { abs(y0 - y1) }
     }
 
     case slopeIntercept(SlopeIntercept)
@@ -48,11 +51,7 @@ extension LineSegment: LineSegmentImpl {
     var line: Line { impl.line }
     var start: Point2 { impl.start }
     var end: Point2 { impl.end }
-
-    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
-    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: point) }
-
-    var length: CGFloat { start.distance(to: end) }
+    var length: CGFloat { impl.length }
 
     private var impl: Impl {
         switch self {
@@ -81,6 +80,10 @@ extension LineSegment.Vertical: Parametrizable {
     }
 }
 
+extension LineSegment: Parametrizable {
+    func position(paramT: CGFloat) -> Point2 { impl.position(paramT: paramT) }
+}
+
 // MARK: InverseParametrizable
 
 extension LineSegment.SlopeIntercept: InverseParametrizable {
@@ -99,6 +102,10 @@ extension LineSegment.Vertical: InverseParametrizable {
         p = CGPoint(x: vertical.x, y: y)
         return (t: (y - y0) / (y1 - y0), p.distance(to: point))
     }
+}
+
+extension LineSegment: InverseParametrizable {
+    func paramT(closestTo point: Point2) -> (t: CGFloat, distance: CGFloat) { impl.paramT(closestTo: point) }
 }
 
 // MARK: - Polyline

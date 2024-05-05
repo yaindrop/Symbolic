@@ -18,7 +18,7 @@ class PathStore: ObservableObject {
     var nodes: [PathNode] { pathIds.compactMap { nid in nodeIdToNode[nid] } }
 
     func add(path: Path) {
-        guard !path.pairs.isEmpty else { return }
+        guard path.count > 1 else { return }
         if loadingPendingEvent {
             pendingPaths?.append(path)
             return
@@ -41,6 +41,10 @@ class PathStore: ObservableObject {
     }
 
     func update(path: Path) {
+        guard path.count > 1 else {
+            remove(pathId: path.id)
+            return
+        }
         if loadingPendingEvent {
             guard let i = (pendingPaths?.firstIndex { $0.id == path.id }) else { return }
             pendingPaths?[i] = path

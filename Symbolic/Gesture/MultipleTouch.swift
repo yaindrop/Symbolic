@@ -51,7 +51,7 @@ struct PinchInfo {
         let (o0, o1) = origin
         let originMid = o0.midPoint(to: o1)
         let (c0, c1) = current
-        let currentMid = c0.midPoint(to: originMid)
+        let currentMid = c0.midPoint(to: c1)
         return .init(origin: originMid, offset: originMid.offset(to: currentMid))
     }
 

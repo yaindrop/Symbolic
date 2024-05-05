@@ -17,20 +17,12 @@ extension ActivePathPanel {
             .padding(12)
             .background(.ultraThickMaterial)
             .cornerRadius(12)
-        } 
+        }
 
         @EnvironmentObject private var activePathModel: ActivePathModel
         @EnvironmentObject private var updater: PathUpdater
 
         private var focused: Bool { activePathModel.focusedPart == .node(node.id) }
-
-        private func deleteNode() {
-            updater.updateActivePath(deleteNode: node.id)
-        }
-
-        private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { updater.updateActivePath(node: node.id, position: $0, pending: pending) }
-        }
 
         @ViewBuilder private var title: some View {
             Group {
@@ -43,17 +35,30 @@ extension ActivePathPanel {
 
         @ViewBuilder var titleMenu: some View {
             Menu {
-                Button(focused ? "Unfocus" : "Focus") {
-                    focused ? activePathModel.clearFocus() : activePathModel.setFocus(node: node.id)
-                }
+                Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                 Divider()
-                Button("Delete", role: .destructive) {
-                    deleteNode()
-                }
+                Button("Break", role: .destructive) { breakNode() }
+                Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
             } label: {
                 title
             }
             .buttonStyle(PlainButtonStyle())
+        }
+
+        private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
+            { updater.updateActivePath(node: node.id, position: $0, pending: pending) }
+        }
+
+        private func toggleFocus() {
+            focused ? activePathModel.clearFocus() : activePathModel.setFocus(node: node.id)
+        }
+
+        private func breakNode() {
+//            updater.updateActivePath(deleteNode: node.id)
+        }
+
+        private func deleteNode() {
+            updater.updateActivePath(deleteNode: node.id)
         }
     }
 }

@@ -15,7 +15,9 @@ extension ActivePathPanel {
                     HStack {
                         titleMenu
                         Spacer()
-                        expandButton
+                        if case .line = edge {} else {
+                            expandButton
+                        }
                     }
                     edgeKindPanel
                 }
@@ -42,10 +44,6 @@ extension ActivePathPanel {
             }
         }
 
-        private func deleteEdge() {
-            updater.updateActivePath(deleteEdge: fromNodeId)
-        }
-
         @ViewBuilder private var title: some View {
             HStack(spacing: 6) {
                 Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
@@ -58,13 +56,21 @@ extension ActivePathPanel {
 
         @ViewBuilder private var titleMenu: some View {
             Menu {
-                Button(focused ? "Unfocus" : "Focus") {
-                    focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromNodeId)
-                }
+                Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                 Divider()
-                Button("Delete", role: .destructive) {
-                    deleteEdge()
+                ControlGroup {
+                    Button("Arc", systemImage: "circle") { changeEdge(to: .arc) }
+                        .disabled(edge.case == .arc)
+                    Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { changeEdge(to: .bezier) }
+                        .disabled(edge.case == .bezier)
+                    Button("Line", systemImage: "chart.xyaxis.line") { changeEdge(to: .line) }
+                        .disabled(edge.case == .line)
+                } label: {
+                    Text("Type")
                 }
+                Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
+                Divider()
+                Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }
             } label: {
                 title
             }
@@ -92,6 +98,24 @@ extension ActivePathPanel {
             .padding(.top, 6)
             .frame(height: expanded ? nil : 0, alignment: .top)
             .clipped()
+        }
+
+        private func toggleFocus() {
+            focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromNodeId)
+        }
+
+        private func changeEdge(to case: PathEdge.Case) {
+        }
+
+        private func splitEdge() {
+            guard let segment = activePathModel.activePath?.segment(from: fromNodeId) else { return }
+            let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
+            let position = segment.position(paramT: paramT)
+            updater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: UUID(), position: position)
+        }
+
+        private func breakEdge() {
+            updater.updateActivePath(deleteEdge: fromNodeId)
         }
     }
 }

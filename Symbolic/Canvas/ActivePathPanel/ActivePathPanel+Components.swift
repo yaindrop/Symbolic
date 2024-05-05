@@ -12,7 +12,8 @@ extension ActivePathPanel {
                 sectionTitle("Components")
                 VStack(spacing: 12) {
                     ForEach(activePath.pairs, id: \.node.id) { p in
-                        NodeEdgeGroup(index: activePath.nodeIdToIndex[p.node.id] ?? 0, node: p.node, edge: p.edge)
+                        let i = activePath.nodeIdToIndex[p.node.id] ?? 0
+                        NodeEdgeGroup(index: i, node: p.node, edge: p.edge, hasNext: activePath.isClosed || (i + 1 < activePath.count))
                     }
                 }
             }
@@ -42,11 +43,14 @@ extension ActivePathPanel {
         let index: Int
         let node: PathNode
         let edge: PathEdge
+        let hasNext: Bool
 
         var body: some View {
             Group {
                 NodePanel(index: index, node: node)
-                EdgePanel(fromNodeId: node.id, edge: edge)
+                if hasNext {
+                    EdgePanel(fromNodeId: node.id, edge: edge)
+                }
             }
             .scaleEffect(scale)
             .onChange(of: focused) { animateOnFocused() }

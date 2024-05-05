@@ -40,6 +40,15 @@ enum PathEdge {
 
     struct Line: Impl {}
 
+    enum Case { case arc, bezier, line }
+    var `case`: Case {
+        switch self {
+        case .arc: .arc
+        case .bezier: .bezier
+        case .line: .line
+        }
+    }
+
     case arc(Arc)
     case bezier(Bezier)
     case line(Line)

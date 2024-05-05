@@ -24,9 +24,19 @@ class PathUpdater: ObservableObject {
         handle(.pathAction(.deleteNode(.init(pathId: activePath.id, nodeId: id))), pending: false)
     }
 
+    func updateActivePath(deleteNodeAndEdge id: UUID) {
+        guard let activePath else { return }
+        handle(.pathAction(.deleteNodeAndEdge(.init(pathId: activePath.id, nodeId: id))), pending: false)
+    }
+
     func updateActivePath(deleteEdge fromNodeId: UUID) {
         guard let activePath else { return }
         handle(.pathAction(.deleteEdge(.init(pathId: activePath.id, fromNodeId: fromNodeId))), pending: false)
+    }
+
+    func updateActivePath(changeEdge fromNodeId: UUID, to: PathEdge.Case) {
+        guard let activePath else { return }
+        handle(.pathAction(.changeEdge(.init(pathId: activePath.id, fromNodeId: fromNodeId, to: to))), pending: false)
     }
 
     // MARK: single update
@@ -130,16 +140,18 @@ class PathUpdater: ObservableObject {
 
     private func collectEvents(to events: inout [PathEvent], _ pathAction: PathAction) {
         switch pathAction {
+        case .load: break
         case let .splitSegment(splitSegment): collectEvents(to: &events, splitSegment)
         case let .deleteNode(deleteNode): collectEvents(to: &events, deleteNode)
         case let .deleteEdge(deleteEdge): collectEvents(to: &events, deleteEdge)
-        case let .moveEdge(moveEdge): collectEvents(to: &events, moveEdge)
-        case let .moveNode(moveNode): collectEvents(to: &events, moveNode)
+        case let .deleteNodeAndEdge(deleteNodeAndEdge): collectEvents(to: &events, deleteNodeAndEdge)
+        case let .changeEdge(changeEdge): collectEvents(to: &events, changeEdge)
         case let .setEdgeArc(setEdgeArc): collectEvents(to: &events, setEdgeArc)
         case let .setEdgeBezier(setEdgeBezier): collectEvents(to: &events, setEdgeBezier)
         case let .setNodePosition(setNodePosition): collectEvents(to: &events, setNodePosition)
         case .setEdgeLine: break
-        default: break
+        case let .moveEdge(moveEdge): collectEvents(to: &events, moveEdge)
+        case let .moveNode(moveNode): collectEvents(to: &events, moveNode)
         }
     }
 
@@ -182,20 +194,42 @@ class PathUpdater: ObservableObject {
         }
     }
 
+    private func collectEvents(to events: inout [PathEvent], _ deleteNodeAndEdge: PathAction.DeleteNodeAndEdge) {
+        let pathId = deleteNodeAndEdge.pathId, nodeId = deleteNodeAndEdge.nodeId
+        guard let path = pathStore.pathIdToPath[pathId] else { return }
+//        if path.isClosed {
+//            events.append(.init(in: pathId, breakAfter: fromNodeId))
+//            return
+//        }
+//        guard let i = path.nodeIdToIndex[fromNodeId] else { return }
+//        if i < path.count {
+//            events.append(.init(in: pathId, breakUntil: fromNodeId))
+//            events.append(.create(.init(path: Path(pairs: Array(path.pairs[...i]), isClosed: false))))
+//        } else {
+//            events.append(.init(in: pathId, breakAfter: fromNodeId))
+//            events.append(.create(.init(path: Path(pairs: Array(path.pairs[(i + 1)...]), isClosed: false))))
+//        }
+    }
+
     private func collectEvents(to events: inout [PathEvent], _ setNodePosition: PathAction.SetNodePosition) {
         let pathId = setNodePosition.pathId, nodeId = setNodePosition.nodeId, position = setNodePosition.position
         guard let node = pathStore.pathIdToPath[pathId]?.node(id: nodeId) else { return }
         events.append(.init(in: pathId, updateNode: node.with(position: position)))
     }
 
-    private func collectEvents(to events: inout [PathEvent], _ setEdgeBezier: PathAction.SetEdgeBezier) {
-        let pathId = setEdgeBezier.pathId, fromNodeId = setEdgeBezier.fromNodeId, bezier = setEdgeBezier.bezier
-        events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier)))
+    private func collectEvents(to events: inout [PathEvent], _ changeEdge: PathAction.ChangeEdge) {
+        let pathId = changeEdge.pathId, fromNodeId = changeEdge.fromNodeId, to = changeEdge.to
+//        events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .arc(arc)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ setEdgeArc: PathAction.SetEdgeArc) {
         let pathId = setEdgeArc.pathId, fromNodeId = setEdgeArc.fromNodeId, arc = setEdgeArc.arc
         events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .arc(arc)))
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ setEdgeBezier: PathAction.SetEdgeBezier) {
+        let pathId = setEdgeBezier.pathId, fromNodeId = setEdgeBezier.fromNodeId, bezier = setEdgeBezier.bezier
+        events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ moveNode: PathAction.MoveNode) {

@@ -43,14 +43,12 @@ struct ActivePathEdgeHandle: View {
         return MultipleGestureModifier(segment,
                                        onTap: { _, _ in toggleFocus() },
                                        onLongPress: { v, s in
-                                           withAnimation {
-                                               let t = s.paramT(closestTo: v.location).t
-                                               longPressParamT = t
-                                               let id = UUID()
-                                               longPressSplitNodeId = id
-                                               split(at: s.position(paramT: t), pending: true)
-                                               activePathModel.setFocus(node: id)
-                                           }
+                                           let t = s.paramT(closestTo: v.location).t
+                                           longPressParamT = t
+                                           let id = UUID()
+                                           longPressSplitNodeId = id
+                                           split(at: s.position(paramT: t), pending: true)
+                                           activePathModel.setFocus(node: id)
                                        },
                                        onLongPressEnd: { _, s in
                                            guard let longPressParamT else { return }

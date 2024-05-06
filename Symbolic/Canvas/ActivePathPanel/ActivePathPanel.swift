@@ -43,11 +43,11 @@ struct ActivePathPanel: View {
         if let activePath = activePathModel.pendingActivePath {
             ScrollViewReader { proxy in
                 ScrollViewWithOffset(model: scrollOffset) {
-                    Components(activePath: activePath)
+                    Components(activePath: activePath).id(activePath.id)
                 }
                 .onChange(of: activePathModel.focusedPart) {
                     guard let id = activePathModel.focusedPart?.id else { return }
-                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .top) }
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                 }
             }
             .frame(maxHeight: 400)

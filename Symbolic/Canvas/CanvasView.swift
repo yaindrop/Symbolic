@@ -37,12 +37,13 @@ struct CanvasView: View {
         let activePathModel = ActivePathModel(pathStore: pathStore)
         let pathUpdater = PathUpdater(pathStore: pathStore, activePathModel: activePathModel, viewport: viewport)
 
-        pathUpdater.onPendingEvent {
-            pathStore.pendingEvent = $0
+        pathUpdater.onPendingEvent { e in
+            pathStore.pendingEvent = e
         }
         pathUpdater.onEvent { e in
-            pathStore.pendingEvent = nil
-            documentModel.sendEvent(e)
+            withAnimation {
+                documentModel.sendEvent(e)
+            }
         }
 
         _touchContext = StateObject(wrappedValue: touchContext)
@@ -162,8 +163,11 @@ struct CanvasView: View {
             .edgesIgnoringSafeArea(.all)
         }
         .onChange(of: documentModel.activeDocument) {
-            pathStore.clear()
-            pathStore.loadDocument(documentModel.activeDocument)
+            withAnimation {
+                pathStore.pendingEvent = nil
+                pathStore.clear()
+                pathStore.loadDocument(documentModel.activeDocument)
+            }
         }
         .onChange(of: activePathModel.activePath) {
             activePathModel.onActivePathChanged()

@@ -15,20 +15,20 @@ enum PathEvent {
 // MARK: Update
 
 extension PathEvent.Update {
+    struct BreakAfter { let nodeId: UUID } // break closed path after id, or delete nodes (exclusively) after id
+    struct BreakUntil { let nodeId: UUID } // break closed path after id, or delete nodes (inclusively) till id
     struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
     struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
     struct NodeUpdate { let node: PathNode }
     struct NodeDelete { let nodeId: UUID }
-    struct BreakUntil { let nodeId: UUID } // delete nodes (inclusively) till id
-    struct BreakAfter { let nodeId: UUID } // delete nodes (exclusively) after id
 
     enum Kind {
+        case breakAfter(BreakAfter)
+        case breakUntil(BreakUntil)
         case edgeUpdate(EdgeUpdate)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
-        case breakUntil(BreakUntil)
-        case breakAfter(BreakAfter)
     }
 }
 

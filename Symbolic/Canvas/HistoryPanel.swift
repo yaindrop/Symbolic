@@ -35,6 +35,8 @@ struct HistoryPanel: View {
     // MARK: private
 
     @EnvironmentObject private var documentModel: DocumentModel
+    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var activePathModel: ActivePathModel
 
     @ViewBuilder private var title: some View {
         HStack {
@@ -88,9 +90,6 @@ struct HistoryPanel: View {
             }
             sectionTitle("Events")
             VStack(spacing: 12) {
-//                        ForEach(activePath.segments) { segment in
-//                            NodeEdgeGroup(segment: segment)
-//                        }
                 ForEach(document.events) { e in
                     Text("\(e.name)")
                 }

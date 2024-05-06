@@ -56,6 +56,7 @@ extension ActivePathPanel {
 
         @ViewBuilder private var titleMenu: some View {
             Menu {
+                Label("\(fromNodeId)", systemImage: "number")
                 Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                 Divider()
                 ControlGroup {
@@ -104,14 +105,17 @@ extension ActivePathPanel {
             focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromNodeId)
         }
 
-        private func changeEdge(to case: PathEdge.Case) {
+        private func changeEdge(to: PathEdge.Case) {
+            updater.updateActivePath(changeEdge: fromNodeId, to: to)
         }
 
         private func splitEdge() {
             guard let segment = activePathModel.activePath?.segment(from: fromNodeId) else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let position = segment.position(paramT: paramT)
-            updater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: UUID(), position: position)
+            let id = UUID()
+            updater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
+            activePathModel.setFocus(node: id)
         }
 
         private func breakEdge() {

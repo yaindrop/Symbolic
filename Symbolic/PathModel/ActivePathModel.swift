@@ -46,7 +46,7 @@ class ActivePathModel: ObservableObject {
     }
 
     func onActivePathChanged() {
-        print("onActivePathChanged")
+        print("onActivePathChanged", activePath?.id)
         if let part = focusedPart {
             if let path = activePath {
                 if path.node(id: part.id) == nil {
@@ -70,6 +70,7 @@ class ActivePathModel: ObservableObject {
             SUPath { path in pendingActivePath.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
+                .id(pendingActivePath.id)
         }
     }
 

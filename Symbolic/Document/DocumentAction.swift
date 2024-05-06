@@ -6,8 +6,8 @@ enum PathAction {
     struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: Scalar, newNode: PathNode }
 
     struct DeleteNode { let pathId: UUID, nodeId: UUID }
-    struct DeleteNodeAndEdge { let pathId: UUID, nodeId: UUID }
-    struct DeleteEdge { let pathId: UUID, fromNodeId: UUID }
+    struct BreakAtNode { let pathId: UUID, nodeId: UUID }
+    struct BreakAtEdge { let pathId: UUID, fromNodeId: UUID }
 
     struct ChangeEdge { let pathId: UUID, fromNodeId: UUID, to: PathEdge.Case }
 
@@ -22,9 +22,10 @@ enum PathAction {
     case load(Load)
 
     case splitSegment(SplitSegment)
+
     case deleteNode(DeleteNode)
-    case deleteNodeAndEdge(DeleteNodeAndEdge)
-    case deleteEdge(DeleteEdge)
+    case breakAtNode(BreakAtNode)
+    case breakAtEdge(BreakAtEdge)
 
     case changeEdge(ChangeEdge)
 

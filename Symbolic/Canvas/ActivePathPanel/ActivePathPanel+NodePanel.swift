@@ -35,9 +35,10 @@ extension ActivePathPanel {
 
         @ViewBuilder var titleMenu: some View {
             Menu {
+                Label("\(node.id)", systemImage: "number")
                 Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                 Divider()
-                Button("Break", role: .destructive) { breakNode() }
+                Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
                 Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
             } label: {
                 title
@@ -54,7 +55,7 @@ extension ActivePathPanel {
         }
 
         private func breakNode() {
-//            updater.updateActivePath(deleteNode: node.id)
+            updater.updateActivePath(breakAtNode: node.id)
         }
 
         private func deleteNode() {

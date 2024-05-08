@@ -122,7 +122,7 @@ struct CanvasView: View {
                 pressDetector.onTap { info in
                     let worldLocation = info.location.applying(viewport.toWorld)
                     print("onTap \(info) worldLocation \(worldLocation)")
-                    withAnimation(.easeIn(duration: 0.1)) {
+                    withAnimation(.easeIn(duration: 1)) {
                         activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
                     }
                 }
@@ -154,9 +154,11 @@ struct CanvasView: View {
                 overlay
             }
             .overlay {
-                ActivePathPanel()
-                HistoryPanel()
-                DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater)
+                ZStack {
+                    ActivePathPanel()
+                    HistoryPanel()
+                    DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater)
+                }
             }
             .navigationTitle("Canvas")
             .toolbar(.hidden, for: .navigationBar)

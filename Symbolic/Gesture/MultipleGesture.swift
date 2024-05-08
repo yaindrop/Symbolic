@@ -4,28 +4,31 @@ import SwiftUI
 // MARK: - MultipleGestureModifier
 
 struct MultipleGestureModifier<Origin>: ViewModifier {
+    typealias Value = DragGesture.Value
+
     struct Configs {
-        let distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
-        let durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
-        let allowLongPressDuringDrag: Bool = true // whether to continue long press after drag start
+        var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
+        var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
+        var allowLongPressDuringDrag: Bool = true // whether to continue long press after drag start
+        var coordinateSpace: CoordinateSpace = .local
     }
 
     private struct Context {
         let origin: Origin
         let startTime: Date = .now
 
-        private(set) var lastValue: DragGesture.Value
+        private(set) var lastValue: Value
         private(set) var maxDistance: Scalar = 0
 
         var longPressTimeout: DispatchWorkItem?
         var longPressStarted = false
 
-        mutating func onValue(_ value: DragGesture.Value) {
+        mutating func onValue(_ value: Value) {
             lastValue = value
             maxDistance = max(maxDistance, Vector2(value.translation).length)
         }
 
-        init(origin: Origin, value: DragGesture.Value) {
+        init(origin: Origin, value: Value) {
             self.origin = origin
             lastValue = value
         }
@@ -44,11 +47,11 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
 
     init(_ getOrigin: @autoclosure @escaping () -> Origin,
          configs: Configs = Configs(),
-         onTap: ((DragGesture.Value, Origin) -> Void)? = nil,
-         onLongPress: ((DragGesture.Value, Origin) -> Void)? = nil,
-         onLongPressEnd: ((DragGesture.Value, Origin) -> Void)? = nil,
-         onDrag: ((DragGesture.Value, Origin) -> Void)? = nil,
-         onDragEnd: ((DragGesture.Value, Origin) -> Void)? = nil) {
+         onTap: ((Value, Origin) -> Void)? = nil,
+         onLongPress: ((Value, Origin) -> Void)? = nil,
+         onLongPressEnd: ((Value, Origin) -> Void)? = nil,
+         onDrag: ((Value, Origin) -> Void)? = nil,
+         onDragEnd: ((Value, Origin) -> Void)? = nil) {
         self.getOrigin = getOrigin
         self.configs = configs
         self.onTap = onTap
@@ -62,11 +65,11 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
 
     private let getOrigin: () -> Origin
     private let configs: Configs
-    private let onTap: ((DragGesture.Value, Origin) -> Void)?
-    private let onLongPress: ((DragGesture.Value, Origin) -> Void)?
-    private let onLongPressEnd: ((DragGesture.Value, Origin) -> Void)?
-    private let onDrag: ((DragGesture.Value, Origin) -> Void)?
-    private let onDragEnd: ((DragGesture.Value, Origin) -> Void)?
+    private let onTap: ((Value, Origin) -> Void)?
+    private let onLongPress: ((Value, Origin) -> Void)?
+    private let onLongPressEnd: ((Value, Origin) -> Void)?
+    private let onDrag: ((Value, Origin) -> Void)?
+    private let onDragEnd: ((Value, Origin) -> Void)?
 
     @State private var context: Context?
     @GestureState private var active: Bool = false
@@ -97,7 +100,7 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
     }
 
     private var gesture: some Gesture {
-        DragGesture(minimumDistance: 0)
+        DragGesture(minimumDistance: 0, coordinateSpace: configs.coordinateSpace)
             .updating(flag: $active)
             .onChanged { v in
                 context?.onValue(v)

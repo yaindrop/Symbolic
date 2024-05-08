@@ -25,7 +25,7 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
 
         mutating func onValue(_ value: Value) {
             lastValue = value
-            maxDistance = max(maxDistance, Vector2(value.translation).length)
+            maxDistance = max(maxDistance, value.offset.length)
         }
 
         init(origin: Origin, value: Value) {

@@ -18,19 +18,7 @@ fileprivate extension DocumentEvent {
 
 struct HistoryPanel: View {
     var body: some View {
-        VStack {
-            Spacer()
-            VStack(spacing: 0) {
-                PanelTitle(name: "History")
-                    .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
-                scrollView
-            }
-            .background(.regularMaterial)
-            .cornerRadius(12)
-        }
-        .frame(maxWidth: 320, maxHeight: 480)
-        .padding(24)
-        .atCornerPosition(.bottomTrailing)
+        panel.frame(width: 320)
     }
 
     // MARK: private
@@ -40,6 +28,31 @@ struct HistoryPanel: View {
     @EnvironmentObject private var activePathModel: ActivePathModel
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
+
+    @Environment(\.windowId) private var windowId
+    @EnvironmentObject private var windowModel: WindowModel
+    private var window: WindowData { windowModel.idToWindow[windowId]! }
+
+    private var moveWindowGesture: MultipleGestureModifier<Point2> {
+        MultipleGestureModifier(
+            window.origin,
+            configs: .init(coordinateSpace: .global),
+            onDrag: { v, c in windowModel.onMoving(windowId: window.id, origin: c + v.offset) },
+            onDragEnd: { v, c in windowModel.onMoved(windowId: window.id, origin: c + v.offset, inertia: v.inertia) }
+        )
+    }
+
+    @ViewBuilder private var panel: some View {
+        VStack(spacing: 0) {
+            PanelTitle(name: "History")
+                .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
+                .invisibleSoildOverlay()
+                .modifier(moveWindowGesture)
+            scrollView
+        }
+        .background(.regularMaterial)
+        .cornerRadius(12)
+    }
 
     @ViewBuilder var scrollView: some View {
         ManagedScrollView(model: scrollViewModel) { _ in

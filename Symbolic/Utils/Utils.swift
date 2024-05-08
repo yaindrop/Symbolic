@@ -249,3 +249,32 @@ extension Gesture {
         updating(flag) { _, state, _ in state = true }
     }
 }
+
+extension DragGesture.Value {
+    var offset: Vector2 { .init(translation) }
+
+    var inertia: Vector2 { Vector2(predictedEndTranslation) - offset }
+}
+
+// MARK: - read size
+
+struct ViewSizeReader: ViewModifier {
+    let onChange: (CGSize) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                GeometryReader { geometry in
+                    Color.clear.onChange(of: geometry.size, initial: true) {
+                        onChange(geometry.size)
+                    }
+                }
+            }
+    }
+}
+
+extension View {
+    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
+        modifier(ViewSizeReader(onChange: onChange))
+    }
+}

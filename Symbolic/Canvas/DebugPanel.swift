@@ -1,12 +1,29 @@
 import SwiftUI
 
 struct DebugPanel: View {
+    var body: some View {
+        panel.frame(width: 320)
+    }
+
     @ObservedObject var touchContext: MultipleTouchContext
     @ObservedObject var pressDetector: MultipleTouchPressDetector
     @ObservedObject var viewportUpdater: ViewportUpdater
 
     @EnvironmentObject var viewport: Viewport
     @EnvironmentObject var activePathModel: ActivePathModel
+
+    @Environment(\.windowId) private var windowId
+    @EnvironmentObject private var windowModel: WindowModel
+    private var window: WindowData { windowModel.idToWindow[windowId]! }
+
+    private var moveWindowGesture: MultipleGestureModifier<Point2> {
+        MultipleGestureModifier(
+            window.origin,
+            configs: .init(coordinateSpace: .global),
+            onDrag: { v, c in windowModel.onMoving(windowId: window.id, origin: c + v.offset) },
+            onDragEnd: { v, c in windowModel.onMoved(windowId: window.id, origin: c + v.offset, inertia: v.inertia) }
+        )
+    }
 
     var title: some View {
         HStack {
@@ -17,25 +34,20 @@ struct DebugPanel: View {
         }
     }
 
-    var body: some View {
+    @ViewBuilder private var panel: some View {
         VStack {
-            Group {
-                VStack {
-                    title
-                    Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
-                    Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
-                    Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
-                    Divider()
-                    Row(name: "Viewport", value: viewport.info.description)
-                }
-                .padding(12)
-            }
-            .background(.regularMaterial)
-            .cornerRadius(12)
+            title
+                .invisibleSoildOverlay()
+                .modifier(moveWindowGesture)
+            Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
+            Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
+            Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
+            Divider()
+            Row(name: "Viewport", value: viewport.info.description)
         }
-        .frame(maxWidth: 320)
-        .padding(24)
-        .atCornerPosition(.topTrailing)
+        .padding(12)
+        .background(.regularMaterial)
+        .cornerRadius(12)
     }
 
     private struct Row: View {

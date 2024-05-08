@@ -3,76 +3,11 @@ import SwiftUI
 
 import SwiftUI
 
-struct ViewSizeReader: ViewModifier {
-    let onChange: (CGSize) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .background {
-                GeometryReader { geometry in
-                    Color.clear.onChange(of: geometry.size, initial: true) {
-                        onChange(geometry.size)
-                    }
-                }
-            }
-    }
-}
-
-extension View {
-    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
-        modifier(ViewSizeReader(onChange: onChange))
-    }
-}
-
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View {
-    @State var origin: Point2 = .init(24, 24)
-    @State var viewSize: CGSize = .zero
-    @State var panelSize: CGSize = .zero
-
-    func clampPanel() {
-        let viewRect = CGRect(viewSize)
-        let panelRect = CGRect(origin: origin, size: panelSize)
-        origin = panelRect.clamped(by: viewRect).origin
-    }
-
-    var gesture: MultipleGestureModifier<Point2> {
-        MultipleGestureModifier(origin,
-                                configs: .init(coordinateSpace: .named("Foobar")),
-                                onDrag: { v, c in
-                                    origin = c + Vector2(v.translation)
-
-                                },
-                                onDragEnd: { v, c in
-                                    origin = c + Vector2(v.translation)
-                                    withAnimation { clampPanel() }
-                                }
-        )
-    }
-
     var body: some View {
-        Group {
-            panel
-                .frame(width: 320)
-                .offset(x: origin.x, y: origin.y)
-                .readSize { panelSize = $0 }
-                .modifier(gesture)
-                .atCornerPosition(.topLeading)
-        }
-        .coordinateSpace(name: "Foobar")
-        .readSize { viewSize = $0 }
-        .onChange(of: origin) {
-            print("origin", origin)
-        }
-        .onChange(of: viewSize) {
-            print("viewSize", viewSize)
-            withAnimation { clampPanel() }
-        }
-        .onChange(of: panelSize) {
-            print("panelSize", panelSize)
-            withAnimation { clampPanel() }
-        }
+        panel.frame(width: 320)
     }
 
     // MARK: private
@@ -82,10 +17,25 @@ struct ActivePathPanel: View {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
+    @Environment(\.windowId) private var windowId
+    @EnvironmentObject private var windowModel: WindowModel
+    private var window: WindowData { windowModel.idToWindow[windowId]! }
+
+    private var moveWindowGesture: MultipleGestureModifier<Point2> {
+        MultipleGestureModifier(
+            window.origin,
+            configs: .init(coordinateSpace: .global),
+            onDrag: { v, c in windowModel.onMoving(windowId: window.id, origin: c + v.offset) },
+            onDragEnd: { v, c in windowModel.onMoved(windowId: window.id, origin: c + v.offset, inertia: v.inertia) }
+        )
+    }
+
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "Active Path")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
+                .invisibleSoildOverlay()
+                .modifier(moveWindowGesture)
             scrollView
         }
         .background(.regularMaterial)

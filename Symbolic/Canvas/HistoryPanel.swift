@@ -30,7 +30,7 @@ struct HistoryPanel: View {
         }
         .frame(maxWidth: 320, maxHeight: 480)
         .padding(24)
-        .atCornerPosition(.bottomLeft)
+        .atCornerPosition(.bottomTrailing)
     }
 
     // MARK: private

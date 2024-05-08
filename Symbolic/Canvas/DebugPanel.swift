@@ -35,7 +35,7 @@ struct DebugPanel: View {
         }
         .frame(maxWidth: 320)
         .padding(24)
-        .atCornerPosition(.topRight)
+        .atCornerPosition(.topTrailing)
     }
 
     private struct Row: View {

@@ -49,29 +49,29 @@ extension ReflectedStringConvertible {
 // MARK: - CornerPosition
 
 enum CornerPosition {
-    case topLeft
-    case topRight
-    case bottomLeft
-    case bottomRight
+    case topLeading
+    case topTrailing
+    case bottomLeading
+    case bottomTrailing
 
-    var isTop: Bool { return self == .topLeft || self == .topRight }
-    var isBottom: Bool { return self == .bottomLeft || self == .bottomRight }
-    var isLeft: Bool { return self == .topLeft || self == .bottomLeft }
-    var isRight: Bool { return self == .topRight || self == .bottomRight }
+    var isTop: Bool { return self == .topLeading || self == .topTrailing }
+    var isBottom: Bool { return self == .bottomLeading || self == .bottomTrailing }
+    var isLeading: Bool { return self == .topLeading || self == .bottomLeading }
+    var isTrailing: Bool { return self == .topTrailing || self == .bottomTrailing }
 }
 
 struct CornerPositionModifier: ViewModifier {
     let position: CornerPosition
 
     func body(content: Content) -> some View {
-        HStack {
-            if position.isRight { Spacer() }
-            VStack {
-                if position.isBottom { Spacer() }
+        HStack(spacing: 0) {
+            if position.isTrailing { Spacer(minLength: 0) }
+            VStack(spacing: 0) {
+                if position.isBottom { Spacer(minLength: 0) }
                 content
-                if position.isTop { Spacer() }
+                if position.isTop { Spacer(minLength: 0) }
             }
-            if position.isLeft { Spacer() }
+            if position.isLeading { Spacer(minLength: 0) }
         }
     }
 }

@@ -42,45 +42,36 @@ struct ActivePathPanel: View {
                                 configs: .init(coordinateSpace: .named("Foobar")),
                                 onDrag: { v, c in
                                     origin = c + Vector2(v.translation)
+
                                 },
                                 onDragEnd: { v, c in
                                     origin = c + Vector2(v.translation)
+                                    withAnimation { clampPanel() }
                                 }
         )
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            HStack(spacing: 0) {
-                Spacer().frame(width: origin.x)
-                VStack(spacing: 0) {
-                    Spacer().frame(height: origin.y)
-                    panel
-                        .readSize { panelSize = $0 }
-                        .modifier(gesture)
-                    Spacer()
-                }
+        Group {
+            panel
                 .frame(width: 320)
-                .background { Color.red.opacity(0.1).allowsHitTesting(false) }
-                Spacer()
-            }
-            .coordinateSpace(name: "Foobar")
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .clipped()
-            .readSize { viewSize = $0 }
-            .background { Color.blue.opacity(0.1).allowsHitTesting(false) }
-            .onChange(of: origin) {
-                print("origin", origin)
-                clampPanel()
-            }
-            .onChange(of: viewSize) {
-                print("viewSize", viewSize)
-                withAnimation { clampPanel() }
-            }
-            .onChange(of: panelSize) {
-                print("panelSize", panelSize)
-                withAnimation { clampPanel() }
-            }
+                .offset(x: origin.x, y: origin.y)
+                .readSize { panelSize = $0 }
+                .modifier(gesture)
+                .atCornerPosition(.topLeading)
+        }
+        .coordinateSpace(name: "Foobar")
+        .readSize { viewSize = $0 }
+        .onChange(of: origin) {
+            print("origin", origin)
+        }
+        .onChange(of: viewSize) {
+            print("viewSize", viewSize)
+            withAnimation { clampPanel() }
+        }
+        .onChange(of: panelSize) {
+            print("panelSize", panelSize)
+            withAnimation { clampPanel() }
         }
     }
 

@@ -107,6 +107,10 @@ extension View {
             falseContent(self)
         }
     }
+
+    func modifier(_ modifier: (some ViewModifier)?) -> some View {
+        self.if(modifier != nil, then: { $0.modifier(modifier!) })
+    }
 }
 
 // MARK: - ManagedScrollView

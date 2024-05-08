@@ -14,16 +14,6 @@ struct DebugPanel: View {
 
     @Environment(\.windowId) private var windowId
     @EnvironmentObject private var windowModel: WindowModel
-    private var window: WindowData { windowModel.idToWindow[windowId]! }
-
-    private var moveWindowGesture: MultipleGestureModifier<Point2> {
-        MultipleGestureModifier(
-            window.origin,
-            configs: .init(coordinateSpace: .global),
-            onDrag: { v, c in windowModel.onMoving(windowId: window.id, origin: c + v.offset) },
-            onDragEnd: { v, c in windowModel.onMoved(windowId: window.id, origin: c + v.offset, inertia: v.inertia) }
-        )
-    }
 
     var title: some View {
         HStack {
@@ -38,7 +28,7 @@ struct DebugPanel: View {
         VStack {
             title
                 .invisibleSoildOverlay()
-                .modifier(moveWindowGesture)
+                .modifier(windowModel.moveGesture(windowId: windowId))
             Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")

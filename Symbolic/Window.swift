@@ -82,6 +82,16 @@ extension WindowModel {
         window.origin = window.rect.clamped(by: CGRect(rootSize)).origin
         idToWindow[windowId] = window
     }
+
+    func moveGesture(windowId: UUID) -> MultipleGestureModifier<Point2>? {
+        guard let window = idToWindow[windowId] else { return nil }
+        return MultipleGestureModifier(
+            window.origin,
+            configs: .init(coordinateSpace: .global),
+            onDrag: { v, c in self.onMoving(windowId: window.id, origin: c + v.offset) },
+            onDragEnd: { v, c in self.onMoved(windowId: window.id, origin: c + v.offset, inertia: v.inertia) }
+        )
+    }
 }
 
 // MARK: - WindowRoot

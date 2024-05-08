@@ -31,23 +31,13 @@ struct HistoryPanel: View {
 
     @Environment(\.windowId) private var windowId
     @EnvironmentObject private var windowModel: WindowModel
-    private var window: WindowData { windowModel.idToWindow[windowId]! }
-
-    private var moveWindowGesture: MultipleGestureModifier<Point2> {
-        MultipleGestureModifier(
-            window.origin,
-            configs: .init(coordinateSpace: .global),
-            onDrag: { v, c in windowModel.onMoving(windowId: window.id, origin: c + v.offset) },
-            onDragEnd: { v, c in windowModel.onMoved(windowId: window.id, origin: c + v.offset, inertia: v.inertia) }
-        )
-    }
 
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "History")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .modifier(moveWindowGesture)
+                .modifier(windowModel.moveGesture(windowId: windowId))
             scrollView
         }
         .background(.regularMaterial)

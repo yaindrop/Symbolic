@@ -8,7 +8,8 @@ struct ActivePathPanel: View {
         VStack {
             Spacer()
             VStack(spacing: 0) {
-                title
+                PanelTitle(name: "Active Path")
+                    .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 scrollView
             }
             .background(.regularMaterial)
@@ -24,31 +25,16 @@ struct ActivePathPanel: View {
     @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
 
-    @StateObject private var scrollOffset = ScrollOffsetModel()
-
-    @ViewBuilder private var title: some View {
-        HStack {
-            Spacer()
-            Text("Active Path")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.vertical, 8)
-            Spacer()
-        }
-        .padding(12)
-        .if(scrollOffset.scrolled) { $0.background(.regularMaterial) }
-    }
+    @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     @ViewBuilder private var scrollView: some View {
         if let activePath = activePathModel.pendingActivePath {
-            ScrollViewReader { proxy in
-                ScrollViewWithOffset(model: scrollOffset) {
-                    Components(activePath: activePath).id(activePath.id)
-                }
-                .onChange(of: activePathModel.focusedPart) {
-                    guard let id = activePathModel.focusedPart?.id else { return }
-                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
-                }
+            ManagedScrollView(model: scrollViewModel) { proxy in
+                Components(activePath: activePath).id(activePath.id)
+                    .onChange(of: activePathModel.focusedPart) {
+                        guard let id = activePathModel.focusedPart?.id else { return }
+                        withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
+                    }
             }
             .frame(maxHeight: 400)
             .fixedSize(horizontal: false, vertical: true)

@@ -21,7 +21,8 @@ struct HistoryPanel: View {
         VStack {
             Spacer()
             VStack(spacing: 0) {
-                title
+                PanelTitle(name: "History")
+                    .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 scrollView
             }
             .background(.regularMaterial)
@@ -38,40 +39,11 @@ struct HistoryPanel: View {
     @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
 
-    @ViewBuilder private var title: some View {
-        HStack {
-            Spacer()
-            Text("History")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.vertical, 8)
-            Spacer()
-        }
-        .padding(12)
-        .if(scrollOffset.scrolled) { $0.background(.regularMaterial) }
-    }
-
-    @ViewBuilder private func sectionTitle(_ title: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.subheadline)
-                .foregroundStyle(Color.secondaryLabel)
-                .padding(.leading, 12)
-            Spacer()
-        }
-    }
-
-    @StateObject private var scrollOffset = ScrollOffsetModel()
+    @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     @ViewBuilder var scrollView: some View {
-        ScrollViewReader { _ in
-            ScrollViewWithOffset(model: scrollOffset) {
-                content
-            }
-//            .onChange(of: activePathModel.focusedPart) {
-//                guard let id = activePathModel.focusedPart?.id else { return }
-//                withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .top) }
-//            }
+        ManagedScrollView(model: scrollViewModel) { _ in
+            content
         }
         .frame(maxHeight: 400)
         .fixedSize(horizontal: false, vertical: true)
@@ -88,7 +60,7 @@ struct HistoryPanel: View {
             } label: {
                 Text("Undo")
             }
-            sectionTitle("Events")
+            PanelSectionTitle(name: "Events")
             VStack(spacing: 12) {
                 ForEach(document.events) { e in
                     Text("\(e.name)")

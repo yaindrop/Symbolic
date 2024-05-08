@@ -9,7 +9,7 @@ extension ActivePathPanel {
 
         @ViewBuilder var body: some View {
             VStack(spacing: 4) {
-                sectionTitle("Components")
+                PanelSectionTitle(name: "Components")
                 VStack(spacing: 12) {
                     ForEach(activePath.pairs, id: \.node.id) { p in
                         let i = activePath.nodeIdToIndex[p.node.id] ?? 0
@@ -25,16 +25,6 @@ extension ActivePathPanel {
 
         @EnvironmentObject private var pathStore: PathStore
         @EnvironmentObject private var activePathModel: ActivePathModel
-
-        @ViewBuilder private func sectionTitle(_ title: String) -> some View {
-            HStack {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundStyle(Color.secondaryLabel)
-                    .padding(.leading, 12)
-                Spacer()
-            }
-        }
     }
 
     // MARK: - NodeEdgeGroup

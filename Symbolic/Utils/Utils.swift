@@ -109,23 +109,23 @@ extension View {
     }
 }
 
-// MARK: - ScrollOffset
+// MARK: - ManagedScrollView
 
-class ScrollOffsetModel: ObservableObject {
+class ManagedScrollViewModel: ObservableObject {
     @Published var offset: Scalar = 0
     let coordinateSpaceName = UUID().uuidString
 
     var scrolled: Bool { offset > 0 }
 }
 
-struct ScrollOffsetKey: PreferenceKey {
+fileprivate struct ScrollOffsetKey: PreferenceKey {
     typealias Value = Scalar
     static var defaultValue: Scalar = .zero
     static func reduce(value: inout Value, nextValue: () -> Value) { value += nextValue() }
 }
 
-struct ScrollOffsetReaderModifier: ViewModifier {
-    @ObservedObject var model: ScrollOffsetModel
+fileprivate struct ScrollOffsetReaderModifier: ViewModifier {
+    @ObservedObject var model: ManagedScrollViewModel
 
     func body(content: Content) -> some View {
         content.background(
@@ -137,8 +137,8 @@ struct ScrollOffsetReaderModifier: ViewModifier {
     }
 }
 
-struct ScrollOffsetSetterModifier: ViewModifier {
-    @ObservedObject var model: ScrollOffsetModel
+fileprivate struct ScrollOffsetSetterModifier: ViewModifier {
+    @ObservedObject var model: ManagedScrollViewModel
 
     func body(content: Content) -> some View {
         content.coordinateSpace(name: model.coordinateSpaceName)
@@ -146,31 +146,28 @@ struct ScrollOffsetSetterModifier: ViewModifier {
     }
 }
 
-extension View {
-    func scrollOffsetReader(model: ScrollOffsetModel) -> some View {
+fileprivate extension View {
+    func scrollOffsetReader(model: ManagedScrollViewModel) -> some View {
         modifier(ScrollOffsetReaderModifier(model: model))
     }
 
-    func scrollOffsetSetter(model: ScrollOffsetModel) -> some View {
+    func scrollOffsetSetter(model: ManagedScrollViewModel) -> some View {
         modifier(ScrollOffsetSetterModifier(model: model))
     }
 }
 
-struct ScrollViewWithOffset<Content: View>: View {
-    @ObservedObject var model: ScrollOffsetModel
-    let content: Content
+struct ManagedScrollView<Content: View>: View {
+    @ObservedObject var model: ManagedScrollViewModel
+    @ViewBuilder let content: (ScrollViewProxy) -> Content
 
     var body: some View {
-        ScrollView {
-            content
-                .scrollOffsetReader(model: model)
+        ScrollViewReader { proxy in
+            ScrollView {
+                content(proxy)
+                    .scrollOffsetReader(model: model)
+            }
+            .scrollOffsetSetter(model: model)
         }
-        .scrollOffsetSetter(model: model)
-    }
-
-    init(model: ScrollOffsetModel, @ViewBuilder content: () -> Content) {
-        self.model = model
-        self.content = content()
     }
 }
 

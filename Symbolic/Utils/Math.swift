@@ -248,6 +248,8 @@ extension Point2 {
 
     func midPoint(to point: Self) -> Self { .init((Vector2(self) + Vector2(point)) / 2) }
 
+    func clamped(by rect: CGRect) -> Self { .init((rect.minX ... rect.maxX).clamp(x), (rect.minY ... rect.maxY).clamp(y)) }
+
     // MARK: operator
 
     public static func + (lhs: Self, rhs: Vector2) -> Self { .init(Vector2(lhs) + rhs) }
@@ -280,7 +282,28 @@ extension CGSize {
 // MARK: - CGRect
 
 extension CGRect {
-    var center: Point2 { Point2(midX, midY) }
+    var center: Point2 { .init(midX, midY) }
+
+    var min: Point2 { .init(minX, minY) }
+
+    var max: Point2 { .init(maxX, maxY) }
+
+    func clamped(by rect: CGRect) -> Self {
+        let offsetMax = max.offset(to: max.clamped(by: rect))
+        let r = self + offsetMax
+        let offsetMin = r.min.offset(to: r.min.clamped(by: rect))
+        return r + offsetMin
+    }
+
+    // MARK: operator
+
+    public static func + (lhs: Self, rhs: Vector2) -> Self { .init(origin: lhs.origin + rhs, size: lhs.size) }
+
+    public static func - (lhs: Self, rhs: Vector2) -> Self { lhs + -rhs }
+
+    public static func += (lhs: inout Self, rhs: Vector2) { lhs = lhs + rhs }
+
+    public static func -= (lhs: inout Self, rhs: Vector2) { lhs = lhs - rhs }
 
     init(_ size: CGSize) { self.init(x: 0, y: 0, width: size.width, height: size.height) }
 

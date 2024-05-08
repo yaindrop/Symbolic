@@ -8,11 +8,13 @@ struct ViewSizeReader: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background(
+            .background {
                 GeometryReader { geometry in
-                    Color.clear.onChange(of: geometry.size) { onChange(geometry.size) }
+                    Color.clear.onChange(of: geometry.size, initial: true) {
+                        onChange(geometry.size)
+                    }
                 }
-            )
+            }
     }
 }
 
@@ -25,36 +27,61 @@ extension View {
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View {
-    @State var offset: Vector2 = Vector2(24, 24)
+    @State var origin: Point2 = .init(24, 24)
+    @State var viewSize: CGSize = .zero
+    @State var panelSize: CGSize = .zero
+
+    func clampPanel() {
+        let viewRect = CGRect(viewSize)
+        let panelRect = CGRect(origin: origin, size: panelSize)
+        origin = panelRect.clamped(by: viewRect).origin
+    }
+
+    var gesture: MultipleGestureModifier<Point2> {
+        MultipleGestureModifier(origin,
+                                configs: .init(coordinateSpace: .named("Foobar")),
+                                onDrag: { v, c in
+                                    origin = c + Vector2(v.translation)
+                                },
+                                onDragEnd: { v, c in
+                                    origin = c + Vector2(v.translation)
+                                }
+        )
+    }
 
     var body: some View {
-        HStack(spacing: 0) {
-            Spacer().frame(width: offset.dx)
-            VStack(spacing: 0) {
-                Spacer().frame(height: offset.dy)
+        GeometryReader { proxy in
+            HStack(spacing: 0) {
+                Spacer().frame(width: origin.x)
                 VStack(spacing: 0) {
-                    PanelTitle(name: "Active Path")
-                        .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
-                    scrollView
+                    Spacer().frame(height: origin.y)
+                    panel
+                        .readSize { panelSize = $0 }
+                        .modifier(gesture)
+                    Spacer()
                 }
-                .background(.regularMaterial)
-                .cornerRadius(12)
-//                .readSize { innerSize = $0 }
-                .modifier(MultipleGestureModifier(offset, configs: .init(coordinateSpace: .named("Foobar")),
-                                                  onDrag: { v, c in
-                                                      offset = c + Vector2(v.translation)
-                                                  },
-                                                  onDragEnd: { v, c in
-                                                      offset = c + Vector2(v.translation)
-                                                  }))
+                .frame(width: 320)
+                .background { Color.red.opacity(0.1).allowsHitTesting(false) }
                 Spacer()
             }
-            .frame(maxWidth: 320)
-            .background { Color.red.opacity(0.1).allowsHitTesting(false) }
-            Spacer()
+            .coordinateSpace(name: "Foobar")
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+            .readSize { viewSize = $0 }
+            .background { Color.blue.opacity(0.1).allowsHitTesting(false) }
+            .onChange(of: origin) {
+                print("origin", origin)
+                clampPanel()
+            }
+            .onChange(of: viewSize) {
+                print("viewSize", viewSize)
+                withAnimation { clampPanel() }
+            }
+            .onChange(of: panelSize) {
+                print("panelSize", panelSize)
+                withAnimation { clampPanel() }
+            }
         }
-        .coordinateSpace(name: "Foobar")
-        .background { Color.blue.opacity(0.1).allowsHitTesting(false) }
     }
 
     // MARK: private
@@ -63,6 +90,16 @@ struct ActivePathPanel: View {
     @EnvironmentObject private var activePathModel: ActivePathModel
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
+
+    @ViewBuilder private var panel: some View {
+        VStack(spacing: 0) {
+            PanelTitle(name: "Active Path")
+                .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
+            scrollView
+        }
+        .background(.regularMaterial)
+        .cornerRadius(12)
+    }
 
     @ViewBuilder private var scrollView: some View {
         if let activePath = activePathModel.pendingActivePath {

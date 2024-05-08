@@ -122,7 +122,7 @@ struct CanvasView: View {
                 pressDetector.onTap { info in
                     let worldLocation = info.location.applying(viewport.toWorld)
                     print("onTap \(info) worldLocation \(worldLocation)")
-                    withAnimation(.easeIn(duration: 1)) {
+                    withAnimation {
                         activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
                     }
                 }

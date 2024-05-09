@@ -46,39 +46,84 @@ extension ReflectedStringConvertible {
     }
 }
 
-// MARK: - CornerPosition
+// MARK: - axis, align, position
 
-enum CornerPosition {
-    case topLeading
-    case topTrailing
-    case bottomLeading
-    case bottomTrailing
-
-    var isTop: Bool { return self == .topLeading || self == .topTrailing }
-    var isBottom: Bool { return self == .bottomLeading || self == .bottomTrailing }
-    var isLeading: Bool { return self == .topLeading || self == .bottomLeading }
-    var isTrailing: Bool { return self == .topTrailing || self == .bottomTrailing }
+enum Axis: CaseIterable {
+    case horizontal, vertical
 }
 
-struct CornerPositionModifier: ViewModifier {
-    let position: CornerPosition
+extension Axis: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .horizontal: "horizontal"
+        case .vertical: "vertical"
+        }
+    }
+}
+
+enum EdgeAlign: CaseIterable {
+    case start, center, end
+}
+
+extension EdgeAlign: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .start: "start"
+        case .center: "center"
+        case .end: "end"
+        }
+    }
+}
+
+enum AlignPosition {
+    case topLeading, topCenter, topTrailing
+    case centerLeading, center, centerTrailing
+    case bottomLeading, bottomCenter, bottomTrailing
+
+    var isLeading: Bool { [.topLeading, .centerLeading, .bottomLeading].contains(self) }
+    var isHorizontalCenter: Bool { [.topCenter, .center, .bottomCenter].contains(self) }
+    var isTrailing: Bool { [.topTrailing, .centerTrailing, .bottomTrailing].contains(self) }
+    var horizontal: EdgeAlign { isLeading ? .start : isTrailing ? .end : .center }
+
+    var isTop: Bool { [.topLeading, .topCenter, .topTrailing].contains(self) }
+    var isVerticalCenter: Bool { [.centerLeading, .center, .centerTrailing].contains(self) }
+    var isBottom: Bool { [.bottomLeading, .bottomCenter, .bottomTrailing].contains(self) }
+    var vertical: EdgeAlign { isTop ? .start : isBottom ? .end : .center }
+
+    init(horizontal: EdgeAlign, vertical: EdgeAlign) {
+        switch (horizontal, vertical) {
+        case (.start, .start): self = .topLeading
+        case (.start, .center): self = .centerLeading
+        case (.start, .end): self = .bottomLeading
+        case (.center, .start): self = .topCenter
+        case (.center, .center): self = .center
+        case (.center, .end): self = .bottomCenter
+        case (.end, .start): self = .topTrailing
+        case (.end, .center): self = .centerTrailing
+        case (.end, .end): self = .bottomTrailing
+        }
+    }
+}
+
+struct AtAlignPositionModifier: ViewModifier {
+    let position: AlignPosition
 
     func body(content: Content) -> some View {
         HStack(spacing: 0) {
-            if position.isTrailing { Spacer(minLength: 0) }
+            if !position.isLeading { Spacer(minLength: 0) }
             VStack(spacing: 0) {
-                if position.isBottom { Spacer(minLength: 0) }
+                if !position.isTop { Spacer(minLength: 0) }
                 content
-                if position.isTop { Spacer(minLength: 0) }
+                if !position.isBottom { Spacer(minLength: 0) }
             }
-            if position.isLeading { Spacer(minLength: 0) }
+            if !position.isTrailing { Spacer(minLength: 0) }
         }
     }
 }
 
 extension View {
-    func atCornerPosition(_ position: CornerPosition) -> some View {
-        modifier(CornerPositionModifier(position: position))
+    func atAlignPosition(_ position: AlignPosition) -> some View {
+        modifier(AtAlignPositionModifier(position: position))
     }
 }
 

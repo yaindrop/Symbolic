@@ -32,7 +32,7 @@ struct ActivePathEdgeHandle: View {
             .modifier(gesture)
     }
 
-    private var gesture: MultipleGestureModifier<PathSegment> {
+    private var gesture: some ViewModifier {
         func split(at p: Point2, pending: Bool = false) {
             guard let longPressParamT, let longPressSplitNodeId else { return }
             updater.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, positionInView: p, pending: pending)
@@ -40,22 +40,24 @@ struct ActivePathEdgeHandle: View {
                 self.longPressParamT = nil
             }
         }
-        return MultipleGestureModifier(segment,
-                                       onTap: { _, _ in toggleFocus() },
-                                       onLongPress: { v, s in
-                                           let t = s.paramT(closestTo: v.location).t
-                                           longPressParamT = t
-                                           let id = UUID()
-                                           longPressSplitNodeId = id
-                                           split(at: s.position(paramT: t), pending: true)
-                                           activePathModel.setFocus(node: id)
-                                       },
-                                       onLongPressEnd: { _, s in
-                                           guard let longPressParamT else { return }
-                                           split(at: s.position(paramT: longPressParamT))
-                                       },
-                                       onDrag: { v, _ in split(at: v.location, pending: true) },
-                                       onDragEnd: { v, _ in split(at: v.location) })
+        return MultipleGestureModifier(
+            segment,
+            onTap: { _, _ in toggleFocus() },
+            onLongPress: { v, s in
+                let t = s.paramT(closestTo: v.location).t
+                longPressParamT = t
+                let id = UUID()
+                longPressSplitNodeId = id
+                split(at: s.position(paramT: t), pending: true)
+                activePathModel.setFocus(node: id)
+            },
+            onLongPressEnd: { _, s in
+                guard let longPressParamT else { return }
+                split(at: s.position(paramT: longPressParamT))
+            },
+            onDrag: { v, _ in split(at: v.location, pending: true) },
+            onDragEnd: { v, _ in split(at: v.location) }
+        )
     }
 
     private static let circleSize: Scalar = 16
@@ -125,7 +127,7 @@ struct ActivePathFocusedEdgeHandle: View {
             .modifier(gesture(origin: point))
     }
 
-    private func gesture(origin: Point2) -> MultipleGestureModifier<Point2> {
+    private func gesture(origin: Point2) -> some ViewModifier {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveEdge: fromId, offsetInView: origin.offset(to: value.location), pending: pending) }
         }

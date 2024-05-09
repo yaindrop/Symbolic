@@ -79,7 +79,7 @@ struct ActivePathBezierHandle: View {
             .position(point)
     }
 
-    private func drag(getBezier: @escaping (Point2) -> PathEdge.Bezier) -> MultipleGestureModifier<Void> {
+    private func drag(getBezier: @escaping (Point2) -> PathEdge.Bezier) -> some ViewModifier {
         func update(pending: Bool = false) -> (DragGesture.Value, Any) -> Void {
             { value, _ in updater.updateActivePath(edge: fromId, bezierInView: getBezier(value.location), pending: pending) }
         }
@@ -202,7 +202,7 @@ struct ActivePathArcHandle: View {
             .modifier(dragRadius { arc.with(radius: radius.with(height: $0)) })
     }
 
-    private func dragRadius(getArc: @escaping (Scalar) -> PathEdge.Arc) -> MultipleGestureModifier<Point2> {
+    private func dragRadius(getArc: @escaping (Scalar) -> PathEdge.Arc) -> some ViewModifier {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(edge: fromId, arcInView: getArc(value.location.distance(to: origin) * 2), pending: pending) }
         }

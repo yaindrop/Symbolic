@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		5700C2C42BEB5AAF00481FA7 /* PanelTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */; };
 		5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */; };
-		5700C2C82BEBC4A800481FA7 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* Window.swift */; };
+		5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */; };
 		5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF792BC39844002209F2 /* SymbolicApp.swift */; };
 		5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7B2BC39844002209F2 /* ContentView.swift */; };
 		5723BF7E2BC39844002209F2 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7D2BC39844002209F2 /* Item.swift */; };
@@ -77,7 +77,7 @@
 /* Begin PBXFileReference section */
 		5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTitle.swift; sourceTree = "<group>"; };
 		5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSectionTitle.swift; sourceTree = "<group>"; };
-		5700C2C72BEBC4A800481FA7 /* Window.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Window.swift; sourceTree = "<group>"; };
+		5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRoot.swift; sourceTree = "<group>"; };
 		5723BF762BC39844002209F2 /* Symbolic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Symbolic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5723BF792BC39844002209F2 /* SymbolicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicApp.swift; sourceTree = "<group>"; };
 		5723BF7B2BC39844002209F2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -156,6 +156,7 @@
 		5700C2C22BEB5A6800481FA7 /* Panel */ = {
 			isa = PBXGroup;
 			children = (
+				5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */,
 				5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */,
 				5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */,
 			);
@@ -198,7 +199,6 @@
 				57B5F13B2BD4A2E2001E1B2E /* SVG */,
 				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
-				5700C2C72BEBC4A800481FA7 /* Window.swift */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -512,7 +512,7 @@
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
-				5700C2C82BEBC4A800481FA7 /* Window.swift in Sources */,
+				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */,
 			);

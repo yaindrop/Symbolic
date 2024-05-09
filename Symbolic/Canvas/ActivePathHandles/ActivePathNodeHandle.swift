@@ -42,7 +42,7 @@ struct ActivePathNodeHandle: View {
             .modifier(gesture)
     }
 
-    private var gesture: MultipleGestureModifier<Point2> {
+    private var gesture: some ViewModifier {
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
             { value, origin in updater.updateActivePath(moveNode: nodeId, offsetInView: origin.offset(to: value.location), pending: pending) }
         }

@@ -12,8 +12,8 @@ struct DebugPanel: View {
     @EnvironmentObject var viewport: Viewport
     @EnvironmentObject var activePathModel: ActivePathModel
 
-    @Environment(\.windowId) private var windowId
-    @EnvironmentObject private var windowModel: WindowModel
+    @Environment(\.panelId) private var panelId
+    @EnvironmentObject private var panelModel: PanelModel
 
     var title: some View {
         HStack {
@@ -28,7 +28,7 @@ struct DebugPanel: View {
         VStack {
             title
                 .invisibleSoildOverlay()
-                .modifier(windowModel.moveGesture(windowId: windowId))
+                .modifier(panelModel.moveGesture(panelId: panelId))
             Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")

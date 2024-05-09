@@ -142,7 +142,7 @@ struct CanvasView: View {
         .allowsHitTesting(!touchContext.active)
     }
 
-    @StateObject var windowModel = WindowModel()
+    @StateObject var panelModel = PanelModel()
 
     var body: some View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
@@ -156,8 +156,8 @@ struct CanvasView: View {
                 overlay
             }
             .overlay {
-                WindowRoot()
-                    .environmentObject(windowModel)
+                PanelRoot()
+                    .environmentObject(panelModel)
             }
             .navigationTitle("Canvas")
             .toolbar(.hidden, for: .navigationBar)
@@ -175,9 +175,9 @@ struct CanvasView: View {
         }
         .onAppear {
             documentModel.activeDocument = Document(from: fooSvg)
-            windowModel.register { ActivePathPanel() }
-            windowModel.register { HistoryPanel() }
-            windowModel.register { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
+            panelModel.register { ActivePathPanel() }
+            panelModel.register { HistoryPanel() }
+            panelModel.register { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
         }
         .environmentObject(viewport)
         .environmentObject(documentModel)

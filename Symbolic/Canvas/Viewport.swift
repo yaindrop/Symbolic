@@ -39,14 +39,18 @@ class ViewportUpdater: ObservableObject {
 
     init(viewport: Viewport, touchContext: MultipleTouchContext) {
         self.viewport = viewport
-        touchContext.$panInfo.sink { value in
-            guard let info = value else { self.onCommit(); return }
-            self.onPanInfo(info)
-        }.store(in: &subscriptions)
-        touchContext.$pinchInfo.sink { value in
-            guard let info = value else { self.onCommit(); return }
-            self.onPinchInfo(info)
-        }.store(in: &subscriptions)
+        touchContext.$panInfo
+            .sink { value in
+                guard let info = value else { self.onCommit(); return }
+                self.onPanInfo(info)
+            }
+            .store(in: &subscriptions)
+        touchContext.$pinchInfo
+            .sink { value in
+                guard let info = value else { self.onCommit(); return }
+                self.onPinchInfo(info)
+            }
+            .store(in: &subscriptions)
     }
 
     // MARK: private

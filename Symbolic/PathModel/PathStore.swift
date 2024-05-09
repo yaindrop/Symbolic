@@ -62,7 +62,7 @@ class PathStore: ObservableObject {
     }
 
     init() {
-        $pendingEvent.sink { e in self.loadPendingEvent(e) }.store(in: &subscriptions)
+        $pendingEvent.sink { self.loadPendingEvent($0) }.store(in: &subscriptions)
     }
 
     // MARK: private

@@ -31,8 +31,8 @@ class MultipleTouchPressDetector: ObservableObject {
 
     var pressLocation: Point2? { isPress ? multipleTouch.panInfo?.current : nil }
 
-    private(set) var tapSubject = PassthroughSubject<TapInfo, Never>()
-    private(set) var longPressSubject = PassthroughSubject<LongPressInfo, Never>()
+    let tapSubject = PassthroughSubject<TapInfo, Never>()
+    let longPressSubject = PassthroughSubject<LongPressInfo, Never>()
 
     func onTap(_ callback: @escaping (TapInfo) -> Void) { tapSubject.sink(receiveValue: callback).store(in: &subscriptions) }
 

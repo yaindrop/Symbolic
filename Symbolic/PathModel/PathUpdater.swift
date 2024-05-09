@@ -90,13 +90,9 @@ class PathUpdater: ObservableObject {
 
     // MARK: update handler
 
-    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
-        eventSubject.sink { value in callback(value) }.store(in: &subscriptions)
-    }
+    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) { eventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
 
-    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) {
-        pendingEventSubject.sink { value in callback(value) }.store(in: &subscriptions)
-    }
+    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) { pendingEventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
 
     init(pathStore: PathStore, activePathModel: ActivePathModel, viewport: Viewport) {
         self.pathStore = pathStore
@@ -107,8 +103,8 @@ class PathUpdater: ObservableObject {
     // MARK: private
 
     private var subscriptions = Set<AnyCancellable>()
-    private var eventSubject = PassthroughSubject<DocumentEvent, Never>()
-    private var pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
+    private let eventSubject = PassthroughSubject<DocumentEvent, Never>()
+    private let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
 
     private var activePath: Path? { activePathModel.activePath }
 

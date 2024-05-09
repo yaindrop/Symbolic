@@ -4,11 +4,7 @@ import Foundation
 // MARK: - SVGParserDelegate
 
 class SVGParserDelegate: NSObject, XMLParserDelegate {
-    var pathSubject = PassthroughSubject<SVGPath, Never>()
-
-    func onPath(_ callback: @escaping (SVGPath) -> Void) {
-        pathSubject.sink { value in callback(value) }.store(in: &subscriptions)
-    }
+    func onPath(_ callback: @escaping (SVGPath) -> Void) { pathSubject.sink(receiveValue: callback).store(in: &subscriptions) }
 
     // MARK: handler
 
@@ -39,6 +35,7 @@ class SVGParserDelegate: NSObject, XMLParserDelegate {
 
     // MARK: private
 
+    private let pathSubject = PassthroughSubject<SVGPath, Never>()
     private var subscriptions = Set<AnyCancellable>()
 
     private func onPathElement(with attributes: [String: String]) {

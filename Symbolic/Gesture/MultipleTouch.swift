@@ -82,24 +82,21 @@ extension PinchInfo: CustomStringConvertible {
 // MARK: - MultipleTouchContext
 
 class MultipleTouchContext: ObservableObject {
-    @Published var active: Bool = false
-    @Published var maxTouchesCount: Int = 0
-    @Published var maxPanOffset: Scalar = 0
-    @Published var firstTouchBeganTime: Date?
+    @Published private(set) var startTime: Date?
 
+    @Published var touchesCount: Int = 0
     @Published var panInfo: PanInfo?
     @Published var pinchInfo: PinchInfo?
 
-    func onFirstTouchBegan() {
-        firstTouchBeganTime = Date()
-        active = true
+    var active: Bool { startTime != nil }
+
+    fileprivate func onFirstTouchBegan() {
+        startTime = .now
     }
 
-    func onAllTouchesEnded() {
-        active = false
-        maxTouchesCount = 0
-        maxPanOffset = 0
-        firstTouchBeganTime = nil
+    fileprivate func onAllTouchesEnded() {
+        startTime = nil
+        touchesCount = 0
         panInfo = nil
         pinchInfo = nil
     }
@@ -179,9 +176,9 @@ class MultipleTouchView: TouchDebugView {
     private func location(of touch: UITouch) -> Point2 { touch.location(in: self) }
 
     private func onActiveTouchesChanged() {
+        context.touchesCount = activeTouches.count
         context.panInfo = nil
         context.pinchInfo = nil
-        context.maxTouchesCount = max(context.maxTouchesCount, activeTouches.count)
         if let panTouch {
             context.panInfo = PanInfo(origin: location(of: panTouch))
         } else if let pinchTouches {
@@ -191,12 +188,12 @@ class MultipleTouchView: TouchDebugView {
 
     private func onActiveTouchesMoved() {
         if let info = context.panInfo, let panTouch {
-            let movedInfo = PanInfo(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
-            context.maxPanOffset = max(context.maxPanOffset, movedInfo.offset.length)
-            context.panInfo = movedInfo
+            context.panInfo = .init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
         } else if let info = context.pinchInfo, let pinchTouches {
-            let movedInfo = PinchInfo(origin: info.origin, offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1)))
-            context.pinchInfo = movedInfo
+            context.pinchInfo = .init(
+                origin: info.origin,
+                offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1))
+            )
         }
     }
 }

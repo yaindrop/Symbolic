@@ -6,12 +6,16 @@ import SwiftUI
 struct MultipleGestureModifier<Origin>: ViewModifier {
     typealias Value = DragGesture.Value
 
+    // MARK: Context
+
     struct Configs {
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
         var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
-        var allowLongPressDuringDrag: Bool = true // whether to continue long press after drag start
+        var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
         var coordinateSpace: CoordinateSpace = .local
     }
+
+    // MARK: Context
 
     private struct Context {
         let origin: Origin
@@ -34,13 +38,14 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
         }
     }
 
+    // MARK: body
+
     func body(content: Content) -> some View {
         content
             .gesture(gesture)
             .onChange(of: active) {
                 if !active {
-                    context?.longPressTimeout?.cancel()
-                    context = nil
+                    onPressCancelled()
                 }
             }
     }
@@ -79,6 +84,66 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
         return context.maxDistance > configs.distanceThreshold
     }
 
+    private var gesture: some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: configs.coordinateSpace)
+            .updating(flag: $active)
+            .onChanged { v in
+                if context == nil {
+                    onPressStarted(v)
+                    onPressChanged()
+                } else {
+                    context?.onValue(v)
+                    onPressChanged()
+                }
+            }
+            .onEnded { v in
+                context?.onValue(v)
+                onPressEnded()
+            }
+    }
+
+    // MARK: stages
+
+    private func onPressStarted(_ v: DragGesture.Value) {
+        context = Context(origin: getOrigin(), value: v)
+        setupLongPress()
+    }
+
+    private func onPressChanged() {
+        guard let context else { return }
+        if isDrag {
+            if !context.longPressStarted || !configs.holdLongPressOnDrag {
+                resetLongPress()
+            }
+            onDrag?(context.lastValue, context.origin)
+        }
+    }
+
+    private func onPressEnded() {
+        guard let context else { return }
+        let value = context.lastValue, origin = context.origin
+        if isDrag {
+            onDragEnd?(value, origin)
+            if configs.holdLongPressOnDrag {
+                resetLongPress()
+            }
+        } else {
+            if context.longPressStarted {
+                onLongPressEnd?(value, origin)
+            } else {
+                onTap?(value, origin)
+            }
+        }
+    }
+
+    private func onPressCancelled() {
+        guard let context else { return }
+        context.longPressTimeout?.cancel()
+        self.context = nil
+    }
+
+    // MARK: long press
+
     private func setupLongPress() {
         guard let context else { return }
         let longPressTimeout = DispatchWorkItem {
@@ -97,40 +162,5 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
         }
         self.context?.longPressTimeout?.cancel()
         self.context?.longPressTimeout = nil
-    }
-
-    private var gesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: configs.coordinateSpace)
-            .updating(flag: $active)
-            .onChanged { v in
-                context?.onValue(v)
-                if context == nil {
-                    context = Context(origin: getOrigin(), value: v)
-                    setupLongPress()
-                }
-                guard let context else { return }
-                if isDrag {
-                    if !context.longPressStarted || !configs.allowLongPressDuringDrag {
-                        resetLongPress()
-                    }
-                    onDrag?(v, context.origin)
-                }
-            }
-            .onEnded { v in
-                context?.onValue(v)
-                guard let context else { return }
-                if isDrag {
-                    onDragEnd?(v, context.origin)
-                    if context.longPressStarted && configs.allowLongPressDuringDrag {
-                        onLongPressEnd?(v, context.origin)
-                    }
-                } else {
-                    if context.longPressStarted {
-                        onLongPressEnd?(v, context.origin)
-                    } else {
-                        onTap?(v, context.origin)
-                    }
-                }
-            }
     }
 }

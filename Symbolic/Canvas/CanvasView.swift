@@ -47,7 +47,7 @@ struct CanvasView: View {
         }
 
         _touchContext = StateObject(wrappedValue: touchContext)
-        _pressDetector = StateObject(wrappedValue: MultipleTouchPressDetector(touchContext: touchContext))
+        _pressDetector = StateObject(wrappedValue: MultipleTouchPressDetector(multipleTouch: touchContext))
         _viewport = StateObject(wrappedValue: viewport)
         _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
         _documentModel = StateObject(wrappedValue: documentModel)
@@ -125,6 +125,10 @@ struct CanvasView: View {
                     withAnimation {
                         activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
                     }
+                }
+                pressDetector.onLongPress { info in
+                    let worldLocation = info.location.applying(viewport.toWorld)
+                    print("onLongPress \(info) worldLocation \(worldLocation)")
                 }
             }
     }

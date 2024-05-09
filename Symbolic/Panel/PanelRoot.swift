@@ -15,6 +15,49 @@ extension EnvironmentValues {
     }
 }
 
+// MARK: - PanelAffinity
+
+enum PanelAffinity {
+    struct Root {
+        let axis: Axis
+        let align: EdgeAlign
+    }
+
+    struct Peer {
+        let peerId: UUID
+        let axis: Axis
+        let selfAlign: EdgeAlign
+        let peerAlign: EdgeAlign
+    }
+
+    case root(Root)
+    case peer(Peer)
+
+    var axis: Axis {
+        switch self {
+        case let .root(root): root.axis
+        case let .peer(peer): peer.axis
+        }
+    }
+}
+
+extension PanelAffinity.Root: CustomStringConvertible {
+    var description: String { "(\(axis), \(align))" }
+}
+
+extension PanelAffinity.Peer: CustomStringConvertible {
+    var description: String { "(\(axis), \(selfAlign) to \(peerAlign) of \(peerId)" }
+}
+
+extension PanelAffinity: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case let .root(root): "Root\(root.description)"
+        case let .peer(peer): "Peer\(peer.description)"
+        }
+    }
+}
+
 // MARK: - PanelData
 
 struct PanelData {
@@ -23,6 +66,7 @@ struct PanelData {
     var origin: Point2 = .zero
     var size: CGSize = .zero
     var zIndex: Double
+    var affinities: [PanelAffinity] = []
 
     var rect: CGRect { .init(origin: origin, size: size) }
 }
@@ -70,31 +114,22 @@ extension PanelModel {
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin
         idToPanel[panelId] = panel
+
+        var finalOrigin = origin
+        if inertia.length > 240 {
+            finalOrigin = origin + inertia / 4
+        }
+
+        // TODO: prioritize clamp over affinity
+        finalOrigin = CGRect(origin: finalOrigin, size: panel.size).clamped(by: CGRect(rootSize)).origin
+        panel.origin = finalOrigin
+
+        panel.affinities = getAffinities(of: panel)
+        panel.origin += offsetByAffinities(of: panel)
+
         withAnimation {
-            var finalOrigin = origin
-            if inertia.length > 240 {
-                finalOrigin = origin + inertia / 4
-            }
-            finalOrigin = CGRect(origin: finalOrigin, size: panel.size).clamped(by: CGRect(rootSize)).origin
-            panel.origin = finalOrigin
-            idToPanel[panelId] = panel
-            let affinities = getAffinities(of: panelId)
-            if let a = affinities.first { $0.axis == .horizontal } {
-                panel.origin += offset(panel: panel, by: a)
-//                print(offset(panel: panel, by: a))
-            }
-            if let a = affinities.first { $0.axis == .vertical } {
-                panel.origin += offset(panel: panel, by: a)
-//                print(offset(panel: panel, by: a))
-            }
             idToPanel[panelId] = panel
         }
-    }
-
-    func clampOrigin(panelId: UUID) {
-        guard var panel = idToPanel[panelId] else { return }
-        panel.origin = panel.rect.clamped(by: CGRect(rootSize)).origin
-        idToPanel[panelId] = panel
     }
 
     func moveGesture(panelId: UUID) -> MultipleGestureModifier<Point2>? {
@@ -105,6 +140,129 @@ extension PanelModel {
             onDrag: { v, c in self.onMoving(panelId: panel.id, origin: c + v.offset) },
             onDragEnd: { v, c in self.onMoved(panelId: panel.id, origin: c + v.offset, inertia: v.inertia) }
         )
+    }
+}
+
+// MARK: - get affinities
+
+fileprivate func getKeyPath(axis: Axis, align: EdgeAlign) -> KeyPath<CGRect, Scalar> {
+    switch axis {
+    case .horizontal:
+        switch align {
+        case .start: \.minX
+        case .center: \.midX
+        case .end: \.maxX
+        }
+    case .vertical:
+        switch align {
+        case .start: \.minY
+        case .center: \.midY
+        case .end: \.maxY
+        }
+    }
+}
+
+extension PanelModel {
+    static let rootAffinityThreshold = 24.0
+    static let peerAffinityThreshold = 18.0
+
+    typealias PanelAffinityCandidate = (affinity: PanelAffinity, distance: Scalar)
+    private func getRootAffinityCandidates(of rect: CGRect) -> [PanelAffinityCandidate] {
+        Axis.allCases.flatMap { axis in
+            EdgeAlign.allCases.map { align in
+                let kp = getKeyPath(axis: axis, align: align)
+                let distance = abs(rect[keyPath: kp] - rootRect[keyPath: kp])
+                return (.root(.init(axis: axis, align: align)), distance)
+            }
+        }
+    }
+
+    private func getPeerAffinityCandidates(of rect: CGRect, peer: PanelData) -> [PanelAffinityCandidate] {
+        Axis.allCases.flatMap { axis in
+            EdgeAlign.allCases.flatMap { selfAlign in
+                EdgeAlign.allCases.map { peerAlign in
+                    let selfKp = getKeyPath(axis: axis, align: selfAlign)
+                    let peerKp = getKeyPath(axis: axis, align: peerAlign)
+                    let distance = abs(rect[keyPath: selfKp] - peer.rect[keyPath: peerKp])
+                    return (.peer(.init(peerId: peer.id, axis: axis, selfAlign: selfAlign, peerAlign: peerAlign)), distance)
+                }
+            }
+        }
+    }
+
+    private func getAffinities(of panel: PanelData) -> [PanelAffinity] {
+        var candidates = getRootAffinityCandidates(of: panel.rect)
+        for peer in panels {
+            guard peer.id != panel.id else { continue }
+            candidates += getPeerAffinityCandidates(of: panel.rect, peer: peer)
+        }
+        candidates = candidates.filter { affinity, distance in
+            switch affinity {
+            case .root: distance < Self.rootAffinityThreshold
+            case .peer: distance < Self.peerAffinityThreshold
+            }
+        }
+        candidates = candidates.filter { affinity, _ in
+            switch affinity {
+            case .root: true
+            case let .peer(peer):
+                peer.selfAlign != .center && peer.peerAlign != .center || peer.selfAlign == .center && peer.peerAlign == .center
+            }
+        }
+        let horizontal = candidates
+            .filter { $0.affinity.axis == .horizontal }
+            .max { $0.distance < $1.distance }
+        let vertical = candidates
+            .filter { $0.affinity.axis == .vertical }
+            .max { $0.distance < $1.distance }
+        return [horizontal, vertical].compactMap { $0?.affinity }
+    }
+}
+
+// MARK: - offset by affinity
+
+extension PanelModel {
+    private func offset(of panel: PanelData, by affinity: PanelAffinity.Root) -> Vector2 {
+        let axis = affinity.axis, align = affinity.align
+        let kp = getKeyPath(axis: axis, align: align)
+
+        var offset = rootRect[keyPath: kp] - panel.rect[keyPath: kp]
+        offset += align == .start ? 12 : align == .end ? -12 : 0
+
+        switch axis {
+        case .horizontal: return .init(offset, 0)
+        case .vertical: return .init(0, offset)
+        }
+    }
+
+    private func offset(of panel: PanelData, by affinity: PanelAffinity.Peer) -> Vector2 {
+        guard let peerPanel = idToPanel[affinity.peerId] else { return .zero }
+        let axis = affinity.axis, selfAlign = affinity.selfAlign, peerAlign = affinity.peerAlign
+        let panelKeyPath = getKeyPath(axis: axis, align: selfAlign)
+        let peerKeyPath = getKeyPath(axis: axis, align: peerAlign)
+
+        var offset = peerPanel.rect[keyPath: peerKeyPath] - panel.rect[keyPath: panelKeyPath]
+        offset += selfAlign == peerAlign ? 0 : selfAlign == .start ? 6 : selfAlign == .end ? -6 : 0
+
+        switch axis {
+        case .horizontal: return .init(offset, 0)
+        case .vertical: return .init(0, offset)
+        }
+    }
+
+    private func offset(of panel: PanelData, by affinity: PanelAffinity) -> Vector2 {
+        switch affinity {
+        case let .root(root): offset(of: panel, by: root)
+        case let .peer(peer): offset(of: panel, by: peer)
+        }
+    }
+
+    func offsetByAffinities(of panel: PanelData) -> Vector2 {
+        var sum = Vector2.zero
+        for affinity in panel.affinities {
+            sum += offset(of: panel, by: affinity)
+        }
+        return sum
     }
 }
 
@@ -123,8 +281,11 @@ struct PanelRoot: View {
                     .environment(\.panelId, panel.id)
                     .atAlignPosition(.topLeading)
                     .onChange(of: panel.size) {
+                        print("panel.size", panel.size)
+                        guard var panel = model.idToPanel[panel.id] else { return }
+                        panel.origin += model.offsetByAffinities(of: panel)
                         withAnimation {
-                            model.clampOrigin(panelId: panel.id)
+                            model.idToPanel[panel.id] = panel
                         }
                     }
             }
@@ -132,139 +293,15 @@ struct PanelRoot: View {
         .readSize { model.rootSize = $0 }
         .onChange(of: model.rootSize) {
             withAnimation {
+                print("model.rootSize", model.rootSize)
                 for id in model.panelIds {
-                    model.clampOrigin(panelId: id)
-                }
-            }
-        }
-    }
-}
-
-enum PanelAffinity {
-    struct Root {
-        let axis: Axis
-        let align: EdgeAlign
-    }
-
-    struct Peer {
-        let peerId: UUID
-        let axis: Axis
-        let selfAlign: EdgeAlign
-        let peerAlign: EdgeAlign
-    }
-
-    case root(Root)
-    case peer(Peer)
-
-    var axis: Axis {
-        switch self {
-        case let .root(root): root.axis
-        case let .peer(peer): peer.axis
-        }
-    }
-}
-
-extension PanelAffinity.Root: CustomStringConvertible {
-    var description: String { "(\(axis), \(align))" }
-}
-
-extension PanelAffinity.Peer: CustomStringConvertible {
-    var description: String { "(\(axis), \(selfAlign) to \(peerAlign) of \(peerId)" }
-}
-
-extension PanelAffinity: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case let .root(root): "Root\(root.description)"
-        case let .peer(peer): "Peer\(peer.description)"
-        }
-    }
-}
-
-extension PanelModel {
-    static let rootAffinityThreshold = 24.0
-    static let peerAffinityThreshold = 12.0
-
-    private func getKeyPath(axis: Axis, align: EdgeAlign) -> KeyPath<CGRect, Scalar> {
-        switch axis {
-        case .horizontal:
-            switch align {
-            case .start: \.minX
-            case .center: \.midX
-            case .end: \.maxX
-            }
-        case .vertical:
-            switch align {
-            case .start: \.minY
-            case .center: \.midY
-            case .end: \.maxY
-            }
-        }
-    }
-
-    private func getRootAffinityCandidates(of rect: CGRect) -> [PanelAffinity] {
-        Axis.allCases.compactMap { axis in
-            let threshold = Self.rootAffinityThreshold
-            let align = EdgeAlign.allCases.first { align in
-                let kp = getKeyPath(axis: axis, align: align)
-                return abs(rect[keyPath: kp] - rootRect[keyPath: kp]) < threshold
-            }
-            guard let align else { return nil }
-            return .root(.init(axis: axis, align: align))
-        }
-    }
-
-    private func getPeerAffinityCandidates(of rect: CGRect, peer: PanelData) -> [PanelAffinity] {
-        Axis.allCases.flatMap { axis in
-            EdgeAlign.allCases.flatMap { selfAlign in
-                EdgeAlign.allCases.compactMap { peerAlign in
-                    if abs(rect[keyPath: getKeyPath(axis: axis, align: selfAlign)] - peer.rect[keyPath: getKeyPath(axis: axis, align: peerAlign)]) < Self.peerAffinityThreshold {
-                        .peer(.init(peerId: peer.id, axis: axis, selfAlign: selfAlign, peerAlign: peerAlign))
-                    } else {
-                        nil
+                    guard var panel = model.idToPanel[id] else { return }
+                    panel.origin += model.offsetByAffinities(of: panel)
+                    withAnimation {
+                        model.idToPanel[panel.id] = panel
                     }
                 }
             }
-        }
-    }
-
-    private func getAffinities(of panelId: UUID) -> [PanelAffinity] {
-        guard let panel = idToPanel[panelId] else { return [] }
-        var candidates = getRootAffinityCandidates(of: panel.rect)
-        for peer in panels {
-            guard peer.id != panelId else { continue }
-            candidates += getPeerAffinityCandidates(of: panel.rect, peer: peer)
-        }
-        return candidates
-    }
-
-    private func offset(panel: PanelData, by affinity: PanelAffinity.Root) -> Vector2 {
-        let kp = getKeyPath(axis: affinity.axis, align: affinity.align)
-        let offset = rootRect[keyPath: kp] - panel.rect[keyPath: kp]
-
-        switch affinity.axis {
-        case .horizontal: return .init(offset, 0)
-        case .vertical: return .init(0, offset)
-        }
-    }
-
-    private func offset(panel: PanelData, by affinity: PanelAffinity.Peer) -> Vector2 {
-        guard let peerPanel = idToPanel[affinity.peerId] else { return .zero }
-
-        let panelKeyPath = getKeyPath(axis: affinity.axis, align: affinity.selfAlign)
-        let peerKeyPath = getKeyPath(axis: affinity.axis, align: affinity.peerAlign)
-        let offset = peerPanel.rect[keyPath: peerKeyPath] - panel.rect[keyPath: panelKeyPath]
-
-        switch affinity.axis {
-        case .horizontal: return .init(offset, 0)
-        case .vertical: return .init(0, offset)
-        }
-    }
-
-    private func offset(panel: PanelData, by affinity: PanelAffinity) -> Vector2 {
-        switch affinity {
-        case let .root(root): offset(panel: panel, by: root)
-        case let .peer(peer): offset(panel: panel, by: peer)
         }
     }
 }

@@ -13,8 +13,9 @@ class PanelModel: ObservableObject {
 }
 
 extension PanelModel {
-    func register(@ViewBuilder _ panel: @escaping () -> any View) {
-        let panelData = PanelData(view: AnyView(panel()), zIndex: Double(idToPanel.count))
+    func register(align: PlaneAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
+        var panelData = PanelData(view: AnyView(panel()), zIndex: Double(idToPanel.count))
+        panelData.affinities += Axis.allCases.map { axis in .root(.init(axis: axis, align: align.getAxisAlign(in: axis))) }
         idToPanel[panelData.id] = panelData
         panelIds.append(panelData.id)
     }
@@ -75,7 +76,7 @@ extension PanelModel {
 
 // MARK: - get affinities
 
-fileprivate func getKeyPath(axis: Axis, align: EdgeAlign) -> KeyPath<CGRect, Scalar> {
+fileprivate func getKeyPath(axis: Axis, align: AxisAlign) -> KeyPath<CGRect, Scalar> {
     switch axis {
     case .horizontal:
         switch align {
@@ -93,13 +94,15 @@ fileprivate func getKeyPath(axis: Axis, align: EdgeAlign) -> KeyPath<CGRect, Sca
 }
 
 extension PanelModel {
-    static let rootAffinityThreshold = 24.0
-    static let peerAffinityThreshold = 18.0
+    static let rootAffinityThreshold = 48.0
+    static let peerAffinityThreshold = 24.0
+    static let rootAffinityGap = 12.0
+    static let peerAffinityGap = 6.0
 
     typealias PanelAffinityCandidate = (affinity: PanelAffinity, distance: Scalar)
     private func getRootAffinityCandidates(of rect: CGRect) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
-            EdgeAlign.allCases.map { align in
+            AxisAlign.allCases.map { align in
                 let kp = getKeyPath(axis: axis, align: align)
                 let distance = abs(rect[keyPath: kp] - rootRect[keyPath: kp])
                 return (.root(.init(axis: axis, align: align)), distance)
@@ -109,8 +112,8 @@ extension PanelModel {
 
     private func getPeerAffinityCandidates(of rect: CGRect, peer: PanelData) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
-            EdgeAlign.allCases.flatMap { selfAlign in
-                EdgeAlign.allCases.map { peerAlign in
+            AxisAlign.allCases.flatMap { selfAlign in
+                AxisAlign.allCases.map { peerAlign in
                     let selfKp = getKeyPath(axis: axis, align: selfAlign)
                     let peerKp = getKeyPath(axis: axis, align: peerAlign)
                     let distance = abs(rect[keyPath: selfKp] - peer.rect[keyPath: peerKp])
@@ -157,7 +160,7 @@ extension PanelModel {
         let kp = getKeyPath(axis: axis, align: align)
 
         var offset = rootRect[keyPath: kp] - panel.rect[keyPath: kp]
-        offset += align == .start ? 12 : align == .end ? -12 : 0
+        offset += align == .start ? Self.rootAffinityGap : align == .end ? -Self.rootAffinityGap : 0
 
         switch axis {
         case .horizontal: return .init(offset, 0)
@@ -172,7 +175,7 @@ extension PanelModel {
         let peerKeyPath = getKeyPath(axis: axis, align: peerAlign)
 
         var offset = peerPanel.rect[keyPath: peerKeyPath] - panel.rect[keyPath: panelKeyPath]
-        offset += selfAlign == peerAlign ? 0 : selfAlign == .start ? 6 : selfAlign == .end ? -6 : 0
+        offset += selfAlign == peerAlign ? 0 : selfAlign == .start ? Self.peerAffinityGap : selfAlign == .end ? -Self.peerAffinityGap : 0
 
         switch axis {
         case .horizontal: return .init(offset, 0)

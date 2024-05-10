@@ -20,14 +20,14 @@ extension EnvironmentValues {
 enum PanelAffinity {
     struct Root {
         let axis: Axis
-        let align: EdgeAlign
+        let align: AxisAlign
     }
 
     struct Peer {
         let peerId: UUID
         let axis: Axis
-        let selfAlign: EdgeAlign
-        let peerAlign: EdgeAlign
+        let selfAlign: AxisAlign
+        let peerAlign: AxisAlign
     }
 
     case root(Root)

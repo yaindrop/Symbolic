@@ -14,7 +14,7 @@ struct PanelRoot: View {
                     .offset(x: panel.origin.x, y: panel.origin.y)
                     .zIndex(panel.zIndex)
                     .environment(\.panelId, panel.id)
-                    .atAlignPosition(.topLeading)
+                    .atPlaneAlign(.topLeading)
                     .onChange(of: panel.size) {
                         print("panel.size", panel.size)
                         guard var panel = model.idToPanel[panel.id] else { return }

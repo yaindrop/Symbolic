@@ -177,8 +177,10 @@ struct CanvasView: View {
                 overlay
             }
             .navigationTitle("Canvas")
-            .toolbar(.hidden, for: .navigationBar)
-            .edgesIgnoringSafeArea(.all)
+            .navigationBarTitleDisplayMode(.inline)
+//            .toolbar(.hidden, for: .navigationBar)
+            .edgesIgnoringSafeArea(.bottom)
+            .clipped()
         }
         .onChange(of: documentModel.activeDocument) {
             withAnimation {
@@ -192,9 +194,9 @@ struct CanvasView: View {
         }
         .onAppear {
             documentModel.activeDocument = Document(from: fooSvg)
-            panelModel.register { ActivePathPanel() }
-            panelModel.register { HistoryPanel() }
-            panelModel.register { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
+            panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
+            panelModel.register(align: .bottomLeading) { HistoryPanel() }
+            panelModel.register(align: .topTrailing) { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
         }
         .environmentObject(viewport)
         .environmentObject(documentModel)

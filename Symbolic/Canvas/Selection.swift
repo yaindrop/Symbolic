@@ -26,7 +26,7 @@ class PendingSelection: ObservableObject {
         touchContext.$panInfo
             .sink { value in
                 guard self.active, let info = value else { return }
-                self.onPanInfo(info)
+                self.to = info.current
             }
             .store(in: &subscriptions)
     }
@@ -34,10 +34,6 @@ class PendingSelection: ObservableObject {
     // MARK: private
 
     private var subscriptions = Set<AnyCancellable>()
-
-    private func onPanInfo(_ pan: PanInfo) {
-        to = pan.current
-    }
 }
 
 struct PendingSelectionView: View {

@@ -176,11 +176,48 @@ struct CanvasView: View {
                 foreground
                 overlay
             }
-            .navigationTitle("Canvas")
+//            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
 //            .toolbar(.hidden, for: .navigationBar)
-            .edgesIgnoringSafeArea(.bottom)
             .clipped()
+            .edgesIgnoringSafeArea(.bottom)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Text("Item 0")
+                        Divider()
+                        Text("Item 1")
+                    } label: {
+                        HStack {
+                            Text("未命名2").font(.headline)
+                            Image(systemName: "chevron.down.circle.fill")
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(Color.label.opacity(0.5))
+                                .font(.footnote)
+                                .fontWeight(.black)
+                        }
+                        .tint(.label)
+                    }
+                }
+                ToolbarItem(placement: .principal) {
+                    Text("Canvas").font(.headline)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        var events = documentModel.activeDocument.events
+                        guard let last = events.last else { return }
+                        if case let .pathAction(p) = last.action {
+                            if case let .load(l) = p {
+                                return
+                            }
+                        }
+                        events.removeLast()
+                        documentModel.activeDocument = Document(events: events)
+                    } label: {
+                        Image(systemName: "arrow.uturn.backward")
+                    }
+                }
+            }
         }
         .onChange(of: documentModel.activeDocument) {
             withAnimation {
@@ -197,6 +234,7 @@ struct CanvasView: View {
             panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
             panelModel.register(align: .bottomLeading) { HistoryPanel() }
             panelModel.register(align: .topTrailing) { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
+            panelModel.register(align: .topLeading) { Text("hello?").frame(width: 80, height: 40) }
         }
         .environmentObject(viewport)
         .environmentObject(documentModel)

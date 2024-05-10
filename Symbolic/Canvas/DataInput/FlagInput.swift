@@ -11,7 +11,7 @@ struct FlagInput: View {
             } label: {
                 Text(flag ? "True" : "False").font(.footnote)
             }
-            .buttonStyle(PlainButtonStyle())
+            .tint(.label)
         }
         .frame(height: 20)
         .padding(6)

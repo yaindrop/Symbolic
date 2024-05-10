@@ -14,7 +14,7 @@ struct PositionPicker: View {
                 } label: {
                     content
                 }
-                .buttonStyle(PlainButtonStyle())
+                .tint(.label)
             }
         }
         .frame(height: 20)

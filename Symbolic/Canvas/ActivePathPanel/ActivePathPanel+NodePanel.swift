@@ -43,7 +43,7 @@ extension ActivePathPanel {
             } label: {
                 title
             }
-            .buttonStyle(PlainButtonStyle())
+            .tint(.label)
         }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {

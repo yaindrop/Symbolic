@@ -75,7 +75,7 @@ extension ActivePathPanel {
             } label: {
                 title
             }
-            .buttonStyle(PlainButtonStyle())
+            .tint(.label)
         }
 
         @ViewBuilder private var expandButton: some View {
@@ -85,7 +85,7 @@ extension ActivePathPanel {
                 Image(systemName: expanded ? "chevron.up" : "chevron.down")
                     .padding(6)
             }
-            .buttonStyle(PlainButtonStyle())
+            .tint(.label)
         }
 
         @ViewBuilder private var edgeKindPanel: some View {

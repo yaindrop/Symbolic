@@ -161,7 +161,7 @@ extension View {
 // MARK: - ManagedScrollView
 
 class ManagedScrollViewModel: ObservableObject {
-    @Published var offset: Scalar = 0
+    @Published fileprivate(set) var offset: Scalar = 0
     let coordinateSpaceName = UUID().uuidString
 
     var scrolled: Bool { offset > 0 }

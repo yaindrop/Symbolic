@@ -6,7 +6,7 @@ import SwiftUI
 struct MultipleGestureModifier<Origin>: ViewModifier {
     typealias Value = DragGesture.Value
 
-    // MARK: Context
+    // MARK: Configs
 
     struct Configs {
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater

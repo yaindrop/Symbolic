@@ -26,7 +26,7 @@ extension ViewportInfo: CustomStringConvertible {
 }
 
 class Viewport: ObservableObject {
-    @Published var info: ViewportInfo = .init()
+    @Published fileprivate(set) var info: ViewportInfo = .init()
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
@@ -35,8 +35,8 @@ class Viewport: ObservableObject {
 // MARK: - ViewportUpdater
 
 class ViewportUpdater: ObservableObject {
-    @Published var previousInfo: ViewportInfo = .init()
     @Published var blocked: Bool = false
+    @Published private(set) var previousInfo: ViewportInfo = .init()
 
     init(viewport: Viewport, touchContext: MultipleTouchContext) {
         self.viewport = viewport

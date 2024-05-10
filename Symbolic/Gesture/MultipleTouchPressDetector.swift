@@ -14,6 +14,8 @@ struct LongPressInfo {
 // MARK: - PressDetector
 
 class MultipleTouchPressDetector: ObservableObject {
+    // MARK: Configs
+
     struct Configs {
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
         var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
@@ -21,6 +23,8 @@ class MultipleTouchPressDetector: ObservableObject {
         var repeatedTapDistanceThreshold: Scalar = 20 // repeated tap when smaller, separated tap when greater
         var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
     }
+
+    // MARK: Context
 
     private struct Context {
         var maxDistance: Scalar = 0
@@ -33,10 +37,10 @@ class MultipleTouchPressDetector: ObservableObject {
         }
     }
 
-    var location: Point2? { multipleTouch.panInfo?.current }
-
     let tapSubject = PassthroughSubject<TapInfo, Never>()
     let longPressSubject = PassthroughSubject<LongPressInfo, Never>()
+
+    var location: Point2? { multipleTouch.panInfo?.current }
 
     func onTap(_ callback: @escaping (TapInfo) -> Void) { tapSubject.sink(receiveValue: callback).store(in: &subscriptions) }
 
@@ -56,11 +60,6 @@ class MultipleTouchPressDetector: ObservableObject {
     private var context: Context?
     private var subscriptions = Set<AnyCancellable>()
 
-    private var isPress: Bool {
-        guard let context else { return false }
-        return context.maxDistance < configs.distanceThreshold
-    }
-
     private struct RepeatedTapInfo {
         let count: Int
         let time: Date
@@ -68,12 +67,20 @@ class MultipleTouchPressDetector: ObservableObject {
     }
 
     private var pendingRepeatedTapInfo: RepeatedTapInfo?
+
+    private var isPress: Bool {
+        guard let context else { return false }
+        return context.maxDistance < configs.distanceThreshold
+    }
+
     private var tapCount: Int {
         guard isPress, let info = pendingRepeatedTapInfo, let location else { return 1 }
         guard Date.now.timeIntervalSince(info.time) < configs.repeatedTapIntervalThreshold else { return 1 }
         guard info.location.distance(to: location) < configs.repeatedTapDistanceThreshold else { return 1 }
         return info.count + 1
     }
+
+    // MARK: subscribe
 
     private func subscribeMultipleTouch() {
         multipleTouch.$startTime

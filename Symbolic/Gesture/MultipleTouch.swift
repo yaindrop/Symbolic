@@ -84,9 +84,9 @@ extension PinchInfo: CustomStringConvertible {
 class MultipleTouchContext: ObservableObject {
     @Published private(set) var startTime: Date?
 
-    @Published var touchesCount: Int = 0
-    @Published var panInfo: PanInfo?
-    @Published var pinchInfo: PinchInfo?
+    @Published fileprivate(set) var touchesCount: Int = 0
+    @Published fileprivate(set) var panInfo: PanInfo?
+    @Published fileprivate(set) var pinchInfo: PinchInfo?
 
     var active: Bool { startTime != nil }
 

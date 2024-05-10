@@ -27,9 +27,13 @@ class MultipleTouchPressDetector: ObservableObject {
 
         var longPressTimeout: DispatchWorkItem?
         var longPressStarted = false
+
+        mutating func onValue(_ panInfo: PanInfo) {
+            maxDistance = max(maxDistance, panInfo.offset.length)
+        }
     }
 
-    var pressLocation: Point2? { isPress ? multipleTouch.panInfo?.current : nil }
+    var location: Point2? { multipleTouch.panInfo?.current }
 
     let tapSubject = PassthroughSubject<TapInfo, Never>()
     let longPressSubject = PassthroughSubject<LongPressInfo, Never>()
@@ -65,9 +69,8 @@ class MultipleTouchPressDetector: ObservableObject {
 
     private var pendingRepeatedTapInfo: RepeatedTapInfo?
     private var canEndAsRepeatedTap: Bool {
-        guard let info = pendingRepeatedTapInfo,
-              let currLocation = pressLocation else { return false }
-        return Date().timeIntervalSince(info.time) < configs.repeatedTapIntervalThreshold && info.location.distance(to: currLocation) < configs.repeatedTapDistanceThreshold
+        guard isPress, let info = pendingRepeatedTapInfo, let location else { return false }
+        return Date().timeIntervalSince(info.time) < configs.repeatedTapIntervalThreshold && info.location.distance(to: location) < configs.repeatedTapDistanceThreshold
     }
 
     private func subscribeMultipleTouch() {
@@ -83,7 +86,8 @@ class MultipleTouchPressDetector: ObservableObject {
             .store(in: &subscriptions)
         multipleTouch.$panInfo
             .sink { info in
-                if info != nil {
+                if let info {
+                    self.context?.onValue(info)
                     self.onPressChanged()
                 }
             }
@@ -114,8 +118,9 @@ class MultipleTouchPressDetector: ObservableObject {
     }
 
     private func onPressEnded() {
+        print("end")
         guard let context else { return }
-        guard let location = pressLocation else { return }
+        guard let location else { return }
         if isPress {
             if context.longPressStarted {
                 longPressSubject.send(.init(location: location, isEnd: true))
@@ -134,6 +139,7 @@ class MultipleTouchPressDetector: ObservableObject {
     }
 
     private func onPressCanceled() {
+        print("cancel")
         guard let context else { return }
         context.longPressTimeout?.cancel()
         self.context = nil
@@ -144,7 +150,7 @@ class MultipleTouchPressDetector: ObservableObject {
     private func setupLongPress() {
         guard context != nil else { return }
         let longPressTimeout = DispatchWorkItem {
-            guard let location = self.pressLocation else { return }
+            guard let location = self.location else { return }
             self.longPressSubject.send(.init(location: location, isEnd: false))
             self.context?.longPressStarted = true
         }
@@ -156,7 +162,7 @@ class MultipleTouchPressDetector: ObservableObject {
         guard let context else { return }
         if context.longPressStarted {
             self.context?.longPressStarted = false
-            guard let location = pressLocation else { return }
+            guard let location else { return }
             longPressSubject.send(.init(location: location, isEnd: true))
         }
         self.context?.longPressTimeout?.cancel()

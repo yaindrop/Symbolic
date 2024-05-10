@@ -127,6 +127,7 @@ struct CanvasView: View {
                     }
                 }
                 pressDetector.onLongPress { info in
+                    viewportUpdater.blocked = !info.isEnd
                     let worldLocation = info.location.applying(viewport.toWorld)
                     print("onLongPress \(info) worldLocation \(worldLocation)")
                 }

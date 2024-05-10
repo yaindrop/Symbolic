@@ -36,18 +36,19 @@ class Viewport: ObservableObject {
 
 class ViewportUpdater: ObservableObject {
     @Published var previousInfo: ViewportInfo = .init()
+    @Published var blocked: Bool = false
 
     init(viewport: Viewport, touchContext: MultipleTouchContext) {
         self.viewport = viewport
         touchContext.$panInfo
             .sink { value in
-                guard let info = value else { self.onCommit(); return }
+                guard !self.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
             .store(in: &subscriptions)
         touchContext.$pinchInfo
             .sink { value in
-                guard let info = value else { self.onCommit(); return }
+                guard !self.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)
             }
             .store(in: &subscriptions)

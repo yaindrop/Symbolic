@@ -31,7 +31,7 @@ struct DebugPanel: View {
                 .modifier(panelModel.moveGesture(panelId: panelId))
             Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
-            Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
+            Row(name: "Press", value: pressDetector.location?.shortDescription ?? "nil")
             Divider()
             Row(name: "Viewport", value: viewport.info.description)
         }

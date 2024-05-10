@@ -26,6 +26,10 @@ struct CanvasView: View {
     @StateObject var activePathModel: ActivePathModel
     @StateObject var pathUpdater: PathUpdater
 
+    @StateObject var pendingSelection: PendingSelection
+
+    @StateObject var panelModel = PanelModel()
+
     init() {
         let touchContext = MultipleTouchContext()
 
@@ -37,6 +41,8 @@ struct CanvasView: View {
         let activePathModel = ActivePathModel(pathStore: pathStore)
         let pathUpdater = PathUpdater(pathStore: pathStore, activePathModel: activePathModel, viewport: viewport)
 
+        let pendingSelection = PendingSelection(touchContext: touchContext)
+
         pathUpdater.onPendingEvent { e in
             pathStore.pendingEvent = e
         }
@@ -47,13 +53,14 @@ struct CanvasView: View {
         }
 
         _touchContext = StateObject(wrappedValue: touchContext)
-        _pressDetector = StateObject(wrappedValue: MultipleTouchPressDetector(multipleTouch: touchContext))
+        _pressDetector = StateObject(wrappedValue: .init(multipleTouch: touchContext, configs: .init(durationThreshold: 0.2)))
         _viewport = StateObject(wrappedValue: viewport)
-        _viewportUpdater = StateObject(wrappedValue: ViewportUpdater(viewport: viewport, touchContext: touchContext))
+        _viewportUpdater = StateObject(wrappedValue: .init(viewport: viewport, touchContext: touchContext))
         _documentModel = StateObject(wrappedValue: documentModel)
         _pathStore = StateObject(wrappedValue: pathStore)
         _activePathModel = StateObject(wrappedValue: activePathModel)
         _pathUpdater = StateObject(wrappedValue: pathUpdater)
+        _pendingSelection = StateObject(wrappedValue: pendingSelection)
     }
 
 //    var stuff: some View {
@@ -128,6 +135,13 @@ struct CanvasView: View {
                 }
                 pressDetector.onLongPress { info in
                     viewportUpdater.blocked = !info.isEnd
+                    if info.isEnd {
+                        pendingSelection.onEnd()
+                    } else {
+                        if !pendingSelection.active {
+                            pendingSelection.onStart(from: info.location)
+                        }
+                    }
                     let worldLocation = info.location.applying(viewport.toWorld)
                     print("onLongPress \(info) worldLocation \(worldLocation)")
                 }
@@ -143,11 +157,13 @@ struct CanvasView: View {
         ZStack {
             activePaths
             ActivePathHandles()
+            PendingSelectionView()
+                .environmentObject(pendingSelection)
+            PanelRoot()
+                .environmentObject(panelModel)
         }
         .allowsHitTesting(!touchContext.active)
     }
-
-    @StateObject var panelModel = PanelModel()
 
     var body: some View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
@@ -159,10 +175,6 @@ struct CanvasView: View {
                 inactivePaths
                 foreground
                 overlay
-            }
-            .overlay {
-                PanelRoot()
-                    .environmentObject(panelModel)
             }
             .navigationTitle("Canvas")
             .toolbar(.hidden, for: .navigationBar)

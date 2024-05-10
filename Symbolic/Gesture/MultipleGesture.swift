@@ -79,9 +79,9 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
     @State private var context: Context?
     @GestureState private var active: Bool = false
 
-    private var isDrag: Bool {
+    private var isPress: Bool {
         guard let context else { return false }
-        return context.maxDistance > configs.distanceThreshold
+        return context.maxDistance < configs.distanceThreshold
     }
 
     private var gesture: some Gesture {
@@ -111,7 +111,7 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
 
     private func onPressChanged() {
         guard let context else { return }
-        if isDrag {
+        if !isPress {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
                 resetLongPress()
             }
@@ -122,24 +122,23 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
     private func onPressEnded() {
         guard let context else { return }
         let value = context.lastValue, origin = context.origin
-        if isDrag {
-            onDragEnd?(value, origin)
-            if configs.holdLongPressOnDrag {
-                resetLongPress()
-            }
-        } else {
+        if isPress {
             if context.longPressStarted {
                 onLongPressEnd?(value, origin)
             } else {
                 onTap?(value, origin)
             }
+        } else {
+            onDragEnd?(value, origin)
+            if configs.holdLongPressOnDrag {
+                resetLongPress()
+            }
         }
     }
 
     private func onPressCancelled() {
-        guard let context else { return }
-        context.longPressTimeout?.cancel()
-        self.context = nil
+        resetLongPress()
+        context = nil
     }
 
     // MARK: long press
@@ -156,11 +155,13 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
 
     private func resetLongPress() {
         guard let context else { return }
+        if let timeout = context.longPressTimeout {
+            self.context?.longPressTimeout = nil
+            timeout.cancel()
+        }
         if context.longPressStarted {
             self.context?.longPressStarted = false
             onLongPressEnd?(context.lastValue, context.origin)
         }
-        self.context?.longPressTimeout?.cancel()
-        self.context?.longPressTimeout = nil
     }
 }

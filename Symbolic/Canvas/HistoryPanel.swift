@@ -24,7 +24,7 @@ struct HistoryPanel: View {
     // MARK: private
 
     @EnvironmentObject private var documentModel: DocumentModel
-    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()

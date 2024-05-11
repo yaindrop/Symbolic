@@ -30,13 +30,13 @@ extension ActivePathPanel {
             }
         }
 
-        @EnvironmentObject private var viewport: Viewport
-        @EnvironmentObject private var pathStore: PathStore
+        @EnvironmentObject private var viewport: ViewportModel
+        @EnvironmentObject private var pathModel: PathModel
         @EnvironmentObject private var activePathModel: ActivePathModel
-        var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+        var activePath: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
 
         @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-        var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+        var updater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
         @State private var expanded = false
 
@@ -157,13 +157,13 @@ fileprivate struct BezierPanel: View {
         .cornerRadius(12)
     }
 
-    @EnvironmentObject private var viewport: Viewport
-    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var viewport: ViewportModel
+    @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+    var activePath: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var updater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
         { updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
@@ -215,13 +215,13 @@ fileprivate struct ArcPanel: View {
         .cornerRadius(12)
     }
 
-    @EnvironmentObject private var viewport: Viewport
-    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var viewport: ViewportModel
+    @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+    var activePath: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var updater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
         { updater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }

@@ -23,7 +23,7 @@ extension ActivePathPanel {
 
         // MARK: private
 
-        @EnvironmentObject private var pathStore: PathStore
+        @EnvironmentObject private var pathModel: PathModel
         @EnvironmentObject private var activePathModel: ActivePathModel
     }
 

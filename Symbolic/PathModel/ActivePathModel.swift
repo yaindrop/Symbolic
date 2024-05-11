@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+// MARK: - ActivePathFocusedPart
+
 enum ActivePathFocusedPart: Equatable {
     case node(UUID)
     case edge(UUID)
@@ -20,8 +22,10 @@ class ActivePathModel: ObservableObject {
     @Published fileprivate(set) var focusedPart: ActivePathFocusedPart?
 }
 
+// MARK: - ActivePathInteractor
+
 struct ActivePathInteractor {
-    let pathStore: PathStore
+    let pathModel: PathModel
     let activePathModel: ActivePathModel
 
     var activePathId: UUID? { activePathModel.activePathId }
@@ -46,11 +50,11 @@ struct ActivePathInteractor {
     func clearFocus() { withAnimation { activePathModel.focusedPart = nil } }
 
     var activePath: Path? {
-        pathStore.paths.first { $0.id == activePathId }
+        pathModel.paths.first { $0.id == activePathId }
     }
 
     var pendingActivePath: Path? {
-        pathStore.pendingPaths?.first { $0.id == activePathId } ?? activePath
+        pathModel.pendingPaths?.first { $0.id == activePathId } ?? activePath
     }
 
     func onActivePathChanged() {
@@ -67,7 +71,7 @@ struct ActivePathInteractor {
     }
 
     @ViewBuilder var inactivePathsView: some View {
-        ForEach(pathStore.paths.filter { $0.id != activePathId }) { p in
+        ForEach(pathModel.paths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }

@@ -1,6 +1,8 @@
 import Combine
 import Foundation
 
+// MARK: - ViewportInfo
+
 struct ViewportInfo {
     let origin: Point2 // world position of the view origin (top left corner)
     let scale: Scalar
@@ -25,14 +27,16 @@ extension ViewportInfo: CustomStringConvertible {
     public var description: String { return "(\(origin.shortDescription), \(scale.shortDescription))" }
 }
 
-class Viewport: ObservableObject {
+// MARK: - ViewportModel
+
+class ViewportModel: ObservableObject {
     @Published fileprivate(set) var info: ViewportInfo = .init()
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
 }
 
-class ViewportUpdate: ObservableObject {
+class ViewportUpdateModel: ObservableObject {
     @Published var blocked: Bool = false
     @Published fileprivate(set) var previousInfo: ViewportInfo = .init()
 
@@ -42,17 +46,17 @@ class ViewportUpdate: ObservableObject {
 // MARK: - ViewportInteractor
 
 struct ViewportInteractor {
-    let viewport: Viewport
-    let viewportUpdate: ViewportUpdate
+    let viewport: ViewportModel
+    let viewportUpdate: ViewportUpdateModel
 
-    func subscribe(to touchContext: MultipleTouchContext) {
-        touchContext.$panInfo
+    func subscribe(to multipleTouch: MultipleTouchModel) {
+        multipleTouch.$panInfo
             .sink { value in
                 guard !self.viewportUpdate.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
             .store(in: &viewportUpdate.subscriptions)
-        touchContext.$pinchInfo
+        multipleTouch.$pinchInfo
             .sink { value in
                 guard !self.viewportUpdate.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)

@@ -2,9 +2,9 @@ import Combine
 import Foundation
 import SwiftUI
 
-// MARK: - PathStore
+// MARK: - PathModel
 
-class PathStore: ObservableObject {
+class PathModel: ObservableObject {
     @Published private(set) var pathIds: [UUID] = []
     @Published private(set) var pathIdToPath: [UUID: Path] = [:]
 
@@ -102,9 +102,9 @@ class PathStore: ObservableObject {
     }
 }
 
-// MARK: - PathStore load events
+// MARK: - PathModel load events
 
-extension PathStore {
+extension PathModel {
     func loadDocument(_ document: Document) {
         for event in document.events {
             loadEvent(event)
@@ -192,7 +192,7 @@ extension PathStore {
     }
 }
 
-extension PathStore {
+extension PathModel {
     func hitTest(worldPosition: Point2) -> Path? {
         paths.first { p in p.hitPath.contains(worldPosition) }
     }

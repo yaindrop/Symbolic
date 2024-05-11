@@ -14,15 +14,15 @@ struct BlurView: UIViewRepresentable {
 }
 
 struct CanvasView: View {
-    @StateObject var touchContext = MultipleTouchContext()
-    @StateObject var pressModel = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+    @StateObject var multipleTouch = MultipleTouchModel()
+    @StateObject var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @StateObject var viewport = Viewport()
-    @StateObject var viewportUpdate = ViewportUpdate()
+    @StateObject var viewport = ViewportModel()
+    @StateObject var viewportUpdate = ViewportUpdateModel()
 
     @StateObject var documentModel = DocumentModel()
 
-    @StateObject var pathStore = PathStore()
+    @StateObject var pathModel = PathModel()
     @StateObject var activePathModel = ActivePathModel()
 
     @StateObject var pathUpdateModel = PathUpdateModel()
@@ -33,10 +33,10 @@ struct CanvasView: View {
 
     @StateObject var canvasActionModel = CanvasActionModel()
 
-    var pressDetector: MultipleTouchPressDetector { .init(touchContext: touchContext, pressModel: pressModel) }
+    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
     var viewportInteractor: ViewportInteractor { .init(viewport: viewport, viewportUpdate: viewportUpdate) }
-    var activePathInteractor: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
-    var pathUpdater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var activePathInteractor: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
+    var pathUpdater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
     var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
 
 //    var stuff: some View {
@@ -102,7 +102,7 @@ struct CanvasView: View {
 
     var foreground: some View {
         Color.white.opacity(0.1)
-            .modifier(MultipleTouchModifier(context: touchContext))
+            .modifier(MultipleTouchModifier(model: multipleTouch))
     }
 
     var activePaths: some View {
@@ -120,7 +120,7 @@ struct CanvasView: View {
                 .environmentObject(panelModel)
             HoldActionPopover(position: longPressPosition)
         }
-        .allowsHitTesting(!touchContext.active)
+        .allowsHitTesting(!multipleTouch.active)
     }
 
     var body: some View {
@@ -182,27 +182,27 @@ struct CanvasView: View {
         }
         .onChange(of: documentModel.activeDocument) {
             withAnimation {
-                pathStore.pendingEvent = nil
-                pathStore.clear()
-                pathStore.loadDocument(documentModel.activeDocument)
+                pathModel.pendingEvent = nil
+                pathModel.clear()
+                pathModel.loadDocument(documentModel.activeDocument)
             }
         }
         .onChange(of: activePathInteractor.activePath) {
             activePathInteractor.onActivePathChanged()
         }
         .onAppear {
-            viewportInteractor.subscribe(to: touchContext)
+            viewportInteractor.subscribe(to: multipleTouch)
             pressDetector.subscribe()
-            selectionUpdater.subscribe(to: touchContext)
+            selectionUpdater.subscribe(to: multipleTouch)
 
-            pressModel.onTap { info in
+            multipleTouchPress.onTap { info in
                 let worldLocation = info.location.applying(viewport.toWorld)
                 print("onTap \(info) worldLocation \(worldLocation)")
                 withAnimation {
-                    activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
+                    activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
                 }
             }
-            pressModel.onLongPress { info in
+            multipleTouchPress.onLongPress { info in
                 viewportUpdate.blocked = !info.isEnd
                 if info.isEnd {
 //                        longPressPosition = nil
@@ -220,7 +220,7 @@ struct CanvasView: View {
             }
 
             pathUpdateModel.onPendingEvent { e in
-                pathStore.pendingEvent = e
+                pathModel.pendingEvent = e
             }
             pathUpdateModel.onEvent { e in
                 withAnimation {
@@ -232,7 +232,7 @@ struct CanvasView: View {
 
             panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
             panelModel.register(align: .bottomLeading) { HistoryPanel() }
-            panelModel.register(align: .topTrailing) { DebugPanel().environmentObject(touchContext).environmentObject(pressModel) }
+            panelModel.register(align: .topTrailing) { DebugPanel().environmentObject(multipleTouch).environmentObject(multipleTouchPress) }
             panelModel.register(align: .topLeading) {
                 Text("hello?")
                     .padding()
@@ -240,7 +240,7 @@ struct CanvasView: View {
         }
         .environmentObject(viewport)
         .environmentObject(documentModel)
-        .environmentObject(pathStore)
+        .environmentObject(pathModel)
         .environmentObject(activePathModel)
         .environmentObject(pathUpdateModel)
     }

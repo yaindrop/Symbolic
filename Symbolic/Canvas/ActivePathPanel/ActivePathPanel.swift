@@ -12,13 +12,13 @@ struct ActivePathPanel: View {
 
     // MARK: private
 
-    @EnvironmentObject private var viewport: Viewport
-    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var viewport: ViewportModel
+    @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+    var activePath: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var updater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 

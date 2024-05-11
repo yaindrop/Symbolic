@@ -31,8 +31,8 @@ struct SelectionUpdater {
         pendingSelectionModel.to = .zero
     }
 
-    func subscribe(to touchContext: MultipleTouchContext) {
-        touchContext.$panInfo
+    func subscribe(to multipleTouch: MultipleTouchModel) {
+        multipleTouch.$panInfo
             .sink { value in
                 guard self.pendingSelectionModel.active, let info = value else { return }
                 self.pendingSelectionModel.to = info.current

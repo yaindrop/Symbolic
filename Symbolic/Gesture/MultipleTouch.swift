@@ -1,26 +1,6 @@
 import SwiftUI
 import UIKit
 
-// MARK: - MultipleTouchModifier
-
-struct MultipleTouchModifier: ViewModifier {
-    @ObservedObject var context: MultipleTouchContext
-
-    func body(content: Content) -> some View {
-        content.overlay { Representable(context: context) }
-    }
-
-    // MARK: private
-
-    private struct Representable: UIViewRepresentable {
-        @ObservedObject var context: MultipleTouchContext
-
-        func makeUIView(context: Context) -> UIView { MultipleTouchView(context: self.context) }
-
-        func updateUIView(_ uiView: UIView, context: Context) {}
-    }
-}
-
 // MARK: - PanInfo
 
 struct PanInfo {
@@ -79,9 +59,9 @@ extension PinchInfo: CustomStringConvertible {
     }
 }
 
-// MARK: - MultipleTouchContext
+// MARK: - MultipleTouchModel
 
-class MultipleTouchContext: ObservableObject {
+class MultipleTouchModel: ObservableObject {
     @Published private(set) var startTime: Date?
 
     @Published fileprivate(set) var touchesCount: Int = 0
@@ -108,7 +88,7 @@ class MultipleTouchView: TouchDebugView {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
         if activeTouches.isEmpty {
-            context.onFirstTouchBegan()
+            model.onFirstTouchBegan()
         }
         for touch in touches {
             // only allow 2 touches at most for now
@@ -124,7 +104,7 @@ class MultipleTouchView: TouchDebugView {
         super.touchesEnded(touches, with: event)
         activeTouches.subtract(touches)
         if activeTouches.isEmpty {
-            context.onAllTouchesEnded()
+            model.onAllTouchesEnded()
         } else {
             onActiveTouchesChanged()
         }
@@ -134,7 +114,7 @@ class MultipleTouchView: TouchDebugView {
         super.touchesCancelled(touches, with: event)
         activeTouches.subtract(touches)
         if activeTouches.isEmpty {
-            context.onAllTouchesEnded()
+            model.onAllTouchesEnded()
         } else {
             onActiveTouchesChanged()
         }
@@ -145,14 +125,14 @@ class MultipleTouchView: TouchDebugView {
         onActiveTouchesMoved()
     }
 
-    init(context: MultipleTouchContext, frame: CGRect) {
-        self.context = context
+    init(model: MultipleTouchModel, frame: CGRect) {
+        self.model = model
         super.init(frame: frame)
         isMultipleTouchEnabled = true
     }
 
-    convenience init(context: MultipleTouchContext) {
-        self.init(context: context, frame: CGRect.zero)
+    convenience init(model: MultipleTouchModel) {
+        self.init(model: model, frame: CGRect.zero)
     }
 
     required init(coder aDecoder: NSCoder) {
@@ -161,7 +141,7 @@ class MultipleTouchView: TouchDebugView {
 
     // MARK: private
 
-    private var context: MultipleTouchContext
+    private var model: MultipleTouchModel
 
     private var activeTouches = Set<UITouch>()
     private var panTouch: UITouch? { activeTouches.count == 1 ? activeTouches.first : nil }
@@ -176,24 +156,44 @@ class MultipleTouchView: TouchDebugView {
     private func location(of touch: UITouch) -> Point2 { touch.location(in: self) }
 
     private func onActiveTouchesChanged() {
-        context.touchesCount = activeTouches.count
-        context.panInfo = nil
-        context.pinchInfo = nil
+        model.touchesCount = activeTouches.count
+        model.panInfo = nil
+        model.pinchInfo = nil
         if let panTouch {
-            context.panInfo = PanInfo(origin: location(of: panTouch))
+            model.panInfo = PanInfo(origin: location(of: panTouch))
         } else if let pinchTouches {
-            context.pinchInfo = PinchInfo(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1)))
+            model.pinchInfo = PinchInfo(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1)))
         }
     }
 
     private func onActiveTouchesMoved() {
-        if let info = context.panInfo, let panTouch {
-            context.panInfo = .init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
-        } else if let info = context.pinchInfo, let pinchTouches {
-            context.pinchInfo = .init(
+        if let info = model.panInfo, let panTouch {
+            model.panInfo = .init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
+        } else if let info = model.pinchInfo, let pinchTouches {
+            model.pinchInfo = .init(
                 origin: info.origin,
                 offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1))
             )
         }
+    }
+}
+
+// MARK: - MultipleTouchModifier
+
+struct MultipleTouchModifier: ViewModifier {
+    @ObservedObject var model: MultipleTouchModel
+
+    func body(content: Content) -> some View {
+        content.overlay { Representable(model: model) }
+    }
+
+    // MARK: private
+
+    private struct Representable: UIViewRepresentable {
+        @ObservedObject var model: MultipleTouchModel
+
+        func makeUIView(context: Context) -> UIView { MultipleTouchView(model: model) }
+
+        func updateUIView(_ uiView: UIView, context: Context) {}
     }
 }

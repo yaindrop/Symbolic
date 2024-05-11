@@ -166,6 +166,7 @@
 		5700C2C22BEB5A6800481FA7 /* Panel */ = {
 			isa = PBXGroup;
 			children = (
+				572487882BDF83D90096DDE4 /* DataInput */,
 				5700C2CC2BED169D00481FA7 /* PanelData.swift */,
 				5700C2C92BED162000481FA7 /* PanelModel.swift */,
 				5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */,
@@ -297,14 +298,13 @@
 			children = (
 				572487812BDF82180096DDE4 /* ActivePathHandles */,
 				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
+				5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
-				572487882BDF83D90096DDE4 /* DataInput */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
+				5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */,
 				5700C2CE2BEDB6EB00481FA7 /* Selection.swift */,
 				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
-				5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */,
-				5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";

@@ -59,18 +59,18 @@ class MultipleTouchPressModel: ObservableObject {
     fileprivate var pendingRepeatedTapInfo: RepeatedTapInfo?
 }
 
-// MARK: - PressDetector
+// MARK: - MultipleTouchPressDetector
 
 struct MultipleTouchPressDetector {
-    let touchContext: MultipleTouchContext
-    let pressModel: MultipleTouchPressModel
+    let multipleTouch: MultipleTouchModel
+    let model: MultipleTouchPressModel
 
     var pressLocation: Point2? { isPress ? location : nil }
 
     // MARK: subscribe
 
     func subscribe() {
-        touchContext.$startTime
+        multipleTouch.$startTime
             .sink { time in
                 if time != nil {
                     self.onPressStarted()
@@ -79,34 +79,34 @@ struct MultipleTouchPressDetector {
                     self.onPressEnded()
                 }
             }
-            .store(in: &pressModel.subscriptions)
-        touchContext.$panInfo
+            .store(in: &model.subscriptions)
+        multipleTouch.$panInfo
             .sink { info in
                 if let info {
                     self.context?.onValue(info)
                     self.onPressChanged()
                 }
             }
-            .store(in: &pressModel.subscriptions)
-        touchContext.$touchesCount
+            .store(in: &model.subscriptions)
+        multipleTouch.$touchesCount
             .sink { count in
                 if count != 1 {
                     self.onPressCanceled()
                 }
             }
-            .store(in: &pressModel.subscriptions)
+            .store(in: &model.subscriptions)
     }
 
     // MARK: private
 
-    private var configs: MultipleTouchPressModel.Configs { pressModel.configs }
+    private var configs: MultipleTouchPressModel.Configs { model.configs }
 
     private var context: MultipleTouchPressModel.Context? {
-        get { pressModel.context }
-        nonmutating set { pressModel.context = newValue }
+        get { model.context }
+        nonmutating set { model.context = newValue }
     }
 
-    private var location: Point2? { touchContext.panInfo?.current }
+    private var location: Point2? { multipleTouch.panInfo?.current }
 
     private var isPress: Bool {
         guard let context else { return false }
@@ -114,7 +114,7 @@ struct MultipleTouchPressDetector {
     }
 
     private var tapCount: Int {
-        guard isPress, let info = pressModel.pendingRepeatedTapInfo, let location else { return 1 }
+        guard isPress, let info = model.pendingRepeatedTapInfo, let location else { return 1 }
         guard Date.now.timeIntervalSince(info.time) < configs.repeatedTapIntervalThreshold else { return 1 }
         guard info.location.distance(to: location) < configs.repeatedTapDistanceThreshold else { return 1 }
         return info.count + 1
@@ -140,14 +140,14 @@ struct MultipleTouchPressDetector {
         guard let context, let location else { return }
         if isPress {
             if context.longPressStarted {
-                pressModel.longPressSubject.send(.init(location: location, isEnd: true))
+                model.longPressSubject.send(.init(location: location, isEnd: true))
             } else {
                 let count = tapCount
-                pressModel.tapSubject.send(.init(location: location, count: count))
-                pressModel.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: location)
+                model.tapSubject.send(.init(location: location, count: count))
+                model.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: location)
             }
         } else {
-            pressModel.pendingRepeatedTapInfo = nil
+            model.pendingRepeatedTapInfo = nil
             if configs.holdLongPressOnDrag {
                 resetLongPress()
             }
@@ -165,7 +165,7 @@ struct MultipleTouchPressDetector {
         guard context != nil else { return }
         let longPressTimeout = DispatchWorkItem {
             guard let location = self.location else { return }
-            self.pressModel.longPressSubject.send(.init(location: location, isEnd: false))
+            self.model.longPressSubject.send(.init(location: location, isEnd: false))
             self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
@@ -181,7 +181,7 @@ struct MultipleTouchPressDetector {
         if context.longPressStarted {
             self.context?.longPressStarted = false
             guard let location else { return }
-            pressModel.longPressSubject.send(.init(location: location, isEnd: true))
+            model.longPressSubject.send(.init(location: location, isEnd: true))
         }
     }
 }

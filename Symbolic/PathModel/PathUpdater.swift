@@ -57,22 +57,22 @@ struct PathUpdater {
         handle(.pathAction(.setNodePosition(.init(pathId: activePath.id, nodeId: id, position: position))), pending: pending)
     }
 
+    func updateActivePath(node id: UUID, positionInView: Point2, pending: Bool = false) {
+        updateActivePath(node: id, position: positionInView.applying(viewport.toWorld), pending: pending)
+    }
+
     func updateActivePath(edge fromNodeId: UUID, bezier: PathEdge.Bezier, pending: Bool = false) {
         guard let activePath else { return }
         handle(.pathAction(.setEdgeBezier(.init(pathId: activePath.id, fromNodeId: fromNodeId, bezier: bezier))), pending: pending)
     }
 
+    func updateActivePath(edge fromNodeId: UUID, bezierInView: PathEdge.Bezier, pending: Bool = false) {
+        updateActivePath(edge: fromNodeId, bezier: bezierInView.applying(viewport.toWorld), pending: pending)
+    }
+
     func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {
         guard let activePath else { return }
         handle(.pathAction(.setEdgeArc(.init(pathId: activePath.id, fromNodeId: fromNodeId, arc: arc))), pending: pending)
-    }
-
-    func updateActivePath(node id: UUID, positionInView: Point2, pending: Bool = false) {
-        updateActivePath(node: id, position: positionInView.applying(viewport.toWorld), pending: pending)
-    }
-
-    func updateActivePath(edge fromNodeId: UUID, bezierInView: PathEdge.Bezier, pending: Bool = false) {
-        updateActivePath(edge: fromNodeId, bezier: bezierInView.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(edge fromNodeId: UUID, arcInView: PathEdge.Arc, pending: Bool = false) {
@@ -86,17 +86,26 @@ struct PathUpdater {
         handle(.pathAction(.moveNode(.init(pathId: activePath.id, nodeId: id, offset: offset))), pending: pending)
     }
 
+    func updateActivePath(moveNode id: UUID, offsetInView: Vector2, pending: Bool = false) {
+        updateActivePath(moveNode: id, offset: offsetInView.applying(viewport.toWorld), pending: pending)
+    }
+
     func updateActivePath(moveEdge fromId: UUID, offset: Vector2, pending: Bool = false) {
         guard let activePath else { return }
         handle(.pathAction(.moveEdge(.init(pathId: activePath.id, fromNodeId: fromId, offset: offset))), pending: pending)
     }
 
-    func updateActivePath(moveNode id: UUID, offsetInView: Vector2, pending: Bool = false) {
-        updateActivePath(moveNode: id, offset: offsetInView.applying(viewport.toWorld), pending: pending)
-    }
-
     func updateActivePath(moveEdge fromId: UUID, offsetInView: Vector2, pending: Bool = false) {
         updateActivePath(moveEdge: fromId, offset: offsetInView.applying(viewport.toWorld), pending: pending)
+    }
+
+    func updateActivePath(moveByOffset offset: Vector2, pending: Bool = false) {
+        guard let activePath else { return }
+        handle(.pathAction(.movePath(.init(pathId: activePath.id, offset: offset))), pending: pending)
+    }
+
+    func updateActivePath(moveByOffsetInView offsetInView: Vector2, pending: Bool = false) {
+        updateActivePath(moveByOffset: offsetInView.applying(viewport.toWorld), pending: pending)
     }
 
     init(_ viewport: ViewportModel, _ pathModel: PathModel, _ activePathModel: ActivePathModel, _ model: PathUpdateModel) {
@@ -160,6 +169,7 @@ struct PathUpdater {
         case .setEdgeLine: break
         case let .moveEdge(moveEdge): collectEvents(to: &events, moveEdge)
         case let .moveNode(moveNode): collectEvents(to: &events, moveNode)
+        case let .movePath(movePath): collectEvents(to: &events, movePath)
         }
     }
 
@@ -281,6 +291,17 @@ struct PathUpdater {
             events.append(.init(in: pathId, updateNode: next.node.with(offset: offset)))
             if case let .bezier(b) = next.edge {
                 events.append(.init(in: pathId, updateEdgeFrom: next.node.id, .bezier(b.with(offset0: offset))))
+            }
+        }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ movePath: PathAction.MovePath) {
+        let pathId = movePath.pathId, offset = movePath.offset
+        guard let path = pathModel.pathIdToPath[pathId] else { return }
+        for (node, edge) in path.pairs {
+            events.append(.init(in: pathId, updateNode: node.with(offset: offset)))
+            if case let .bezier(b) = edge {
+                events.append(.init(in: pathId, updateEdgeFrom: node.id, .bezier(b.with(offset: offset))))
             }
         }
     }

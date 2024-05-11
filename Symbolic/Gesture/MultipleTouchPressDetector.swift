@@ -9,6 +9,8 @@ struct TapInfo {
 // MARK: - MultipleTouchPressModel
 
 class MultipleTouchPressModel: ObservableObject {
+    // MARK: Configs
+
     struct Configs {
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
         var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater

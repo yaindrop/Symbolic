@@ -1,9 +1,9 @@
 import Foundation
 import SwiftUI
 
-// MARK: - ActivePathHandles
+// MARK: - ActivePathHandleRoot
 
-struct ActivePathHandles: View {
+struct ActivePathHandleRoot: View {
     var body: some View {
         if let activePath = activePath.pendingActivePath {
             ZStack {
@@ -16,6 +16,7 @@ struct ActivePathHandles: View {
                     guard let toId = activePath.node(after: n.id)?.id else { return nil }
                     return (fromId: n.id, toId: toId, segment: s.applying(viewport.toView))
                 }
+                ActivePathHandle()
                 ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in ActivePathEdgeHandle(fromId: fromId, segment: segment) }
                 ForEach(idAndNodePositionInView, id: \.id) { id, position in ActivePathNodeHandle(nodeId: id, position: position) }
                 ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in ActivePathFocusedEdgeHandle(fromId: fromId, segment: segment) }

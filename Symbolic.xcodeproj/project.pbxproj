@@ -44,8 +44,9 @@
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
-		575C3CFA2BD9F11E0035B758 /* ActivePathHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* ActivePathHandles.swift */; };
+		575C3CFA2BD9F11E0035B758 /* ActivePathHandleRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* ActivePathHandleRoot.swift */; };
 		575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CFB2BDA14590035B758 /* PathStore.swift */; };
+		576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */; };
 		57B5F1142BC62CFB001E1B2E /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* Math.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
@@ -120,8 +121,9 @@
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
-		575C3CF92BD9F11E0035B758 /* ActivePathHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathHandles.swift; sourceTree = "<group>"; };
+		575C3CF92BD9F11E0035B758 /* ActivePathHandleRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathHandleRoot.swift; sourceTree = "<group>"; };
 		575C3CFB2BDA14590035B758 /* PathStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathStore.swift; sourceTree = "<group>"; };
+		576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathHandle.swift; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Math.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -265,7 +267,8 @@
 			children = (
 				572487842BDF832D0096DDE4 /* ActivePathEdgeHandle.swift */,
 				572487862BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift */,
-				575C3CF92BD9F11E0035B758 /* ActivePathHandles.swift */,
+				576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */,
+				575C3CF92BD9F11E0035B758 /* ActivePathHandleRoot.swift */,
 				572487822BDF82420096DDE4 /* ActivePathNodeHandle.swift */,
 			);
 			path = ActivePathHandles;
@@ -503,7 +506,7 @@
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
-				575C3CFA2BD9F11E0035B758 /* ActivePathHandles.swift in Sources */,
+				575C3CFA2BD9F11E0035B758 /* ActivePathHandleRoot.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* HoldAction.swift in Sources */,
@@ -542,6 +545,7 @@
 				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* Selection.swift in Sources */,
+				576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */,
 				572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

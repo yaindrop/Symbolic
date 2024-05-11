@@ -75,10 +75,7 @@ class MultipleGestureModel<Data>: ObservableObject {
     fileprivate let dragEndSubject = PassthroughSubject<Void, Never>()
 
     private var makeValue: () -> (Value, Data)? {
-        {
-            guard let context = self.context else { return nil }
-            return (context.lastValue, context.data)
-        }
+        { if let context = self.context { (context.lastValue, context.data) } else { nil } }
     }
 }
 

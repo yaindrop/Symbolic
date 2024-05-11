@@ -201,7 +201,7 @@ struct CanvasView: View {
     @ViewBuilder private var overlay: some View {
         ZStack {
             activePaths
-            ActivePathHandles()
+            ActivePathHandleRoot()
             PendingSelectionView()
                 .environmentObject(pendingSelectionModel)
             PanelRoot()

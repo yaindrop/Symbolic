@@ -16,6 +16,7 @@ enum PathAction {
     struct SetEdgeBezier { let pathId: UUID, fromNodeId: UUID, bezier: PathEdge.Bezier }
     struct SetEdgeArc { let pathId: UUID, fromNodeId: UUID, arc: PathEdge.Arc }
 
+    struct MovePath { let pathId: UUID, offset: Vector2 }
     struct MoveNode { let pathId: UUID, nodeId: UUID, offset: Vector2 }
     struct MoveEdge { let pathId: UUID, fromNodeId: UUID, offset: Vector2 }
 
@@ -34,6 +35,7 @@ enum PathAction {
     case setEdgeBezier(SetEdgeBezier)
     case setEdgeArc(SetEdgeArc)
 
+    case movePath(MovePath)
     case moveNode(MoveNode)
     case moveEdge(MoveEdge)
 }

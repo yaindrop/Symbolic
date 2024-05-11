@@ -69,7 +69,6 @@ struct PanelData {
 
     var origin: Point2 = .zero
     var size: CGSize = .zero
-    var zIndex: Double
 
     var affinities: [PanelAffinity] = []
 

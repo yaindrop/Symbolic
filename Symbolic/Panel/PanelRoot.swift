@@ -12,7 +12,6 @@ struct PanelRoot: View {
                 panel.view
                     .readSize { model.idToPanel[panel.id]?.size = $0 }
                     .offset(x: panel.origin.x, y: panel.origin.y)
-                    .zIndex(panel.zIndex)
                     .environment(\.panelId, panel.id)
                     .atPlaneAlign(.topLeading)
                     .onChange(of: panel.size) {

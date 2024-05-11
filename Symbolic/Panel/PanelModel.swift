@@ -14,7 +14,7 @@ class PanelModel: ObservableObject {
 
 extension PanelModel {
     func register(align: PlaneAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
-        var panelData = PanelData(view: AnyView(panel()), zIndex: Double(idToPanel.count))
+        var panelData = PanelData(view: AnyView(panel()))
         panelData.affinities += Axis.allCases.map { axis in .root(.init(axis: axis, align: align.getAxisAlign(in: axis))) }
         idToPanel[panelData.id] = panelData
         panelIds.append(panelData.id)
@@ -24,14 +24,6 @@ extension PanelModel {
         idToPanel.removeValue(forKey: panelId)
         panelIds.removeAll { $0 == panelId }
     }
-
-    private func sort() {
-        panelIds.sort {
-            guard let data0 = idToPanel[$0] else { return true }
-            guard let data1 = idToPanel[$1] else { return false }
-            return data0.zIndex < data1.zIndex
-        }
-    }
 }
 
 extension PanelModel {
@@ -39,6 +31,10 @@ extension PanelModel {
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin
         idToPanel[panelId] = panel
+        if panelIds.last != panelId {
+            panelIds.removeAll { $0.id == panelId }
+            panelIds.append(panelId)
+        }
     }
 
     func onMoved(panelId: UUID, origin: Point2, inertia: Vector2) {

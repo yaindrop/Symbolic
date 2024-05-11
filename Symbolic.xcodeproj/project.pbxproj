@@ -13,6 +13,8 @@
 		5700C2CA2BED162000481FA7 /* PanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelModel.swift */; };
 		5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CC2BED169D00481FA7 /* PanelData.swift */; };
 		5700C2CF2BEDB6EB00481FA7 /* Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CE2BEDB6EB00481FA7 /* Selection.swift */; };
+		5700C2D12BEF0F0A00481FA7 /* HoldAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */; };
+		5700C2D32BEF1A1C00481FA7 /* ActionLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D22BEF1A1C00481FA7 /* ActionLabel.swift */; };
 		5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF792BC39844002209F2 /* SymbolicApp.swift */; };
 		5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7B2BC39844002209F2 /* ContentView.swift */; };
 		5723BF7E2BC39844002209F2 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7D2BC39844002209F2 /* Item.swift */; };
@@ -84,6 +86,8 @@
 		5700C2C92BED162000481FA7 /* PanelModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelModel.swift; sourceTree = "<group>"; };
 		5700C2CC2BED169D00481FA7 /* PanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelData.swift; sourceTree = "<group>"; };
 		5700C2CE2BEDB6EB00481FA7 /* Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selection.swift; sourceTree = "<group>"; };
+		5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldAction.swift; sourceTree = "<group>"; };
+		5700C2D22BEF1A1C00481FA7 /* ActionLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionLabel.swift; sourceTree = "<group>"; };
 		5723BF762BC39844002209F2 /* Symbolic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Symbolic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5723BF792BC39844002209F2 /* SymbolicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicApp.swift; sourceTree = "<group>"; };
 		5723BF7B2BC39844002209F2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -299,6 +303,8 @@
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
 				5700C2CE2BEDB6EB00481FA7 /* Selection.swift */,
 				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
+				5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */,
+				5700C2D22BEF1A1C00481FA7 /* ActionLabel.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -500,6 +506,7 @@
 				575C3CFA2BD9F11E0035B758 /* ActivePathHandles.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
+				5700C2D12BEF0F0A00481FA7 /* HoldAction.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* Math.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
@@ -530,6 +537,7 @@
 				57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */,
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
+				5700C2D32BEF1A1C00481FA7 /* ActionLabel.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
 				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,

@@ -122,6 +122,8 @@ struct CanvasView: View {
             .blur(radius: 1)
     }
 
+    @State var longPressPosition: Point2?
+
     var foreground: some View {
         Color.white.opacity(0.1)
             .modifier(MultipleTouchModifier(context: touchContext))
@@ -136,9 +138,11 @@ struct CanvasView: View {
                 pressDetector.onLongPress { info in
                     viewportUpdater.blocked = !info.isEnd
                     if info.isEnd {
+//                        longPressPosition = nil
                         pendingSelection.onEnd()
                     } else {
                         if !pendingSelection.active {
+                            longPressPosition = info.location
                             pendingSelection.onStart(from: info.location)
                         }
                     }
@@ -161,6 +165,7 @@ struct CanvasView: View {
                 .environmentObject(pendingSelection)
             PanelRoot()
                 .environmentObject(panelModel)
+            HoldActionPopover(position: longPressPosition)
         }
         .allowsHitTesting(!touchContext.active)
     }
@@ -200,7 +205,10 @@ struct CanvasView: View {
                     }
                 }
                 ToolbarItem(placement: .principal) {
-                    Text("Canvas").font(.headline)
+                    HStack {
+                        Button {} label: { Image(systemName: "rectangle.and.hand.point.up.left") }
+                        Button {} label: { Image(systemName: "plus.circle") }
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -234,7 +242,10 @@ struct CanvasView: View {
             panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
             panelModel.register(align: .bottomLeading) { HistoryPanel() }
             panelModel.register(align: .topTrailing) { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
-            panelModel.register(align: .topLeading) { Text("hello?").frame(width: 80, height: 40) }
+            panelModel.register(align: .topLeading) {
+                Text("hello?")
+                    .padding()
+            }
         }
         .environmentObject(viewport)
         .environmentObject(documentModel)

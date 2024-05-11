@@ -43,38 +43,43 @@ class ViewportUpdateModel: ObservableObject {
     fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
-// MARK: - ViewportInteractor
+// MARK: - ViewportUpdater
 
-struct ViewportInteractor {
-    let viewport: ViewportModel
-    let viewportUpdate: ViewportUpdateModel
-
+struct ViewportUpdater {
     func subscribe(to multipleTouch: MultipleTouchModel) {
         multipleTouch.$panInfo
             .sink { value in
-                guard !self.viewportUpdate.blocked, let info = value else { self.onCommit(); return }
+                guard !self.model.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
-            .store(in: &viewportUpdate.subscriptions)
+            .store(in: &model.subscriptions)
         multipleTouch.$pinchInfo
             .sink { value in
-                guard !self.viewportUpdate.blocked, let info = value else { self.onCommit(); return }
+                guard !self.model.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)
             }
-            .store(in: &viewportUpdate.subscriptions)
+            .store(in: &model.subscriptions)
+    }
+
+    init(_ viewport: ViewportModel, _ model: ViewportUpdateModel) {
+        self.viewport = viewport
+        self.model = model
     }
 
     // MARK: private
 
+    private let viewport: ViewportModel
+    private let model: ViewportUpdateModel
+
     private func onPanInfo(_ pan: PanInfo) {
-        let previousInfo = viewportUpdate.previousInfo
+        let previousInfo = model.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
         viewport.info = .init(origin: origin, scale: scale)
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
-        let previousInfo = viewportUpdate.previousInfo
+        let previousInfo = model.previousInfo
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
@@ -83,6 +88,6 @@ struct ViewportInteractor {
     }
 
     private func onCommit() {
-        viewportUpdate.previousInfo = viewport.info
+        model.previousInfo = viewport.info
     }
 }

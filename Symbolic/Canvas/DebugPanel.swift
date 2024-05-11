@@ -7,7 +7,7 @@ struct DebugPanel: View {
 
     @EnvironmentObject var multipleTouch: MultipleTouchModel
     @EnvironmentObject var multipleTouchPress: MultipleTouchPressModel
-    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress)}
+    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch, multipleTouchPress) }
 
     @EnvironmentObject var viewport: ViewportModel
     @EnvironmentObject var activePathModel: ActivePathModel

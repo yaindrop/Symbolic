@@ -33,11 +33,11 @@ struct CanvasView: View {
 
     @StateObject var canvasActionModel = CanvasActionModel()
 
-    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
-    var viewportInteractor: ViewportInteractor { .init(viewport: viewport, viewportUpdate: viewportUpdate) }
-    var activePathInteractor: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
-    var pathUpdater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
-    var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
+    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch, multipleTouchPress) }
+    var viewportUpdater: ViewportUpdater { .init(viewport, viewportUpdate) }
+    var activePathInteractor: ActivePathInteractor { .init(pathModel, activePathModel) }
+    var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
+    var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel) }
 
 //    var stuff: some View {
 //        RoundedRectangle(cornerRadius: 25)
@@ -191,7 +191,7 @@ struct CanvasView: View {
             activePathInteractor.onActivePathChanged()
         }
         .onAppear {
-            viewportInteractor.subscribe(to: multipleTouch)
+            viewportUpdater.subscribe(to: multipleTouch)
             pressDetector.subscribe()
             selectionUpdater.subscribe(to: multipleTouch)
 

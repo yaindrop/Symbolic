@@ -16,8 +16,6 @@ class PendingSelectionModel: ObservableObject {
 }
 
 struct SelectionUpdater {
-    let pendingSelectionModel: PendingSelectionModel
-
     var from: Point2? { pendingSelectionModel.from }
     var to: Point2 { pendingSelectionModel.to }
 
@@ -39,6 +37,12 @@ struct SelectionUpdater {
             }
             .store(in: &pendingSelectionModel.subscriptions)
     }
+
+    init(_ pendingSelectionModel: PendingSelectionModel) {
+        self.pendingSelectionModel = pendingSelectionModel
+    }
+
+    private let pendingSelectionModel: PendingSelectionModel
 }
 
 struct PendingSelectionView: View {

@@ -20,10 +20,10 @@ struct ActivePathEdgeHandle: View {
     @EnvironmentObject private var viewport: ViewportModel
     @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
+    var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
 
     private var focused: Bool { activePath.focusedEdgeId == fromId }
     private func toggleFocus() {
@@ -97,10 +97,10 @@ struct ActivePathFocusedEdgeHandle: View {
     @EnvironmentObject private var viewport: ViewportModel
     @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathModel: pathModel, activePathModel: activePathModel) }
+    var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport: viewport, pathModel: pathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
 
     private var focused: Bool { activePath.focusedEdgeId == fromId }
 

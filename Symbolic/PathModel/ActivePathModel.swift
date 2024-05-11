@@ -25,11 +25,8 @@ class ActivePathModel: ObservableObject {
 // MARK: - ActivePathInteractor
 
 struct ActivePathInteractor {
-    let pathModel: PathModel
-    let activePathModel: ActivePathModel
-
-    var activePathId: UUID? { activePathModel.activePathId }
-    var focusedPart: ActivePathFocusedPart? { activePathModel.focusedPart }
+    var activePathId: UUID? { model.activePathId }
+    var focusedPart: ActivePathFocusedPart? { model.focusedPart }
 
     var focusedEdgeId: UUID? {
         guard let focusedPart,
@@ -43,11 +40,11 @@ struct ActivePathInteractor {
         return id
     }
 
-    func setFocus(node id: UUID) { withAnimation { activePathModel.focusedPart = .node(id) } }
+    func setFocus(node id: UUID) { withAnimation { model.focusedPart = .node(id) } }
 
-    func setFocus(edge fromNodeId: UUID) { withAnimation { activePathModel.focusedPart = .edge(fromNodeId) } }
+    func setFocus(edge fromNodeId: UUID) { withAnimation { model.focusedPart = .edge(fromNodeId) } }
 
-    func clearFocus() { withAnimation { activePathModel.focusedPart = nil } }
+    func clearFocus() { withAnimation { model.focusedPart = nil } }
 
     var activePath: Path? {
         pathModel.paths.first { $0.id == activePathId }
@@ -59,7 +56,7 @@ struct ActivePathInteractor {
 
     func onActivePathChanged() {
         print("onActivePathChanged", activePath?.id)
-        if let part = activePathModel.focusedPart {
+        if let part = model.focusedPart {
             if let path = activePath {
                 if path.node(id: part.id) == nil {
                     clearFocus()
@@ -85,4 +82,12 @@ struct ActivePathInteractor {
                 .id(pendingActivePath.id)
         }
     }
+
+    init(_ pathModel: PathModel, _ model: ActivePathModel) {
+        self.pathModel = pathModel
+        self.model = model
+    }
+
+    private let pathModel: PathModel
+    private let model: ActivePathModel
 }

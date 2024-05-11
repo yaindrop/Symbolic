@@ -15,11 +15,6 @@ class PathUpdateModel: ObservableObject {
 // MARK: - PathUpdater
 
 struct PathUpdater {
-    let viewport: ViewportModel
-    let pathModel: PathModel
-    let activePathModel: ActivePathModel
-    let pathUpdateModel: PathUpdateModel
-
     func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
         guard let activePath else { return }
         let newNode = PathNode(id: newNodeId, position: position)
@@ -99,9 +94,21 @@ struct PathUpdater {
         updateActivePath(moveEdge: fromId, offset: offsetInView.applying(viewport.toWorld), pending: pending)
     }
 
+    init(_ viewport: ViewportModel, _ pathModel: PathModel, _ activePathModel: ActivePathModel, _ model: PathUpdateModel) {
+        self.viewport = viewport
+        self.pathModel = pathModel
+        self.activePathModel = activePathModel
+        self.model = model
+    }
+
     // MARK: private
 
-    private var activePath: Path? { ActivePathInteractor(pathModel: pathModel, activePathModel: activePathModel).activePath }
+    private let viewport: ViewportModel
+    private let pathModel: PathModel
+    private let activePathModel: ActivePathModel
+    private let model: PathUpdateModel
+
+    private var activePath: Path? { ActivePathInteractor(pathModel, activePathModel).activePath }
 
     // MARK: handle action
 
@@ -125,10 +132,10 @@ struct PathUpdater {
         }
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending || pathModel.pendingEvent != nil {
-            pathUpdateModel.pendingEventSubject.send(event)
+            model.pendingEventSubject.send(event)
         }
         if !pending {
-            pathUpdateModel.eventSubject.send(event)
+            model.eventSubject.send(event)
         }
     }
 

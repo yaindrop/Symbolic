@@ -19,10 +19,15 @@ extension ActivePathPanel {
             .cornerRadius(12)
         }
 
+        @EnvironmentObject private var viewport: Viewport
+        @EnvironmentObject private var pathStore: PathStore
         @EnvironmentObject private var activePathModel: ActivePathModel
-        @EnvironmentObject private var updater: PathUpdater
+        var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
 
-        private var focused: Bool { activePathModel.focusedPart == .node(node.id) }
+        @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+        var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+
+        private var focused: Bool { activePath.focusedPart == .node(node.id) }
 
         @ViewBuilder private var title: some View {
             Group {
@@ -51,7 +56,7 @@ extension ActivePathPanel {
         }
 
         private func toggleFocus() {
-            focused ? activePathModel.clearFocus() : activePathModel.setFocus(node: node.id)
+            focused ? activePath.clearFocus() : activePath.setFocus(node: node.id)
         }
 
         private func breakNode() {

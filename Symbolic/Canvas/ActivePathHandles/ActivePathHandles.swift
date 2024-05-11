@@ -5,7 +5,7 @@ import SwiftUI
 
 struct ActivePathHandles: View {
     var body: some View {
-        if let activePath = activePathModel.pendingActivePath {
+        if let activePath = activePath.pendingActivePath {
             ZStack {
                 let nodes = activePath.nodes
                 let idAndNodePositionInView = nodes.compactMap { n -> (id: UUID, position: Point2)? in
@@ -25,7 +25,7 @@ struct ActivePathHandles: View {
     }
 
     @EnvironmentObject private var viewport: Viewport
-    @EnvironmentObject private var documentModel: DocumentModel
     @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
 }

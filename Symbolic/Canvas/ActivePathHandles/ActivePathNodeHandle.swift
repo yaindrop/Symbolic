@@ -17,12 +17,17 @@ struct ActivePathNodeHandle: View {
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
 
-    private var focused: Bool { activePathModel.focusedNodeId == nodeId }
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+
+    private var focused: Bool { activePath.focusedNodeId == nodeId }
     private func toggleFocus() {
-        focused ? activePathModel.clearFocus() : activePathModel.setFocus(node: nodeId)
+        focused ? activePath.clearFocus() : activePath.setFocus(node: nodeId)
     }
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {

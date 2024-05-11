@@ -14,54 +14,30 @@ struct BlurView: UIViewRepresentable {
 }
 
 struct CanvasView: View {
-    @StateObject var touchContext: MultipleTouchContext
-    @StateObject var pressDetector: MultipleTouchPressDetector
+    @StateObject var touchContext = MultipleTouchContext()
+    @StateObject var pressModel = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @StateObject var viewport: Viewport
-    @StateObject var viewportUpdater: ViewportUpdater
+    @StateObject var viewport = Viewport()
+    @StateObject var viewportUpdate = ViewportUpdate()
 
-    @StateObject var documentModel: DocumentModel
+    @StateObject var documentModel = DocumentModel()
 
-    @StateObject var pathStore: PathStore
-    @StateObject var activePathModel: ActivePathModel
-    @StateObject var pathUpdater: PathUpdater
+    @StateObject var pathStore = PathStore()
+    @StateObject var activePathModel = ActivePathModel()
 
-    @StateObject var pendingSelection: PendingSelection
+    @StateObject var pathUpdateModel = PathUpdateModel()
+
+    @StateObject var pendingSelectionModel = PendingSelectionModel()
 
     @StateObject var panelModel = PanelModel()
 
-    init() {
-        let touchContext = MultipleTouchContext()
+    @StateObject var canvasActionModel = CanvasActionModel()
 
-        let viewport = Viewport()
-
-        let documentModel = DocumentModel()
-
-        let pathStore = PathStore()
-        let activePathModel = ActivePathModel(pathStore: pathStore)
-        let pathUpdater = PathUpdater(pathStore: pathStore, activePathModel: activePathModel, viewport: viewport)
-
-        let pendingSelection = PendingSelection(touchContext: touchContext)
-
-        pathUpdater.onPendingEvent { e in
-            pathStore.pendingEvent = e
-        }
-        pathUpdater.onEvent { e in
-            withAnimation {
-                documentModel.sendEvent(e)
-            }
-        }
-
-        _touchContext = StateObject(wrappedValue: touchContext)
-        _pressDetector = StateObject(wrappedValue: .init(multipleTouch: touchContext, configs: .init(durationThreshold: 0.2)))
-        _viewport = StateObject(wrappedValue: viewport)
-        _viewportUpdater = StateObject(wrappedValue: .init(viewport: viewport, touchContext: touchContext))
-        _documentModel = StateObject(wrappedValue: documentModel)
-        _pathStore = StateObject(wrappedValue: pathStore)
-        _activePathModel = StateObject(wrappedValue: activePathModel)
-        _pathUpdater = StateObject(wrappedValue: pathUpdater)
-        _pendingSelection = StateObject(wrappedValue: pendingSelection)
-    }
+    var pressDetector: MultipleTouchPressDetector { .init(touchContext: touchContext, pressModel: pressModel) }
+    var viewportInteractor: ViewportInteractor { .init(viewport: viewport, viewportUpdate: viewportUpdate) }
+    var activePathInteractor: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+    var pathUpdater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
 
 //    var stuff: some View {
 //        RoundedRectangle(cornerRadius: 25)
@@ -117,7 +93,7 @@ struct CanvasView: View {
     }
 
     var inactivePaths: some View {
-        activePathModel.inactivePathsView
+        activePathInteractor.inactivePathsView
             .transformEffect(viewport.toView)
             .blur(radius: 1)
     }
@@ -127,33 +103,10 @@ struct CanvasView: View {
     var foreground: some View {
         Color.white.opacity(0.1)
             .modifier(MultipleTouchModifier(context: touchContext))
-            .onAppear {
-                pressDetector.onTap { info in
-                    let worldLocation = info.location.applying(viewport.toWorld)
-                    print("onTap \(info) worldLocation \(worldLocation)")
-                    withAnimation {
-                        activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
-                    }
-                }
-                pressDetector.onLongPress { info in
-                    viewportUpdater.blocked = !info.isEnd
-                    if info.isEnd {
-//                        longPressPosition = nil
-                        pendingSelection.onEnd()
-                    } else {
-                        if !pendingSelection.active {
-                            longPressPosition = info.location
-                            pendingSelection.onStart(from: info.location)
-                        }
-                    }
-                    let worldLocation = info.location.applying(viewport.toWorld)
-                    print("onLongPress \(info) worldLocation \(worldLocation)")
-                }
-            }
     }
 
     var activePaths: some View {
-        activePathModel.activePathView
+        activePathInteractor.activePathView
             .transformEffect(viewport.toView)
     }
 
@@ -162,7 +115,7 @@ struct CanvasView: View {
             activePaths
             ActivePathHandles()
             PendingSelectionView()
-                .environmentObject(pendingSelection)
+                .environmentObject(pendingSelectionModel)
             PanelRoot()
                 .environmentObject(panelModel)
             HoldActionPopover(position: longPressPosition)
@@ -234,14 +187,52 @@ struct CanvasView: View {
                 pathStore.loadDocument(documentModel.activeDocument)
             }
         }
-        .onChange(of: activePathModel.activePath) {
-            activePathModel.onActivePathChanged()
+        .onChange(of: activePathInteractor.activePath) {
+            activePathInteractor.onActivePathChanged()
         }
         .onAppear {
+            viewportInteractor.subscribe(to: touchContext)
+            pressDetector.subscribe()
+            selectionUpdater.subscribe(to: touchContext)
+
+            pressModel.onTap { info in
+                let worldLocation = info.location.applying(viewport.toWorld)
+                print("onTap \(info) worldLocation \(worldLocation)")
+                withAnimation {
+                    activePathModel.activePathId = pathStore.hitTest(worldPosition: worldLocation)?.id
+                }
+            }
+            pressModel.onLongPress { info in
+                viewportUpdate.blocked = !info.isEnd
+                if info.isEnd {
+//                        longPressPosition = nil
+                    canvasActionModel.onEnd(triggering: .longPressViewport)
+                    selectionUpdater.onEnd()
+                } else {
+                    if !pendingSelectionModel.active {
+                        canvasActionModel.onStart(triggering: .longPressViewport)
+                        longPressPosition = info.location
+                        selectionUpdater.onStart(from: info.location)
+                    }
+                }
+                let worldLocation = info.location.applying(viewport.toWorld)
+                print("onLongPress \(info) worldLocation \(worldLocation)")
+            }
+
+            pathUpdateModel.onPendingEvent { e in
+                pathStore.pendingEvent = e
+            }
+            pathUpdateModel.onEvent { e in
+                withAnimation {
+                    documentModel.sendEvent(e)
+                }
+            }
+
             documentModel.activeDocument = Document(from: fooSvg)
+
             panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
             panelModel.register(align: .bottomLeading) { HistoryPanel() }
-            panelModel.register(align: .topTrailing) { DebugPanel(touchContext: touchContext, pressDetector: pressDetector, viewportUpdater: viewportUpdater) }
+            panelModel.register(align: .topTrailing) { DebugPanel().environmentObject(touchContext).environmentObject(pressModel) }
             panelModel.register(align: .topLeading) {
                 Text("hello?")
                     .padding()
@@ -251,7 +242,7 @@ struct CanvasView: View {
         .environmentObject(documentModel)
         .environmentObject(pathStore)
         .environmentObject(activePathModel)
-        .environmentObject(pathUpdater)
+        .environmentObject(pathUpdateModel)
     }
 }
 

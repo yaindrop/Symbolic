@@ -5,9 +5,9 @@ struct DebugPanel: View {
         panel.frame(width: 320)
     }
 
-    @ObservedObject var touchContext: MultipleTouchContext
-    @ObservedObject var pressDetector: MultipleTouchPressDetector
-    @ObservedObject var viewportUpdater: ViewportUpdater
+    @EnvironmentObject var touchContext: MultipleTouchContext
+    @EnvironmentObject var pressModel: MultipleTouchPressModel
+    var pressDetector: MultipleTouchPressDetector { .init(touchContext: touchContext, pressModel: pressModel) }
 
     @EnvironmentObject var viewport: Viewport
     @EnvironmentObject var activePathModel: ActivePathModel
@@ -31,7 +31,7 @@ struct DebugPanel: View {
                 .modifier(panelModel.moveGesture(panelId: panelId))
             Row(name: "Pan", value: touchContext.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: touchContext.pinchInfo?.description ?? "nil")
-            Row(name: "Press", value: pressDetector.location?.shortDescription ?? "nil")
+            Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
             Divider()
             Row(name: "Viewport", value: viewport.info.description)
         }

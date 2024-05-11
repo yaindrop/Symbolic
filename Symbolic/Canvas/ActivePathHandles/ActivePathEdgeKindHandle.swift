@@ -45,14 +45,19 @@ struct ActivePathBezierHandle: View {
     private static let circleSize: Scalar = 12
     private static let touchablePadding: Scalar = 12
 
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     private var bezier: PathEdge.Bezier { segment.bezier }
 
-    private var edgeFocused: Bool { activePathModel.focusedEdgeId == fromId }
-    private var nodeFocused: Bool { activePathModel.focusedNodeId == fromId }
-    private var nextFocused: Bool { activePathModel.focusedNodeId == toId }
+    private var edgeFocused: Bool { activePath.focusedEdgeId == fromId }
+    private var nodeFocused: Bool { activePath.focusedNodeId == fromId }
+    private var nextFocused: Bool { activePath.focusedNodeId == toId }
 
     private func subtractingCircle(at point: Point2) -> SUPath {
         SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
@@ -113,14 +118,19 @@ struct ActivePathArcHandle: View {
     private static let rectSize: CGSize = CGSize(16, 9)
     private static let touchablePadding: Scalar = 12
 
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     private var arc: PathEdge.Arc { segment.arc }
 
-    private var edgeFocused: Bool { activePathModel.focusedEdgeId == fromId.id }
-    private var nodeFocused: Bool { activePathModel.focusedNodeId == fromId.id }
-    private var nextFocused: Bool { activePathModel.focusedNodeId == toId }
+    private var edgeFocused: Bool { activePath.focusedEdgeId == fromId.id }
+    private var nodeFocused: Bool { activePath.focusedNodeId == fromId.id }
+    private var nextFocused: Bool { activePath.focusedNodeId == toId }
 
     private var radius: CGSize { arc.radius }
     private var endPointParams: PathSegment.Arc.EndpointParams { segment.params }

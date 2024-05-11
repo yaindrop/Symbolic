@@ -2,12 +2,24 @@ import Combine
 import Foundation
 import SwiftUI
 
+class PathUpdateModel: ObservableObject {
+    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) { eventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
+
+    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) { pendingEventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
+
+    fileprivate var subscriptions = Set<AnyCancellable>()
+
+    fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
+    fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
+}
+
 // MARK: - PathUpdater
 
-class PathUpdater: ObservableObject {
+struct PathUpdater {
+    let viewport: Viewport
     let pathStore: PathStore
     let activePathModel: ActivePathModel
-    let viewport: Viewport
+    let pathUpdateModel: PathUpdateModel
 
     func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
         guard let activePath else { return }
@@ -88,25 +100,9 @@ class PathUpdater: ObservableObject {
         updateActivePath(moveEdge: fromId, offset: offsetInView.applying(viewport.toWorld), pending: pending)
     }
 
-    // MARK: update handler
-
-    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) { eventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
-
-    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) { pendingEventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
-
-    init(pathStore: PathStore, activePathModel: ActivePathModel, viewport: Viewport) {
-        self.pathStore = pathStore
-        self.activePathModel = activePathModel
-        self.viewport = viewport
-    }
-
     // MARK: private
 
-    private var subscriptions = Set<AnyCancellable>()
-    private let eventSubject = PassthroughSubject<DocumentEvent, Never>()
-    private let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
-
-    private var activePath: Path? { activePathModel.activePath }
+    private var activePath: Path? { ActivePathInteractor(pathStore: pathStore, activePathModel: activePathModel).activePath }
 
     // MARK: handle action
 
@@ -130,10 +126,10 @@ class PathUpdater: ObservableObject {
         }
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending || pathStore.pendingEvent != nil {
-            pendingEventSubject.send(event)
+            pathUpdateModel.pendingEventSubject.send(event)
         }
         if !pending {
-            eventSubject.send(event)
+            pathUpdateModel.eventSubject.send(event)
         }
     }
 

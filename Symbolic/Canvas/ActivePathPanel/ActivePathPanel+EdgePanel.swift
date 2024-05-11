@@ -30,11 +30,17 @@ extension ActivePathPanel {
             }
         }
 
+        @EnvironmentObject private var viewport: Viewport
+        @EnvironmentObject private var pathStore: PathStore
         @EnvironmentObject private var activePathModel: ActivePathModel
-        @EnvironmentObject private var updater: PathUpdater
+        var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+
+        @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+        var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+
         @State private var expanded = false
 
-        private var focused: Bool { activePathModel.focusedPart == .edge(fromNodeId) }
+        private var focused: Bool { activePath.focusedPart == .edge(fromNodeId) }
 
         private var name: String {
             switch edge {
@@ -102,7 +108,7 @@ extension ActivePathPanel {
         }
 
         private func toggleFocus() {
-            focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromNodeId)
+            focused ? activePath.clearFocus() : activePath.setFocus(edge: fromNodeId)
         }
 
         private func changeEdge(to: PathEdge.Case) {
@@ -110,12 +116,12 @@ extension ActivePathPanel {
         }
 
         private func splitEdge() {
-            guard let segment = activePathModel.activePath?.segment(from: fromNodeId) else { return }
+            guard let segment = activePath.activePath?.segment(from: fromNodeId) else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let position = segment.position(paramT: paramT)
             let id = UUID()
             updater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
-            activePathModel.setFocus(node: id)
+            activePath.setFocus(node: id)
         }
 
         private func breakEdge() {
@@ -151,7 +157,13 @@ fileprivate struct BezierPanel: View {
         .cornerRadius(12)
     }
 
-    @EnvironmentObject private var updater: PathUpdater
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var activePathModel: ActivePathModel
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
         { updater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
@@ -203,7 +215,13 @@ fileprivate struct ArcPanel: View {
         .cornerRadius(12)
     }
 
-    @EnvironmentObject private var updater: PathUpdater
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
+    @EnvironmentObject private var activePathModel: ActivePathModel
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
+
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
         { updater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }

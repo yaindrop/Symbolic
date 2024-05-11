@@ -32,40 +32,45 @@ class Viewport: ObservableObject {
     var toView: CGAffineTransform { info.worldToView }
 }
 
-// MARK: - ViewportUpdater
-
-class ViewportUpdater: ObservableObject {
+class ViewportUpdate: ObservableObject {
     @Published var blocked: Bool = false
-    @Published private(set) var previousInfo: ViewportInfo = .init()
+    @Published fileprivate(set) var previousInfo: ViewportInfo = .init()
 
-    init(viewport: Viewport, touchContext: MultipleTouchContext) {
-        self.viewport = viewport
+    fileprivate var subscriptions = Set<AnyCancellable>()
+}
+
+// MARK: - ViewportInteractor
+
+struct ViewportInteractor {
+    let viewport: Viewport
+    let viewportUpdate: ViewportUpdate
+
+    func subscribe(to touchContext: MultipleTouchContext) {
         touchContext.$panInfo
             .sink { value in
-                guard !self.blocked, let info = value else { self.onCommit(); return }
+                guard !self.viewportUpdate.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
-            .store(in: &subscriptions)
+            .store(in: &viewportUpdate.subscriptions)
         touchContext.$pinchInfo
             .sink { value in
-                guard !self.blocked, let info = value else { self.onCommit(); return }
+                guard !self.viewportUpdate.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)
             }
-            .store(in: &subscriptions)
+            .store(in: &viewportUpdate.subscriptions)
     }
 
     // MARK: private
 
-    private let viewport: Viewport
-    private var subscriptions = Set<AnyCancellable>()
-
     private func onPanInfo(_ pan: PanInfo) {
+        let previousInfo = viewportUpdate.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
         viewport.info = .init(origin: origin, scale: scale)
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
+        let previousInfo = viewportUpdate.previousInfo
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
@@ -74,6 +79,6 @@ class ViewportUpdater: ObservableObject {
     }
 
     private func onCommit() {
-        previousInfo = viewport.info
+        viewportUpdate.previousInfo = viewport.info
     }
 }

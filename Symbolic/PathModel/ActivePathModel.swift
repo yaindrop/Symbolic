@@ -17,7 +17,15 @@ enum ActivePathFocusedPart: Equatable {
 
 class ActivePathModel: ObservableObject {
     @Published var activePathId: UUID?
-    @Published private(set) var focusedPart: ActivePathFocusedPart?
+    @Published fileprivate(set) var focusedPart: ActivePathFocusedPart?
+}
+
+struct ActivePathInteractor {
+    let pathStore: PathStore
+    let activePathModel: ActivePathModel
+
+    var activePathId: UUID? { activePathModel.activePathId }
+    var focusedPart: ActivePathFocusedPart? { activePathModel.focusedPart }
 
     var focusedEdgeId: UUID? {
         guard let focusedPart,
@@ -31,11 +39,11 @@ class ActivePathModel: ObservableObject {
         return id
     }
 
-    func setFocus(node id: UUID) { withAnimation { focusedPart = .node(id) } }
+    func setFocus(node id: UUID) { withAnimation { activePathModel.focusedPart = .node(id) } }
 
-    func setFocus(edge fromNodeId: UUID) { withAnimation { focusedPart = .edge(fromNodeId) } }
+    func setFocus(edge fromNodeId: UUID) { withAnimation { activePathModel.focusedPart = .edge(fromNodeId) } }
 
-    func clearFocus() { withAnimation { focusedPart = nil } }
+    func clearFocus() { withAnimation { activePathModel.focusedPart = nil } }
 
     var activePath: Path? {
         pathStore.paths.first { $0.id == activePathId }
@@ -47,13 +55,13 @@ class ActivePathModel: ObservableObject {
 
     func onActivePathChanged() {
         print("onActivePathChanged", activePath?.id)
-        if let part = focusedPart {
+        if let part = activePathModel.focusedPart {
             if let path = activePath {
                 if path.node(id: part.id) == nil {
-                    focusedPart = nil
+                    clearFocus()
                 }
             } else {
-                focusedPart = nil
+                clearFocus()
             }
         }
     }
@@ -73,10 +81,4 @@ class ActivePathModel: ObservableObject {
                 .id(pendingActivePath.id)
         }
     }
-
-    init(pathStore: PathStore) {
-        self.pathStore = pathStore
-    }
-
-    private var pathStore: PathStore
 }

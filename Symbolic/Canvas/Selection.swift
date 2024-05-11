@@ -2,9 +2,9 @@ import Combine
 import Foundation
 import SwiftUI
 
-class PendingSelection: ObservableObject {
-    @Published private(set) var from: Point2? = nil
-    @Published private(set) var to: Point2 = .zero
+class PendingSelectionModel: ObservableObject {
+    @Published fileprivate(set) var from: Point2? = nil
+    @Published fileprivate(set) var to: Point2 = .zero
 
     var active: Bool { from != nil }
     var rect: CGRect? {
@@ -12,35 +12,40 @@ class PendingSelection: ObservableObject {
         return .init(from: from, to: to)
     }
 
+    fileprivate var subscriptions = Set<AnyCancellable>()
+}
+
+struct SelectionUpdater {
+    let pendingSelectionModel: PendingSelectionModel
+
+    var from: Point2? { pendingSelectionModel.from }
+    var to: Point2 { pendingSelectionModel.to }
+
     func onStart(from: Point2) {
-        self.from = from
-        to = from
+        pendingSelectionModel.from = from
+        pendingSelectionModel.to = from
     }
 
     func onEnd() {
-        from = nil
-        to = .zero
+        pendingSelectionModel.from = nil
+        pendingSelectionModel.to = .zero
     }
 
-    init(touchContext: MultipleTouchContext) {
+    func subscribe(to touchContext: MultipleTouchContext) {
         touchContext.$panInfo
             .sink { value in
-                guard self.active, let info = value else { return }
-                self.to = info.current
+                guard self.pendingSelectionModel.active, let info = value else { return }
+                self.pendingSelectionModel.to = info.current
             }
-            .store(in: &subscriptions)
+            .store(in: &pendingSelectionModel.subscriptions)
     }
-
-    // MARK: private
-
-    private var subscriptions = Set<AnyCancellable>()
 }
 
 struct PendingSelectionView: View {
-    @EnvironmentObject var pendingSelection: PendingSelection
+    @EnvironmentObject var pendingSelectionModel: PendingSelectionModel
 
     var body: some View {
-        if let rect = pendingSelection.rect {
+        if let rect = pendingSelectionModel.rect {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.gray.opacity(0.2))
                 .stroke(.gray.opacity(0.5))

@@ -17,12 +17,17 @@ struct ActivePathEdgeHandle: View {
     @State private var longPressParamT: Scalar?
     @State private var longPressSplitNodeId: UUID?
 
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
 
-    private var focused: Bool { activePathModel.focusedEdgeId == fromId }
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+
+    private var focused: Bool { activePath.focusedEdgeId == fromId }
     private func toggleFocus() {
-        focused ? activePathModel.clearFocus() : activePathModel.setFocus(edge: fromId)
+        focused ? activePath.clearFocus() : activePath.setFocus(edge: fromId)
     }
 
     @ViewBuilder private var outline: some View {
@@ -49,7 +54,7 @@ struct ActivePathEdgeHandle: View {
                 let id = UUID()
                 longPressSplitNodeId = id
                 split(at: s.position(paramT: t), pending: true)
-                activePathModel.setFocus(node: id)
+                activePath.setFocus(node: id)
             },
             onLongPressEnd: { _, s in
                 guard let longPressParamT else { return }
@@ -89,10 +94,15 @@ struct ActivePathFocusedEdgeHandle: View {
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
+    @EnvironmentObject private var viewport: Viewport
+    @EnvironmentObject private var pathStore: PathStore
     @EnvironmentObject private var activePathModel: ActivePathModel
-    @EnvironmentObject private var updater: PathUpdater
+    var activePath: ActivePathInteractor { .init(pathStore: pathStore, activePathModel: activePathModel) }
 
-    private var focused: Bool { activePathModel.focusedEdgeId == fromId }
+    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
+    var updater: PathUpdater { .init(viewport: viewport, pathStore: pathStore, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+
+    private var focused: Bool { activePath.focusedEdgeId == fromId }
 
     private var circlePosition: Point2? {
         let tessellated = segment.tessellated()

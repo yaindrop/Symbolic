@@ -4,7 +4,9 @@ import Foundation
 // MARK: - SVGParserDelegate
 
 class SVGParserDelegate: NSObject, XMLParserDelegate {
-    func onPath(_ callback: @escaping (SVGPath) -> Void) { pathSubject.sink(receiveValue: callback).store(in: &subscriptions) }
+    func onPath(_ callback: @escaping (SVGPath) -> Void) {
+        pathSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
 
     // MARK: handler
 

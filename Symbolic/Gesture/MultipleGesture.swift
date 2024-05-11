@@ -1,9 +1,10 @@
+import Combine
 import Foundation
 import SwiftUI
 
-// MARK: - MultipleGestureModifier
+// MARK: - MultipleGestureModel
 
-struct MultipleGestureModifier<Origin>: ViewModifier {
+class MultipleGestureModel<Data>: ObservableObject {
     typealias Value = DragGesture.Value
 
     // MARK: Configs
@@ -15,10 +16,34 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
         var coordinateSpace: CoordinateSpace = .local
     }
 
-    // MARK: Context
+    func onTap(_ callback: @escaping (Value, Data) -> Void) {
+        tapSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+    }
 
-    private struct Context {
-        let origin: Origin
+    func onLongPress(_ callback: @escaping (Value, Data) -> Void) {
+        longPressSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onLongPressEnd(_ callback: @escaping (Value, Data) -> Void) {
+        longPressEndSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onDrag(_ callback: @escaping (Value, Data) -> Void) {
+        dragSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onDragEnd(_ callback: @escaping (Value, Data) -> Void) {
+        dragEndSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    init(configs: Configs = Configs()) {
+        self.configs = configs
+    }
+
+    // MARK: fileprivate
+
+    fileprivate struct Context {
+        let data: Data
         let startTime: Date = .now
 
         private(set) var lastValue: Value
@@ -32,14 +57,34 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
             maxDistance = max(maxDistance, value.offset.length)
         }
 
-        init(origin: Origin, value: Value) {
-            self.origin = origin
+        init(data: Data, value: Value) {
+            self.data = data
             lastValue = value
         }
     }
 
-    // MARK: body
+    fileprivate let configs: Configs
 
+    fileprivate var context: Context?
+    fileprivate var subscriptions = Set<AnyCancellable>()
+
+    fileprivate let tapSubject = PassthroughSubject<Void, Never>()
+    fileprivate let longPressSubject = PassthroughSubject<Void, Never>()
+    fileprivate let longPressEndSubject = PassthroughSubject<Void, Never>()
+    fileprivate let dragSubject = PassthroughSubject<Void, Never>()
+    fileprivate let dragEndSubject = PassthroughSubject<Void, Never>()
+
+    private var makeValue: () -> (Value, Data)? {
+        {
+            guard let context = self.context else { return nil }
+            return (context.lastValue, context.data)
+        }
+    }
+}
+
+// MARK: - MultipleGestureModifier
+
+struct MultipleGestureModifier<Data>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .gesture(gesture)
@@ -50,33 +95,23 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
             }
     }
 
-    init(_ getOrigin: @autoclosure @escaping () -> Origin,
-         configs: Configs = Configs(),
-         onTap: ((Value, Origin) -> Void)? = nil,
-         onLongPress: ((Value, Origin) -> Void)? = nil,
-         onLongPressEnd: ((Value, Origin) -> Void)? = nil,
-         onDrag: ((Value, Origin) -> Void)? = nil,
-         onDragEnd: ((Value, Origin) -> Void)? = nil) {
-        self.getOrigin = getOrigin
-        self.configs = configs
-        self.onTap = onTap
-        self.onLongPress = onLongPress
-        self.onLongPressEnd = onLongPressEnd
-        self.onDrag = onDrag
-        self.onDragEnd = onDragEnd
+    init(_ model: MultipleGestureModel<Data>, _ getData: @autoclosure @escaping () -> Data) {
+        self.model = model
+        self.getData = getData
     }
 
     // MARK: private
 
-    private let getOrigin: () -> Origin
-    private let configs: Configs
-    private let onTap: ((Value, Origin) -> Void)?
-    private let onLongPress: ((Value, Origin) -> Void)?
-    private let onLongPressEnd: ((Value, Origin) -> Void)?
-    private let onDrag: ((Value, Origin) -> Void)?
-    private let onDragEnd: ((Value, Origin) -> Void)?
+    private let model: MultipleGestureModel<Data>
 
-    @State private var context: Context?
+    private var configs: MultipleGestureModel<Data>.Configs { model.configs }
+
+    private var context: MultipleGestureModel<Data>.Context? {
+        get { model.context }
+        nonmutating set { model.context = newValue }
+    }
+
+    private let getData: () -> Data
     @GestureState private var active: Bool = false
 
     private var isPress: Bool {
@@ -105,7 +140,7 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
     // MARK: stages
 
     private func onPressStarted(_ v: DragGesture.Value) {
-        context = Context(origin: getOrigin(), value: v)
+        context = .init(data: getData(), value: v)
         setupLongPress()
     }
 
@@ -115,21 +150,20 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
                 resetLongPress()
             }
-            onDrag?(context.lastValue, context.origin)
+            model.dragSubject.send()
         }
     }
 
     private func onPressEnded() {
         guard let context else { return }
-        let value = context.lastValue, origin = context.origin
         if isPress {
             if context.longPressStarted {
-                onLongPressEnd?(value, origin)
+                model.longPressEndSubject.send()
             } else {
-                onTap?(value, origin)
+                model.tapSubject.send()
             }
         } else {
-            onDragEnd?(value, origin)
+            model.dragEndSubject.send()
             if configs.holdLongPressOnDrag {
                 resetLongPress()
             }
@@ -144,13 +178,13 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
     // MARK: long press
 
     private func setupLongPress() {
-        guard let context else { return }
+        guard context != nil else { return }
         let longPressTimeout = DispatchWorkItem {
-            onLongPress?(context.lastValue, context.origin)
+            model.longPressSubject.send()
             self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
-        self.context?.longPressTimeout = longPressTimeout
+        context?.longPressTimeout = longPressTimeout
     }
 
     private func resetLongPress() {
@@ -161,7 +195,14 @@ struct MultipleGestureModifier<Origin>: ViewModifier {
         }
         if context.longPressStarted {
             self.context?.longPressStarted = false
-            onLongPressEnd?(context.lastValue, context.origin)
+            model.longPressEndSubject.send()
         }
+    }
+}
+
+extension View {
+    func multipleGesture<Data>(_ model: MultipleGestureModel<Data>, _ getData: @autoclosure @escaping () -> Data, _ setup: ((MultipleGestureModel<Data>) -> Void)? = nil) -> some View {
+        modifier(MultipleGestureModifier<Data>(model, getData()))
+            .onAppear { setup?(model) }
     }
 }

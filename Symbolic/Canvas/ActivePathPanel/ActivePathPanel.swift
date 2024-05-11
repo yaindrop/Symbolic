@@ -15,22 +15,24 @@ struct ActivePathPanel: View {
     @EnvironmentObject private var viewport: ViewportModel
     @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
+    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
+    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 
+    @StateObject var moveGesture = PanelModel.moveGestureModel()
+
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "Active Path")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .modifier(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(moveGesture, panelModel.idToPanel[panelId], panelModel.moveGestureSetup)
             scrollView
         }
         .background(.regularMaterial)

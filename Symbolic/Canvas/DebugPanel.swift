@@ -24,11 +24,13 @@ struct DebugPanel: View {
         }
     }
 
+    @StateObject var moveGesture = PanelModel.moveGestureModel()
+
     @ViewBuilder private var panel: some View {
         VStack {
             title
                 .invisibleSoildOverlay()
-                .modifier(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(moveGesture, panelModel.idToPanel[panelId], panelModel.moveGestureSetup)
             Row(name: "Pan", value: multipleTouch.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")

@@ -32,12 +32,14 @@ struct HistoryPanel: View {
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 
+    @StateObject var moveGesture = PanelModel.moveGestureModel()
+
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "History")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .modifier(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(moveGesture, panelModel.idToPanel[panelId], panelModel.moveGestureSetup)
             scrollView
         }
         .background(.regularMaterial)

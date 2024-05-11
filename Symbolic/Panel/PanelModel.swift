@@ -59,14 +59,19 @@ extension PanelModel {
         }
     }
 
-    func moveGesture(panelId: UUID) -> MultipleGestureModifier<Point2>? {
-        guard let panel = idToPanel[panelId] else { return nil }
-        return MultipleGestureModifier(
-            panel.origin,
-            configs: .init(coordinateSpace: .global),
-            onDrag: { v, c in self.onMoving(panelId: panel.id, origin: c + v.offset) },
-            onDragEnd: { v, c in self.onMoved(panelId: panel.id, origin: c + v.offset, inertia: v.inertia) }
-        )
+    static func moveGestureModel() -> MultipleGestureModel<PanelData?> { .init(configs: .init(coordinateSpace: .global)) }
+
+    var moveGestureSetup: (MultipleGestureModel<PanelData?>) -> Void {
+        {
+            $0.onDrag { v, panel in
+                guard let panel else { return }
+                self.onMoving(panelId: panel.id, origin: panel.origin + v.offset)
+            }
+            $0.onDragEnd { v, panel in
+                guard let panel else { return }
+                self.onMoved(panelId: panel.id, origin: panel.origin + v.offset, inertia: v.inertia)
+            }
+        }
     }
 }
 

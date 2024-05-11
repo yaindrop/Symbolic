@@ -6,11 +6,6 @@ struct TapInfo {
     let count: Int
 }
 
-struct LongPressInfo {
-    let location: Point2
-    let isEnd: Bool
-}
-
 // MARK: - MultipleTouchPressModel
 
 class MultipleTouchPressModel: ObservableObject {
@@ -22,10 +17,17 @@ class MultipleTouchPressModel: ObservableObject {
         var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
     }
 
-    let configs: Configs
+    func onTap(_ callback: @escaping (TapInfo) -> Void) {
+        tapSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
 
-    func onTap(_ callback: @escaping (TapInfo) -> Void) { tapSubject.sink(receiveValue: callback).store(in: &subscriptions) }
-    func onLongPress(_ callback: @escaping (LongPressInfo) -> Void) { longPressSubject.sink(receiveValue: callback).store(in: &subscriptions) }
+    func onLongPress(_ callback: @escaping (PanInfo) -> Void) {
+        longPressSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onLongPressEnd(_ callback: @escaping (PanInfo) -> Void) {
+        longPressEndSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
 
     init(configs: Configs) {
         self.configs = configs
@@ -44,11 +46,14 @@ class MultipleTouchPressModel: ObservableObject {
         }
     }
 
+    fileprivate let configs: Configs
+
     fileprivate var context: Context?
     fileprivate var subscriptions = Set<AnyCancellable>()
 
     fileprivate let tapSubject = PassthroughSubject<TapInfo, Never>()
-    fileprivate let longPressSubject = PassthroughSubject<LongPressInfo, Never>()
+    fileprivate let longPressSubject = PassthroughSubject<PanInfo, Never>()
+    fileprivate let longPressEndSubject = PassthroughSubject<PanInfo, Never>()
 
     fileprivate struct RepeatedTapInfo {
         let count: Int
@@ -109,7 +114,9 @@ struct MultipleTouchPressDetector {
         nonmutating set { model.context = newValue }
     }
 
-    private var location: Point2? { multipleTouch.panInfo?.current }
+    private var panInfo: PanInfo? { multipleTouch.panInfo }
+
+    private var location: Point2? { panInfo?.current }
 
     private var isPress: Bool {
         guard let context else { return false }
@@ -140,14 +147,14 @@ struct MultipleTouchPressDetector {
     }
 
     private func onPressEnded() {
-        guard let context, let location else { return }
+        guard let context, let panInfo else { return }
         if isPress {
             if context.longPressStarted {
-                model.longPressSubject.send(.init(location: location, isEnd: true))
+                model.longPressEndSubject.send(panInfo)
             } else {
                 let count = tapCount
-                model.tapSubject.send(.init(location: location, count: count))
-                model.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: location)
+                model.tapSubject.send(.init(location: panInfo.current, count: count))
+                model.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: panInfo.current)
             }
         } else {
             model.pendingRepeatedTapInfo = nil
@@ -167,8 +174,8 @@ struct MultipleTouchPressDetector {
     private func setupLongPress() {
         guard context != nil else { return }
         let longPressTimeout = DispatchWorkItem {
-            guard let location = self.location else { return }
-            self.model.longPressSubject.send(.init(location: location, isEnd: false))
+            guard let panInfo else { return }
+            self.model.longPressSubject.send(panInfo)
             self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
@@ -183,8 +190,8 @@ struct MultipleTouchPressDetector {
         }
         if context.longPressStarted {
             self.context?.longPressStarted = false
-            guard let location else { return }
-            model.longPressSubject.send(.init(location: location, isEnd: true))
+            guard let panInfo else { return }
+            model.longPressEndSubject.send(panInfo)
         }
     }
 }

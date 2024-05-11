@@ -13,46 +13,136 @@ struct BlurView: UIViewRepresentable {
     }
 }
 
+// MARK: - CanvasView
+
 struct CanvasView: View {
-    @StateObject var multipleTouch = MultipleTouchModel()
-    @StateObject var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+    var body: some View {
+        navigationView
+            .onChange(of: documentModel.activeDocument) {
+                withAnimation {
+                    pathModel.pendingEvent = nil
+                    pathModel.clear()
+                    pathModel.loadDocument(documentModel.activeDocument)
+                }
+            }
+            .onChange(of: activePathInteractor.activePath) {
+                activePathInteractor.onActivePathChanged()
+            }
+            .onAppear {
+                viewportUpdater.subscribe(to: multipleTouch)
+                pressDetector.subscribe()
+                selectionUpdater.subscribe(to: multipleTouch)
+            }
+            .onAppear {
+                multipleTouchPress.onTap { info in
+                    let worldLocation = info.location.applying(viewport.toWorld)
+                    print("onTap \(info) worldLocation \(worldLocation)")
+                    withAnimation {
+                        activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
+                    }
+                }
+                multipleTouchPress.onLongPress { info in
+                    viewportUpdate.blocked = true
+                    if !pendingSelectionModel.active {
+                        canvasActionModel.onStart(triggering: .longPressViewport)
+                        longPressPosition = info.current
+                        selectionUpdater.onStart(from: info.current)
+                    }
+                    let worldLocation = info.current.applying(viewport.toWorld)
+                    print("onLongPress \(info) worldLocation \(worldLocation)")
+                }
+                multipleTouchPress.onLongPressEnd { _ in
+                    viewportUpdate.blocked = false
+//                    longPressPosition = nil
+                    canvasActionModel.onEnd(triggering: .longPressViewport)
+                    selectionUpdater.onEnd()
+                }
+            }
+            .onAppear {
+                pathUpdateModel.onPendingEvent { e in
+                    pathModel.pendingEvent = e
+                }
+                pathUpdateModel.onEvent { e in
+                    withAnimation {
+                        documentModel.sendEvent(e)
+                    }
+                }
+            }
+            .onAppear {
+                panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
+                panelModel.register(align: .bottomLeading) { HistoryPanel() }
+                panelModel.register(align: .topTrailing) { DebugPanel().environmentObject(multipleTouch).environmentObject(multipleTouchPress) }
+                panelModel.register(align: .topLeading) {
+                    Text("hello?")
+                        .padding()
+                }
+            }
+            .onAppear {
+                documentModel.activeDocument = Document(from: fooSvg)
+            }
+    }
 
-    @StateObject var viewport = ViewportModel()
-    @StateObject var viewportUpdate = ViewportUpdateModel()
+    // MARK: private
 
-    @StateObject var documentModel = DocumentModel()
+    // MARK: models
 
-    @StateObject var pathModel = PathModel()
-    @StateObject var activePathModel = ActivePathModel()
+    @StateObject private var multipleTouch = MultipleTouchModel()
+    @StateObject private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @StateObject var pathUpdateModel = PathUpdateModel()
+    @StateObject private var viewport = ViewportModel()
+    @StateObject private var viewportUpdate = ViewportUpdateModel()
 
-    @StateObject var pendingSelectionModel = PendingSelectionModel()
+    @StateObject private var documentModel = DocumentModel()
 
-    @StateObject var panelModel = PanelModel()
+    @StateObject private var pathModel = PathModel()
+    @StateObject private var activePathModel = ActivePathModel()
 
-    @StateObject var canvasActionModel = CanvasActionModel()
+    @StateObject private var pathUpdateModel = PathUpdateModel()
 
-    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch, multipleTouchPress) }
-    var viewportUpdater: ViewportUpdater { .init(viewport, viewportUpdate) }
-    var activePathInteractor: ActivePathInteractor { .init(pathModel, activePathModel) }
-    var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-    var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel) }
+    @StateObject private var pendingSelectionModel = PendingSelectionModel()
 
-//    var stuff: some View {
-//        RoundedRectangle(cornerRadius: 25)
-//            .fill(.blue)
-//            .frame(width: 200, height: 200)
-//            .position(x: 300, y: 300)
-//            .transformEffect(viewport.info.worldToView)
-//        SUPath { path in
-//            path.move(to: Point2(x: 400, y: 200))
-//            path.addCurve(to: Point2(x: 400, y: 400), control1: Point2(x: 450, y: 250), control2: Point2(x: 350, y: 350))
-//        }.stroke(lineWidth: 10)
-//            .transformEffect(viewport.info.worldToView)
-//    }
+    @StateObject private var panelModel = PanelModel()
 
-    var background: some View {
+    @StateObject private var canvasActionModel = CanvasActionModel()
+
+    // MARK: interactors
+
+    private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch, multipleTouchPress) }
+    private var viewportUpdater: ViewportUpdater { .init(viewport, viewportUpdate) }
+    private var activePathInteractor: ActivePathInteractor { .init(pathModel, activePathModel) }
+    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
+    private var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel) }
+
+    @State private var longPressPosition: Point2?
+
+    // MARK: view builders
+
+    @ViewBuilder private var navigationView: some View {
+        NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
+            Text("sidebar")
+                .navigationTitle("Sidebar")
+        } detail: {
+            ZStack {
+                background
+                inactivePaths
+                foreground
+                overlay
+            }
+//            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+//            .toolbar(.hidden, for: .navigationBar)
+            .clipped()
+            .edgesIgnoringSafeArea(.bottom)
+            .toolbar { toolbar }
+        }
+        .environmentObject(viewport)
+        .environmentObject(documentModel)
+        .environmentObject(pathModel)
+        .environmentObject(activePathModel)
+        .environmentObject(pathUpdateModel)
+    }
+
+    @ViewBuilder private var background: some View {
         GeometryReader { geometry in
             Canvas { context, _ in
                 context.concatenate(viewport.toView)
@@ -92,25 +182,23 @@ struct CanvasView: View {
         }
     }
 
-    var inactivePaths: some View {
+    @ViewBuilder private var inactivePaths: some View {
         activePathInteractor.inactivePathsView
             .transformEffect(viewport.toView)
             .blur(radius: 1)
     }
 
-    @State var longPressPosition: Point2?
-
-    var foreground: some View {
+    @ViewBuilder private var foreground: some View {
         Color.white.opacity(0.1)
             .modifier(MultipleTouchModifier(model: multipleTouch))
     }
 
-    var activePaths: some View {
+    @ViewBuilder private var activePaths: some View {
         activePathInteractor.activePathView
             .transformEffect(viewport.toView)
     }
 
-    @ViewBuilder var overlay: some View {
+    @ViewBuilder private var overlay: some View {
         ZStack {
             activePaths
             ActivePathHandles()
@@ -123,126 +211,45 @@ struct CanvasView: View {
         .allowsHitTesting(!multipleTouch.active)
     }
 
-    var body: some View {
-        NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
-            Text("sidebar")
-                .navigationTitle("Sidebar")
-        } detail: {
-            ZStack {
-                background
-                inactivePaths
-                foreground
-                overlay
-            }
-//            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-//            .toolbar(.hidden, for: .navigationBar)
-            .clipped()
-            .edgesIgnoringSafeArea(.bottom)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Text("Item 0")
-                        Divider()
-                        Text("Item 1")
-                    } label: {
-                        HStack {
-                            Text("未命名2").font(.headline)
-                            Image(systemName: "chevron.down.circle.fill")
-                                .symbolRenderingMode(.hierarchical)
-                                .foregroundStyle(Color.label.opacity(0.5))
-                                .font(.footnote)
-                                .fontWeight(.black)
-                        }
-                        .tint(.label)
-                    }
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Menu {
+                Text("Item 0")
+                Divider()
+                Text("Item 1")
+            } label: {
+                HStack {
+                    Text("未命名2").font(.headline)
+                    Image(systemName: "chevron.down.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(Color.label.opacity(0.5))
+                        .font(.footnote)
+                        .fontWeight(.black)
                 }
-                ToolbarItem(placement: .principal) {
-                    HStack {
-                        Button {} label: { Image(systemName: "rectangle.and.hand.point.up.left") }
-                        Button {} label: { Image(systemName: "plus.circle") }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        var events = documentModel.activeDocument.events
-                        guard let last = events.last else { return }
-                        if case let .pathAction(p) = last.action {
-                            if case let .load(l) = p {
-                                return
-                            }
-                        }
-                        events.removeLast()
-                        documentModel.activeDocument = Document(events: events)
-                    } label: {
-                        Image(systemName: "arrow.uturn.backward")
-                    }
-                }
+                .tint(.label)
             }
         }
-        .onChange(of: documentModel.activeDocument) {
-            withAnimation {
-                pathModel.pendingEvent = nil
-                pathModel.clear()
-                pathModel.loadDocument(documentModel.activeDocument)
+        ToolbarItem(placement: .principal) {
+            HStack {
+                Button {} label: { Image(systemName: "rectangle.and.hand.point.up.left") }
+                Button {} label: { Image(systemName: "plus.circle") }
             }
         }
-        .onChange(of: activePathInteractor.activePath) {
-            activePathInteractor.onActivePathChanged()
-        }
-        .onAppear {
-            viewportUpdater.subscribe(to: multipleTouch)
-            pressDetector.subscribe()
-            selectionUpdater.subscribe(to: multipleTouch)
-
-            multipleTouchPress.onTap { info in
-                let worldLocation = info.location.applying(viewport.toWorld)
-                print("onTap \(info) worldLocation \(worldLocation)")
-                withAnimation {
-                    activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
-                }
-            }
-            multipleTouchPress.onLongPress { info in
-                viewportUpdate.blocked = !info.isEnd
-                if info.isEnd {
-//                        longPressPosition = nil
-                    canvasActionModel.onEnd(triggering: .longPressViewport)
-                    selectionUpdater.onEnd()
-                } else {
-                    if !pendingSelectionModel.active {
-                        canvasActionModel.onStart(triggering: .longPressViewport)
-                        longPressPosition = info.location
-                        selectionUpdater.onStart(from: info.location)
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                var events = documentModel.activeDocument.events
+                guard let last = events.last else { return }
+                if case let .pathAction(p) = last.action {
+                    if case let .load(l) = p {
+                        return
                     }
                 }
-                let worldLocation = info.location.applying(viewport.toWorld)
-                print("onLongPress \(info) worldLocation \(worldLocation)")
-            }
-
-            pathUpdateModel.onPendingEvent { e in
-                pathModel.pendingEvent = e
-            }
-            pathUpdateModel.onEvent { e in
-                withAnimation {
-                    documentModel.sendEvent(e)
-                }
-            }
-
-            documentModel.activeDocument = Document(from: fooSvg)
-
-            panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
-            panelModel.register(align: .bottomLeading) { HistoryPanel() }
-            panelModel.register(align: .topTrailing) { DebugPanel().environmentObject(multipleTouch).environmentObject(multipleTouchPress) }
-            panelModel.register(align: .topLeading) {
-                Text("hello?")
-                    .padding()
+                events.removeLast()
+                documentModel.activeDocument = Document(events: events)
+            } label: {
+                Image(systemName: "arrow.uturn.backward")
             }
         }
-        .environmentObject(viewport)
-        .environmentObject(documentModel)
-        .environmentObject(pathModel)
-        .environmentObject(activePathModel)
-        .environmentObject(pathUpdateModel)
     }
 }
 

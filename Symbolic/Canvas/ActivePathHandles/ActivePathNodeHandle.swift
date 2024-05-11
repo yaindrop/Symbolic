@@ -20,15 +20,17 @@ struct ActivePathNodeHandle: View {
     @EnvironmentObject private var viewport: ViewportModel
     @EnvironmentObject private var pathModel: PathModel
     @EnvironmentObject private var activePathModel: ActivePathModel
-    var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
+    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
 
     @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
+    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
 
     private var focused: Bool { activePath.focusedNodeId == nodeId }
     private func toggleFocus() {
         focused ? activePath.clearFocus() : activePath.setFocus(node: nodeId)
     }
+
+    @StateObject private var dragGesture = MultipleGestureModel<Point2>()
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
         Circle()
@@ -44,13 +46,12 @@ struct ActivePathNodeHandle: View {
             .padding(Self.touchablePadding)
             .invisibleSoildOverlay()
             .position(point)
-            .modifier(gesture)
-    }
-
-    private var gesture: some ViewModifier {
-        func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { value, origin in updater.updateActivePath(moveNode: nodeId, offsetInView: origin.offset(to: value.location), pending: pending) }
-        }
-        return MultipleGestureModifier(position, onTap: { _, _ in toggleFocus() }, onDrag: update(pending: true), onDragEnd: update())
+            .multipleGesture(dragGesture, position) {
+                func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
+                    { updater.updateActivePath(moveNode: nodeId, offsetInView: $1.offset(to: $0.location), pending: pending) }
+                }
+                $0.onDrag(update(pending: true))
+                $0.onDragEnd(update())
+            }
     }
 }

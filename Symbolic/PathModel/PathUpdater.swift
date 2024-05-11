@@ -3,8 +3,13 @@ import Foundation
 import SwiftUI
 
 class PathUpdateModel: ObservableObject {
-    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) { eventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
-    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) { pendingEventSubject.sink(receiveValue: callback).store(in: &subscriptions) }
+    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
+        eventSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) {
+        pendingEventSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
 
     fileprivate var subscriptions = Set<AnyCancellable>()
 

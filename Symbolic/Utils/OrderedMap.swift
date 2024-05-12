@@ -40,3 +40,10 @@ struct OrderedMap<Key: Hashable, Value> {
         keys.removeAll()
     }
 }
+
+extension OrderedMap: Cloneable where Key: Cloneable, Value: Cloneable {
+    init(_ map: OrderedMap<Key, Value>) {
+        dict = map.dict.reduce(into: [Key: Value]()) { $0[$1.key.cloned] = $1.value.cloned }
+        keys = map.keys.map { Key($0) }
+    }
+}

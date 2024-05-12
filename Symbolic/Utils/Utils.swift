@@ -22,14 +22,20 @@ protocol Cloneable {
 }
 
 extension Cloneable {
+    var cloned: Self { Self(self) }
+
     func with(_ transform: (inout Self) -> Void) -> Self {
-        var cloned = Self(self)
+        var cloned = cloned
         transform(&cloned)
         return cloned
     }
 }
 
 extension Array: Cloneable {}
+
+extension UUID: Cloneable {
+    init(_ uuid: UUID) { self = uuid }
+}
 
 // MARK: - ReflectedStringConvertible
 

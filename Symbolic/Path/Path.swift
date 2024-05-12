@@ -130,7 +130,7 @@ struct PathNode: Identifiable {
 
 // MARK: - Path
 
-class Path: Identifiable, ReflectedStringConvertible, Equatable {
+class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable {
     typealias NodeEdgePair = (node: PathNode, edge: PathEdge)
 
     let id: UUID
@@ -205,6 +205,13 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
         path.strokedPath(StrokeStyle(lineWidth: 12, lineCap: .round))
     }()
 
+    required init(_ path: Path) {
+        id = path.id
+        pairs = path.pairs
+        isClosed = path.isClosed
+        nodeIdToIndex = path.nodeIdToIndex
+    }
+
     required init(id: UUID, pairs: [NodeEdgePair], isClosed: Bool) {
         var nodeIdToIndex: [UUID: Int] = [:]
         for (i, p) in pairs.enumerated() {
@@ -235,43 +242,47 @@ extension Path {
 
     func with(pairs: [NodeEdgePair], isClosed: Bool) -> Self { .init(id: id, pairs: pairs, isClosed: isClosed) }
 
-    func with(breakAfter: PathEvent.Update.BreakAfter) -> Self {
-        guard let i = nodeIdToIndex[breakAfter.nodeId] else { return self }
+    func update(breakAfter: PathEvent.Update.BreakAfter) {
+        guard let i = nodeIdToIndex[breakAfter.nodeId] else { return }
         if isClosed {
-            return with(pairs: Array(pairs[(i + 1)...]) + Array(pairs[...i]), isClosed: false)
+            pairs = Array(pairs[(i + 1)...]) + Array(pairs[...i])
+            isClosed = false
+        } else {
+            pairs = Array(pairs[...i])
         }
-        return with(pairs: Array(pairs[...i]))
     }
 
-    func with(breakUntil: PathEvent.Update.BreakUntil) -> Self {
-        guard let i = nodeIdToIndex[breakUntil.nodeId] else { return self }
+    func update(breakUntil: PathEvent.Update.BreakUntil) {
+        guard let i = nodeIdToIndex[breakUntil.nodeId] else { return }
         if isClosed {
-            return with(pairs: Array(pairs[(i + 1)...]) + Array(pairs[...i]), isClosed: false)
+            pairs = Array(pairs[(i + 1)...]) + Array(pairs[...i])
+            isClosed = false
+        } else {
+            pairs = Array(pairs[(i + 1)...])
         }
-        return with(pairs: Array(pairs[(i + 1)...]))
     }
 
-    func with(edgeUpdate: PathEvent.Update.EdgeUpdate) -> Self {
-        guard let i = nodeIdToIndex[edgeUpdate.fromNodeId] else { return self }
-        return with(pairs: pairs.with { $0[i].1 = edgeUpdate.edge })
+    func update(edgeUpdate: PathEvent.Update.EdgeUpdate) {
+        guard let i = nodeIdToIndex[edgeUpdate.fromNodeId] else { return }
+        pairs[i].edge = edgeUpdate.edge
     }
 
-    func with(nodeCreate: PathEvent.Update.NodeCreate) -> Self {
+    func update(nodeCreate: PathEvent.Update.NodeCreate) {
         var i = 0
         if let id = nodeCreate.prevNodeId {
-            guard let prev = nodeIdToIndex[id] else { return self }
+            guard let prev = nodeIdToIndex[id] else { return }
             i = prev + 1
         }
-        return with(pairs: pairs.with { $0.insert((nodeCreate.node, .line(PathEdge.Line())), at: i) })
+        pairs.insert((nodeCreate.node, .line(PathEdge.Line())), at: i)
     }
 
-    func with(nodeDelete: PathEvent.Update.NodeDelete) -> Self {
-        guard let i = nodeIdToIndex[nodeDelete.nodeId] else { return self }
-        return with(pairs: pairs.with { $0.remove(at: i) })
+    func update(nodeDelete: PathEvent.Update.NodeDelete) {
+        guard let i = nodeIdToIndex[nodeDelete.nodeId] else { return }
+        pairs.remove(at: i)
     }
 
-    func with(nodeUpdate: PathEvent.Update.NodeUpdate) -> Self {
-        guard let i = nodeIdToIndex[nodeUpdate.node.id] else { return self }
-        return with(pairs: pairs.with { $0[i].node = nodeUpdate.node })
+    func update(nodeUpdate: PathEvent.Update.NodeUpdate) {
+        guard let i = nodeIdToIndex[nodeUpdate.node.id] else { return }
+        pairs[i].node = nodeUpdate.node
     }
 }

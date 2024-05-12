@@ -2,19 +2,30 @@ import Combine
 import Foundation
 import SwiftUI
 
+typealias PathMap = OrderedMap<UUID, Path>
+
 // MARK: - PathModel
 
 class PathModel: ObservableObject {
-    @Published fileprivate(set) var pathMap = OrderedMap<UUID, Path>()
+    @Published fileprivate(set) var pathMap = PathMap()
 
     var paths: [Path] { pathMap.values }
+
+    fileprivate var updatingPathMap: PathMap?
+
+    fileprivate func updatePathMap(_ pathMap: inout PathMap, _ updater: () -> Void) {
+        updatingPathMap = pathMap
+        defer { updatingPathMap = nil }
+        updater()
+        pathMap = updatingPathMap!
+    }
 }
 
 // MARK: - PendingPathModel
 
 class PendingPathModel: ObservableObject {
     @Published var pendingEvent: DocumentEvent?
-    @Published fileprivate(set) var pathMap = OrderedMap<UUID, Path>()
+    @Published fileprivate(set) var pathMap = PathMap()
 
     var hasPendingEvent: Bool { pendingEvent != nil }
 
@@ -41,22 +52,15 @@ struct PathInteractor {
     let model: PathModel
     let pendingModel: PendingPathModel
 
-    private var targetPathMap: OrderedMap<UUID, Path> {
-        get { pendingModel.loading ? pendingModel.pathMap : model.pathMap }
-        nonmutating set {
-            if pendingModel.loading { pendingModel.pathMap = newValue } else { model.pathMap = newValue }
-        }
-    }
-
     func add(path: Path) {
         guard path.count > 1 else { return }
-        guard targetPathMap[path.id] == nil else { return }
-        targetPathMap[path.id] = path
+        guard updatingPathMap[path.id] == nil else { return }
+        updatingPathMap[path.id] = path
     }
 
     func remove(pathId: UUID) {
-        guard targetPathMap[pathId] != nil else { return }
-        targetPathMap.removeValue(forKey: pathId)
+        guard updatingPathMap[pathId] != nil else { return }
+        updatingPathMap.removeValue(forKey: pathId)
     }
 
     func update(path: Path) {
@@ -64,12 +68,12 @@ struct PathInteractor {
             remove(pathId: path.id)
             return
         }
-        guard targetPathMap[path.id] != nil else { return }
-        targetPathMap[path.id] = path
+        guard updatingPathMap[path.id] != nil else { return }
+        updatingPathMap[path.id] = path
     }
 
     func clear() {
-        targetPathMap.removeAll()
+        updatingPathMap.removeAll()
     }
 
     func subscribe() {
@@ -80,17 +84,38 @@ struct PathInteractor {
         guard let event else { return }
         pendingModel.loading = true
         defer { pendingModel.loading = false }
-        pendingModel.pathMap = model.pathMap
-        loadEvent(event)
+        pendingModel.pathMap = model.pathMap.cloned
+        model.updatePathMap(&targetPathMap) {
+            loadEvent(event)
+        }
     }
 }
 
 // MARK: - PathModel load events
 
 extension PathInteractor {
+    private var targetPathMap: PathMap {
+        get { pendingModel.loading ? pendingModel.pathMap : model.pathMap }
+        nonmutating set {
+            if pendingModel.loading { pendingModel.pathMap = newValue } else { model.pathMap = newValue }
+        }
+    }
+
+    private var updatingPathMap: PathMap {
+        get {
+            if let updatingPathMap = model.updatingPathMap { updatingPathMap } else { targetPathMap }
+        }
+        nonmutating set {
+            if model.updatingPathMap != nil { model.updatingPathMap = newValue } else { targetPathMap = newValue }
+        }
+    }
+
     func loadDocument(_ document: Document) {
-        for event in document.events {
-            loadEvent(event)
+        model.updatePathMap(&targetPathMap) {
+            clear()
+            for event in document.events {
+                loadEvent(event)
+            }
         }
     }
 
@@ -109,8 +134,6 @@ extension PathInteractor {
     }
 
     func loadEvent(_ event: PathEvent) {
-        let start = Date.now
-        defer { print("\tLoad event takes \(Date.now.timeIntervalSince(start))") }
         switch event {
         case let .create(create):
             loadPathEvent(create)
@@ -147,33 +170,39 @@ extension PathInteractor {
     }
 
     func loadPathUpdate(pathId: UUID, _ breakAfter: PathEvent.Update.BreakAfter) {
-        guard let path = targetPathMap[pathId] else { return }
-        update(path: path.with(breakAfter: breakAfter))
+        guard let path = updatingPathMap[pathId] else { return }
+        path.update(breakAfter: breakAfter)
+        update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ breakUntil: PathEvent.Update.BreakUntil) {
-        guard let path = targetPathMap[pathId] else { return }
-        update(path: path.with(breakUntil: breakUntil))
+        guard let path = updatingPathMap[pathId] else { return }
+        path.update(breakUntil: breakUntil)
+        update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ edgeUpdate: PathEvent.Update.EdgeUpdate) {
-        guard let path = targetPathMap[pathId] else { return }
-        update(path: path.with(edgeUpdate: edgeUpdate))
+        guard let path = updatingPathMap[pathId] else { return }
+        path.update(edgeUpdate: edgeUpdate)
+        update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ nodeCreate: PathEvent.Update.NodeCreate) {
-        guard let path = targetPathMap[pathId] else { return }
-        update(path: path.with(nodeCreate: nodeCreate))
+        guard let path = updatingPathMap[pathId] else { return }
+        path.update(nodeCreate: nodeCreate)
+        update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ nodeDelete: PathEvent.Update.NodeDelete) {
-        guard let path = targetPathMap[pathId] else { return }
-        update(path: path.with(nodeDelete: nodeDelete))
+        guard let path = updatingPathMap[pathId] else { return }
+        path.update(nodeDelete: nodeDelete)
+        update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ nodeUpdate: PathEvent.Update.NodeUpdate) {
-        guard let path = targetPathMap[pathId] else { return }
-        update(path: path.with(nodeUpdate: nodeUpdate))
+        guard let path = updatingPathMap[pathId] else { return }
+        path.update(nodeUpdate: nodeUpdate)
+        update(path: path)
     }
 }
 

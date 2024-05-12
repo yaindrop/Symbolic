@@ -47,7 +47,6 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
                     let start = Date.now
                     defer { print("Load document takes \(Date.now.timeIntervalSince(start))") }
                     pendingPathModel.pendingEvent = nil
-                    pathInteractor.clear()
                     pathInteractor.loadDocument(documentModel.activeDocument)
                 }
             }

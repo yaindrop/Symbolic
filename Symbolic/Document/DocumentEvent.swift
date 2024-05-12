@@ -15,6 +15,7 @@ enum PathEvent {
 // MARK: Update
 
 extension PathEvent.Update {
+    struct Move { let offset: Vector2 }
     struct BreakAfter { let nodeId: UUID } // break closed path after id, or delete nodes (exclusively) after id
     struct BreakUntil { let nodeId: UUID } // break closed path after id, or delete nodes (inclusively) till id
     struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
@@ -23,6 +24,7 @@ extension PathEvent.Update {
     struct NodeDelete { let nodeId: UUID }
 
     enum Kind {
+        case move(Move)
         case breakAfter(BreakAfter)
         case breakUntil(BreakUntil)
         case edgeUpdate(EdgeUpdate)
@@ -57,6 +59,11 @@ struct DocumentEvent: Identifiable {
 }
 
 extension PathEvent {
+    init(in pathId: UUID, move offset: Vector2) {
+        self = .update(.init(pathId: pathId,
+                             kind: .move(.init(offset: offset))))
+    }
+
     init(in pathId: UUID, breakAfter nodeId: UUID) {
         self = .update(.init(pathId: pathId,
                              kind: .breakAfter(.init(nodeId: nodeId))))

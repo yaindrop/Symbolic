@@ -304,12 +304,6 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ movePath: PathAction.MovePath) {
         let pathId = movePath.pathId, offset = movePath.offset
-        guard let path = pathModel.pathMap[pathId] else { return }
-        for (node, edge) in path.pairs {
-            events.append(.init(in: pathId, updateNode: node.with(offset: offset)))
-            if case let .bezier(b) = edge {
-                events.append(.init(in: pathId, updateEdgeFrom: node.id, .bezier(b.with(offset: offset))))
-            }
-        }
+        events.append(.init(in: pathId, move: offset))
     }
 }

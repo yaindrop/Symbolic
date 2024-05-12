@@ -52,7 +52,7 @@ struct PathInteractor {
     func add(path: Path) {
         guard path.count > 1 else { return }
         guard targetPathMap[path.id] == nil else { return }
-        targetPathMap[path.id] = path
+        targetPathMap[path.id] = path.cloned
     }
 
     func remove(pathId: UUID) {
@@ -66,7 +66,7 @@ struct PathInteractor {
             return
         }
         guard targetPathMap[path.id] != nil else { return }
-        targetPathMap[path.id] = path
+        targetPathMap[path.id] = path.cloned
     }
 
     func clear() {
@@ -158,6 +158,8 @@ extension PathInteractor {
 
     func loadPathEvent(_ event: PathEvent.Update) {
         switch event.kind {
+        case let .move(move):
+            loadPathUpdate(pathId: event.pathId, move)
         case let .breakAfter(breakAfter):
             loadPathUpdate(pathId: event.pathId, breakAfter)
         case let .breakUntil(breakUntil):
@@ -171,6 +173,12 @@ extension PathInteractor {
         case let .nodeUpdate(nodeUpdate):
             loadPathUpdate(pathId: event.pathId, nodeUpdate)
         }
+    }
+
+    func loadPathUpdate(pathId: UUID, _ move: PathEvent.Update.Move) {
+        guard let path = targetPathMap[pathId] else { return }
+        path.update(move: move)
+        update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ breakAfter: PathEvent.Update.BreakAfter) {

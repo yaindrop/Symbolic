@@ -201,9 +201,9 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable {
 
     var boundingRect: CGRect { path.boundingRect }
 
-    lazy var hitPath: SUPath = {
+    var hitPath: SUPath {
         path.strokedPath(StrokeStyle(lineWidth: 12, lineCap: .round))
-    }()
+    }
 
     required init(_ path: Path) {
         id = path.id
@@ -238,9 +238,19 @@ extension Path: SUPathAppendable {
 // MARK: - clone with path update event
 
 extension Path {
-    func with(pairs: [NodeEdgePair]) -> Self { .init(id: id, pairs: pairs, isClosed: isClosed) }
+    func with(pairs: [NodeEdgePair], isClosed: Bool? = nil) -> Self {
+        .init(id: id, pairs: pairs, isClosed: isClosed ?? self.isClosed)
+    }
 
-    func with(pairs: [NodeEdgePair], isClosed: Bool) -> Self { .init(id: id, pairs: pairs, isClosed: isClosed) }
+    func update(move: PathEvent.Update.Move) {
+        pairs.indices.forEach { i in
+            let (node, edge) = pairs[i]
+            pairs[i].node = node.with(offset: move.offset)
+            if case let .bezier(b) = edge {
+                pairs[i].edge = .bezier(b.with(offset: move.offset))
+            }
+        }
+    }
 
     func update(breakAfter: PathEvent.Update.BreakAfter) {
         guard let i = nodeIdToIndex[breakAfter.nodeId] else { return }

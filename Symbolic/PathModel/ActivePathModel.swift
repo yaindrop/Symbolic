@@ -22,9 +22,23 @@ class ActivePathModel: ObservableObject {
     @Published fileprivate(set) var focusedPart: ActivePathFocusedPart?
 }
 
+// MARK: - EnableActivePathInteractor
+
+protocol EnableActivePathInteractor {
+    var pathInteractor: PathInteractor { get }
+    var activePathModel: ActivePathModel { get }
+}
+
+extension EnableActivePathInteractor {
+    var activePathInteractor: ActivePathInteractor { .init(pathInteractor: pathInteractor, model: activePathModel) }
+}
+
 // MARK: - ActivePathInteractor
 
 struct ActivePathInteractor {
+    let pathInteractor: PathInteractor
+    let model: ActivePathModel
+
     var activePathId: UUID? { model.activePathId }
     var focusedPart: ActivePathFocusedPart? { model.focusedPart }
 
@@ -47,11 +61,11 @@ struct ActivePathInteractor {
     func clearFocus() { withAnimation { model.focusedPart = nil } }
 
     var activePath: Path? {
-        pathModel.paths.first { $0.id == activePathId }
+        pathInteractor.model.paths.first { $0.id == activePathId }
     }
 
     var pendingActivePath: Path? {
-        pathModel.pendingPaths?.first { $0.id == activePathId } ?? activePath
+        pathInteractor.pendingModel.hasPendingEvent ? pathInteractor.pendingModel.paths.first { $0.id == activePathId } : activePath
     }
 
     func onActivePathChanged() {
@@ -68,7 +82,7 @@ struct ActivePathInteractor {
     }
 
     @ViewBuilder var inactivePathsView: some View {
-        ForEach(pathModel.paths.filter { $0.id != activePathId }) { p in
+        ForEach(pathInteractor.model.paths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
@@ -82,12 +96,4 @@ struct ActivePathInteractor {
                 .id(pendingActivePath.id)
         }
     }
-
-    init(_ pathModel: PathModel, _ model: ActivePathModel) {
-        self.pathModel = pathModel
-        self.model = model
-    }
-
-    private let pathModel: PathModel
-    private let model: ActivePathModel
 }

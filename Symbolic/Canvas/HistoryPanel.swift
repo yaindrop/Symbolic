@@ -17,20 +17,20 @@ fileprivate extension DocumentEvent {
 // MARK: - HistoryPanel
 
 struct HistoryPanel: View {
+    @EnvironmentObject private var documentModel: DocumentModel
+    @EnvironmentObject private var pathModel: PathModel
+    @EnvironmentObject private var activePathModel: ActivePathModel
+
+    @Environment(\.panelId) private var panelId
+    @EnvironmentObject private var panelModel: PanelModel
+
     var body: some View {
         panel.frame(width: 320)
     }
 
     // MARK: private
 
-    @EnvironmentObject private var documentModel: DocumentModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
-
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
-
-    @Environment(\.panelId) private var panelId
-    @EnvironmentObject private var panelModel: PanelModel
 
     @StateObject var moveGesture = PanelModel.moveGestureModel()
 

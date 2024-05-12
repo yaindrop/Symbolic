@@ -3,7 +3,13 @@ import SwiftUI
 
 // MARK: - ActivePathNodeHandle
 
-struct ActivePathNodeHandle: View {
+struct ActivePathNodeHandle: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
+    @EnvironmentObject var viewport: ViewportModel
+    @EnvironmentObject var pathModel: PathModel
+    @EnvironmentObject var pendingPathModel: PendingPathModel
+    @EnvironmentObject var activePathModel: ActivePathModel
+    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+
     let nodeId: UUID
     let position: Point2
 
@@ -17,17 +23,9 @@ struct ActivePathNodeHandle: View {
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
-    @EnvironmentObject private var viewport: ViewportModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
-
-    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-
-    private var focused: Bool { activePath.focusedNodeId == nodeId }
+    private var focused: Bool { activePathInteractor.focusedNodeId == nodeId }
     private func toggleFocus() {
-        focused ? activePath.clearFocus() : activePath.setFocus(node: nodeId)
+        focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(node: nodeId)
     }
 
     @StateObject private var dragGesture = MultipleGestureModel<Point2>()
@@ -48,7 +46,7 @@ struct ActivePathNodeHandle: View {
             .position(point)
             .multipleGesture(dragGesture, position) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { updater.updateActivePath(moveNode: nodeId, offsetInView: $1.offset(to: $0.location), pending: pending) }
+                    { pathUpdater.updateActivePath(moveNode: nodeId, offsetInView: $1.offset(to: $0.location), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

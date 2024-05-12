@@ -15,14 +15,38 @@ struct BlurView: UIViewRepresentable {
 
 // MARK: - CanvasView
 
-struct CanvasView: View {
+struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActivePathInteractor, EnablePathUpdater {
+    // MARK: models
+
+    @StateObject var multipleTouch = MultipleTouchModel()
+    @StateObject var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+
+    @StateObject var viewport = ViewportModel()
+    @StateObject var viewportUpdate = ViewportUpdateModel()
+
+    @StateObject var documentModel = DocumentModel()
+
+    @StateObject var pathModel = PathModel()
+    @StateObject var pendingPathModel = PendingPathModel()
+    @StateObject var activePathModel = ActivePathModel()
+
+    @StateObject var pathUpdateModel = PathUpdateModel()
+
+    @StateObject var pendingSelectionModel = PendingSelectionModel()
+
+    @StateObject var panelModel = PanelModel()
+
+    @StateObject var canvasActionModel = CanvasActionModel()
+
     var body: some View {
         navigationView
             .onChange(of: documentModel.activeDocument) {
                 withAnimation {
-                    pathModel.pendingEvent = nil
-                    pathModel.clear()
-                    pathModel.loadDocument(documentModel.activeDocument)
+                    let start = Date.now
+                    defer { print("Load document takes \(Date.now.timeIntervalSince(start))") }
+                    pendingPathModel.pendingEvent = nil
+                    pathInteractor.clear()
+                    pathInteractor.loadDocument(documentModel.activeDocument)
                 }
             }
             .onChange(of: activePathInteractor.activePath) {
@@ -31,6 +55,7 @@ struct CanvasView: View {
             .onAppear {
                 viewportUpdater.subscribe(to: multipleTouch)
                 pressDetector.subscribe()
+                pathInteractor.subscribe()
                 selectionUpdater.subscribe(to: multipleTouch)
             }
             .onAppear {
@@ -60,7 +85,7 @@ struct CanvasView: View {
             }
             .onAppear {
                 pathUpdateModel.onPendingEvent { e in
-                    pathModel.pendingEvent = e
+                    pendingPathModel.pendingEvent = e
                 }
                 pathUpdateModel.onEvent { e in
                     withAnimation {
@@ -84,34 +109,10 @@ struct CanvasView: View {
 
     // MARK: private
 
-    // MARK: models
-
-    @StateObject private var multipleTouch = MultipleTouchModel()
-    @StateObject private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
-
-    @StateObject private var viewport = ViewportModel()
-    @StateObject private var viewportUpdate = ViewportUpdateModel()
-
-    @StateObject private var documentModel = DocumentModel()
-
-    @StateObject private var pathModel = PathModel()
-    @StateObject private var activePathModel = ActivePathModel()
-
-    @StateObject private var pathUpdateModel = PathUpdateModel()
-
-    @StateObject private var pendingSelectionModel = PendingSelectionModel()
-
-    @StateObject private var panelModel = PanelModel()
-
-    @StateObject private var canvasActionModel = CanvasActionModel()
-
     // MARK: interactors
 
-    private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch, multipleTouchPress) }
-    private var viewportUpdater: ViewportUpdater { .init(viewport, viewportUpdate) }
-    private var activePathInteractor: ActivePathInteractor { .init(pathModel, activePathModel) }
-    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-    private var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel) }
+    private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
+    private var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
 
     @State private var longPressPosition: Point2?
 
@@ -138,6 +139,7 @@ struct CanvasView: View {
         .environmentObject(viewport)
         .environmentObject(documentModel)
         .environmentObject(pathModel)
+        .environmentObject(pendingPathModel)
         .environmentObject(activePathModel)
         .environmentObject(pathUpdateModel)
     }

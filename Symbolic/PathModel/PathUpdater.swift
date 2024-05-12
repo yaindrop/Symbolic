@@ -17,9 +17,27 @@ class PathUpdateModel: ObservableObject {
     fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
 }
 
+// MARK: - EnablePathUpdater
+
+protocol EnablePathUpdater {
+    var viewport: ViewportModel { get }
+    var pathInteractor: PathInteractor { get }
+    var activePathInteractor: ActivePathInteractor { get }
+    var pathUpdateModel: PathUpdateModel { get }
+}
+
+extension EnablePathUpdater {
+    var pathUpdater: PathUpdater { .init(viewport: viewport, pathInteractor: pathInteractor, activePathInteractor: activePathInteractor, model: pathUpdateModel) }
+}
+
 // MARK: - PathUpdater
 
 struct PathUpdater {
+    let viewport: ViewportModel
+    let pathInteractor: PathInteractor
+    let activePathInteractor: ActivePathInteractor
+    let model: PathUpdateModel
+
     func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
         guard let activePath else { return }
         let newNode = PathNode(id: newNodeId, position: position)
@@ -108,21 +126,10 @@ struct PathUpdater {
         updateActivePath(moveByOffset: offsetInView.applying(viewport.toWorld), pending: pending)
     }
 
-    init(_ viewport: ViewportModel, _ pathModel: PathModel, _ activePathModel: ActivePathModel, _ model: PathUpdateModel) {
-        self.viewport = viewport
-        self.pathModel = pathModel
-        self.activePathModel = activePathModel
-        self.model = model
-    }
-
     // MARK: private
 
-    private let viewport: ViewportModel
-    private let pathModel: PathModel
-    private let activePathModel: ActivePathModel
-    private let model: PathUpdateModel
-
-    private var activePath: Path? { ActivePathInteractor(pathModel, activePathModel).activePath }
+    private var activePath: Path? { activePathInteractor.activePath }
+    private var pathModel: PathModel { pathInteractor.model }
 
     // MARK: handle action
 
@@ -145,7 +152,7 @@ struct PathUpdater {
             kind = .compoundEvent(.init(events: events.map { .pathEvent($0) }))
         }
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
-        if pending || pathModel.pendingEvent != nil {
+        if pending || pathInteractor.pendingModel.hasPendingEvent {
             model.pendingEventSubject.send(event)
         }
         if !pending {

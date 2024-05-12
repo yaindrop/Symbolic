@@ -69,6 +69,9 @@ class MultipleTouchPressModel: ObservableObject {
 // MARK: - MultipleTouchPressDetector
 
 struct MultipleTouchPressDetector {
+    let multipleTouch: MultipleTouchModel
+    let model: MultipleTouchPressModel
+
     var pressLocation: Point2? { isPress ? location : nil }
 
     func subscribe() {
@@ -99,15 +102,7 @@ struct MultipleTouchPressDetector {
             .store(in: &model.subscriptions)
     }
 
-    init(_ multipleTouch: MultipleTouchModel, _ model: MultipleTouchPressModel) {
-        self.multipleTouch = multipleTouch
-        self.model = model
-    }
-
     // MARK: private
-
-    private let multipleTouch: MultipleTouchModel
-    private let model: MultipleTouchPressModel
 
     private var configs: MultipleTouchPressModel.Configs { model.configs }
 

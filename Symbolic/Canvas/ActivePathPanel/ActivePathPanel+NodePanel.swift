@@ -4,7 +4,13 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - NodePanel
 
-    struct NodePanel: View {
+    struct NodePanel: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
+        @EnvironmentObject var viewport: ViewportModel
+        @EnvironmentObject var pathModel: PathModel
+        @EnvironmentObject var pendingPathModel: PendingPathModel
+        @EnvironmentObject var activePathModel: ActivePathModel
+        @EnvironmentObject var pathUpdateModel: PathUpdateModel
+
         let index: Int
         let node: PathNode
 
@@ -19,15 +25,7 @@ extension ActivePathPanel {
             .cornerRadius(12)
         }
 
-        @EnvironmentObject private var viewport: ViewportModel
-        @EnvironmentObject private var pathModel: PathModel
-        @EnvironmentObject private var activePathModel: ActivePathModel
-        private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
-
-        @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-        private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-
-        private var focused: Bool { activePath.focusedPart == .node(node.id) }
+        private var focused: Bool { activePathInteractor.focusedPart == .node(node.id) }
 
         @ViewBuilder private var title: some View {
             Group {
@@ -52,19 +50,19 @@ extension ActivePathPanel {
         }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { updater.updateActivePath(node: node.id, position: $0, pending: pending) }
+            { pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
         }
 
         private func toggleFocus() {
-            focused ? activePath.clearFocus() : activePath.setFocus(node: node.id)
+            focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(node: node.id)
         }
 
         private func breakNode() {
-            updater.updateActivePath(breakAtNode: node.id)
+            pathUpdater.updateActivePath(breakAtNode: node.id)
         }
 
         private func deleteNode() {
-            updater.updateActivePath(deleteNode: node.id)
+            pathUpdater.updateActivePath(deleteNode: node.id)
         }
     }
 }

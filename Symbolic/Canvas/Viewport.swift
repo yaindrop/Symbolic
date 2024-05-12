@@ -43,9 +43,23 @@ class ViewportUpdateModel: ObservableObject {
     fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
+// MARK: - EnableViewportUpdater
+
+protocol EnableViewportUpdater {
+    var viewport: ViewportModel { get }
+    var viewportUpdate: ViewportUpdateModel { get }
+}
+
+extension EnableViewportUpdater {
+    var viewportUpdater: ViewportUpdater { .init(viewport: viewport, model: viewportUpdate) }
+}
+
 // MARK: - ViewportUpdater
 
 struct ViewportUpdater {
+    let viewport: ViewportModel
+    let model: ViewportUpdateModel
+
     func subscribe(to multipleTouch: MultipleTouchModel) {
         multipleTouch.$panInfo
             .sink { value in
@@ -61,15 +75,7 @@ struct ViewportUpdater {
             .store(in: &model.subscriptions)
     }
 
-    init(_ viewport: ViewportModel, _ model: ViewportUpdateModel) {
-        self.viewport = viewport
-        self.model = model
-    }
-
     // MARK: private
-
-    private let viewport: ViewportModel
-    private let model: ViewportUpdateModel
 
     private func onPanInfo(_ pan: PanInfo) {
         let previousInfo = model.previousInfo

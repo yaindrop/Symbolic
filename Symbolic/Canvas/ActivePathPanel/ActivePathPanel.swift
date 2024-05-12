@@ -1,31 +1,25 @@
 import Foundation
 import SwiftUI
 
-import SwiftUI
-
 // MARK: - ActivePathPanel
 
-struct ActivePathPanel: View {
+struct ActivePathPanel: View, EnablePathInteractor, EnableActivePathInteractor {
+    @EnvironmentObject var pathModel: PathModel
+    @EnvironmentObject var pendingPathModel: PendingPathModel
+    @EnvironmentObject var activePathModel: ActivePathModel
+
+    @Environment(\.panelId) private var panelId
+    @EnvironmentObject private var panelModel: PanelModel
+
     var body: some View {
         panel.frame(width: 320)
     }
 
     // MARK: private
 
-    @EnvironmentObject private var viewport: ViewportModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
-
-    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
-    @Environment(\.panelId) private var panelId
-    @EnvironmentObject private var panelModel: PanelModel
-
-    @StateObject var moveGesture = PanelModel.moveGestureModel()
+    @StateObject private var moveGesture = PanelModel.moveGestureModel()
 
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
@@ -40,11 +34,11 @@ struct ActivePathPanel: View {
     }
 
     @ViewBuilder private var scrollView: some View {
-        if let pendingActivePath = activePath.pendingActivePath {
+        if let pendingActivePath = activePathInteractor.pendingActivePath {
             ManagedScrollView(model: scrollViewModel) { proxy in
                 Components(activePath: pendingActivePath).id(pendingActivePath.id)
-                    .onChange(of: activePath.focusedPart) {
-                        guard let id = activePath.focusedPart?.id else { return }
+                    .onChange(of: activePathInteractor.focusedPart) {
+                        guard let id = activePathInteractor.focusedPart?.id else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                     }
             }

@@ -5,6 +5,9 @@ extension ActivePathPanel {
     // MARK: - Components
 
     struct Components: View {
+        @EnvironmentObject private var pathModel: PathModel
+        @EnvironmentObject private var activePathModel: ActivePathModel
+
         let activePath: Path
 
         @ViewBuilder var body: some View {
@@ -20,16 +23,13 @@ extension ActivePathPanel {
             .padding(.horizontal, 12)
             .padding(.bottom, 24)
         }
-
-        // MARK: private
-
-        @EnvironmentObject private var pathModel: PathModel
-        @EnvironmentObject private var activePathModel: ActivePathModel
     }
 
     // MARK: - NodeEdgeGroup
 
     fileprivate struct NodeEdgeGroup: View {
+        @EnvironmentObject private var activePathModel: ActivePathModel
+
         let index: Int
         let node: PathNode
         let edge: PathEdge
@@ -46,7 +46,6 @@ extension ActivePathPanel {
             .onChange(of: focused) { animateOnFocused() }
         }
 
-        @EnvironmentObject private var activePathModel: ActivePathModel
         @State private var scale: Double = 1
 
         private var focused: Bool { activePathModel.focusedPart?.id == node.id }

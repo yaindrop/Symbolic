@@ -19,7 +19,13 @@ struct ActivePathEdgeKindHandle: View {
 
 // MARK: - ActivePathBezierHandle
 
-struct ActivePathBezierHandle: View {
+struct ActivePathBezierHandle: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
+    @EnvironmentObject var viewport: ViewportModel
+    @EnvironmentObject var pathModel: PathModel
+    @EnvironmentObject var pendingPathModel: PendingPathModel
+    @EnvironmentObject var activePathModel: ActivePathModel
+    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Bezier
@@ -31,7 +37,7 @@ struct ActivePathBezierHandle: View {
                 circle(at: bezier.control0, color: .green)
                     .multipleGesture(dragControl0, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in updater.updateActivePath(edge: fromId, bezierInView: bezier.with(control0: v.location), pending: pending) }
+                            { v, _ in pathUpdater.updateActivePath(edge: fromId, bezierInView: bezier.with(control0: v.location), pending: pending) }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -42,7 +48,7 @@ struct ActivePathBezierHandle: View {
                 circle(at: bezier.control1, color: .orange)
                     .multipleGesture(dragControl1, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in updater.updateActivePath(edge: fromId, bezierInView: bezier.with(control1: v.location), pending: pending) }
+                            { v, _ in pathUpdater.updateActivePath(edge: fromId, bezierInView: bezier.with(control1: v.location), pending: pending) }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -57,22 +63,14 @@ struct ActivePathBezierHandle: View {
     private static let circleSize: Scalar = 12
     private static let touchablePadding: Scalar = 12
 
-    @EnvironmentObject private var viewport: ViewportModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
-
-    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-
     @StateObject private var dragControl0 = MultipleGestureModel<Void>()
     @StateObject private var dragControl1 = MultipleGestureModel<Void>()
 
     private var bezier: PathEdge.Bezier { segment.bezier }
 
-    private var edgeFocused: Bool { activePath.focusedEdgeId == fromId }
-    private var nodeFocused: Bool { activePath.focusedNodeId == fromId }
-    private var nextFocused: Bool { activePath.focusedNodeId == toId }
+    private var edgeFocused: Bool { activePathInteractor.focusedEdgeId == fromId }
+    private var nodeFocused: Bool { activePathInteractor.focusedNodeId == fromId }
+    private var nextFocused: Bool { activePathInteractor.focusedNodeId == toId }
 
     private func subtractingCircle(at point: Point2) -> SUPath {
         SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
@@ -102,7 +100,13 @@ struct ActivePathBezierHandle: View {
 
 // MARK: - ActivePathArcHandle
 
-struct ActivePathArcHandle: View {
+struct ActivePathArcHandle: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
+    @EnvironmentObject var viewport: ViewportModel
+    @EnvironmentObject var pathModel: PathModel
+    @EnvironmentObject var pendingPathModel: PendingPathModel
+    @EnvironmentObject var activePathModel: ActivePathModel
+    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Arc
@@ -126,19 +130,11 @@ struct ActivePathArcHandle: View {
     private static let rectSize: CGSize = CGSize(16, 9)
     private static let touchablePadding: Scalar = 12
 
-    @EnvironmentObject private var viewport: ViewportModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
-
-    @EnvironmentObject private var pathUpdateModel: PathUpdateModel
-    private var updater: PathUpdater { .init(viewport, pathModel, activePathModel, pathUpdateModel) }
-
     private var arc: PathEdge.Arc { segment.arc }
 
-    private var edgeFocused: Bool { activePath.focusedEdgeId == fromId.id }
-    private var nodeFocused: Bool { activePath.focusedNodeId == fromId.id }
-    private var nextFocused: Bool { activePath.focusedNodeId == toId }
+    private var edgeFocused: Bool { activePathInteractor.focusedEdgeId == fromId.id }
+    private var nodeFocused: Bool { activePathInteractor.focusedNodeId == fromId.id }
+    private var nextFocused: Bool { activePathInteractor.focusedNodeId == toId }
 
     private var radius: CGSize { arc.radius }
     private var endPointParams: PathSegment.Arc.EndpointParams { segment.params }
@@ -209,7 +205,7 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfWidthEnd)
             .multipleGesture(dragRadiusHeight, center) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { updater.updateActivePath(edge: fromId, arcInView: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
+                    { pathUpdater.updateActivePath(edge: fromId, arcInView: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())
@@ -229,7 +225,7 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfHeightEnd)
             .multipleGesture(dragRadiusHeight, center) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { updater.updateActivePath(edge: fromId, arcInView: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
+                    { pathUpdater.updateActivePath(edge: fromId, arcInView: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

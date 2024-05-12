@@ -1,19 +1,20 @@
 import SwiftUI
 
 struct DebugPanel: View {
-    var body: some View {
-        panel.frame(width: 320)
-    }
-
     @EnvironmentObject var multipleTouch: MultipleTouchModel
     @EnvironmentObject var multipleTouchPress: MultipleTouchPressModel
-    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch, multipleTouchPress) }
 
     @EnvironmentObject var viewport: ViewportModel
     @EnvironmentObject var activePathModel: ActivePathModel
 
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
+
+    var body: some View {
+        panel.frame(width: 320)
+    }
+
+    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
     var title: some View {
         HStack {

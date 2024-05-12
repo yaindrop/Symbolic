@@ -134,9 +134,9 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable {
     typealias NodeEdgePair = (node: PathNode, edge: PathEdge)
 
     let id: UUID
-    let pairs: [NodeEdgePair]
-    let isClosed: Bool
-    let nodeIdToIndex: [UUID: Int]
+    private(set) var pairs: [NodeEdgePair]
+    private(set) var isClosed: Bool
+    private(set) var nodeIdToIndex: [UUID: Int]
 
     var count: Int { pairs.count }
 

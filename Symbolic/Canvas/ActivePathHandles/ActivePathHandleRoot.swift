@@ -3,9 +3,14 @@ import SwiftUI
 
 // MARK: - ActivePathHandleRoot
 
-struct ActivePathHandleRoot: View {
+struct ActivePathHandleRoot: View, EnablePathInteractor, EnableActivePathInteractor {
+    @EnvironmentObject var viewport: ViewportModel
+    @EnvironmentObject var pathModel: PathModel
+    @EnvironmentObject var pendingPathModel: PendingPathModel
+    @EnvironmentObject var activePathModel: ActivePathModel
+
     var body: some View {
-        if let activePath = activePath.pendingActivePath {
+        if let activePath = activePathInteractor.pendingActivePath {
             ZStack {
                 let nodes = activePath.nodes
                 let idAndNodePositionInView = nodes.compactMap { n -> (id: UUID, position: Point2)? in
@@ -24,9 +29,4 @@ struct ActivePathHandleRoot: View {
             }
         }
     }
-
-    @EnvironmentObject private var viewport: ViewportModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
-    private var activePath: ActivePathInteractor { .init(pathModel, activePathModel) }
 }

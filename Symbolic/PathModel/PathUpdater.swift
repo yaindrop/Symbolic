@@ -182,7 +182,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ splitSegment: PathAction.SplitSegment) {
         let pathId = splitSegment.pathId, fromNodeId = splitSegment.fromNodeId, paramT = splitSegment.paramT, newNode = splitSegment.newNode
-        guard let path = pathModel.pathIdToPath[pathId],
+        guard let path = pathModel.pathMap[pathId],
               let segment = path.segment(from: fromNodeId) else { return }
         events.append(.init(in: pathId, createNodeAfter: fromNodeId, newNode))
         var (before, after) = segment.split(paramT: paramT)
@@ -204,7 +204,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ breakAtEdge: PathAction.BreakAtEdge) {
         let pathId = breakAtEdge.pathId, fromNodeId = breakAtEdge.fromNodeId
-        guard let path = pathModel.pathIdToPath[pathId] else { return }
+        guard let path = pathModel.pathMap[pathId] else { return }
         if path.isClosed {
             events.append(.init(in: pathId, breakAfter: fromNodeId))
             return
@@ -221,7 +221,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ breakAtNode: PathAction.BreakAtNode) {
         let pathId = breakAtNode.pathId, nodeId = breakAtNode.nodeId
-        guard let path = pathModel.pathIdToPath[pathId] else { return }
+        guard let path = pathModel.pathMap[pathId] else { return }
         if path.isClosed {
             guard let prevNode = path.node(before: nodeId) else { return }
             events.append(.init(in: pathId, breakAfter: prevNode.id))
@@ -245,13 +245,13 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ setNodePosition: PathAction.SetNodePosition) {
         let pathId = setNodePosition.pathId, nodeId = setNodePosition.nodeId, position = setNodePosition.position
-        guard let node = pathModel.pathIdToPath[pathId]?.node(id: nodeId) else { return }
+        guard let node = pathModel.pathMap[pathId]?.node(id: nodeId) else { return }
         events.append(.init(in: pathId, updateNode: node.with(position: position)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ changeEdge: PathAction.ChangeEdge) {
         let pathId = changeEdge.pathId, fromNodeId = changeEdge.fromNodeId, to = changeEdge.to
-        guard let path = pathModel.pathIdToPath[pathId],
+        guard let path = pathModel.pathMap[pathId],
               let segment = path.segment(from: fromNodeId) else { return }
         switch to {
         case .arc: events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .arc(.init(radius: CGSize(10, 10), rotation: .zero, largeArc: false, sweep: false))))
@@ -272,7 +272,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ moveNode: PathAction.MoveNode) {
         let pathId = moveNode.pathId, nodeId = moveNode.nodeId, offset = moveNode.offset
-        guard let path = pathModel.pathIdToPath[pathId],
+        guard let path = pathModel.pathMap[pathId],
               let curr = path.pair(id: nodeId) else { return }
         if let prev = path.pair(before: nodeId), case let .bezier(b) = prev.edge {
             events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + offset))))
@@ -285,7 +285,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ moveEdge: PathAction.MoveEdge) {
         let pathId = moveEdge.pathId, fromNodeId = moveEdge.fromNodeId, offset = moveEdge.offset
-        guard let path = pathModel.pathIdToPath[pathId],
+        guard let path = pathModel.pathMap[pathId],
               let curr = path.pair(id: fromNodeId) else { return }
         if let prev = path.pair(before: fromNodeId), case let .bezier(b) = prev.edge {
             events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(offset1: offset))))
@@ -304,7 +304,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ movePath: PathAction.MovePath) {
         let pathId = movePath.pathId, offset = movePath.offset
-        guard let path = pathModel.pathIdToPath[pathId] else { return }
+        guard let path = pathModel.pathMap[pathId] else { return }
         for (node, edge) in path.pairs {
             events.append(.init(in: pathId, updateNode: node.with(offset: offset)))
             if case let .bezier(b) = edge {

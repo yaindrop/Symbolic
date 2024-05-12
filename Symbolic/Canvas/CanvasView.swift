@@ -38,6 +38,8 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
 
     @StateObject var canvasActionModel = CanvasActionModel()
 
+    // MARK: body
+
     var body: some View {
         navigationView
             .onChange(of: documentModel.activeDocument) {

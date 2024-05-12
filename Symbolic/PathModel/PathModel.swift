@@ -2,8 +2,6 @@ import Combine
 import Foundation
 import SwiftUI
 
-fileprivate var timer = DebugTimer()
-
 typealias PathMap = OrderedMap<UUID, Path>
 
 // MARK: - PathModel
@@ -78,11 +76,7 @@ struct PathInteractor {
     }
 
     private func loadPendingEvent(_ event: DocumentEvent?) {
-        timer.startRecording()
-        defer {
-            let a = timer.endRecording()
-            print("loadPendingEvent \(a.count) avg \(a.reduce(0.0, +) / Double(a.count))")
-        }
+        let _r = tracer.range("loadPendingEvent"); defer { _r() }
         guard let event else { return }
         pendingModel.loading = true
         defer { pendingModel.loading = false }
@@ -108,11 +102,7 @@ extension PathInteractor {
     }
 
     func loadDocument(_ document: Document) {
-        timer.startRecording()
-        defer {
-            let a = timer.endRecording()
-            print("loadDocument \(a.count) avg \(a.reduce(0.0, +) / Double(a.count))")
-        }
+        let _r = tracer.range("loadDocument"); defer { _r() }
         targetPathMapWrapper.batchUpdate {
             clear()
             for event in document.events {
@@ -136,8 +126,7 @@ extension PathInteractor {
     }
 
     func loadEvent(_ event: PathEvent) {
-        timer.startInterval()
-        defer { timer.endInterval() }
+        let _r = tracer.range("event"); defer { _r() }
         switch event {
         case let .create(create):
             loadPathEvent(create)

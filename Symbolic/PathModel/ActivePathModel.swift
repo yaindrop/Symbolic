@@ -69,7 +69,6 @@ struct ActivePathInteractor {
     }
 
     func onActivePathChanged() {
-        print("onActivePathChanged", activePath?.id)
         if let part = model.focusedPart {
             if let path = activePath {
                 if path.node(id: part.id) == nil {

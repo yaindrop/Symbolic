@@ -44,13 +44,15 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
         navigationView
             .onChange(of: documentModel.activeDocument) {
                 withAnimation {
-                    let start = Date.now
-                    defer { print("Load document takes \(Date.now.timeIntervalSince(start))") }
+                    let _r = tracer.range("Reload document")
+                    defer { _r().forSome { logInfo($0.tree) } }
                     pendingPathModel.pendingEvent = nil
                     pathInteractor.loadDocument(documentModel.activeDocument)
                 }
             }
             .onChange(of: activePathInteractor.activePath) {
+                let _r = tracer.range("Active path change \(activePathInteractor.activePath?.description ?? "nil")")
+                defer { _r().forSome { logInfo($0.tree) } }
                 activePathInteractor.onActivePathChanged()
             }
             .onAppear {
@@ -62,20 +64,22 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             .onAppear {
                 multipleTouchPress.onTap { info in
                     let worldLocation = info.location.applying(viewport.toWorld)
-                    print("onTap \(info) worldLocation \(worldLocation)")
+                    let _r = tracer.range("On tap \(worldLocation)")
+                    defer { _r().forSome { logInfo($0.tree) } }
                     withAnimation {
                         activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
                     }
                 }
                 multipleTouchPress.onLongPress { info in
+                    let worldLocation = info.current.applying(viewport.toWorld)
+                    let _r = tracer.range("On long press \(worldLocation)")
+                    defer { _r().forSome { logInfo($0.tree) } }
                     viewportUpdate.blocked = true
                     if !pendingSelectionModel.active {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
                         selectionUpdater.onStart(from: info.current)
                     }
-                    let worldLocation = info.current.applying(viewport.toWorld)
-                    print("onLongPress \(info) worldLocation \(worldLocation)")
                 }
                 multipleTouchPress.onLongPressEnd { _ in
                     viewportUpdate.blocked = false
@@ -180,7 +184,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             //                }
             //                .transformEffect(viewport.info.worldToView)
             .onChange(of: geometry.size) { oldValue, newValue in
-                print("Changing size from \(oldValue) to \(newValue)")
+                logInfo("Changing size from \(oldValue) to \(newValue)")
             }
         }
     }

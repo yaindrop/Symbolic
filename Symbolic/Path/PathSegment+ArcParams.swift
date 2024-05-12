@@ -53,7 +53,7 @@ extension PathSegment.Arc {
 
             var rx = abs(radius.width), ry = abs(radius.height)
             guard rx != 0 && ry != 0 else {
-                print("Radius cannot be 0")
+                logError("Radius cannot be 0")
                 return CenterParams(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 
@@ -71,7 +71,7 @@ extension PathSegment.Arc {
             // F.6.5.2
             let sumOfSquare = rx * rx * y1p * y1p + ry * ry * x1p * x1p
             guard sumOfSquare != 0 else {
-                print("Start point can not be same as end point")
+                logError("Start point can not be same as end point")
                 return CenterParams(center: from, radius: .zero, rotation: rotation, startAngle: .zero, deltaAngle: .zero)
             }
 

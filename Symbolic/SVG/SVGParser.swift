@@ -15,7 +15,7 @@ class SVGParserDelegate: NSObject, XMLParserDelegate {
         case "path":
             onPathElement(with: attributeDict)
         default:
-            print("Found element name \(elementName)")
+            logInfo("Found element name \(elementName)")
             break
         }
     }
@@ -23,16 +23,16 @@ class SVGParserDelegate: NSObject, XMLParserDelegate {
     func parser(_ parser: XMLParser, foundCharacters string: String) {
         let trimmedString = string.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedString.isEmpty {
-            print("Found characters: \(trimmedString)")
+            logInfo("Found characters: \(trimmedString)")
         }
     }
 
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        print("Ended element: \(elementName)")
+        logInfo("Ended element: \(elementName)")
     }
 
     func parserDidEndDocument(_ parser: XMLParser) {
-        print("Finished parsing document.")
+        logInfo("Finished parsing document.")
     }
 
     // MARK: private
@@ -49,9 +49,9 @@ class SVGParserDelegate: NSObject, XMLParserDelegate {
                 pathSubject.send(path)
             }
         } catch let error as SVGPathParserError {
-            print("SVGPathParserError: \(error).")
+            logError("SVGPathParserError: \(error).")
         } catch {
-            print("Unexpected error: \(error).")
+            logError("Unexpected error: \(error).")
         }
     }
 }

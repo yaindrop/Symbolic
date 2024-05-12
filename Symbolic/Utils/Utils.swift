@@ -326,6 +326,8 @@ extension View {
     }
 }
 
+// MARK: - BatchedPublished
+
 @propertyWrapper
 class BatchedPublished<Value> {
     @Published private var value: Value
@@ -363,37 +365,30 @@ class BatchedPublished<Value> {
     }
 }
 
-class DebugTimer {
-    private var timingIntervals: [(start: Date, end: Date)] = []
-    private var currentStart: Date?
-
-    func startRecording() {
-        timingIntervals.removeAll()
+extension Optional {
+    @inlinable public func forSome(_ callback: (Wrapped) -> Void) {
+        if case let .some(v) = self {
+            callback(v)
+        }
     }
+}
 
-    func endRecording() -> [TimeInterval] {
-        timingIntervals.compactMap { start, end in end.timeIntervalSince(start) }
-    }
-
-    func recording(in range: () -> Void) -> [TimeInterval] {
-        startRecording()
-        range()
-        return endRecording()
-    }
-
-    func startInterval() {
-        currentStart = Date()
-    }
-
-    func endInterval() {
-        guard let currentStart else { return }
-        timingIntervals.append((start: currentStart, end: .now))
-        self.currentStart = nil
-    }
-
-    func interval(in range: () -> Void) {
-        startInterval()
-        range()
-        endInterval()
+extension TimeInterval {
+    var readableTime: String {
+        if self < 1e-6 {
+            String(format: "%.1f ns", self / 1e-9)
+        } else if self < 1e-3 {
+            String(format: "%.1f us", self / 1e-6)
+        } else if self < 1 {
+            String(format: "%.1f ms", self / 1e-3)
+        } else if self < 60 {
+            String(format: "%.1 fs", self)
+        } else if self < 60 * 60 {
+            String(format: "%.1f min", self / 60)
+        } else if self < 60 * 60 * 24 {
+            String(format: "%.1f hr", self / 60 / 60)
+        } else {
+            String(format: "%.1f days", self / 60 / 60 / 24)
+        }
     }
 }

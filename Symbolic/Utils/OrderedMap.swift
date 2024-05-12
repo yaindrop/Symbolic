@@ -11,28 +11,26 @@ struct OrderedMap<Key: Hashable, Value> {
     subscript(key: Key) -> Value? {
         get { dict[key] }
         set {
-            guard let newValue else {
+            if let newValue {
+                if dict.updateValue(newValue, forKey: key) == nil {
+                    keys.append(key)
+                }
+            } else {
                 removeValue(forKey: key)
-                return
             }
-            if dict[key] == nil {
-                keys.append(key)
-            }
-            dict[key] = newValue
         }
     }
 
     func value(at index: Int) -> Value? {
-        guard index >= 0 && index < keys.count else {
-            return nil
-        }
+        guard index >= 0 && index < keys.count else { return nil }
         return dict[keys[index]]
     }
 
     mutating func removeValue(forKey key: Key) {
-        guard dict[key] != nil else { return }
-        dict.removeValue(forKey: key)
-        keys = keys.filter { $0 != key }
+        if let index = keys.firstIndex(of: key) {
+            dict.removeValue(forKey: key)
+            keys.remove(at: index)
+        }
     }
 
     mutating func removeAll() {
@@ -43,7 +41,7 @@ struct OrderedMap<Key: Hashable, Value> {
 
 extension OrderedMap: Cloneable where Key: Cloneable, Value: Cloneable {
     init(_ map: OrderedMap<Key, Value>) {
-        dict = map.dict.reduce(into: [Key: Value]()) { $0[$1.key.cloned] = $1.value.cloned }
+        dict = map.dict.reduce(into: [Key: Value]()) { dict, pair in dict[pair.key.cloned] = pair.value.cloned }
         keys = map.keys.map { Key($0) }
     }
 }

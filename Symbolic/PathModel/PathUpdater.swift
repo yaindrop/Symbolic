@@ -209,7 +209,7 @@ struct PathUpdater {
             events.append(.init(in: pathId, breakAfter: fromNodeId))
             return
         }
-        guard let i = path.nodeIdToIndex[fromNodeId] else { return }
+        guard let i = path.nodeIndex(id: fromNodeId) else { return }
         if i < path.count / 2 {
             events.append(.init(in: pathId, breakUntil: fromNodeId))
             events.append(.create(.init(path: Path(pairs: Array(path.pairs[...i]), isClosed: false))))
@@ -228,7 +228,7 @@ struct PathUpdater {
             events.append(.init(in: pathId, breakUntil: nodeId))
             return
         }
-        guard let i = path.nodeIdToIndex[nodeId] else { return }
+        guard let i = path.nodeIndex(id: nodeId) else { return }
         if i < path.count / 2 {
             events.append(.init(in: pathId, breakUntil: nodeId))
             if i - 1 > 0 {

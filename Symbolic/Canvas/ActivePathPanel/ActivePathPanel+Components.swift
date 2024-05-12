@@ -15,7 +15,7 @@ extension ActivePathPanel {
                 PanelSectionTitle(name: "Components")
                 VStack(spacing: 12) {
                     ForEach(activePath.pairs, id: \.node.id) { p in
-                        let i = activePath.nodeIdToIndex[p.node.id] ?? 0
+                        let i = activePath.nodeIndex(id: p.node.id) ?? 0
                         NodeEdgeGroup(index: i, node: p.node, edge: p.edge, hasNext: activePath.isClosed || i + 1 < activePath.count)
                     }
                 }

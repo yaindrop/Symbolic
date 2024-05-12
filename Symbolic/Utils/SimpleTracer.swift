@@ -27,6 +27,7 @@ extension SimpleTracer {
     }
 
     class EndRange {
+        @discardableResult
         func callAsFunction() -> Node.Range? {
             ended = true
             return tracer?.onEnd(self)
@@ -110,6 +111,7 @@ class SimpleTracer {
         return .init(tracer: self)
     }
 
+    @discardableResult
     fileprivate func onEnd(_ endRange: EndRange) -> Node.Range? {
         guard let pending = rangeStack.popLast() else { return nil }
         let range = Node.Range(start: pending.start, end: .now, nodes: pending.nodes, message: pending.message)

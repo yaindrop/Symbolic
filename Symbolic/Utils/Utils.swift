@@ -392,3 +392,85 @@ extension TimeInterval {
         }
     }
 }
+
+// MARK: - Proxy
+
+@propertyWrapper
+struct AnyProxy<EnclosingType, Value> {
+    let keyPath: ReferenceWritableKeyPath<EnclosingType, Value>
+
+    @available(*, unavailable, message: "@Proxy can only be applied to classes")
+    var wrappedValue: Value {
+        get { fatalError() }
+        set { fatalError() }
+    }
+
+    static subscript(
+        _enclosingInstance instance: EnclosingType,
+        wrapped wrappedKeyPath: KeyPath<EnclosingType, Value>,
+        storage storageKeyPath: KeyPath<EnclosingType, Self>
+    ) -> Value {
+        get {
+            let wrapper = instance[keyPath: storageKeyPath]
+            return instance[keyPath: wrapper.keyPath]
+        }
+        set {
+            let wrapper = instance[keyPath: storageKeyPath]
+            instance[keyPath: wrapper.keyPath] = newValue
+        }
+    }
+
+    init(_ keyPath: ReferenceWritableKeyPath<EnclosingType, Value>) {
+        self.keyPath = keyPath
+    }
+}
+
+protocol EnableProxy {
+    typealias Proxy<T> = AnyProxy<Self, T>
+}
+
+// MARK: - CachedLazy
+
+@propertyWrapper
+struct AnyCachedLazy<EnclosingType, Value> {
+    var cached: Value?
+    let computedKeyPath: KeyPath<EnclosingType, Value>
+
+    @available(*, unavailable, message: "@CachedLazy can only be applied to classes")
+    var wrappedValue: Value {
+        get { fatalError() }
+        set { fatalError() }
+    }
+
+    @discardableResult
+    mutating func refresh(_ instance: EnclosingType) -> Value {
+        let value = instance[keyPath: computedKeyPath]
+        cached = value
+        return value
+    }
+
+    static subscript(
+        _enclosingInstance instance: EnclosingType,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingType, Value>,
+        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingType, Self>
+    ) -> Value {
+        get {
+            if let cached = instance[keyPath: storageKeyPath].cached {
+                cached
+            } else {
+                instance[keyPath: storageKeyPath].refresh(instance)
+            }
+        }
+        set {
+            instance[keyPath: storageKeyPath].cached = newValue
+        }
+    }
+
+    init(_ computedKeyPath: KeyPath<EnclosingType, Value>) {
+        self.computedKeyPath = computedKeyPath
+    }
+}
+
+protocol EnableCachedLazy {
+    typealias CachedLazy<T> = AnyCachedLazy<Self, T>
+}

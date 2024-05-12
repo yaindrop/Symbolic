@@ -325,3 +325,75 @@ extension View {
         modifier(ViewSizeReader(onChange: onChange))
     }
 }
+
+@propertyWrapper
+class BatchedPublished<Value> {
+    @Published private var value: Value
+    private var updatingValue: Value?
+
+    var projectedValue: Published<Value>.Publisher {
+        get { $value }
+        set { $value = newValue }
+    }
+
+    var wrappedValue: Value {
+        get { if let updatingValue { updatingValue } else { value } }
+        set {
+            if updatingValue == nil {
+                value = newValue
+            } else {
+                updatingValue = newValue
+            }
+        }
+    }
+
+    func batchUpdate(_ update: () -> Void) {
+        if updatingValue != nil {
+            update()
+            return
+        }
+        updatingValue = value
+        update()
+        value = updatingValue!
+        updatingValue = nil
+    }
+
+    init(wrappedValue initialValue: Value) {
+        value = initialValue
+    }
+}
+
+class DebugTimer {
+    private var timingIntervals: [(start: Date, end: Date)] = []
+    private var currentStart: Date?
+
+    func startRecording() {
+        timingIntervals.removeAll()
+    }
+
+    func endRecording() -> [TimeInterval] {
+        timingIntervals.compactMap { start, end in end.timeIntervalSince(start) }
+    }
+
+    func recording(in range: () -> Void) -> [TimeInterval] {
+        startRecording()
+        range()
+        return endRecording()
+    }
+
+    func startInterval() {
+        currentStart = Date()
+    }
+
+    func endInterval() {
+        guard let currentStart else { return }
+        timingIntervals.append((start: currentStart, end: .now))
+        self.currentStart = nil
+    }
+
+    func interval(in range: () -> Void) {
+        startInterval()
+        range()
+        endInterval()
+    }
+}

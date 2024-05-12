@@ -2,34 +2,31 @@ import Combine
 import Foundation
 import SwiftUI
 
+fileprivate var timer = DebugTimer()
+
 typealias PathMap = OrderedMap<UUID, Path>
 
 // MARK: - PathModel
 
 class PathModel: ObservableObject {
-    @Published fileprivate(set) var pathMap = PathMap()
+    @BatchedPublished var pathMap = PathMap()
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var updatingPathMap: PathMap?
-
-    fileprivate func updatePathMap(_ pathMap: inout PathMap, _ updater: () -> Void) {
-        updatingPathMap = pathMap
-        defer { updatingPathMap = nil }
-        updater()
-        pathMap = updatingPathMap!
-    }
+    fileprivate var pathMapWrapper: BatchedPublished<PathMap> { _pathMap }
 }
 
 // MARK: - PendingPathModel
 
 class PendingPathModel: ObservableObject {
     @Published var pendingEvent: DocumentEvent?
-    @Published fileprivate(set) var pathMap = PathMap()
+    @BatchedPublished fileprivate(set) var pathMap = PathMap()
 
     var hasPendingEvent: Bool { pendingEvent != nil }
 
     var paths: [Path] { pathMap.values }
+
+    fileprivate var pathMapWrapper: BatchedPublished<PathMap> { _pathMap }
 
     fileprivate var loading = false
     fileprivate var subscriptions = Set<AnyCancellable>()
@@ -54,13 +51,13 @@ struct PathInteractor {
 
     func add(path: Path) {
         guard path.count > 1 else { return }
-        guard updatingPathMap[path.id] == nil else { return }
-        updatingPathMap[path.id] = path
+        guard targetPathMap[path.id] == nil else { return }
+        targetPathMap[path.id] = path
     }
 
     func remove(pathId: UUID) {
-        guard updatingPathMap[pathId] != nil else { return }
-        updatingPathMap.removeValue(forKey: pathId)
+        guard targetPathMap[pathId] != nil else { return }
+        targetPathMap.removeValue(forKey: pathId)
     }
 
     func update(path: Path) {
@@ -68,12 +65,12 @@ struct PathInteractor {
             remove(pathId: path.id)
             return
         }
-        guard updatingPathMap[path.id] != nil else { return }
-        updatingPathMap[path.id] = path
+        guard targetPathMap[path.id] != nil else { return }
+        targetPathMap[path.id] = path
     }
 
     func clear() {
-        updatingPathMap.removeAll()
+        targetPathMap.removeAll()
     }
 
     func subscribe() {
@@ -81,11 +78,16 @@ struct PathInteractor {
     }
 
     private func loadPendingEvent(_ event: DocumentEvent?) {
+        timer.startRecording()
+        defer {
+            let a = timer.endRecording()
+            print("loadPendingEvent \(a.count) avg \(a.reduce(0.0, +) / Double(a.count))")
+        }
         guard let event else { return }
         pendingModel.loading = true
         defer { pendingModel.loading = false }
         pendingModel.pathMap = model.pathMap.cloned
-        model.updatePathMap(&targetPathMap) {
+        targetPathMapWrapper.batchUpdate {
             loadEvent(event)
         }
     }
@@ -101,17 +103,17 @@ extension PathInteractor {
         }
     }
 
-    private var updatingPathMap: PathMap {
-        get {
-            if let updatingPathMap = model.updatingPathMap { updatingPathMap } else { targetPathMap }
-        }
-        nonmutating set {
-            if model.updatingPathMap != nil { model.updatingPathMap = newValue } else { targetPathMap = newValue }
-        }
+    private var targetPathMapWrapper: BatchedPublished<PathMap> {
+        pendingModel.loading ? pendingModel.pathMapWrapper : model.pathMapWrapper
     }
 
     func loadDocument(_ document: Document) {
-        model.updatePathMap(&targetPathMap) {
+        timer.startRecording()
+        defer {
+            let a = timer.endRecording()
+            print("loadDocument \(a.count) avg \(a.reduce(0.0, +) / Double(a.count))")
+        }
+        targetPathMapWrapper.batchUpdate {
             clear()
             for event in document.events {
                 loadEvent(event)
@@ -134,6 +136,8 @@ extension PathInteractor {
     }
 
     func loadEvent(_ event: PathEvent) {
+        timer.startInterval()
+        defer { timer.endInterval() }
         switch event {
         case let .create(create):
             loadPathEvent(create)
@@ -170,37 +174,37 @@ extension PathInteractor {
     }
 
     func loadPathUpdate(pathId: UUID, _ breakAfter: PathEvent.Update.BreakAfter) {
-        guard let path = updatingPathMap[pathId] else { return }
+        guard let path = targetPathMap[pathId] else { return }
         path.update(breakAfter: breakAfter)
         update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ breakUntil: PathEvent.Update.BreakUntil) {
-        guard let path = updatingPathMap[pathId] else { return }
+        guard let path = targetPathMap[pathId] else { return }
         path.update(breakUntil: breakUntil)
         update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ edgeUpdate: PathEvent.Update.EdgeUpdate) {
-        guard let path = updatingPathMap[pathId] else { return }
+        guard let path = targetPathMap[pathId] else { return }
         path.update(edgeUpdate: edgeUpdate)
         update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ nodeCreate: PathEvent.Update.NodeCreate) {
-        guard let path = updatingPathMap[pathId] else { return }
+        guard let path = targetPathMap[pathId] else { return }
         path.update(nodeCreate: nodeCreate)
         update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ nodeDelete: PathEvent.Update.NodeDelete) {
-        guard let path = updatingPathMap[pathId] else { return }
+        guard let path = targetPathMap[pathId] else { return }
         path.update(nodeDelete: nodeDelete)
         update(path: path)
     }
 
     func loadPathUpdate(pathId: UUID, _ nodeUpdate: PathEvent.Update.NodeUpdate) {
-        guard let path = updatingPathMap[pathId] else { return }
+        guard let path = targetPathMap[pathId] else { return }
         path.update(nodeUpdate: nodeUpdate)
         update(path: path)
     }

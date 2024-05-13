@@ -3,17 +3,17 @@ import Foundation
 extension SimpleTracer {
     enum Node {
         struct Instant {
-            let time: Date
+            let time: ContinuousClock.Instant
             let message: String
         }
 
         struct Range {
-            let start: Date
-            let end: Date
+            let start: ContinuousClock.Instant
+            let end: ContinuousClock.Instant
             let nodes: [Node]
             let message: String
 
-            var interval: TimeInterval { end.timeIntervalSince(start) }
+            var duration: Duration { start.duration(to: end) }
         }
 
         case instant(Instant)
@@ -21,7 +21,7 @@ extension SimpleTracer {
     }
 
     struct PendingRange {
-        let start: Date
+        let start: ContinuousClock.Instant
         let message: String
         var nodes: [Node] = []
     }
@@ -57,7 +57,7 @@ extension SimpleTracer.Node.Instant: CustomStringConvertible {
 
 extension SimpleTracer.Node.Range: CustomStringConvertible {
     var description: String {
-        "Range(\(message), \(interval))"
+        "Range(\(message), \(duration.readable))"
     }
 
     var tree: String { buildTreeLines().joined(separator: "\n") }
@@ -65,14 +65,14 @@ extension SimpleTracer.Node.Range: CustomStringConvertible {
     private func buildTreeLines(asRoot: Bool = true) -> [String] {
         var lines: [String] = []
         if asRoot {
-            lines.append("\(message) lasting \(interval.readableTime) at \(start.timeIntervalSince1970)")
+            lines.append("\(message) (\(duration.readable))")
         }
         for node in nodes {
             switch node {
             case let .instant(i):
-                lines.append("\\_(+\(i.time.timeIntervalSince(start).readableTime)) \(i.message)")
+                lines.append("\\_(+\(start.duration(to: i.time).readable)) \(i.message)")
             case let .range(r):
-                lines.append("\\_(+\(r.start.timeIntervalSince(start).readableTime)) \(r.message) lasting \(r.interval.readableTime)")
+                lines.append("\\_(+\(start.duration(to: r.start).readable)) \(r.message) (\(r.duration.readable))")
                 lines += r.buildTreeLines(asRoot: false).map { "\t" + $0 }
             }
         }

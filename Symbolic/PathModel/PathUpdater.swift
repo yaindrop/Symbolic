@@ -134,6 +134,7 @@ struct PathUpdater {
     // MARK: handle action
 
     private func handle(_ action: DocumentAction, pending: Bool) {
+        let _r = tracer.range("Path updater handle action"); defer { _r().forSome { logInfo($0.tree) } }
         switch action {
         case let .pathAction(pathAction):
             handle(pathAction, pending: pending)
@@ -153,9 +154,11 @@ struct PathUpdater {
         }
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending || pathInteractor.pendingModel.hasPendingEvent {
+            let _r = tracer.range("Path updater send pending event"); defer { _r() }
             model.pendingEventSubject.send(event)
         }
         if !pending {
+            let _r = tracer.range("Path updater send event"); defer { _r() }
             model.eventSubject.send(event)
         }
     }
@@ -212,10 +215,12 @@ struct PathUpdater {
         guard let i = path.nodeIndex(id: fromNodeId) else { return }
         if i < path.count / 2 {
             events.append(.init(in: pathId, breakUntil: fromNodeId))
-            events.append(.create(.init(path: Path(pairs: Array(path.pairs[...i]), isClosed: false))))
+            let newPairs = path.pairs.with { $0.mutateKeys { $0 = Array($0[...i]) } }
+            events.append(.create(.init(path: Path(pairs: newPairs, isClosed: false))))
         } else {
             events.append(.init(in: pathId, breakAfter: fromNodeId))
-            events.append(.create(.init(path: Path(pairs: Array(path.pairs[(i + 1)...]), isClosed: false))))
+            let newPairs = path.pairs.with { $0.mutateKeys { $0 = Array($0[(i + 1)...]) } }
+            events.append(.create(.init(path: Path(pairs: newPairs, isClosed: false))))
         }
     }
 
@@ -232,13 +237,15 @@ struct PathUpdater {
         if i < path.count / 2 {
             events.append(.init(in: pathId, breakUntil: nodeId))
             if i - 1 > 0 {
-                events.append(.create(.init(path: Path(pairs: Array(path.pairs[...(i - 1)]), isClosed: false))))
+                let newPairs = path.pairs.with { $0.mutateKeys { $0 = Array($0[...(i - 1)]) } }
+                events.append(.create(.init(path: Path(pairs: newPairs, isClosed: false))))
             }
         } else {
             guard let prevNode = path.node(before: nodeId) else { return }
             events.append(.init(in: pathId, breakAfter: prevNode.id))
             if i + 1 < path.count - 1 {
-                events.append(.create(.init(path: Path(pairs: Array(path.pairs[(i + 1)...]), isClosed: false))))
+                let newPairs = path.pairs.with { $0.mutateKeys { $0 = Array($0[(i + 1)...]) } }
+                events.append(.create(.init(path: Path(pairs: newPairs, isClosed: false))))
             }
         }
     }

@@ -29,14 +29,16 @@ extension PathEdge {
 
 extension Path {
     convenience init(from svgPath: SVGPath) {
-        var pairs: [NodeEdgePair] = []
+        var pairs = PairMap()
         var current = svgPath.initial
         for command in svgPath.commands {
-            pairs.append((PathNode(position: current), PathEdge(from: command, at: current)))
+            let node = PathNode(position: current)
+            pairs.append((node.id, .init(node, .init(from: command, at: current))))
             current = command.position
         }
         if svgPath.initial != svgPath.last {
-            pairs.append((PathNode(position: svgPath.last), .line(PathEdge.Line())))
+            let node = PathNode(position: svgPath.last)
+            pairs.append((node.id, .init(node, .line(PathEdge.Line()))))
         }
         self.init(pairs: pairs, isClosed: svgPath.isClosed)
     }

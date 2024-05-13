@@ -78,6 +78,7 @@ struct ViewportUpdater {
     // MARK: private
 
     private func onPanInfo(_ pan: PanInfo) {
+        let _r = tracer.range("Viewport pan \(pan)"); defer { _r().forSome { logInfo($0.tree) } }
         let previousInfo = model.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
@@ -85,6 +86,7 @@ struct ViewportUpdater {
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
+        let _r = tracer.range("Viewport pinch \(pinch)"); defer { _r().forSome { logInfo($0.tree) } }
         let previousInfo = model.previousInfo
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame

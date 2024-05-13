@@ -48,17 +48,20 @@ struct PathInteractor {
     let pendingModel: PendingPathModel
 
     func add(path: Path) {
+        let _r = tracer.range("Add path"); defer { _r() }
         guard path.count > 1 else { return }
         guard targetPathMap[path.id] == nil else { return }
         targetPathMap[path.id] = path.cloned
     }
 
     func remove(pathId: UUID) {
+        let _r = tracer.range("Remove path"); defer { _r() }
         guard targetPathMap[pathId] != nil else { return }
         targetPathMap.removeValue(forKey: pathId)
     }
 
     func update(path: Path) {
+        let _r = tracer.range("Update path"); defer { _r() }
         guard path.count > 1 else {
             remove(pathId: path.id)
             return
@@ -68,6 +71,7 @@ struct PathInteractor {
     }
 
     func clear() {
+        let _r = tracer.range("Clear paths"); defer { _r() }
         targetPathMap.removeAll()
     }
 
@@ -75,8 +79,21 @@ struct PathInteractor {
         pendingModel.$pendingEvent.sink { self.loadPendingEvent($0) }.store(in: &pendingModel.subscriptions)
     }
 
+    // MARK: private
+
+    private var targetPathMap: PathMap {
+        get { pendingModel.loading ? pendingModel.pathMap : model.pathMap }
+        nonmutating set {
+            if pendingModel.loading { pendingModel.pathMap = newValue } else { model.pathMap = newValue }
+        }
+    }
+
+    private var targetPathMapWrapper: BatchedPublished<PathMap> {
+        pendingModel.loading ? pendingModel.pathMapWrapper : model.pathMapWrapper
+    }
+
     private func loadPendingEvent(_ event: DocumentEvent?) {
-        let _r = tracer.range("loadPendingEvent"); defer { _r() }
+        let _r = tracer.range("Path load pending event"); defer { _r() }
         guard let event else { return }
         pendingModel.loading = true
         defer { pendingModel.loading = false }
@@ -90,19 +107,8 @@ struct PathInteractor {
 // MARK: - PathModel load events
 
 extension PathInteractor {
-    private var targetPathMap: PathMap {
-        get { pendingModel.loading ? pendingModel.pathMap : model.pathMap }
-        nonmutating set {
-            if pendingModel.loading { pendingModel.pathMap = newValue } else { model.pathMap = newValue }
-        }
-    }
-
-    private var targetPathMapWrapper: BatchedPublished<PathMap> {
-        pendingModel.loading ? pendingModel.pathMapWrapper : model.pathMapWrapper
-    }
-
     func loadDocument(_ document: Document) {
-        let _r = tracer.range("loadDocument"); defer { _r() }
+        let _r = tracer.range("Path load document"); defer { _r() }
         targetPathMapWrapper.batchUpdate {
             clear()
             for event in document.events {
@@ -126,7 +132,7 @@ extension PathInteractor {
     }
 
     func loadEvent(_ event: PathEvent) {
-        let _r = tracer.range("event"); defer { _r() }
+        let _r = tracer.range("Path load event"); defer { _r() }
         switch event {
         case let .create(create):
             loadPathEvent(create)

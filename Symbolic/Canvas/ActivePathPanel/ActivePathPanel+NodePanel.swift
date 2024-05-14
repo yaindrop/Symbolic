@@ -26,7 +26,7 @@ extension ActivePathPanel {
         init(index: Int, node: PathNode) {
             self.index = index
             self.node = node
-            _focused = .init { activePathInteractor.focusedNodeId == node.id }
+            _focused = .init { interactor.activePath.focusedNodeId == node.id }
         }
 
         @ViewBuilder private var title: some View {
@@ -54,19 +54,19 @@ extension ActivePathPanel {
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
+            { interactor.pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
         }
 
         private func toggleFocus() {
-            focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(node: node.id)
+            focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(node: node.id)
         }
 
         private func breakNode() {
-            pathUpdater.updateActivePath(breakAtNode: node.id)
+            interactor.pathUpdater.updateActivePath(breakAtNode: node.id)
         }
 
         private func deleteNode() {
-            pathUpdater.updateActivePath(deleteNode: node.id)
+            interactor.pathUpdater.updateActivePath(deleteNode: node.id)
         }
     }
 }

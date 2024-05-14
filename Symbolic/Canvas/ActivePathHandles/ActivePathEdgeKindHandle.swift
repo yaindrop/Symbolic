@@ -37,7 +37,7 @@ struct ActivePathBezierHandle: View {
                 circle(at: bezier.control0, color: .green)
                     .multipleGesture(dragControl0, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control0: v.location), pending: pending) }
+                            { v, _ in interactor.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control0: v.location), pending: pending) }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -48,7 +48,7 @@ struct ActivePathBezierHandle: View {
                 circle(at: bezier.control1, color: .orange)
                     .multipleGesture(dragControl1, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control1: v.location), pending: pending) }
+                            { v, _ in interactor.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control1: v.location), pending: pending) }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -61,9 +61,9 @@ struct ActivePathBezierHandle: View {
         self.fromId = fromId
         self.toId = toId
         self.segment = segment
-        _edgeFocused = .init { activePathInteractor.focusedEdgeId == fromId }
-        _nodeFocused = .init { activePathInteractor.focusedNodeId == fromId }
-        _nextFocused = .init { activePathInteractor.focusedNodeId == toId }
+        _edgeFocused = .init { interactor.activePath.focusedEdgeId == fromId }
+        _nodeFocused = .init { interactor.activePath.focusedNodeId == fromId }
+        _nextFocused = .init { interactor.activePath.focusedNodeId == toId }
     }
 
     // MARK: private
@@ -130,9 +130,9 @@ struct ActivePathArcHandle: View {
         self.fromId = fromId
         self.toId = toId
         self.segment = segment
-        _edgeFocused = .init { activePathInteractor.focusedEdgeId == fromId }
-        _nodeFocused = .init { activePathInteractor.focusedNodeId == fromId }
-        _nextFocused = .init { activePathInteractor.focusedNodeId == toId }
+        _edgeFocused = .init { interactor.activePath.focusedEdgeId == fromId }
+        _nodeFocused = .init { interactor.activePath.focusedNodeId == fromId }
+        _nextFocused = .init { interactor.activePath.focusedNodeId == toId }
     }
 
     // MARK: private
@@ -213,7 +213,7 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfWidthEnd)
             .multipleGesture(dragRadiusHeight, center) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
+                    { interactor.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())
@@ -233,7 +233,7 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfHeightEnd)
             .multipleGesture(dragRadiusHeight, center) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
+                    { interactor.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

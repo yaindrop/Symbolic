@@ -52,11 +52,11 @@ struct ActivePathInteractor {
     func clearFocus() { withAnimation { model.focusedPart = nil } }
 
     var activePath: Path? {
-        pathInteractor.model.paths.first { $0.id == activePathId }
+        interactor.path.model.paths.first { $0.id == activePathId }
     }
 
     var pendingActivePath: Path? {
-        pathInteractor.pendingModel.hasPendingEvent ? pathInteractor.pendingModel.paths.first { $0.id == activePathId } : activePath
+        interactor.path.pendingModel.hasPendingEvent ? interactor.path.pendingModel.paths.first { $0.id == activePathId } : activePath
     }
 
     func onActivePathChanged() {
@@ -72,7 +72,7 @@ struct ActivePathInteractor {
     }
 
     @ViewBuilder var inactivePathsView: some View {
-        ForEach(pathInteractor.model.paths.filter { $0.id != activePathId }) { p in
+        ForEach(interactor.path.model.paths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }

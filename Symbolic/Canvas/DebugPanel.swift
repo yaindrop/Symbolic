@@ -33,7 +33,7 @@ struct DebugPanel: View {
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
             Divider()
-            Row(name: "Viewport", value: store.viewportModel.info.description)
+            Row(name: "Viewport", value: store.viewport.info.description)
         }
         .padding(12)
         .background(.regularMaterial)

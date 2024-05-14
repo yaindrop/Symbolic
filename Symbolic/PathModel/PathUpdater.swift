@@ -88,7 +88,7 @@ struct PathUpdater {
 
     // MARK: private
 
-    private var activePath: Path? { activePathInteractor.activePath }
+    private var activePath: Path? { interactor.activePath.activePath }
 
     // MARK: handle action
 
@@ -284,34 +284,34 @@ struct PathUpdaterInView {
     let pathUpdateModel: PathUpdateModel
 
     func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
-        pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: newNodeId, position: position.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: newNodeId, position: position.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: single update
 
     func updateActivePath(node id: UUID, position: Point2, pending: Bool = false) {
-        pathUpdater.updateActivePath(node: id, position: position.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(node: id, position: position.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(edge fromNodeId: UUID, bezier: PathEdge.Bezier, pending: Bool = false) {
-        pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {
-        pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: compound update
 
     func updateActivePath(moveNode id: UUID, offset: Vector2, pending: Bool = false) {
-        pathUpdater.updateActivePath(moveNode: id, offset: offset.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(moveNode: id, offset: offset.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(moveEdge fromId: UUID, offset: Vector2, pending: Bool = false) {
-        pathUpdater.updateActivePath(moveEdge: fromId, offset: offset.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(moveEdge: fromId, offset: offset.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(moveByOffset offset: Vector2, pending: Bool = false) {
-        pathUpdater.updateActivePath(moveByOffset: offset.applying(viewport.toWorld), pending: pending)
+        interactor.pathUpdater.updateActivePath(moveByOffset: offset.applying(viewport.toWorld), pending: pending)
     }
 }

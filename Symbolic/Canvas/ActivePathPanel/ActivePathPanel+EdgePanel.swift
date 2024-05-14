@@ -32,8 +32,8 @@ extension ActivePathPanel {
         init(fromNodeId: UUID, edge: PathEdge) {
             self.fromNodeId = fromNodeId
             self.edge = edge
-            _segment = .init { activePathInteractor.activePath?.segment(from: fromNodeId) }
-            _focused = .init { activePathInteractor.focusedNodeId == fromNodeId }
+            _segment = .init { interactor.activePath.activePath?.segment(from: fromNodeId) }
+            _focused = .init { interactor.activePath.focusedNodeId == fromNodeId }
         }
 
         @State private var expanded = false
@@ -118,11 +118,11 @@ extension ActivePathPanel {
         } }
 
         private func toggleFocus() {
-            focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(edge: fromNodeId)
+            focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(edge: fromNodeId)
         }
 
         private func changeEdge(to: PathEdge.Case) {
-            pathUpdater.updateActivePath(changeEdge: fromNodeId, to: to)
+            interactor.pathUpdater.updateActivePath(changeEdge: fromNodeId, to: to)
         }
 
         private func splitEdge() {
@@ -130,12 +130,12 @@ extension ActivePathPanel {
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let position = segment.position(paramT: paramT)
             let id = UUID()
-            pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
-            activePathInteractor.setFocus(node: id)
+            interactor.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
+            interactor.activePath.setFocus(node: id)
         }
 
         private func breakEdge() {
-            pathUpdater.updateActivePath(deleteEdge: fromNodeId)
+            interactor.pathUpdater.updateActivePath(deleteEdge: fromNodeId)
         }
     }
 }
@@ -170,11 +170,11 @@ fileprivate struct BezierPanel: View, EquatableByTuple {
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
-        { pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
+        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
     }
 
     private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
-        { pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: pending) }
+        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: pending) }
     }
 }
 
@@ -222,18 +222,18 @@ fileprivate struct ArcPanel: View, EquatableByTuple {
     } }
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
-        { pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }
+        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }
     }
 
     private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
-        { pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
+        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
     }
 
     private var updateLargeArc: (Bool) -> Void {
-        { pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(largeArc: $0)) }
+        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(largeArc: $0)) }
     }
 
     private var updateSweep: (Bool) -> Void {
-        { pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(sweep: $0)) }
+        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(sweep: $0)) }
     }
 }

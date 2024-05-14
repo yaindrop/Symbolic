@@ -44,7 +44,7 @@
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
 		57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E462BE2851D00C73434 /* MultipleGesture.swift */; };
 		57416E492BE5252000C73434 /* FlagInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E482BE5252000C73434 /* FlagInput.swift */; };
-		574CC7BA2BF3B2950042FEE3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7B92BF3B2950042FEE3 /* Store.swift */; };
+		574CC7BA2BF3B2950042FEE3 /* GlobalState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7B92BF3B2950042FEE3 /* GlobalState.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -125,7 +125,7 @@
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		57416E462BE2851D00C73434 /* MultipleGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleGesture.swift; sourceTree = "<group>"; };
 		57416E482BE5252000C73434 /* FlagInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagInput.swift; sourceTree = "<group>"; };
-		574CC7B92BF3B2950042FEE3 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		574CC7B92BF3B2950042FEE3 /* GlobalState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalState.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -222,6 +222,7 @@
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
 				57B5F1472BD54260001E1B2E /* Document */,
 				57B5F13D2BD4A314001E1B2E /* Gesture */,
+				574CC7B92BF3B2950042FEE3 /* GlobalState.swift */,
 				5723BF7D2BC39844002209F2 /* Item.swift */,
 				5700C2C22BEB5A6800481FA7 /* Panel */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
@@ -230,7 +231,6 @@
 				57B5F13B2BD4A2E2001E1B2E /* SVG */,
 				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
-				574CC7B92BF3B2950042FEE3 /* Store.swift */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -514,7 +514,7 @@
 				5700C2C42BEB5AAF00481FA7 /* PanelTitle.swift in Sources */,
 				5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */,
 				5723BF7E2BC39844002209F2 /* Item.swift in Sources */,
-				574CC7BA2BF3B2950042FEE3 /* Store.swift in Sources */,
+				574CC7BA2BF3B2950042FEE3 /* GlobalState.swift in Sources */,
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,

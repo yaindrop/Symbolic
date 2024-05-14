@@ -52,7 +52,7 @@ struct HistoryPanel: View {
     }
 
     @ViewBuilder var content: some View {
-        let document = store.documentModel.activeDocument
+        let document = store.document.activeDocument
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Events")
             VStack(spacing: 12) {

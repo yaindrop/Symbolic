@@ -18,7 +18,7 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     init(nodeId: UUID, position: Point2) {
         self.nodeId = nodeId
         self.position = position
-        _focused = .init { activePathInteractor.focusedNodeId == nodeId }
+        _focused = .init { interactor.activePath.focusedNodeId == nodeId }
     }
 
     // MARK: private
@@ -28,7 +28,7 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     private static let touchablePadding: Scalar = 16
 
     private func toggleFocus() {
-        focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(node: nodeId)
+        focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(node: nodeId)
     }
 
     @State private var dragGesture = MultipleGestureModel<Point2>()
@@ -49,7 +49,7 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
             .position(point)
             .multipleGesture(dragGesture, position) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending) }
+                    { interactor.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

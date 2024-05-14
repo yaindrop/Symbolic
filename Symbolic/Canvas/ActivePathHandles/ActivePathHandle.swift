@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - ActivePathHandle
 
 struct ActivePathHandle: View {
-    @Selected var boundingRect = activePathInteractor.pendingActivePath?.boundingRect
+    @Selected var boundingRect = interactor.activePath.pendingActivePath?.boundingRect
 
     var body: some View { tracer.range("ActivePathHandle body") {
         rect
@@ -19,7 +19,7 @@ struct ActivePathHandle: View {
     @State private var dragGesture = MultipleGestureModel<Void>()
 
     var boundingRectInView: CGRect? {
-        boundingRect?.applying(store.viewportModel.toView)
+        boundingRect?.applying(store.viewport.toView)
     }
 
     @ViewBuilder private var rect: some View {
@@ -31,7 +31,7 @@ struct ActivePathHandle: View {
                 .position(boundingRectInView.center)
                 .multipleGesture(dragGesture, ()) {
                     func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending) }
+                        { v, _ in interactor.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending) }
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())

@@ -42,35 +42,35 @@ struct CanvasView: View {
 
     var body: some View { tracer.range("CanvasView body") {
         navigationView
-            .onChange(of: store.documentModel.activeDocument) {
+            .onChange(of: store.document.activeDocument) {
                 withAnimation {
                     let _r = tracer.range("Reload document"); defer { _r() }
-                    store.pendingPathModel.pendingEvent = nil
-                    pathInteractor.loadDocument(store.documentModel.activeDocument)
+                    store.pendingPath.pendingEvent = nil
+                    interactor.path.loadDocument(store.document.activeDocument)
                 }
             }
-            .onChange(of: activePathInteractor.activePath) {
-                let _r = tracer.range("Active path change \(activePathInteractor.activePath?.id.uuidString ?? "nil")"); defer { _r() }
-                activePathInteractor.onActivePathChanged()
+            .onChange(of: interactor.activePath.activePath) {
+                let _r = tracer.range("Active path change \(interactor.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
+                interactor.activePath.onActivePathChanged()
             }
             .onAppear {
-                viewportUpdater.subscribe(to: multipleTouch)
+                interactor.viewportUpdater.subscribe(to: multipleTouch)
                 pressDetector.subscribe()
-                pathInteractor.subscribe()
+                interactor.path.subscribe()
                 selectionUpdater.subscribe(to: multipleTouch)
             }
             .onAppear {
                 multipleTouchPress.onTap { info in
-                    let worldLocation = info.location.applying(store.viewportModel.toWorld)
+                    let worldLocation = info.location.applying(store.viewport.toWorld)
                     let _r = tracer.range("On tap \(worldLocation)"); defer { _r() }
                     withAnimation {
-                        store.activePathModel.activePathId = store.pathModel.hitTest(worldPosition: worldLocation)?.id
+                        store.activePath.activePathId = store.path.hitTest(worldPosition: worldLocation)?.id
                     }
                 }
                 multipleTouchPress.onLongPress { info in
-                    let worldLocation = info.current.applying(store.viewportModel.toWorld)
+                    let worldLocation = info.current.applying(store.viewport.toWorld)
                     let _r = tracer.range("On long press \(worldLocation)"); defer { _r() }
-                    store.viewportUpdateModel.blocked = true
+                    store.viewportUpdate.blocked = true
                     if !pendingSelectionModel.active {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
@@ -79,19 +79,19 @@ struct CanvasView: View {
                 }
                 multipleTouchPress.onLongPressEnd { _ in
                     let _r = tracer.range("On long press end"); defer { _r() }
-                    store.viewportUpdateModel.blocked = false
+                    store.viewportUpdate.blocked = false
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
                     selectionUpdater.onEnd()
                 }
             }
             .onAppear {
-                store.pathUpdateModel.onPendingEvent { e in
-                    store.pendingPathModel.pendingEvent = e
+                store.pathUpdate.onPendingEvent { e in
+                    store.pendingPath.pendingEvent = e
                 }
-                store.pathUpdateModel.onEvent { e in
+                store.pathUpdate.onEvent { e in
                     withAnimation {
-                        store.documentModel.sendEvent(e)
+                        store.document.sendEvent(e)
                     }
                 }
             }
@@ -105,7 +105,7 @@ struct CanvasView: View {
                 }
             }
             .onAppear {
-                store.documentModel.activeDocument = Document(from: fooSvg)
+                store.document.activeDocument = Document(from: fooSvg)
             }
     }}
 
@@ -143,7 +143,7 @@ struct CanvasView: View {
     @ViewBuilder private var background: some View {
         GeometryReader { geometry in
             Canvas { context, _ in
-                context.concatenate(store.viewportModel.toView)
+                context.concatenate(store.viewport.toView)
                 let path = SUPath { path in
                     for index in 0 ... 10240 {
                         let vOffset: Scalar = Scalar(index) * 10
@@ -181,8 +181,8 @@ struct CanvasView: View {
     }
 
     @ViewBuilder private var inactivePaths: some View {
-        activePathInteractor.inactivePathsView
-            .transformEffect(store.viewportModel.toView)
+        interactor.activePath.inactivePathsView
+            .transformEffect(store.viewport.toView)
             .blur(radius: 1)
     }
 
@@ -192,8 +192,8 @@ struct CanvasView: View {
     }
 
     @ViewBuilder private var activePaths: some View {
-        activePathInteractor.activePathView
-            .transformEffect(store.viewportModel.toView)
+        interactor.activePath.activePathView
+            .transformEffect(store.viewport.toView)
     }
 
     @ViewBuilder private var overlay: some View {
@@ -235,7 +235,7 @@ struct CanvasView: View {
         }
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                var events = store.documentModel.activeDocument.events
+                var events = store.document.activeDocument.events
                 guard let last = events.last else { return }
                 if case let .pathAction(p) = last.action {
                     if case let .load(l) = p {
@@ -243,7 +243,7 @@ struct CanvasView: View {
                     }
                 }
                 events.removeLast()
-                store.documentModel.activeDocument = Document(events: events)
+                store.document.activeDocument = Document(events: events)
             } label: {
                 Image(systemName: "arrow.uturn.backward")
             }

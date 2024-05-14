@@ -9,7 +9,7 @@ protocol SUPathAppendable {
 
 // MARK: - PathEdge
 
-fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable {}
+fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable, Equatable {}
 
 enum PathEdge {
     fileprivate typealias Impl = PathEdgeImpl
@@ -55,7 +55,7 @@ enum PathEdge {
 }
 
 extension PathEdge: PathEdgeImpl {
-    private var impl: Impl {
+    private var impl: any Impl {
         switch self {
         case let .arc(a): a
         case let .bezier(b): b
@@ -63,7 +63,7 @@ extension PathEdge: PathEdgeImpl {
         }
     }
 
-    private func impl(_ transform: (Impl) -> Impl) -> Self {
+    private func impl(_ transform: (any Impl) -> any Impl) -> Self {
         switch self {
         case let .arc(a): .arc(transform(a) as! Arc)
         case let .bezier(b): .bezier(transform(b) as! Bezier)

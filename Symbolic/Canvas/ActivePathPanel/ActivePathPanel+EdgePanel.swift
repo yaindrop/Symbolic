@@ -61,28 +61,30 @@ extension ActivePathPanel {
             .padding(6)
         }}
 
-        @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu") {
-            Menu { tracer.range("ActivePathPanel EdgePanel titleMenu menu") {
-                Label("\(fromNodeId)", systemImage: "number")
-                Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
-                Divider()
-                ControlGroup {
-                    Button("Arc", systemImage: "circle") { changeEdge(to: .arc) }
-                        .disabled(edge.case == .arc)
-                    Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { changeEdge(to: .bezier) }
-                        .disabled(edge.case == .bezier)
-                    Button("Line", systemImage: "chart.xyaxis.line") { changeEdge(to: .line) }
-                        .disabled(edge.case == .line)
-                } label: {
-                    Text("Type")
+        @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu \(fromNodeId)") {
+            memo(edge) {
+                Menu { tracer.range("ActivePathPanel EdgePanel titleMenu menu") {
+                    Label("\(fromNodeId)", systemImage: "number")
+                    Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
+                    Divider()
+                    ControlGroup {
+                        Button("Arc", systemImage: "circle") { changeEdge(to: .arc) }
+                            .disabled(edge.case == .arc)
+                        Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { changeEdge(to: .bezier) }
+                            .disabled(edge.case == .bezier)
+                        Button("Line", systemImage: "chart.xyaxis.line") { changeEdge(to: .line) }
+                            .disabled(edge.case == .line)
+                    } label: {
+                        Text("Type")
+                    }
+                    Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
+                    Divider()
+                    Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }
+                }} label: {
+                    title
                 }
-                Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
-                Divider()
-                Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }
-            }} label: {
-                title
+                .tint(.label)
             }
-            .tint(.label)
         }}
 
         @ViewBuilder private var expandButton: some View {
@@ -96,16 +98,18 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
-            Group {
-                if case let .bezier(bezier) = edge {
-                    BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
-                } else if case let .arc(arc) = edge {
-                    ArcPanel(fromNodeId: fromNodeId, arc: arc)
+            memo(deps: .init(expanded, edge)) {
+                Group {
+                    if case let .bezier(bezier) = edge {
+                        BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
+                    } else if case let .arc(arc) = edge {
+                        ArcPanel(fromNodeId: fromNodeId, arc: arc)
+                    }
                 }
+                .padding(.top, 6)
+                .frame(height: expanded ? nil : 0, alignment: .top)
+                .clipped()
             }
-            .padding(.top, 6)
-            .frame(height: expanded ? nil : 0, alignment: .top)
-            .clipped()
         } }
 
         private func toggleFocus() {
@@ -143,24 +147,26 @@ fileprivate struct BezierPanel: View, EnableActivePathInteractor, EnablePathUpda
     let bezier: PathEdge.Bezier
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("C₁")
-                    .font(.callout.monospacedDigit())
-                Spacer(minLength: 12)
-                PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
+        memo(bezier) { tracer.range("ActivePathPanel EdgePanel BezierPanel") {
+            VStack(spacing: 12) {
+                HStack {
+                    Text("C₁")
+                        .font(.callout.monospacedDigit())
+                    Spacer(minLength: 12)
+                    PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
+                }
+                Divider()
+                HStack {
+                    Text("C₂")
+                        .font(.callout.monospacedDigit())
+                    Spacer(minLength: 12)
+                    PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
+                }
             }
-            Divider()
-            HStack {
-                Text("C₂")
-                    .font(.callout.monospacedDigit())
-                Spacer(minLength: 12)
-                PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
-            }
-        }
-        .padding(12)
-        .background(.regularMaterial)
-        .cornerRadius(12)
+            .padding(12)
+            .background(.regularMaterial)
+            .cornerRadius(12)
+        }}
     }
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
@@ -183,40 +189,42 @@ fileprivate struct ArcPanel: View, EnableActivePathInteractor, EnablePathUpdater
     let fromNodeId: UUID
     let arc: PathEdge.Arc
 
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Radius")
-                    .font(.subheadline)
-                Spacer()
-                SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
+    var body: some View { tracer.range("ActivePathPanel EdgePanel ArcPanel") {
+        memo(arc) {
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Radius")
+                        .font(.subheadline)
+                    Spacer()
+                    SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
+                }
+                Divider()
+                HStack {
+                    Text("Rotation")
+                        .font(.subheadline)
+                    Spacer()
+                    AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
+                }
+                Divider()
+                HStack {
+                    Text("Large Arc")
+                        .font(.subheadline)
+                    Spacer()
+                    FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
+                }
+                Divider()
+                HStack {
+                    Text("Sweep")
+                        .font(.subheadline)
+                    Spacer()
+                    FlagInput(flag: arc.sweep, onChange: updateSweep)
+                }
             }
-            Divider()
-            HStack {
-                Text("Rotation")
-                    .font(.subheadline)
-                Spacer()
-                AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
-            }
-            Divider()
-            HStack {
-                Text("Large Arc")
-                    .font(.subheadline)
-                Spacer()
-                FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
-            }
-            Divider()
-            HStack {
-                Text("Sweep")
-                    .font(.subheadline)
-                Spacer()
-                FlagInput(flag: arc.sweep, onChange: updateSweep)
-            }
+            .padding(12)
+            .background(Color.secondarySystemBackground)
+            .cornerRadius(12)
         }
-        .padding(12)
-        .background(Color.secondarySystemBackground)
-        .cornerRadius(12)
-    }
+    }}
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
         { pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }

@@ -29,6 +29,16 @@ extension ViewportInfo: CustomStringConvertible {
 
 // MARK: - ViewportModel
 
+import Observation
+
+@Observable
+class ViewportModelFoo {
+    fileprivate(set) var info: ViewportInfo = .init()
+
+    var toWorld: CGAffineTransform { info.viewToWorld }
+    var toView: CGAffineTransform { info.worldToView }
+}
+
 class ViewportModel: ObservableObject {
     @TracedPublished("Viewport info") fileprivate(set) var info: ViewportInfo = .init()
 

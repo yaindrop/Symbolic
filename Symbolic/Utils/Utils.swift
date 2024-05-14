@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import Observation
 import SwiftUI
 
 extension UUID: Identifiable {
@@ -584,4 +585,124 @@ struct _CachedLazy<Instance, Value> {
 
 protocol EnableCachedLazy {
     typealias CachedLazy<T> = _CachedLazy<Self, T>
+}
+
+// MARK: - EquatableTuple
+
+enum Monostate { case value }
+
+extension Monostate: Equatable {}
+
+extension Monostate: CustomStringConvertible {
+    var description: String { "_" }
+}
+
+struct EquatableTuple<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>: Equatable {
+    let v0: T0, v1: T1, v2: T2, v3: T3, v4: T4, v5: T5
+    var tuple: (T0, T1, T2, T3, T4, T5) { (v0, v1, v2, v3, v4, v5) }
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.tuple == rhs.tuple }
+
+    init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4, _ v5: T5) {
+        self.v0 = v0
+        self.v1 = v1
+        self.v2 = v2
+        self.v3 = v3
+        self.v4 = v4
+        self.v5 = v5
+    }
+}
+
+extension EquatableTuple where T2 == Monostate, T3 == Monostate, T4 == Monostate, T5 == Monostate {
+    init(_ v0: T0, _ v1: T1) { self.init(v0, v1, .value, .value, .value, .value) }
+}
+
+extension EquatableTuple where T3 == Monostate, T4 == Monostate, T5 == Monostate {
+    init(_ v0: T0, _ v1: T1, _ v2: T2) { self.init(v0, v1, v2, .value, .value, .value) }
+}
+
+extension EquatableTuple where T4 == Monostate, T5 == Monostate {
+    init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3) { self.init(v0, v1, v2, v3, .value, .value) }
+}
+
+extension EquatableTuple where T5 == Monostate {
+    init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4) { self.init(v0, v1, v2, v3, v4, .value) }
+}
+
+// MARK: - Memorized
+
+struct Memo<Key: Equatable, Content: View>: View, Equatable {
+    let key: Key
+    @ViewBuilder let content: () -> Content
+
+    var body: some View { tracer.range("Memo") {
+        content()
+    } }
+
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.key == rhs.key }
+}
+
+func memo<Key, Content>(_ key: Key, @ViewBuilder _ content: @escaping () -> Content) -> Memo<Key, Content> {
+    .init(key: key, content: content)
+}
+
+func memo<T0, T1, T2, T3, T4, T5, Content>(
+    deps: EquatableTuple<T0, T1, T2, T3, T4, T5>,
+    @ViewBuilder _ content: @escaping () -> Content
+) -> Memo<EquatableTuple<T0, T1, T2, T3, T4, T5>, Content> {
+    .init(key: deps, content: content)
+}
+
+// MARK: - Selected
+
+@propertyWrapper
+struct Selected<Value: Equatable>: DynamicProperty {
+    private class Storage: ObservableObject {
+        var wrappedValue: Value {
+            if let value {
+                return value
+            }
+            setupSelectTask()
+            return selector()
+        }
+
+        init(selector: @escaping () -> Value) {
+            self.selector = selector
+        }
+
+        deinit {
+            selectTask?.cancel()
+        }
+
+        private let selector: () -> Value
+        private var value: Value?
+        private var selectTask: Task<Void, Never>?
+
+        private func setupSelectTask() {
+            selectTask = Task { @MainActor [weak self] in
+                self?.select()
+            }
+        }
+
+        private func select() {
+            withObservationTracking {
+                let newValue = selector()
+                if value != newValue {
+                    objectWillChange.send()
+                }
+                value = newValue
+            } onChange: { [weak self] in
+                self?.setupSelectTask()
+            }
+        }
+    }
+
+    @StateObject private var storage: Storage
+
+    var wrappedValue: Value { storage.wrappedValue }
+
+    var projectedValue: Selected<Value> { self }
+
+    init(wrappedValue: @autoclosure @escaping () -> Value) {
+        _storage = StateObject(wrappedValue: Storage(selector: wrappedValue))
+    }
 }

@@ -4,10 +4,6 @@ import SwiftUI
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View, EnableActivePathInteractor {
-    @Environment(PathModel.self) var pathModel: PathModel
-    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 

@@ -4,9 +4,6 @@ struct DebugPanel: View {
     var multipleTouch: MultipleTouchModel
     var multipleTouchPress: MultipleTouchPressModel
 
-    @Environment(ViewportModel.self) var viewport: ViewportModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 
@@ -36,7 +33,7 @@ struct DebugPanel: View {
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
             Divider()
-            Row(name: "Viewport", value: viewport.info.description)
+            Row(name: "Viewport", value: store.viewportModel.info.description)
         }
         .padding(12)
         .background(.regularMaterial)

@@ -21,14 +21,11 @@ class PathUpdateModel {
 // MARK: - EnablePathUpdater
 
 protocol EnablePathUpdater {
-    var pathModel: PathModel { get }
-    var pendingPathModel: PendingPathModel { get }
-    var activePathModel: ActivePathModel { get }
-    var pathUpdateModel: PathUpdateModel { get }
+    var pathUpdater: PathUpdater { get }
 }
 
 extension EnablePathUpdater {
-    var pathUpdater: PathUpdater { .init(pathModel: pathModel, pendingPathModel: pendingPathModel, activePathModel: activePathModel, model: pathUpdateModel) }
+    var pathUpdater: PathUpdater { .init(pathModel: store.pathModel, pendingPathModel: store.pendingPathModel, activePathModel: store.activePathModel, model: store.pathUpdateModel) }
 }
 
 // MARK: - PathUpdater
@@ -290,15 +287,11 @@ struct PathUpdater: EnableActivePathInteractor {
 // MARK: - EnablePathUpdaterInView
 
 protocol EnablePathUpdaterInView {
-    var viewport: ViewportModel { get }
-    var pathModel: PathModel { get }
-    var pendingPathModel: PendingPathModel { get }
-    var activePathModel: ActivePathModel { get }
-    var pathUpdateModel: PathUpdateModel { get }
+    var pathUpdaterInView: PathUpdaterInView { get }
 }
 
 extension EnablePathUpdaterInView {
-    var pathUpdaterInView: PathUpdaterInView { .init(viewport: viewport, pathModel: pathModel, pendingPathModel: pendingPathModel, activePathModel: activePathModel, pathUpdateModel: pathUpdateModel) }
+    var pathUpdaterInView: PathUpdaterInView { .init(viewport: store.viewportModel, pathModel: store.pathModel, pendingPathModel: store.pendingPathModel, activePathModel: store.activePathModel, pathUpdateModel: store.pathUpdateModel) }
 }
 
 // MARK: - PathUpdaterInView

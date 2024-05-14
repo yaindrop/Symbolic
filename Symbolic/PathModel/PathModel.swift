@@ -36,12 +36,11 @@ class PendingPathModel {
 // MARK: - EnablePathInteractor
 
 protocol EnablePathInteractor {
-    var pathModel: PathModel { get }
-    var pendingPathModel: PendingPathModel { get }
+    var pathInteractor: PathInteractor { get }
 }
 
 extension EnablePathInteractor {
-    var pathInteractor: PathInteractor { .init(model: pathModel, pendingModel: pendingPathModel) }
+    var pathInteractor: PathInteractor { .init(model: store.pathModel, pendingModel: store.pendingPathModel) }
 }
 
 // MARK: - PathInteractor

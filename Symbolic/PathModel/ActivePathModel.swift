@@ -26,13 +26,11 @@ class ActivePathModel {
 // MARK: - EnableActivePathInteractor
 
 protocol EnableActivePathInteractor {
-    var pathModel: PathModel { get }
-    var pendingPathModel: PendingPathModel { get }
-    var activePathModel: ActivePathModel { get }
+    var activePathInteractor: ActivePathInteractor { get }
 }
 
 extension EnableActivePathInteractor {
-    var activePathInteractor: ActivePathInteractor { .init(pathModel: pathModel, pendingPathModel: pendingPathModel, model: activePathModel) }
+    var activePathInteractor: ActivePathInteractor { .init(pathModel: store.pathModel, pendingPathModel: store.pendingPathModel, model: store.activePathModel) }
 }
 
 // MARK: - ActivePathInteractor

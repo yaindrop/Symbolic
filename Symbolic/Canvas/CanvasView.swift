@@ -21,16 +21,16 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
     @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @State var viewport = ViewportModel()
-    @State var viewportUpdate = ViewportUpdateModel()
-
-    @State var documentModel = DocumentModel()
-
-    @State var pathModel = PathModel()
-    @State var pendingPathModel = PendingPathModel()
-    @State var activePathModel = ActivePathModel()
-
-    @State var pathUpdateModel = PathUpdateModel()
+//    @State var viewport = ViewportModel()
+//    @State var viewportUpdate = ViewportUpdateModel()
+//
+//    @State var documentModel = DocumentModel()
+//
+//    @State var pathModel = PathModel()
+//    @State var pendingPathModel = PendingPathModel()
+//    @State var activePathModel = ActivePathModel()
+//
+//    @State var pathUpdateModel = PathUpdateModel()
 
     @StateObject var pendingSelectionModel = PendingSelectionModel()
 
@@ -42,11 +42,11 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
 
     var body: some View { tracer.range("CanvasView body") {
         navigationView
-            .onChange(of: documentModel.activeDocument) {
+            .onChange(of: store.documentModel.activeDocument) {
                 withAnimation {
                     let _r = tracer.range("Reload document"); defer { _r() }
-                    pendingPathModel.pendingEvent = nil
-                    pathInteractor.loadDocument(documentModel.activeDocument)
+                    store.pendingPathModel.pendingEvent = nil
+                    pathInteractor.loadDocument(store.documentModel.activeDocument)
                 }
             }
             .onChange(of: activePathInteractor.activePath) {
@@ -61,16 +61,16 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             }
             .onAppear {
                 multipleTouchPress.onTap { info in
-                    let worldLocation = info.location.applying(viewport.toWorld)
+                    let worldLocation = info.location.applying(store.viewportModel.toWorld)
                     let _r = tracer.range("On tap \(worldLocation)"); defer { _r() }
                     withAnimation {
-                        activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
+                        store.activePathModel.activePathId = store.pathModel.hitTest(worldPosition: worldLocation)?.id
                     }
                 }
                 multipleTouchPress.onLongPress { info in
-                    let worldLocation = info.current.applying(viewport.toWorld)
+                    let worldLocation = info.current.applying(store.viewportModel.toWorld)
                     let _r = tracer.range("On long press \(worldLocation)"); defer { _r() }
-                    viewportUpdate.blocked = true
+                    store.viewportUpdateModel.blocked = true
                     if !pendingSelectionModel.active {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
@@ -79,19 +79,19 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
                 }
                 multipleTouchPress.onLongPressEnd { _ in
                     let _r = tracer.range("On long press end"); defer { _r() }
-                    viewportUpdate.blocked = false
+                    store.viewportUpdateModel.blocked = false
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
                     selectionUpdater.onEnd()
                 }
             }
             .onAppear {
-                pathUpdateModel.onPendingEvent { e in
-                    pendingPathModel.pendingEvent = e
+                store.pathUpdateModel.onPendingEvent { e in
+                    store.pendingPathModel.pendingEvent = e
                 }
-                pathUpdateModel.onEvent { e in
+                store.pathUpdateModel.onEvent { e in
                     withAnimation {
-                        documentModel.sendEvent(e)
+                        store.documentModel.sendEvent(e)
                     }
                 }
             }
@@ -105,7 +105,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
                 }
             }
             .onAppear {
-                documentModel.activeDocument = Document(from: fooSvg)
+                store.documentModel.activeDocument = Document(from: fooSvg)
             }
     }}
 
@@ -138,18 +138,12 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             .edgesIgnoringSafeArea(.bottom)
             .toolbar { toolbar }
         }
-        .environment(viewport)
-        .environment(documentModel)
-        .environment(pathModel)
-        .environment(pendingPathModel)
-        .environment(activePathModel)
-        .environment(pathUpdateModel)
     }
 
     @ViewBuilder private var background: some View {
         GeometryReader { geometry in
             Canvas { context, _ in
-                context.concatenate(viewport.toView)
+                context.concatenate(store.viewportModel.toView)
                 let path = SUPath { path in
                     for index in 0 ... 10240 {
                         let vOffset: Scalar = Scalar(index) * 10
@@ -188,7 +182,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
 
     @ViewBuilder private var inactivePaths: some View {
         activePathInteractor.inactivePathsView
-            .transformEffect(viewport.toView)
+            .transformEffect(store.viewportModel.toView)
             .blur(radius: 1)
     }
 
@@ -199,7 +193,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
 
     @ViewBuilder private var activePaths: some View {
         activePathInteractor.activePathView
-            .transformEffect(viewport.toView)
+            .transformEffect(store.viewportModel.toView)
     }
 
     @ViewBuilder private var overlay: some View {
@@ -241,7 +235,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
         }
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                var events = documentModel.activeDocument.events
+                var events = store.documentModel.activeDocument.events
                 guard let last = events.last else { return }
                 if case let .pathAction(p) = last.action {
                     if case let .load(l) = p {
@@ -249,7 +243,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
                     }
                 }
                 events.removeLast()
-                documentModel.activeDocument = Document(events: events)
+                store.documentModel.activeDocument = Document(events: events)
             } label: {
                 Image(systemName: "arrow.uturn.backward")
             }

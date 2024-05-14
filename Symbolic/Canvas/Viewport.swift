@@ -48,12 +48,11 @@ class ViewportUpdateModel {
 // MARK: - EnableViewportUpdater
 
 protocol EnableViewportUpdater {
-    var viewport: ViewportModel { get }
-    var viewportUpdate: ViewportUpdateModel { get }
+    var viewportUpdater: ViewportUpdater { get }
 }
 
 extension EnableViewportUpdater {
-    var viewportUpdater: ViewportUpdater { .init(viewport: viewport, model: viewportUpdate) }
+    var viewportUpdater: ViewportUpdater { .init(viewport: store.viewportModel, model: store.viewportUpdateModel) }
 }
 
 // MARK: - ViewportUpdater

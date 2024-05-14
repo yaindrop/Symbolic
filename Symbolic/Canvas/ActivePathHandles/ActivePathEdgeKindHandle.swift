@@ -20,12 +20,6 @@ struct ActivePathEdgeKindHandle: View {
 // MARK: - ActivePathBezierHandle
 
 struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @Environment(ViewportModel.self) var viewport: ViewportModel
-    @Environment(PathModel.self) var pathModel: PathModel
-    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Bezier
@@ -101,12 +95,6 @@ struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdat
 // MARK: - ActivePathArcHandle
 
 struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @Environment(ViewportModel.self) var viewport: ViewportModel
-    @Environment(PathModel.self) var pathModel: PathModel
-    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Arc

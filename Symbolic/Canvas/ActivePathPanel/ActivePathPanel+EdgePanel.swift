@@ -5,11 +5,6 @@ extension ActivePathPanel {
     // MARK: - EdgePanel
 
     struct EdgePanel: View, EnableActivePathInteractor, EnablePathUpdater {
-        @Environment(PathModel.self) var pathModel: PathModel
-        @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-        @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-        @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
         let fromNodeId: UUID
         let edge: PathEdge
 
@@ -138,11 +133,6 @@ extension ActivePathPanel {
 // MARK: - BezierPanel
 
 fileprivate struct BezierPanel: View, EnableActivePathInteractor, EnablePathUpdater {
-    @Environment(PathModel.self) var pathModel: PathModel
-    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
     let fromNodeId: UUID
     let bezier: PathEdge.Bezier
 
@@ -181,11 +171,6 @@ fileprivate struct BezierPanel: View, EnableActivePathInteractor, EnablePathUpda
 // MARK: - ArcPanel
 
 fileprivate struct ArcPanel: View, EnableActivePathInteractor, EnablePathUpdater {
-    @Environment(PathModel.self) var pathModel: PathModel
-    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
     let fromNodeId: UUID
     let arc: PathEdge.Arc
 

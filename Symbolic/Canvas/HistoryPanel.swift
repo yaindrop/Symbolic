@@ -17,8 +17,6 @@ fileprivate extension DocumentEvent {
 // MARK: - HistoryPanel
 
 struct HistoryPanel: View {
-    @Environment(DocumentModel.self) private var documentModel: DocumentModel
-
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 
@@ -54,7 +52,7 @@ struct HistoryPanel: View {
     }
 
     @ViewBuilder var content: some View {
-        let document = documentModel.activeDocument
+        let document = store.documentModel.activeDocument
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Events")
             VStack(spacing: 12) {

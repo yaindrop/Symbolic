@@ -5,11 +5,6 @@ extension ActivePathPanel {
     // MARK: - NodePanel
 
     struct NodePanel: View, EnableActivePathInteractor, EnablePathUpdater {
-        @Environment(PathModel.self) var pathModel: PathModel
-        @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-        @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-        @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
         let index: Int
         let node: PathNode
 

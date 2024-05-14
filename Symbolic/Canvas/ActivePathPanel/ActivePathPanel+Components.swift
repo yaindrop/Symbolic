@@ -25,8 +25,6 @@ extension ActivePathPanel {
     // MARK: - NodeEdgeGroup
 
     fileprivate struct NodeEdgeGroup: View {
-        @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-
         let index: Int
         let node: PathNode
         let edge: PathEdge
@@ -45,7 +43,7 @@ extension ActivePathPanel {
 
         @State private var scale: Double = 1
 
-        private var focused: Bool { activePathModel.focusedPart?.id == node.id }
+        private var focused: Bool { store.activePathModel.focusedPart?.id == node.id }
 
         func animateOnFocused() {
             if focused {

@@ -4,12 +4,6 @@ import SwiftUI
 // MARK: - ActivePathNodeHandle
 
 struct ActivePathNodeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @Environment(ViewportModel.self) var viewport: ViewportModel
-    @Environment(PathModel.self) var pathModel: PathModel
-    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
-    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
-    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
-
     let nodeId: UUID
     let position: Point2
 

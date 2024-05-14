@@ -5,9 +5,6 @@ extension ActivePathPanel {
     // MARK: - Components
 
     struct Components: View {
-        @EnvironmentObject private var pathModel: PathModel
-        @EnvironmentObject private var activePathModel: ActivePathModel
-
         let activePath: Path
 
         @ViewBuilder var body: some View { tracer.range("ActivePathPanel Components body") {
@@ -28,7 +25,7 @@ extension ActivePathPanel {
     // MARK: - NodeEdgeGroup
 
     fileprivate struct NodeEdgeGroup: View {
-        @EnvironmentObject private var activePathModel: ActivePathModel
+        @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
 
         let index: Int
         let node: PathNode

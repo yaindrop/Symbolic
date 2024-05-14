@@ -4,10 +4,10 @@ import SwiftUI
 // MARK: - ActivePathHandleRoot
 
 struct ActivePathHandleRoot: View, EnableActivePathInteractor {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
 
     var body: some View { tracer.range("ActivePathHandleRoot body") {
         if let activePath = activePathInteractor.pendingActivePath {

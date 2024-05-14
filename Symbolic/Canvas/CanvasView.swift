@@ -18,25 +18,25 @@ struct BlurView: UIViewRepresentable {
 struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActivePathInteractor, EnablePathUpdater {
     // MARK: models
 
-    @StateObject var multipleTouch = MultipleTouchModel()
-    @StateObject var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+    @State var multipleTouch = MultipleTouchModel()
+    @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @StateObject var viewport = ViewportModel()
-    @StateObject var viewportUpdate = ViewportUpdateModel()
+    @State var viewport = ViewportModel()
+    @State var viewportUpdate = ViewportUpdateModel()
 
-    @StateObject var documentModel = DocumentModel()
+    @State var documentModel = DocumentModel()
 
-    @StateObject var pathModel = PathModel()
-    @StateObject var pendingPathModel = PendingPathModel()
-    @StateObject var activePathModel = ActivePathModel()
+    @State var pathModel = PathModel()
+    @State var pendingPathModel = PendingPathModel()
+    @State var activePathModel = ActivePathModel()
 
-    @StateObject var pathUpdateModel = PathUpdateModel()
+    @State var pathUpdateModel = PathUpdateModel()
 
     @StateObject var pendingSelectionModel = PendingSelectionModel()
 
     @StateObject var panelModel = PanelModel()
 
-    @StateObject var canvasActionModel = CanvasActionModel()
+    @State var canvasActionModel = CanvasActionModel()
 
     // MARK: body
 
@@ -98,7 +98,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             .onAppear {
                 panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
                 panelModel.register(align: .bottomLeading) { HistoryPanel() }
-                panelModel.register(align: .topTrailing) { DebugPanel().environmentObject(multipleTouch).environmentObject(multipleTouchPress) }
+                panelModel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
                 panelModel.register(align: .topLeading) {
                     Text("hello?")
                         .padding()
@@ -138,12 +138,12 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             .edgesIgnoringSafeArea(.bottom)
             .toolbar { toolbar }
         }
-        .environmentObject(viewport)
-        .environmentObject(documentModel)
-        .environmentObject(pathModel)
-        .environmentObject(pendingPathModel)
-        .environmentObject(activePathModel)
-        .environmentObject(pathUpdateModel)
+        .environment(viewport)
+        .environment(documentModel)
+        .environment(pathModel)
+        .environment(pendingPathModel)
+        .environment(activePathModel)
+        .environment(pathUpdateModel)
     }
 
     @ViewBuilder private var background: some View {
@@ -194,7 +194,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
 
     @ViewBuilder private var foreground: some View {
         Color.white.opacity(0.1)
-            .modifier(MultipleTouchModifier(model: multipleTouch))
+            .modifier(MultipleTouchModifier(model: $multipleTouch))
     }
 
     @ViewBuilder private var activePaths: some View {

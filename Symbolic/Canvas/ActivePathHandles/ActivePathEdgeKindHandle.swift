@@ -20,11 +20,11 @@ struct ActivePathEdgeKindHandle: View {
 // MARK: - ActivePathBezierHandle
 
 struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
+    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
 
     let fromId: UUID
     let toId: UUID
@@ -63,8 +63,8 @@ struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdat
     private static let circleSize: Scalar = 12
     private static let touchablePadding: Scalar = 12
 
-    @StateObject private var dragControl0 = MultipleGestureModel<Void>()
-    @StateObject private var dragControl1 = MultipleGestureModel<Void>()
+    @State private var dragControl0 = MultipleGestureModel<Void>()
+    @State private var dragControl1 = MultipleGestureModel<Void>()
 
     private var bezier: PathEdge.Bezier { segment.bezier }
 
@@ -101,11 +101,11 @@ struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdat
 // MARK: - ActivePathArcHandle
 
 struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
+    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
 
     let fromId: UUID
     let toId: UUID
@@ -192,7 +192,7 @@ struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterI
 //            .position(center)
 //    }
 
-    @StateObject private var dragRadiusWidth = MultipleGestureModel<Point2>()
+    @State private var dragRadiusWidth = MultipleGestureModel<Point2>()
 
     @ViewBuilder private var radiusWidthRect: some View {
         Rectangle()
@@ -212,7 +212,7 @@ struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterI
             }
     }
 
-    @StateObject private var dragRadiusHeight = MultipleGestureModel<Point2>()
+    @State private var dragRadiusHeight = MultipleGestureModel<Point2>()
 
     @ViewBuilder private var radiusHeightRect: some View {
         Rectangle()

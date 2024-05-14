@@ -4,11 +4,11 @@ import SwiftUI
 // MARK: - ActivePathHandle
 
 struct ActivePathHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
+    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
 
     var body: some View { tracer.range("ActivePathHandle body") {
         rect
@@ -20,7 +20,7 @@ struct ActivePathHandle: View, EnableActivePathInteractor, EnablePathUpdaterInVi
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
-    @StateObject private var dragGesture = MultipleGestureModel<Void>()
+    @State private var dragGesture = MultipleGestureModel<Void>()
 
     var boundingRectInView: CGRect? {
         activePathInteractor.pendingActivePath?.boundingRect.applying(viewport.toView)

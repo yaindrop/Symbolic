@@ -6,28 +6,31 @@ typealias PathMap = OrderedMap<UUID, Path>
 
 // MARK: - PathModel
 
-class PathModel: ObservableObject {
-    @BatchedPublished var pathMap = PathMap()
+@Observable
+class PathModel {
+    var pathMap = PathMap()
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var pathMapUpdater: (() -> Void) -> Void { _pathMap.batchUpdater }
+    fileprivate var pathMapUpdater: (() -> Void) -> Void { { $0() } }
 }
 
 // MARK: - PendingPathModel
 
-class PendingPathModel: ObservableObject {
-    @TracedPublished("pendingEvent") var pendingEvent: DocumentEvent? = nil
-    @BatchedPublished fileprivate(set) var pathMap = PathMap()
+@Observable
+class PendingPathModel {
+    var pendingEvent: DocumentEvent? { didSet { pendingEventSubject.send(pendingEvent) } }
+    fileprivate(set) var pathMap = PathMap()
 
     var hasPendingEvent: Bool { pendingEvent != nil }
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var pathMapUpdater: (() -> Void) -> Void { _pathMap.batchUpdater }
+    fileprivate var pathMapUpdater: (() -> Void) -> Void { { $0() } }
 
-    fileprivate var loading = false
-    fileprivate var subscriptions = Set<AnyCancellable>()
+    @ObservationIgnored fileprivate var loading = false
+    @ObservationIgnored fileprivate var subscriptions = Set<AnyCancellable>()
+    @ObservationIgnored fileprivate var pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 }
 
 // MARK: - EnablePathInteractor
@@ -76,7 +79,7 @@ struct PathInteractor {
     }
 
     func subscribe() {
-        pendingModel.$pendingEvent.sink { self.loadPendingEvent($0) }.store(in: &pendingModel.subscriptions)
+        pendingModel.pendingEventSubject.sink { self.loadPendingEvent($0) }.store(in: &pendingModel.subscriptions)
     }
 
     // MARK: private

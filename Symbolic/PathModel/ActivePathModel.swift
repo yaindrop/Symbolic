@@ -17,9 +17,10 @@ enum ActivePathFocusedPart: Equatable {
 
 // MARK: - ActivePathModel
 
-class ActivePathModel: ObservableObject {
-    @Published var activePathId: UUID?
-    @Published fileprivate(set) var focusedPart: ActivePathFocusedPart?
+@Observable
+class ActivePathModel {
+    var activePathId: UUID?
+    fileprivate(set) var focusedPart: ActivePathFocusedPart?
 }
 
 // MARK: - EnableActivePathInteractor

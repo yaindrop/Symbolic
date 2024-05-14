@@ -2,7 +2,8 @@ import Combine
 import Foundation
 import SwiftUI
 
-class PathUpdateModel: ObservableObject {
+@Observable
+class PathUpdateModel {
     func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
         eventSubject.sink(receiveValue: callback).store(in: &subscriptions)
     }
@@ -11,10 +12,10 @@ class PathUpdateModel: ObservableObject {
         pendingEventSubject.sink(receiveValue: callback).store(in: &subscriptions)
     }
 
-    fileprivate var subscriptions = Set<AnyCancellable>()
+    @ObservationIgnored fileprivate var subscriptions = Set<AnyCancellable>()
 
-    fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
-    fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
+    @ObservationIgnored fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
+    @ObservationIgnored fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
 }
 
 // MARK: - EnablePathUpdater

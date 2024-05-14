@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import UIKit
 
@@ -61,12 +62,17 @@ extension PinchInfo: CustomStringConvertible {
 
 // MARK: - MultipleTouchModel
 
-class MultipleTouchModel: ObservableObject {
-    @Published private(set) var startTime: Date?
+class MultipleTouchModel {
+    private(set) var startTime: Date? { willSet { startTimeSubject.send(newValue) }}
 
-    @Published fileprivate(set) var touchesCount: Int = 0
-    @Published fileprivate(set) var panInfo: PanInfo?
-    @Published fileprivate(set) var pinchInfo: PinchInfo?
+    fileprivate(set) var touchesCount: Int = 0 { willSet { touchesCountSubject.send(newValue) }}
+    fileprivate(set) var panInfo: PanInfo? { willSet { panInfoSubject.send(newValue) }}
+    fileprivate(set) var pinchInfo: PinchInfo? { willSet { pinchInfoSubject.send(newValue) }}
+
+    let startTimeSubject = PassthroughSubject<Date?, Never>()
+    let touchesCountSubject = PassthroughSubject<Int?, Never>()
+    let panInfoSubject = PassthroughSubject<PanInfo?, Never>()
+    let pinchInfoSubject = PassthroughSubject<PinchInfo?, Never>()
 
     var active: Bool { startTime != nil }
 
@@ -181,16 +187,16 @@ class MultipleTouchView: TouchDebugView {
 // MARK: - MultipleTouchModifier
 
 struct MultipleTouchModifier: ViewModifier {
-    @ObservedObject var model: MultipleTouchModel
+    @Binding var model: MultipleTouchModel
 
     func body(content: Content) -> some View {
-        content.overlay { Representable(model: model) }
+        content.overlay { Representable(model: $model) }
     }
 
     // MARK: private
 
     private struct Representable: UIViewRepresentable {
-        @ObservedObject var model: MultipleTouchModel
+        @Binding var model: MultipleTouchModel
 
         func makeUIView(context: Context) -> UIView { MultipleTouchView(model: model) }
 

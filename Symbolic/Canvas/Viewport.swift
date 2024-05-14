@@ -29,28 +29,20 @@ extension ViewportInfo: CustomStringConvertible {
 
 // MARK: - ViewportModel
 
-import Observation
-
 @Observable
-class ViewportModelFoo {
+class ViewportModel {
     fileprivate(set) var info: ViewportInfo = .init()
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
 }
 
-class ViewportModel: ObservableObject {
-    @TracedPublished("Viewport info") fileprivate(set) var info: ViewportInfo = .init()
+@Observable
+class ViewportUpdateModel {
+    var blocked: Bool = false
+    fileprivate(set) var previousInfo: ViewportInfo = .init()
 
-    var toWorld: CGAffineTransform { info.viewToWorld }
-    var toView: CGAffineTransform { info.worldToView }
-}
-
-class ViewportUpdateModel: ObservableObject {
-    @Published var blocked: Bool = false
-    @Published fileprivate(set) var previousInfo: ViewportInfo = .init()
-
-    fileprivate var subscriptions = Set<AnyCancellable>()
+    @ObservationIgnored fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
 // MARK: - EnableViewportUpdater
@@ -71,13 +63,13 @@ struct ViewportUpdater {
     let model: ViewportUpdateModel
 
     func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.$panInfo
+        multipleTouch.panInfoSubject
             .sink { value in
                 guard !self.model.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
             .store(in: &model.subscriptions)
-        multipleTouch.$pinchInfo
+        multipleTouch.pinchInfoSubject
             .sink { value in
                 guard !self.model.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)

@@ -33,7 +33,7 @@ enum CanvasAction {
     case instant(Instant)
 }
 
-class CanvasActionModel: ObservableObject {
+class CanvasActionModel {
     @Published var actions: [CanvasAction] = []
 
     func onStart(triggering: CanvasAction.Triggering) {

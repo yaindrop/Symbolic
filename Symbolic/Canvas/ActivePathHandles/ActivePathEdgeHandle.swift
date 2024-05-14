@@ -4,11 +4,11 @@ import SwiftUI
 // MARK: - ActivePathEdgeHandle
 
 struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
+    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
 
     let fromId: UUID
     let segment: PathSegment
@@ -28,7 +28,7 @@ struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdater
         focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(edge: fromId)
     }
 
-    @StateObject private var multipleGesture = MultipleGestureModel<PathSegment>()
+    @State private var multipleGesture = MultipleGestureModel<PathSegment>()
 
     @ViewBuilder private var outline: some View {
         SUPath { p in segment.append(to: &p) }
@@ -88,11 +88,11 @@ struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdater
 // MARK: - ActivePathFocusedEdgeHandle
 
 struct ActivePathFocusedEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
+    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
 
     let fromId: UUID
     let segment: PathSegment
@@ -119,7 +119,7 @@ struct ActivePathFocusedEdgeHandle: View, EnableActivePathInteractor, EnablePath
         SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
     }
 
-    @StateObject private var dragGesture = MultipleGestureModel<Point2>()
+    @State private var dragGesture = MultipleGestureModel<Point2>()
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
         Circle()

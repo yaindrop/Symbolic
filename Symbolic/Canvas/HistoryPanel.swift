@@ -17,9 +17,7 @@ fileprivate extension DocumentEvent {
 // MARK: - HistoryPanel
 
 struct HistoryPanel: View {
-    @EnvironmentObject private var documentModel: DocumentModel
-    @EnvironmentObject private var pathModel: PathModel
-    @EnvironmentObject private var activePathModel: ActivePathModel
+    @Environment(DocumentModel.self) private var documentModel: DocumentModel
 
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
@@ -32,7 +30,7 @@ struct HistoryPanel: View {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
-    @StateObject var moveGesture = PanelModel.moveGestureModel()
+    @State var moveGesture = PanelModel.moveGestureModel()
 
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {

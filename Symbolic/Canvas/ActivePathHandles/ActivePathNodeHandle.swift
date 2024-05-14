@@ -4,11 +4,11 @@ import SwiftUI
 // MARK: - ActivePathNodeHandle
 
 struct ActivePathNodeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
-    @EnvironmentObject var pathUpdateModel: PathUpdateModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
+    @Environment(PathUpdateModel.self) var pathUpdateModel: PathUpdateModel
 
     let nodeId: UUID
     let position: Point2
@@ -28,7 +28,7 @@ struct ActivePathNodeHandle: View, EnableActivePathInteractor, EnablePathUpdater
         focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(node: nodeId)
     }
 
-    @StateObject private var dragGesture = MultipleGestureModel<Point2>()
+    @State private var dragGesture = MultipleGestureModel<Point2>()
 
     @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
         Circle()

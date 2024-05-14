@@ -4,9 +4,9 @@ import SwiftUI
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View, EnableActivePathInteractor {
-    @EnvironmentObject var pathModel: PathModel
-    @EnvironmentObject var pendingPathModel: PendingPathModel
-    @EnvironmentObject var activePathModel: ActivePathModel
+    @Environment(PathModel.self) var pathModel: PathModel
+    @Environment(PendingPathModel.self) var pendingPathModel: PendingPathModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
 
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
@@ -17,9 +17,9 @@ struct ActivePathPanel: View, EnableActivePathInteractor {
 
     // MARK: private
 
-    @StateObject private var scrollViewModel = ManagedScrollViewModel()
+    @State private var scrollViewModel = ManagedScrollViewModel()
 
-    @StateObject private var moveGesture = PanelModel.moveGestureModel()
+    @State private var moveGesture = PanelModel.moveGestureModel()
 
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {

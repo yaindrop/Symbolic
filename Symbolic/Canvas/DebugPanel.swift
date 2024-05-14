@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct DebugPanel: View {
-    @EnvironmentObject var multipleTouch: MultipleTouchModel
-    @EnvironmentObject var multipleTouchPress: MultipleTouchPressModel
+    var multipleTouch: MultipleTouchModel
+    var multipleTouchPress: MultipleTouchPressModel
 
-    @EnvironmentObject var viewport: ViewportModel
-    @EnvironmentObject var activePathModel: ActivePathModel
+    @Environment(ViewportModel.self) var viewport: ViewportModel
+    @Environment(ActivePathModel.self) var activePathModel: ActivePathModel
 
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
@@ -25,7 +25,7 @@ struct DebugPanel: View {
         }
     }
 
-    @StateObject var moveGesture = PanelModel.moveGestureModel()
+    @State var moveGesture = PanelModel.moveGestureModel()
 
     @ViewBuilder private var panel: some View {
         VStack {

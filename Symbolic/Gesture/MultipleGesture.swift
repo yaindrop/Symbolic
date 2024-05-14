@@ -4,7 +4,7 @@ import SwiftUI
 
 // MARK: - MultipleGestureModel
 
-class MultipleGestureModel<Data>: ObservableObject {
+class MultipleGestureModel<Data> {
     typealias Value = DragGesture.Value
 
     // MARK: Configs

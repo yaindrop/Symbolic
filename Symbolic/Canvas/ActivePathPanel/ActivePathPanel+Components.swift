@@ -10,7 +10,7 @@ extension ActivePathPanel {
 
         let activePath: Path
 
-        @ViewBuilder var body: some View {
+        @ViewBuilder var body: some View { tracer.range("ActivePathPanel Components body") {
             VStack(spacing: 4) {
                 PanelSectionTitle(name: "Components")
                 VStack(spacing: 12) {
@@ -22,7 +22,7 @@ extension ActivePathPanel {
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 24)
-        }
+        }}
     }
 
     // MARK: - NodeEdgeGroup

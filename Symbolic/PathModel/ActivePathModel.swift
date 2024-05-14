@@ -25,18 +25,20 @@ class ActivePathModel: ObservableObject {
 // MARK: - EnableActivePathInteractor
 
 protocol EnableActivePathInteractor {
-    var pathInteractor: PathInteractor { get }
+    var pathModel: PathModel { get }
+    var pendingPathModel: PendingPathModel { get }
     var activePathModel: ActivePathModel { get }
 }
 
 extension EnableActivePathInteractor {
-    var activePathInteractor: ActivePathInteractor { .init(pathInteractor: pathInteractor, model: activePathModel) }
+    var activePathInteractor: ActivePathInteractor { .init(pathModel: pathModel, pendingPathModel: pendingPathModel, model: activePathModel) }
 }
 
 // MARK: - ActivePathInteractor
 
-struct ActivePathInteractor {
-    let pathInteractor: PathInteractor
+struct ActivePathInteractor: EnablePathInteractor {
+    let pathModel: PathModel
+    let pendingPathModel: PendingPathModel
     let model: ActivePathModel
 
     var activePathId: UUID? { model.activePathId }

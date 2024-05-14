@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - ActivePathEdgeHandle
 
-struct ActivePathEdgeHandle: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
+struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
     @EnvironmentObject var viewport: ViewportModel
     @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var pendingPathModel: PendingPathModel
@@ -13,12 +13,12 @@ struct ActivePathEdgeHandle: View, EnablePathUpdater, EnablePathInteractor, Enab
     let fromId: UUID
     let segment: PathSegment
 
-    var body: some View {
+    var body: some View { tracer.range("ActivePathEdgeHandle body") {
         outline
-//        if let longPressPosition {
-//            circle(at: p, color: .teal)
-//        }
-    }
+        //        if let longPressPosition {
+        //            circle(at: p, color: .teal)
+        //        }
+    }}
 
     @State private var longPressParamT: Scalar?
     @State private var longPressSplitNodeId: UUID?
@@ -43,7 +43,7 @@ struct ActivePathEdgeHandle: View, EnablePathUpdater, EnablePathInteractor, Enab
                 }
                 func moveSplitNode(to p: Point2, pending: Bool = false) {
                     guard let longPressParamT, let longPressSplitNodeId else { return }
-                    pathUpdater.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, positionInView: p, pending: pending)
+                    pathUpdaterInView.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, position: p, pending: pending)
                     if !pending {
                         self.longPressParamT = nil
                     }
@@ -51,7 +51,7 @@ struct ActivePathEdgeHandle: View, EnablePathUpdater, EnablePathInteractor, Enab
                 func updateDrag(pending: Bool = false) -> (DragGesture.Value, Any) -> Void {
                     { v, _ in
                         if longPressSplitNodeId == nil {
-                            pathUpdater.updateActivePath(moveByOffsetInView: Vector2(v.translation), pending: pending)
+                            pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending)
                         } else {
                             moveSplitNode(to: v.location, pending: pending)
                         }
@@ -87,7 +87,7 @@ struct ActivePathEdgeHandle: View, EnablePathUpdater, EnablePathInteractor, Enab
 
 // MARK: - ActivePathFocusedEdgeHandle
 
-struct ActivePathFocusedEdgeHandle: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
+struct ActivePathFocusedEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
     @EnvironmentObject var viewport: ViewportModel
     @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var pendingPathModel: PendingPathModel
@@ -143,7 +143,7 @@ struct ActivePathFocusedEdgeHandle: View, EnablePathUpdater, EnablePathInteracto
             }}
             .multipleGesture(dragGesture, point) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { value, origin in pathUpdater.updateActivePath(moveEdge: fromId, offsetInView: origin.offset(to: value.location), pending: pending) }
+                    { value, origin in pathUpdaterInView.updateActivePath(moveEdge: fromId, offset: origin.offset(to: value.location), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

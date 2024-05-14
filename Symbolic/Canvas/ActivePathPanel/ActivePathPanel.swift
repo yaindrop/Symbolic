@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - ActivePathPanel
 
-struct ActivePathPanel: View, EnablePathInteractor, EnableActivePathInteractor {
+struct ActivePathPanel: View, EnableActivePathInteractor {
     @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var pendingPathModel: PendingPathModel
     @EnvironmentObject var activePathModel: ActivePathModel
@@ -11,9 +11,9 @@ struct ActivePathPanel: View, EnablePathInteractor, EnableActivePathInteractor {
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 
-    var body: some View {
+    var body: some View { tracer.range("ActivePathPanel body") {
         panel.frame(width: 320)
-    }
+    }}
 
     // MARK: private
 

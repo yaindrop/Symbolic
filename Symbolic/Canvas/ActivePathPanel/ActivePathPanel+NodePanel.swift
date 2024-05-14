@@ -4,8 +4,7 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - NodePanel
 
-    struct NodePanel: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
-        @EnvironmentObject var viewport: ViewportModel
+    struct NodePanel: View, EnableActivePathInteractor, EnablePathUpdater {
         @EnvironmentObject var pathModel: PathModel
         @EnvironmentObject var pendingPathModel: PendingPathModel
         @EnvironmentObject var activePathModel: ActivePathModel
@@ -14,7 +13,7 @@ extension ActivePathPanel {
         let index: Int
         let node: PathNode
 
-        var body: some View {
+        var body: some View { tracer.range("ActivePathPanel NodePanel body") {
             HStack {
                 titleMenu
                 Spacer()
@@ -23,7 +22,7 @@ extension ActivePathPanel {
             .padding(12)
             .background(.ultraThickMaterial)
             .cornerRadius(12)
-        }
+        }}
 
         private var focused: Bool { activePathInteractor.focusedPart == .node(node.id) }
 
@@ -36,7 +35,7 @@ extension ActivePathPanel {
             .if(focused) { $0.foregroundStyle(.blue) }
         }
 
-        @ViewBuilder var titleMenu: some View {
+        @ViewBuilder var titleMenu: some View { tracer.range("ActivePathPanel NodePanel titleMenu") {
             Menu {
                 Label("\(node.id)", systemImage: "number")
                 Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
@@ -47,7 +46,7 @@ extension ActivePathPanel {
                 title
             }
             .tint(.label)
-        }
+        } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
             { pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }

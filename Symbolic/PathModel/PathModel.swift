@@ -11,20 +11,20 @@ class PathModel: ObservableObject {
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var pathMapWrapper: BatchedPublished<PathMap> { _pathMap }
+    fileprivate var pathMapUpdater: (() -> Void) -> Void { _pathMap.batchUpdater }
 }
 
 // MARK: - PendingPathModel
 
 class PendingPathModel: ObservableObject {
-    @Published var pendingEvent: DocumentEvent?
+    @TracedPublished("pendingEvent") var pendingEvent: DocumentEvent? = nil
     @BatchedPublished fileprivate(set) var pathMap = PathMap()
 
     var hasPendingEvent: Bool { pendingEvent != nil }
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var pathMapWrapper: BatchedPublished<PathMap> { _pathMap }
+    fileprivate var pathMapUpdater: (() -> Void) -> Void { _pathMap.batchUpdater }
 
     fileprivate var loading = false
     fileprivate var subscriptions = Set<AnyCancellable>()
@@ -88,8 +88,8 @@ struct PathInteractor {
         }
     }
 
-    private var targetPathMapWrapper: BatchedPublished<PathMap> {
-        pendingModel.loading ? pendingModel.pathMapWrapper : model.pathMapWrapper
+    private var targetPathMapUpdater: (() -> Void) -> Void {
+        pendingModel.loading ? pendingModel.pathMapUpdater : model.pathMapUpdater
     }
 
     private func loadPendingEvent(_ event: DocumentEvent?) {
@@ -98,7 +98,7 @@ struct PathInteractor {
         pendingModel.loading = true
         defer { pendingModel.loading = false }
         pendingModel.pathMap = model.pathMap.cloned
-        targetPathMapWrapper.batchUpdate {
+        targetPathMapUpdater {
             loadEvent(event)
         }
     }
@@ -109,7 +109,7 @@ struct PathInteractor {
 extension PathInteractor {
     func loadDocument(_ document: Document) {
         let _r = tracer.range("Path load document"); defer { _r() }
-        targetPathMapWrapper.batchUpdate {
+        targetPathMapUpdater {
             clear()
             for event in document.events {
                 loadEvent(event)

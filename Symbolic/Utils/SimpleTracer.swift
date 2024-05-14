@@ -1,6 +1,9 @@
 import Foundation
+import SwiftUI
 
 extension SimpleTracer {
+    // MARK: - Node
+
     enum Node {
         struct Instant {
             let time: ContinuousClock.Instant
@@ -20,11 +23,15 @@ extension SimpleTracer {
         case range(Range)
     }
 
+    // MARK: - PendingRange
+
     struct PendingRange {
         let start: ContinuousClock.Instant
         let message: String
         var nodes: [Node] = []
     }
+
+    // MARK: - EndRange
 
     class EndRange {
         @discardableResult
@@ -49,6 +56,8 @@ extension SimpleTracer {
     }
 }
 
+// MARK: - CustomStringConvertible
+
 extension SimpleTracer.Node.Instant: CustomStringConvertible {
     var description: String {
         "Instant(\(message))"
@@ -59,7 +68,20 @@ extension SimpleTracer.Node.Range: CustomStringConvertible {
     var description: String {
         "Range(\(message), \(duration.readable))"
     }
+}
 
+extension SimpleTracer.Node: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case let .instant(i): i.description
+        case let .range(r): r.description
+        }
+    }
+}
+
+// MARK: - tree
+
+extension SimpleTracer.Node.Range {
     var tree: String { buildTreeLines().joined(separator: "\n") }
 
     private func buildTreeLines(asRoot: Bool = true) -> [String] {
@@ -80,14 +102,7 @@ extension SimpleTracer.Node.Range: CustomStringConvertible {
     }
 }
 
-extension SimpleTracer.Node: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case let .instant(i): i.description
-        case let .range(r): r.description
-        }
-    }
-}
+// MARK: - SimpleTracer
 
 class SimpleTracer {
     func start() {
@@ -111,6 +126,21 @@ class SimpleTracer {
         return .init(tracer: self)
     }
 
+    func range(_ message: String, _ work: () -> Void) {
+        let _r = range(message)
+        work()
+        _r()
+    }
+
+    func range(_ message: String, @ViewBuilder _ builder: () -> some View) -> some View {
+        let _r = range(message)
+        let view = builder()
+        _r()
+        return view
+    }
+
+    // MARK: private
+
     @discardableResult
     fileprivate func onEnd(_ endRange: EndRange) -> Node.Range? {
         guard let pending = rangeStack.popLast() else { return nil }
@@ -125,6 +155,9 @@ class SimpleTracer {
     private func onNode(_ node: Node) {
         if rangeStack.isEmpty {
             nodes.append(node)
+            if case let .range(r) = node {
+                logInfo(r.tree)
+            }
         } else {
             rangeStack[rangeStack.count - 1].nodes.append(node)
         }

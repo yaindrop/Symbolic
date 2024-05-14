@@ -4,8 +4,7 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - EdgePanel
 
-    struct EdgePanel: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
-        @EnvironmentObject var viewport: ViewportModel
+    struct EdgePanel: View, EnableActivePathInteractor, EnablePathUpdater {
         @EnvironmentObject var pathModel: PathModel
         @EnvironmentObject var pendingPathModel: PendingPathModel
         @EnvironmentObject var activePathModel: ActivePathModel
@@ -14,17 +13,11 @@ extension ActivePathPanel {
         let fromNodeId: UUID
         let edge: PathEdge
 
-        var body: some View {
+        var body: some View { tracer.range("ActivePathPanel EdgePanel body") {
             HStack {
                 Spacer(minLength: 24)
                 VStack(spacing: 0) {
-                    HStack {
-                        titleMenu
-                        Spacer()
-                        if case .line = edge {} else {
-                            expandButton
-                        }
-                    }
+                    header
                     edgeKindPanel
                 }
                 .padding(12)
@@ -34,7 +27,7 @@ extension ActivePathPanel {
                     withAnimation { expanded = focused }
                 }
             }
-        }
+        }}
 
         @State private var expanded = false
 
@@ -48,7 +41,17 @@ extension ActivePathPanel {
             }
         }
 
-        @ViewBuilder private var title: some View {
+        @ViewBuilder private var header: some View { tracer.range("ActivePathPanel EdgePanel header") {
+            HStack {
+                titleMenu
+                Spacer()
+                if case .line = edge {} else {
+                    expandButton
+                }
+            }
+        } }
+
+        @ViewBuilder private var title: some View { tracer.range("ActivePathPanel EdgePanel title") {
             HStack(spacing: 6) {
                 Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                 Text(name)
@@ -56,10 +59,10 @@ extension ActivePathPanel {
             }
             .if(focused) { $0.foregroundStyle(.cyan) }
             .padding(6)
-        }
+        }}
 
-        @ViewBuilder private var titleMenu: some View {
-            Menu {
+        @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu") {
+            Menu { tracer.range("ActivePathPanel EdgePanel titleMenu menu") {
                 Label("\(fromNodeId)", systemImage: "number")
                 Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                 Divider()
@@ -76,11 +79,11 @@ extension ActivePathPanel {
                 Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
                 Divider()
                 Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }
-            } label: {
+            }} label: {
                 title
             }
             .tint(.label)
-        }
+        }}
 
         @ViewBuilder private var expandButton: some View {
             Button {
@@ -92,7 +95,7 @@ extension ActivePathPanel {
             .tint(.label)
         }
 
-        @ViewBuilder private var edgeKindPanel: some View {
+        @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
             Group {
                 if case let .bezier(bezier) = edge {
                     BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
@@ -103,7 +106,7 @@ extension ActivePathPanel {
             .padding(.top, 6)
             .frame(height: expanded ? nil : 0, alignment: .top)
             .clipped()
-        }
+        } }
 
         private func toggleFocus() {
             focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(edge: fromNodeId)
@@ -130,8 +133,7 @@ extension ActivePathPanel {
 
 // MARK: - BezierPanel
 
-fileprivate struct BezierPanel: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
-    @EnvironmentObject var viewport: ViewportModel
+fileprivate struct BezierPanel: View, EnableActivePathInteractor, EnablePathUpdater {
     @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var pendingPathModel: PendingPathModel
     @EnvironmentObject var activePathModel: ActivePathModel
@@ -172,8 +174,7 @@ fileprivate struct BezierPanel: View, EnablePathUpdater, EnablePathInteractor, E
 
 // MARK: - ArcPanel
 
-fileprivate struct ArcPanel: View, EnablePathUpdater, EnablePathInteractor, EnableActivePathInteractor {
-    @EnvironmentObject var viewport: ViewportModel
+fileprivate struct ArcPanel: View, EnableActivePathInteractor, EnablePathUpdater {
     @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var pendingPathModel: PendingPathModel
     @EnvironmentObject var activePathModel: ActivePathModel

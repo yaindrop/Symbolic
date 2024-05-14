@@ -3,13 +3,13 @@ import SwiftUI
 
 // MARK: - ActivePathHandleRoot
 
-struct ActivePathHandleRoot: View, EnablePathInteractor, EnableActivePathInteractor {
+struct ActivePathHandleRoot: View, EnableActivePathInteractor {
     @EnvironmentObject var viewport: ViewportModel
     @EnvironmentObject var pathModel: PathModel
     @EnvironmentObject var pendingPathModel: PendingPathModel
     @EnvironmentObject var activePathModel: ActivePathModel
 
-    var body: some View {
+    var body: some View { tracer.range("ActivePathHandleRoot body") {
         if let activePath = activePathInteractor.pendingActivePath {
             ZStack {
                 let nodes = activePath.nodes
@@ -28,5 +28,5 @@ struct ActivePathHandleRoot: View, EnablePathInteractor, EnableActivePathInterac
                 ForEach(idAndSegmentInView, id: \.fromId) { fromId, toId, segment in ActivePathEdgeKindHandle(fromId: fromId, toId: toId, segment: segment) }
             }
         }
-    }
+    }}
 }

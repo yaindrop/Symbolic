@@ -36,6 +36,7 @@ class DocumentModel: ObservableObject {
     @Published var activeDocument: Document = Document()
 
     func sendEvent(_ event: DocumentEvent) {
+        let _r = tracer.range("Document send event"); defer { _r() }
         activeDocument = Document(events: activeDocument.events + [event])
     }
 }

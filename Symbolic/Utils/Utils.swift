@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import SwiftUI
 
@@ -333,40 +334,115 @@ extension View {
 // MARK: - BatchedPublished
 
 @propertyWrapper
-class BatchedPublished<Value> {
-    @Published private var value: Value
-    private var updatingValue: Value?
+class _BatchedPublished<Instance: ObservableObject, Value> where Instance.ObjectWillChangePublisher == ObservableObjectPublisher {
+    @available(*, unavailable)
+    var wrappedValue: Value {
+        get { fatalError() }
+        set { fatalError() }
+    }
 
     var projectedValue: Published<Value>.Publisher {
         get { $value }
         set { $value = newValue }
     }
 
-    var wrappedValue: Value {
-        get { if let updatingValue { updatingValue } else { value } }
-        set {
-            if updatingValue == nil {
-                value = newValue
+    static subscript(
+        _enclosingInstance instance: Instance,
+        wrapped _: KeyPath<Instance, Value>,
+        storage storageKeyPath: KeyPath<Instance, _BatchedPublished>
+    ) -> Value {
+        get {
+            let wrapper = instance[keyPath: storageKeyPath]
+            if let updatingValue = wrapper.updatingValue {
+                return updatingValue
             } else {
-                updatingValue = newValue
+                return wrapper.value
+            }
+        }
+        set {
+            let wrapper = instance[keyPath: storageKeyPath]
+            if wrapper.updatingValue == nil {
+                wrapper.value = newValue
+            } else {
+                wrapper.updatingValue = newValue
             }
         }
     }
 
-    func batchUpdate(_ update: () -> Void) {
-        if updatingValue != nil {
+    var batchUpdater: (() -> Void) -> Void {
+        { [weak self] update in
+            guard let self else { return }
+            if self.updatingValue != nil {
+                update()
+                return
+            }
+            self.updatingValue = self.value
             update()
-            return
+            self.value = self.updatingValue!
+            self.updatingValue = nil
         }
-        updatingValue = value
-        update()
-        value = updatingValue!
-        updatingValue = nil
     }
 
     init(wrappedValue initialValue: Value) {
         value = initialValue
     }
+
+    @Published private var value: Value
+
+    private var updatingValue: Value?
+}
+
+extension ObservableObject where Self.ObjectWillChangePublisher == ObservableObjectPublisher {
+    typealias BatchedPublished<T> = _BatchedPublished<Self, T>
+}
+
+// MARK: - TracedPublished
+
+@propertyWrapper
+class _TracedPublished<Instance: ObservableObject, Value> where Instance.ObjectWillChangePublisher == ObservableObjectPublisher {
+    @available(*, unavailable)
+    var wrappedValue: Value {
+        get { fatalError() }
+        set { fatalError() }
+    }
+
+    var projectedValue: Published<Value>.Publisher {
+        get { $value }
+        set { $value = newValue }
+    }
+
+    static subscript(
+        _enclosingInstance instance: Instance,
+        wrapped _: KeyPath<Instance, Value>,
+        storage storageKeyPath: KeyPath<Instance, _TracedPublished>
+    ) -> Value {
+        get {
+            let wrapper = instance[keyPath: storageKeyPath]
+            tracer.instant("get \(wrapper.message)")
+            return wrapper.value
+        }
+        set {
+            let wrapper = instance[keyPath: storageKeyPath]
+            let _r = tracer.range("set \(wrapper.message)"); defer { _r() }
+            tracer.range("objectWillChange") {
+                instance.objectWillChange.send()
+            }
+            wrapper.value = newValue
+        }
+    }
+
+    init(wrappedValue: Value, _ message: String) {
+        value = wrappedValue
+        self.message = message
+    }
+
+    @Published private var value: Value
+
+    private var message: String
+}
+
+extension ObservableObject where Self.ObjectWillChangePublisher == ObservableObjectPublisher {
+    typealias TracedPublished<T> = _TracedPublished<Self, T>
 }
 
 // MARK: - Optional forSome
@@ -431,8 +507,8 @@ extension Duration {
 // MARK: - Proxy
 
 @propertyWrapper
-struct AnyProxy<EnclosingType, Value> {
-    let keyPath: ReferenceWritableKeyPath<EnclosingType, Value>
+struct _Proxy<Instance, Value> {
+    let keyPath: ReferenceWritableKeyPath<Instance, Value>
 
     @available(*, unavailable, message: "@Proxy can only be applied to classes")
     var wrappedValue: Value {
@@ -441,9 +517,9 @@ struct AnyProxy<EnclosingType, Value> {
     }
 
     static subscript(
-        _enclosingInstance instance: EnclosingType,
-        wrapped wrappedKeyPath: KeyPath<EnclosingType, Value>,
-        storage storageKeyPath: KeyPath<EnclosingType, Self>
+        _enclosingInstance instance: Instance,
+        wrapped _: KeyPath<Instance, Value>,
+        storage storageKeyPath: KeyPath<Instance, Self>
     ) -> Value {
         get {
             let wrapper = instance[keyPath: storageKeyPath]
@@ -455,21 +531,21 @@ struct AnyProxy<EnclosingType, Value> {
         }
     }
 
-    init(_ keyPath: ReferenceWritableKeyPath<EnclosingType, Value>) {
+    init(_ keyPath: ReferenceWritableKeyPath<Instance, Value>) {
         self.keyPath = keyPath
     }
 }
 
 protocol EnableProxy {
-    typealias Proxy<T> = AnyProxy<Self, T>
+    typealias Proxy<T> = _Proxy<Self, T>
 }
 
 // MARK: - CachedLazy
 
 @propertyWrapper
-struct AnyCachedLazy<EnclosingType, Value> {
+struct _CachedLazy<Instance, Value> {
     var cached: Value?
-    let computedKeyPath: KeyPath<EnclosingType, Value>
+    let computedKeyPath: KeyPath<Instance, Value>
 
     @available(*, unavailable, message: "@CachedLazy can only be applied to classes")
     var wrappedValue: Value {
@@ -478,16 +554,16 @@ struct AnyCachedLazy<EnclosingType, Value> {
     }
 
     @discardableResult
-    mutating func refresh(_ instance: EnclosingType) -> Value {
+    mutating func refresh(_ instance: Instance) -> Value {
         let value = instance[keyPath: computedKeyPath]
         cached = value
         return value
     }
 
     static subscript(
-        _enclosingInstance instance: EnclosingType,
-        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingType, Value>,
-        storage storageKeyPath: ReferenceWritableKeyPath<EnclosingType, Self>
+        _enclosingInstance instance: Instance,
+        wrapped _: ReferenceWritableKeyPath<Instance, Value>,
+        storage storageKeyPath: ReferenceWritableKeyPath<Instance, Self>
     ) -> Value {
         get {
             if let cached = instance[keyPath: storageKeyPath].cached {
@@ -501,11 +577,11 @@ struct AnyCachedLazy<EnclosingType, Value> {
         }
     }
 
-    init(_ computedKeyPath: KeyPath<EnclosingType, Value>) {
+    init(_ computedKeyPath: KeyPath<Instance, Value>) {
         self.computedKeyPath = computedKeyPath
     }
 }
 
 protocol EnableCachedLazy {
-    typealias CachedLazy<T> = AnyCachedLazy<Self, T>
+    typealias CachedLazy<T> = _CachedLazy<Self, T>
 }

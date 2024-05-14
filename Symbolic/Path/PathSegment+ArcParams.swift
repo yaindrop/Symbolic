@@ -27,6 +27,8 @@ extension PathSegment.Arc {
         }
 
         var endpointParams: EndpointParams {
+            let _r = tracer.range("Calc endpointParams"); defer { _r() }
+
             let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
             let theta1 = startAngle.radians, sinTheta1 = sin(theta1), cosTheta1 = cos(theta1)
             let theta2 = endAngle.radians, sinTheta2 = sin(theta2), cosTheta2 = cos(theta2)
@@ -48,6 +50,8 @@ extension PathSegment.Arc {
         let sweep: Bool
 
         var centerParams: CenterParams {
+            let _r = tracer.range("Calc centerParams"); defer { _r() }
+
             let a = Vector2(from), b = Vector2(to)
             let phi = rotation.radians, sinPhi = sin(phi), cosPhi = cos(phi)
 

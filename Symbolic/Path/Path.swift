@@ -112,7 +112,7 @@ extension PathEdge: Transformable {
 
 // MARK: - PathNode
 
-struct PathNode: Identifiable {
+struct PathNode: Identifiable, Equatable {
     let id: UUID
     let position: Point2
 

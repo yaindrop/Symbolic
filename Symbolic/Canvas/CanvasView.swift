@@ -40,17 +40,17 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
 
     // MARK: body
 
-    var body: some View {
+    var body: some View { tracer.range("CanvasView body") {
         navigationView
             .onChange(of: documentModel.activeDocument) {
                 withAnimation {
-                    let _r = tracer.range("Reload document"); defer { _r().forSome { logInfo($0.tree) } }
+                    let _r = tracer.range("Reload document"); defer { _r() }
                     pendingPathModel.pendingEvent = nil
                     pathInteractor.loadDocument(documentModel.activeDocument)
                 }
             }
             .onChange(of: activePathInteractor.activePath) {
-                let _r = tracer.range("Active path change \(activePathInteractor.activePath?.id.uuidString ?? "nil")"); defer { _r().forSome { logInfo($0.tree) } }
+                let _r = tracer.range("Active path change \(activePathInteractor.activePath?.id.uuidString ?? "nil")"); defer { _r() }
                 activePathInteractor.onActivePathChanged()
             }
             .onAppear {
@@ -62,14 +62,14 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             .onAppear {
                 multipleTouchPress.onTap { info in
                     let worldLocation = info.location.applying(viewport.toWorld)
-                    let _r = tracer.range("On tap \(worldLocation)"); defer { _r().forSome { logInfo($0.tree) } }
+                    let _r = tracer.range("On tap \(worldLocation)"); defer { _r() }
                     withAnimation {
                         activePathModel.activePathId = pathModel.hitTest(worldPosition: worldLocation)?.id
                     }
                 }
                 multipleTouchPress.onLongPress { info in
                     let worldLocation = info.current.applying(viewport.toWorld)
-                    let _r = tracer.range("On long press \(worldLocation)"); defer { _r().forSome { logInfo($0.tree) } }
+                    let _r = tracer.range("On long press \(worldLocation)"); defer { _r() }
                     viewportUpdate.blocked = true
                     if !pendingSelectionModel.active {
                         canvasActionModel.onStart(triggering: .longPressViewport)
@@ -78,9 +78,9 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
                     }
                 }
                 multipleTouchPress.onLongPressEnd { _ in
-                    let _r = tracer.range("On long press end"); defer { _r().forSome { logInfo($0.tree) } }
+                    let _r = tracer.range("On long press end"); defer { _r() }
                     viewportUpdate.blocked = false
-//                    longPressPosition = nil
+                    //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
                     selectionUpdater.onEnd()
                 }
@@ -107,7 +107,7 @@ struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActi
             .onAppear {
                 documentModel.activeDocument = Document(from: fooSvg)
             }
-    }
+    }}
 
     // MARK: private
 

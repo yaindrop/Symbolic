@@ -4,9 +4,14 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - EdgePanel
 
-    struct EdgePanel: View, EnableActivePathInteractor, EnablePathUpdater {
+    struct EdgePanel: View, EquatableByTuple {
         let fromNodeId: UUID
         let edge: PathEdge
+
+        var equatableTuple: some Equatable { fromNodeId; edge }
+
+        @Selected var segment: PathSegment?
+        @Selected var focused: Bool
 
         var body: some View { tracer.range("ActivePathPanel EdgePanel body") {
             HStack {
@@ -24,9 +29,14 @@ extension ActivePathPanel {
             }
         }}
 
-        @State private var expanded = false
+        init(fromNodeId: UUID, edge: PathEdge) {
+            self.fromNodeId = fromNodeId
+            self.edge = edge
+            _segment = .init { activePathInteractor.activePath?.segment(from: fromNodeId) }
+            _focused = .init { activePathInteractor.focusedNodeId == fromNodeId }
+        }
 
-        private var focused: Bool { activePathInteractor.focusedPart == .edge(fromNodeId) }
+        @State private var expanded = false
 
         private var name: String {
             switch edge {
@@ -57,7 +67,7 @@ extension ActivePathPanel {
         }}
 
         @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu \(fromNodeId)") {
-            memo(edge) {
+            memo({ edge; focused }) {
                 Menu { tracer.range("ActivePathPanel EdgePanel titleMenu menu") {
                     Label("\(fromNodeId)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
@@ -93,7 +103,7 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
-            memo(deps: .init(expanded, edge)) {
+            memo({ expanded; edge }) {
                 Group {
                     if case let .bezier(bezier) = edge {
                         BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
@@ -116,7 +126,7 @@ extension ActivePathPanel {
         }
 
         private func splitEdge() {
-            guard let segment = activePathInteractor.activePath?.segment(from: fromNodeId) else { return }
+            guard let segment else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let position = segment.position(paramT: paramT)
             let id = UUID()
@@ -132,32 +142,32 @@ extension ActivePathPanel {
 
 // MARK: - BezierPanel
 
-fileprivate struct BezierPanel: View, EnableActivePathInteractor, EnablePathUpdater {
+fileprivate struct BezierPanel: View, EquatableByTuple {
     let fromNodeId: UUID
     let bezier: PathEdge.Bezier
 
-    var body: some View {
-        memo(bezier) { tracer.range("ActivePathPanel EdgePanel BezierPanel") {
-            VStack(spacing: 12) {
-                HStack {
-                    Text("C₁")
-                        .font(.callout.monospacedDigit())
-                    Spacer(minLength: 12)
-                    PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
-                }
-                Divider()
-                HStack {
-                    Text("C₂")
-                        .font(.callout.monospacedDigit())
-                    Spacer(minLength: 12)
-                    PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
-                }
+    var equatableTuple: some Equatable { fromNodeId; bezier }
+
+    var body: some View { tracer.range("ActivePathPanel EdgePanel BezierPanel") {
+        VStack(spacing: 12) {
+            HStack {
+                Text("C₁")
+                    .font(.callout.monospacedDigit())
+                Spacer(minLength: 12)
+                PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
             }
-            .padding(12)
-            .background(.regularMaterial)
-            .cornerRadius(12)
-        }}
-    }
+            Divider()
+            HStack {
+                Text("C₂")
+                    .font(.callout.monospacedDigit())
+                Spacer(minLength: 12)
+                PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
+            }
+        }
+        .padding(12)
+        .background(.regularMaterial)
+        .cornerRadius(12)
+    }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
         { pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
@@ -170,46 +180,46 @@ fileprivate struct BezierPanel: View, EnableActivePathInteractor, EnablePathUpda
 
 // MARK: - ArcPanel
 
-fileprivate struct ArcPanel: View, EnableActivePathInteractor, EnablePathUpdater {
+fileprivate struct ArcPanel: View, EquatableByTuple {
     let fromNodeId: UUID
     let arc: PathEdge.Arc
 
+    var equatableTuple: some Equatable { fromNodeId; arc }
+
     var body: some View { tracer.range("ActivePathPanel EdgePanel ArcPanel") {
-        memo(arc) {
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Radius")
-                        .font(.subheadline)
-                    Spacer()
-                    SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
-                }
-                Divider()
-                HStack {
-                    Text("Rotation")
-                        .font(.subheadline)
-                    Spacer()
-                    AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
-                }
-                Divider()
-                HStack {
-                    Text("Large Arc")
-                        .font(.subheadline)
-                    Spacer()
-                    FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
-                }
-                Divider()
-                HStack {
-                    Text("Sweep")
-                        .font(.subheadline)
-                    Spacer()
-                    FlagInput(flag: arc.sweep, onChange: updateSweep)
-                }
+        VStack(spacing: 12) {
+            HStack {
+                Text("Radius")
+                    .font(.subheadline)
+                Spacer()
+                SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
             }
-            .padding(12)
-            .background(Color.secondarySystemBackground)
-            .cornerRadius(12)
+            Divider()
+            HStack {
+                Text("Rotation")
+                    .font(.subheadline)
+                Spacer()
+                AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
+            }
+            Divider()
+            HStack {
+                Text("Large Arc")
+                    .font(.subheadline)
+                Spacer()
+                FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
+            }
+            Divider()
+            HStack {
+                Text("Sweep")
+                    .font(.subheadline)
+                Spacer()
+                FlagInput(flag: arc.sweep, onChange: updateSweep)
+            }
         }
-    }}
+        .padding(12)
+        .background(Color.secondarySystemBackground)
+        .cornerRadius(12)
+    } }
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
         { pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }

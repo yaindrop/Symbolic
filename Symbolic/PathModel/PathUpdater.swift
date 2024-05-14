@@ -18,19 +18,9 @@ class PathUpdateModel {
     @ObservationIgnored fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
 }
 
-// MARK: - EnablePathUpdater
-
-protocol EnablePathUpdater {
-    var pathUpdater: PathUpdater { get }
-}
-
-extension EnablePathUpdater {
-    var pathUpdater: PathUpdater { .init(pathModel: store.pathModel, pendingPathModel: store.pendingPathModel, activePathModel: store.activePathModel, model: store.pathUpdateModel) }
-}
-
 // MARK: - PathUpdater
 
-struct PathUpdater: EnableActivePathInteractor {
+struct PathUpdater {
     let pathModel: PathModel
     let pendingPathModel: PendingPathModel
     let activePathModel: ActivePathModel
@@ -103,7 +93,7 @@ struct PathUpdater: EnableActivePathInteractor {
     // MARK: handle action
 
     private func handle(_ action: DocumentAction, pending: Bool) {
-        let _r = tracer.range("Path updater handle action"); defer { _r() }
+        let _r = tracer.range("[path-updater] handle action, pending: \(pending)"); defer { _r() }
         switch action {
         case let .pathAction(pathAction):
             handle(pathAction, pending: pending)
@@ -284,19 +274,9 @@ struct PathUpdater: EnableActivePathInteractor {
     }
 }
 
-// MARK: - EnablePathUpdaterInView
-
-protocol EnablePathUpdaterInView {
-    var pathUpdaterInView: PathUpdaterInView { get }
-}
-
-extension EnablePathUpdaterInView {
-    var pathUpdaterInView: PathUpdaterInView { .init(viewport: store.viewportModel, pathModel: store.pathModel, pendingPathModel: store.pendingPathModel, activePathModel: store.activePathModel, pathUpdateModel: store.pathUpdateModel) }
-}
-
 // MARK: - PathUpdaterInView
 
-struct PathUpdaterInView: EnablePathUpdater {
+struct PathUpdaterInView {
     let viewport: ViewportModel
     let pathModel: PathModel
     let pendingPathModel: PendingPathModel

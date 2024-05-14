@@ -15,7 +15,7 @@ struct BlurView: UIViewRepresentable {
 
 // MARK: - CanvasView
 
-struct CanvasView: View, EnableViewportUpdater, EnablePathInteractor, EnableActivePathInteractor, EnablePathUpdater {
+struct CanvasView: View {
     // MARK: models
 
     @State var multipleTouch = MultipleTouchModel()

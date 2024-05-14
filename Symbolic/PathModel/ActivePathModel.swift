@@ -23,19 +23,9 @@ class ActivePathModel {
     fileprivate(set) var focusedPart: ActivePathFocusedPart?
 }
 
-// MARK: - EnableActivePathInteractor
-
-protocol EnableActivePathInteractor {
-    var activePathInteractor: ActivePathInteractor { get }
-}
-
-extension EnableActivePathInteractor {
-    var activePathInteractor: ActivePathInteractor { .init(pathModel: store.pathModel, pendingPathModel: store.pendingPathModel, model: store.activePathModel) }
-}
-
 // MARK: - ActivePathInteractor
 
-struct ActivePathInteractor: EnablePathInteractor {
+struct ActivePathInteractor {
     let pathModel: PathModel
     let pendingPathModel: PendingPathModel
     let model: ActivePathModel

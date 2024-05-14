@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - ActivePathPanel
 
-struct ActivePathPanel: View, EnableActivePathInteractor {
+struct ActivePathPanel: View {
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 

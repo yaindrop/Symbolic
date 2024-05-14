@@ -33,16 +33,6 @@ class PendingPathModel {
     @ObservationIgnored fileprivate var pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 }
 
-// MARK: - EnablePathInteractor
-
-protocol EnablePathInteractor {
-    var pathInteractor: PathInteractor { get }
-}
-
-extension EnablePathInteractor {
-    var pathInteractor: PathInteractor { .init(model: store.pathModel, pendingModel: store.pendingPathModel) }
-}
-
 // MARK: - PathInteractor
 
 struct PathInteractor {

@@ -3,9 +3,13 @@ import SwiftUI
 
 // MARK: - ActivePathEdgeHandle
 
-struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
+struct ActivePathEdgeHandle: View, EquatableByTuple {
     let fromId: UUID
     let segment: PathSegment
+
+    @Selected var focused: Bool
+
+    var equatableTuple: some Equatable { fromId; segment }
 
     var body: some View { tracer.range("ActivePathEdgeHandle body") {
         outline
@@ -14,10 +18,15 @@ struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdater
         //        }
     }}
 
+    init(fromId: UUID, segment: PathSegment) {
+        self.fromId = fromId
+        self.segment = segment
+        _focused = .init { activePathInteractor.focusedEdgeId == fromId }
+    }
+
     @State private var longPressParamT: Scalar?
     @State private var longPressSplitNodeId: UUID?
 
-    private var focused: Bool { activePathInteractor.focusedEdgeId == fromId }
     private func toggleFocus() {
         focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(edge: fromId)
     }
@@ -81,9 +90,11 @@ struct ActivePathEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdater
 
 // MARK: - ActivePathFocusedEdgeHandle
 
-struct ActivePathFocusedEdgeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
+struct ActivePathFocusedEdgeHandle: View {
     let fromId: UUID
     let segment: PathSegment
+
+    @Selected var focused: Bool
 
     var body: some View {
         if let circlePosition, focused {
@@ -95,7 +106,11 @@ struct ActivePathFocusedEdgeHandle: View, EnableActivePathInteractor, EnablePath
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
-    private var focused: Bool { activePathInteractor.focusedEdgeId == fromId }
+    init(fromId: UUID, segment: PathSegment) {
+        self.fromId = fromId
+        self.segment = segment
+        _focused = .init { activePathInteractor.focusedEdgeId == fromId }
+    }
 
     private var circlePosition: Point2? {
         let tessellated = segment.tessellated()

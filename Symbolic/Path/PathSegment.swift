@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - PathSegment
 
-fileprivate protocol PathSegmentImpl: Transformable, Parametrizable, Tessellatable, InverseParametrizable, SUPathAppendable, ParamSplittable {
+fileprivate protocol PathSegmentImpl: Equatable, Transformable, Parametrizable, Tessellatable, InverseParametrizable, SUPathAppendable, ParamSplittable {
     var from: Point2 { get }
     var to: Point2 { get }
     var edge: PathEdge { get }
@@ -53,7 +53,7 @@ extension PathSegment: PathSegmentImpl {
     var to: Point2 { impl.to }
     var edge: PathEdge { impl.edge }
 
-    private var impl: Impl {
+    private var impl: any Impl {
         switch self {
         case let .arc(a): a
         case let .bezier(b): b
@@ -61,7 +61,7 @@ extension PathSegment: PathSegmentImpl {
         }
     }
 
-    private func impl(_ transform: (Impl) -> Impl) -> Self {
+    private func impl(_ transform: (any Impl) -> any Impl) -> Self {
         switch self {
         case let .arc(a): .arc(transform(a) as! Arc)
         case let .bezier(b): .bezier(transform(b) as! Bezier)
@@ -69,7 +69,7 @@ extension PathSegment: PathSegmentImpl {
         }
     }
 
-    private func impl(_ transform: (Impl) -> (Impl, Impl)) -> (Self, Self) {
+    private func impl(_ transform: (any Impl) -> (any Impl, any Impl)) -> (Self, Self) {
         switch self {
         case let .arc(a):
             let (a0, a1) = transform(a) as! (Arc, Arc)

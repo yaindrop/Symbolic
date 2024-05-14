@@ -3,13 +3,23 @@ import SwiftUI
 
 // MARK: - ActivePathNodeHandle
 
-struct ActivePathNodeHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
+struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     let nodeId: UUID
     let position: Point2
 
-    var body: some View { tracer.range("ActivePathNodeHandle body") {
+    @Selected var focused: Bool
+
+    var equatableTuple: some Equatable { nodeId; position }
+
+    var body: some View { tracer.range("ActivePathNodeHandle body \(nodeId)") {
         circle(at: position, color: .blue)
     }}
+
+    init(nodeId: UUID, position: Point2) {
+        self.nodeId = nodeId
+        self.position = position
+        _focused = .init { activePathInteractor.focusedNodeId == nodeId }
+    }
 
     // MARK: private
 
@@ -17,7 +27,6 @@ struct ActivePathNodeHandle: View, EnableActivePathInteractor, EnablePathUpdater
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
-    private var focused: Bool { activePathInteractor.focusedNodeId == nodeId }
     private func toggleFocus() {
         focused ? activePathInteractor.clearFocus() : activePathInteractor.setFocus(node: nodeId)
     }

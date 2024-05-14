@@ -3,7 +3,9 @@ import SwiftUI
 
 // MARK: - ActivePathHandle
 
-struct ActivePathHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
+struct ActivePathHandle: View {
+    @Selected var boundingRect = activePathInteractor.pendingActivePath?.boundingRect
+
     var body: some View { tracer.range("ActivePathHandle body") {
         rect
     }}
@@ -17,7 +19,7 @@ struct ActivePathHandle: View, EnableActivePathInteractor, EnablePathUpdaterInVi
     @State private var dragGesture = MultipleGestureModel<Void>()
 
     var boundingRectInView: CGRect? {
-        activePathInteractor.pendingActivePath?.boundingRect.applying(store.viewportModel.toView)
+        boundingRect?.applying(store.viewportModel.toView)
     }
 
     @ViewBuilder private var rect: some View {

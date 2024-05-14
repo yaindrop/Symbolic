@@ -587,7 +587,7 @@ protocol EnableCachedLazy {
     typealias CachedLazy<T> = _CachedLazy<Self, T>
 }
 
-// MARK: - EquatableTuple
+// MARK: - Monostate
 
 enum Monostate { case value }
 
@@ -596,6 +596,8 @@ extension Monostate: Equatable {}
 extension Monostate: CustomStringConvertible {
     var description: String { "_" }
 }
+
+// MARK: - EquatableTuple
 
 struct EquatableTuple<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>: Equatable {
     let v0: T0, v1: T1, v2: T2, v3: T3, v4: T4, v5: T5
@@ -628,7 +630,58 @@ extension EquatableTuple where T5 == Monostate {
     init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4) { self.init(v0, v1, v2, v3, v4, .value) }
 }
 
-// MARK: - Memorized
+// MARK: - EquatableTupleBuilder
+
+@resultBuilder
+struct EquatableTupleBuilder {
+    static func buildBlock<T0: Equatable>(_ v0: T0) -> some Equatable {
+        v0
+    }
+
+    static func buildBlock<T0: Equatable, T1: Equatable>(_ v0: T0, _ v1: T1) -> some Equatable {
+        EquatableTuple(v0, v1)
+    }
+
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2) -> some Equatable {
+        EquatableTuple(v0, v1, v2)
+    }
+
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3) -> some Equatable {
+        EquatableTuple(v0, v1, v2, v3)
+    }
+
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4) -> some Equatable {
+        EquatableTuple(v0, v1, v2, v3, v4)
+    }
+
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4, _ v5: T5) -> some Equatable {
+        EquatableTuple(v0, v1, v2, v3, v4, v5)
+    }
+}
+
+// MARK: - EquatableByKey
+
+protocol EquatableByKey: Equatable {
+    associatedtype Key: Equatable
+    var equatableKey: Key { get }
+}
+
+extension EquatableByKey {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.equatableKey == rhs.equatableKey }
+}
+
+// MARK: - EquatableByTuple
+
+protocol EquatableByTuple: Equatable {
+    associatedtype Tuple: Equatable
+    @EquatableTupleBuilder var equatableTuple: Tuple { get }
+}
+
+extension EquatableByTuple {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.equatableTuple == rhs.equatableTuple }
+}
+
+// MARK: - Memo
 
 struct Memo<Key: Equatable, Content: View>: View, Equatable {
     let key: Key
@@ -641,15 +694,15 @@ struct Memo<Key: Equatable, Content: View>: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.key == rhs.key }
 }
 
-func memo<Key, Content>(_ key: Key, @ViewBuilder _ content: @escaping () -> Content) -> Memo<Key, Content> {
+func memo<Key: Equatable, Content: View>(_ key: Key, @ViewBuilder _ content: @escaping () -> Content) -> Memo<Key, Content> {
     .init(key: key, content: content)
 }
 
-func memo<T0, T1, T2, T3, T4, T5, Content>(
-    deps: EquatableTuple<T0, T1, T2, T3, T4, T5>,
+func memo<Content: View>(
+    @EquatableTupleBuilder _ key: () -> some Equatable,
     @ViewBuilder _ content: @escaping () -> Content
-) -> Memo<EquatableTuple<T0, T1, T2, T3, T4, T5>, Content> {
-    .init(key: deps, content: content)
+) -> Memo<some Equatable, Content> {
+    .init(key: key(), content: content)
 }
 
 // MARK: - Selected
@@ -702,7 +755,11 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
     var projectedValue: Selected<Value> { self }
 
+    init(_ selector: @escaping () -> Value) {
+        _storage = StateObject(wrappedValue: Storage(selector: selector))
+    }
+
     init(wrappedValue: @autoclosure @escaping () -> Value) {
-        _storage = StateObject(wrappedValue: Storage(selector: wrappedValue))
+        self.init(wrappedValue)
     }
 }

@@ -30,6 +30,8 @@ extension ActivePathPanel {
         let edge: PathEdge
         let hasNext: Bool
 
+        @Selected var focused: Bool
+
         var body: some View {
             Group {
                 NodePanel(index: index, node: node)
@@ -41,9 +43,15 @@ extension ActivePathPanel {
             .onChange(of: focused) { animateOnFocused() }
         }
 
-        @State private var scale: Double = 1
+        init(index: Int, node: PathNode, edge: PathEdge, hasNext: Bool) {
+            self.index = index
+            self.node = node
+            self.edge = edge
+            self.hasNext = hasNext
+            _focused = .init { store.activePathModel.focusedPart?.id == node.id }
+        }
 
-        private var focused: Bool { store.activePathModel.focusedPart?.id == node.id }
+        @State private var scale: Double = 1
 
         func animateOnFocused() {
             if focused {

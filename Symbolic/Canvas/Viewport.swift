@@ -45,16 +45,6 @@ class ViewportUpdateModel {
     @ObservationIgnored fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
-// MARK: - EnableViewportUpdater
-
-protocol EnableViewportUpdater {
-    var viewportUpdater: ViewportUpdater { get }
-}
-
-extension EnableViewportUpdater {
-    var viewportUpdater: ViewportUpdater { .init(viewport: store.viewportModel, model: store.viewportUpdateModel) }
-}
-
 // MARK: - ViewportUpdater
 
 struct ViewportUpdater {

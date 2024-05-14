@@ -3,10 +3,12 @@ import SwiftUI
 
 // MARK: - ActivePathEdgeKindHandle
 
-struct ActivePathEdgeKindHandle: View {
+struct ActivePathEdgeKindHandle: View, EquatableByTuple {
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment
+
+    var equatableTuple: some Equatable { fromId; toId; segment }
 
     var body: some View { tracer.range("ActivePathEdgeKindHandle body") {
         if case let .arc(arc) = segment {
@@ -19,10 +21,14 @@ struct ActivePathEdgeKindHandle: View {
 
 // MARK: - ActivePathBezierHandle
 
-struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
+struct ActivePathBezierHandle: View {
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Bezier
+
+    @Selected var edgeFocused: Bool
+    @Selected var nodeFocused: Bool
+    @Selected var nextFocused: Bool
 
     var body: some View {
         ZStack {
@@ -51,6 +57,15 @@ struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdat
         }
     }
 
+    init(fromId: UUID, toId: UUID, segment: PathSegment.Bezier) {
+        self.fromId = fromId
+        self.toId = toId
+        self.segment = segment
+        _edgeFocused = .init { activePathInteractor.focusedEdgeId == fromId }
+        _nodeFocused = .init { activePathInteractor.focusedNodeId == fromId }
+        _nextFocused = .init { activePathInteractor.focusedNodeId == toId }
+    }
+
     // MARK: private
 
     private static let lineWidth: Scalar = 1
@@ -61,10 +76,6 @@ struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdat
     @State private var dragControl1 = MultipleGestureModel<Void>()
 
     private var bezier: PathEdge.Bezier { segment.bezier }
-
-    private var edgeFocused: Bool { activePathInteractor.focusedEdgeId == fromId }
-    private var nodeFocused: Bool { activePathInteractor.focusedNodeId == fromId }
-    private var nextFocused: Bool { activePathInteractor.focusedNodeId == toId }
 
     private func subtractingCircle(at point: Point2) -> SUPath {
         SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
@@ -94,10 +105,14 @@ struct ActivePathBezierHandle: View, EnableActivePathInteractor, EnablePathUpdat
 
 // MARK: - ActivePathArcHandle
 
-struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterInView {
+struct ActivePathArcHandle: View {
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Arc
+
+    @Selected var edgeFocused: Bool
+    @Selected var nodeFocused: Bool
+    @Selected var nextFocused: Bool
 
     var body: some View {
         if edgeFocused || nodeFocused || nextFocused {
@@ -111,6 +126,15 @@ struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterI
         }
     }
 
+    init(fromId: UUID, toId: UUID, segment: PathSegment.Arc) {
+        self.fromId = fromId
+        self.toId = toId
+        self.segment = segment
+        _edgeFocused = .init { activePathInteractor.focusedEdgeId == fromId }
+        _nodeFocused = .init { activePathInteractor.focusedNodeId == fromId }
+        _nextFocused = .init { activePathInteractor.focusedNodeId == toId }
+    }
+
     // MARK: private
 
     private static let lineWidth: Scalar = 1
@@ -119,10 +143,6 @@ struct ActivePathArcHandle: View, EnableActivePathInteractor, EnablePathUpdaterI
     private static let touchablePadding: Scalar = 12
 
     private var arc: PathEdge.Arc { segment.arc }
-
-    private var edgeFocused: Bool { activePathInteractor.focusedEdgeId == fromId.id }
-    private var nodeFocused: Bool { activePathInteractor.focusedNodeId == fromId.id }
-    private var nextFocused: Bool { activePathInteractor.focusedNodeId == toId }
 
     private var radius: CGSize { arc.radius }
     private var endPointParams: PathSegment.Arc.EndpointParams { segment.params }

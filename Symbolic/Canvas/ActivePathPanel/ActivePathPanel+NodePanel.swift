@@ -4,9 +4,13 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - NodePanel
 
-    struct NodePanel: View, EnableActivePathInteractor, EnablePathUpdater {
+    struct NodePanel: View, EquatableByTuple {
         let index: Int
         let node: PathNode
+
+        var equatableTuple: some Equatable { index; node }
+
+        @Selected var focused: Bool
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
             HStack {
@@ -19,7 +23,11 @@ extension ActivePathPanel {
             .cornerRadius(12)
         }}
 
-        private var focused: Bool { activePathInteractor.focusedPart == .node(node.id) }
+        init(index: Int, node: PathNode) {
+            self.index = index
+            self.node = node
+            _focused = .init { activePathInteractor.focusedNodeId == node.id }
+        }
 
         @ViewBuilder private var title: some View {
             Group {
@@ -31,16 +39,18 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder var titleMenu: some View { tracer.range("ActivePathPanel NodePanel titleMenu") {
-            Menu {
-                Label("\(node.id)", systemImage: "number")
-                Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
-                Divider()
-                Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
-                Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-            } label: {
-                title
+            memo({ node; focused }) {
+                Menu {
+                    Label("\(node.id)", systemImage: "number")
+                    Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
+                    Divider()
+                    Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
+                    Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
+                } label: {
+                    title
+                }
+                .tint(.label)
             }
-            .tint(.label)
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {

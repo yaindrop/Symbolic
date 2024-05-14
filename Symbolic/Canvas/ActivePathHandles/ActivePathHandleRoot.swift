@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - ActivePathHandleRoot
 
-struct ActivePathHandleRoot: View, EnableActivePathInteractor {
+struct ActivePathHandleRoot: View {
     var body: some View { tracer.range("ActivePathHandleRoot body") {
         if let activePath = activePathInteractor.pendingActivePath {
             ZStack {

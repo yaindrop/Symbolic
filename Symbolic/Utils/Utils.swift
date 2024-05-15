@@ -7,55 +7,14 @@ extension UUID: Identifiable {
     public var id: UUID { self }
 }
 
-// MARK: - SelfTransformable
+// MARK: - ClosedRange
 
-protocol SelfTransformable {
-    func apply<T>(_ transform: (Self) -> T) -> T
-}
-
-extension SelfTransformable {
-    func apply<T>(_ transform: (Self) -> T) -> T { transform(self) }
-}
-
-// MARK: - Cloneable
-
-protocol Cloneable {
-    init(_: Self)
-}
-
-extension Cloneable {
-    var cloned: Self { Self(self) }
-
-    func with(_ transform: (inout Self) -> Void) -> Self {
-        var cloned = cloned
-        transform(&cloned)
-        return cloned
+extension ClosedRange {
+    func clamp(_ value: Bound) -> Bound {
+        return lowerBound > value ? lowerBound : upperBound < value ? upperBound : value
     }
-}
 
-protocol TriviallyCloneable {}
-
-extension TriviallyCloneable {
-    init(_ v: Self) { self = v }
-}
-
-extension Array: Cloneable {}
-
-extension UUID: Cloneable, TriviallyCloneable {}
-
-// MARK: - ReflectedStringConvertible
-
-public protocol ReflectedStringConvertible: CustomStringConvertible { }
-
-extension ReflectedStringConvertible {
-    public var description: String {
-        let mirror = Mirror(reflecting: self)
-        let propertiesStr = mirror.children.compactMap { label, value in
-            guard let label = label else { return nil }
-            return "\(label): \(value)"
-        }.joined(separator: ", ")
-        return "\(mirror.subjectType)(\(propertiesStr))"
-    }
+    init(start: Bound, end: Bound) { self = start < end ? start ... end : end ... start }
 }
 
 // MARK: - conditional modifier
@@ -115,39 +74,6 @@ extension DragGesture.Value {
     var inertia: Vector2 { Vector2(predictedEndTranslation) - offset }
 }
 
-// MARK: - read size
-
-struct ViewSizeReader: ViewModifier {
-    let onChange: (CGSize) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .background {
-                GeometryReader { geometry in
-                    Color.clear.onChange(of: geometry.size, initial: true) {
-                        onChange(geometry.size)
-                    }
-                }
-            }
-    }
-}
-
-extension View {
-    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
-        modifier(ViewSizeReader(onChange: onChange))
-    }
-}
-
-// MARK: - Optional forSome
-
-extension Optional {
-    @inlinable public func forSome(_ callback: (Wrapped) -> Void) {
-        if case let .some(v) = self {
-            callback(v)
-        }
-    }
-}
-
 // MARK: - readable time
 
 extension TimeInterval {
@@ -195,88 +121,6 @@ extension Duration {
             }
         }
     }
-}
-
-// MARK: - Proxy
-
-@propertyWrapper
-struct _Proxy<Instance, Value> {
-    let keyPath: ReferenceWritableKeyPath<Instance, Value>
-
-    @available(*, unavailable, message: "@Proxy can only be applied to classes")
-    var wrappedValue: Value {
-        get { fatalError() }
-        set { fatalError() }
-    }
-
-    static subscript(
-        _enclosingInstance instance: Instance,
-        wrapped _: KeyPath<Instance, Value>,
-        storage storageKeyPath: KeyPath<Instance, Self>
-    ) -> Value {
-        get {
-            let wrapper = instance[keyPath: storageKeyPath]
-            return instance[keyPath: wrapper.keyPath]
-        }
-        set {
-            let wrapper = instance[keyPath: storageKeyPath]
-            instance[keyPath: wrapper.keyPath] = newValue
-        }
-    }
-
-    init(_ keyPath: ReferenceWritableKeyPath<Instance, Value>) {
-        self.keyPath = keyPath
-    }
-}
-
-protocol EnableProxy {
-    typealias Proxy<T> = _Proxy<Self, T>
-}
-
-// MARK: - CachedLazy
-
-@propertyWrapper
-struct _CachedLazy<Instance, Value> {
-    var cached: Value?
-    let computedKeyPath: KeyPath<Instance, Value>
-
-    @available(*, unavailable, message: "@CachedLazy can only be applied to classes")
-    var wrappedValue: Value {
-        get { fatalError() }
-        set { fatalError() }
-    }
-
-    @discardableResult
-    mutating func refresh(_ instance: Instance) -> Value {
-        let value = instance[keyPath: computedKeyPath]
-        cached = value
-        return value
-    }
-
-    static subscript(
-        _enclosingInstance instance: Instance,
-        wrapped _: ReferenceWritableKeyPath<Instance, Value>,
-        storage storageKeyPath: ReferenceWritableKeyPath<Instance, Self>
-    ) -> Value {
-        get {
-            if let cached = instance[keyPath: storageKeyPath].cached {
-                cached
-            } else {
-                instance[keyPath: storageKeyPath].refresh(instance)
-            }
-        }
-        set {
-            instance[keyPath: storageKeyPath].cached = newValue
-        }
-    }
-
-    init(_ computedKeyPath: KeyPath<Instance, Value>) {
-        self.computedKeyPath = computedKeyPath
-    }
-}
-
-protocol EnableCachedLazy {
-    typealias CachedLazy<T> = _CachedLazy<Self, T>
 }
 
 // MARK: - builder helper

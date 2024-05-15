@@ -93,7 +93,7 @@ struct PathUpdater {
     // MARK: handle action
 
     private func handle(_ action: DocumentAction, pending: Bool) {
-        let _r = tracer.range("[path-updater] handle action, pending: \(pending)"); defer { _r() }
+        let _r = tracer.range("[path-updater] handle action, pending: \(pending)", type: .intent); defer { _r() }
         switch action {
         case let .pathAction(pathAction):
             handle(pathAction, pending: pending)

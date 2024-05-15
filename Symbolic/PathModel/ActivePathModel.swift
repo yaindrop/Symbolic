@@ -31,6 +31,15 @@ struct ActivePathService {
     let model: ActivePathModel
 
     var activePathId: UUID? { model.activePathId }
+
+    var activePath: Path? {
+        service.path.model.paths.first { $0.id == activePathId }
+    }
+
+    var pendingActivePath: Path? {
+        service.path.pendingModel.hasPendingEvent ? service.path.pendingModel.paths.first { $0.id == activePathId } : activePath
+    }
+
     var focusedPart: ActivePathFocusedPart? { model.focusedPart }
 
     var focusedEdgeId: UUID? {
@@ -45,18 +54,19 @@ struct ActivePathService {
         return id
     }
 
-    func setFocus(node id: UUID) { withAnimation { model.focusedPart = .node(id) } }
-
-    func setFocus(edge fromNodeId: UUID) { withAnimation { model.focusedPart = .edge(fromNodeId) } }
-
-    func clearFocus() { withAnimation { model.focusedPart = nil } }
-
-    var activePath: Path? {
-        service.path.model.paths.first { $0.id == activePathId }
+    func setFocus(node id: UUID) {
+        let _r = tracer.range("[active-path] set focus", type: .intent); defer { _r() }
+        withAnimation { model.focusedPart = .node(id) }
     }
 
-    var pendingActivePath: Path? {
-        service.path.pendingModel.hasPendingEvent ? service.path.pendingModel.paths.first { $0.id == activePathId } : activePath
+    func setFocus(edge fromNodeId: UUID) {
+        let _r = tracer.range("[active-path] set focus", type: .intent); defer { _r() }
+        withAnimation { model.focusedPart = .edge(fromNodeId) }
+    }
+
+    func clearFocus() {
+        let _r = tracer.range("[active-path] clear focus", type: .intent); defer { _r() }
+        withAnimation { model.focusedPart = nil }
     }
 
     func onActivePathChanged() {

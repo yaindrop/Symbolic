@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		5700C2C42BEB5AAF00481FA7 /* PanelTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */; };
 		5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */; };
-		5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */; };
+		5700C2C82BEBC4A800481FA7 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelView.swift */; };
 		5700C2CA2BED162000481FA7 /* PanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelModel.swift */; };
 		5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CC2BED169D00481FA7 /* PanelData.swift */; };
 		5700C2CF2BEDB6EB00481FA7 /* Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CE2BEDB6EB00481FA7 /* Selection.swift */; };
@@ -51,13 +51,18 @@
 		574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */; };
 		574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */; };
 		574CC7C62BF44E210042FEE3 /* CustomPublished.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7C52BF44E210042FEE3 /* CustomPublished.swift */; };
+		574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7CD2BF4FD7E0042FEE3 /* Geometry.swift */; };
+		574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7CF2BF4FDAF0042FEE3 /* MathProtocols.swift */; };
+		574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D12BF4FE8F0042FEE3 /* Protocols.swift */; };
+		574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */; };
+		574CC7D62BF500190042FEE3 /* ViewSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D52BF500190042FEE3 /* ViewSize.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
 		575C3CFA2BD9F11E0035B758 /* ActivePathHandleRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* ActivePathHandleRoot.swift */; };
 		575C3CFC2BDA14590035B758 /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CFB2BDA14590035B758 /* PathModel.swift */; };
 		576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */; };
-		57B5F1142BC62CFB001E1B2E /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* Math.swift */; };
+		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
 		57B5F11A2BC62FA3001E1B2E /* MultipleTouchPressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* MultipleTouchPressDetector.swift */; };
@@ -93,7 +98,7 @@
 /* Begin PBXFileReference section */
 		5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTitle.swift; sourceTree = "<group>"; };
 		5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSectionTitle.swift; sourceTree = "<group>"; };
-		5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRoot.swift; sourceTree = "<group>"; };
+		5700C2C72BEBC4A800481FA7 /* PanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
 		5700C2C92BED162000481FA7 /* PanelModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelModel.swift; sourceTree = "<group>"; };
 		5700C2CC2BED169D00481FA7 /* PanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelData.swift; sourceTree = "<group>"; };
 		5700C2CE2BEDB6EB00481FA7 /* Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selection.swift; sourceTree = "<group>"; };
@@ -138,13 +143,18 @@
 		574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedScrollView.swift; sourceTree = "<group>"; };
 		574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AxisAlign.swift; sourceTree = "<group>"; };
 		574CC7C52BF44E210042FEE3 /* CustomPublished.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPublished.swift; sourceTree = "<group>"; };
+		574CC7CD2BF4FD7E0042FEE3 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
+		574CC7CF2BF4FDAF0042FEE3 /* MathProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathProtocols.swift; sourceTree = "<group>"; };
+		574CC7D12BF4FE8F0042FEE3 /* Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Protocols.swift; sourceTree = "<group>"; };
+		574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyWrappers.swift; sourceTree = "<group>"; };
+		574CC7D52BF500190042FEE3 /* ViewSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewSize.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
 		575C3CF92BD9F11E0035B758 /* ActivePathHandleRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathHandleRoot.swift; sourceTree = "<group>"; };
 		575C3CFB2BDA14590035B758 /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
 		576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathHandle.swift; sourceTree = "<group>"; };
-		57B5F1132BC62CFB001E1B2E /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Math.swift; sourceTree = "<group>"; };
+		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
 		57B5F1192BC62FA3001E1B2E /* MultipleTouchPressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouchPressDetector.swift; sourceTree = "<group>"; };
@@ -191,7 +201,7 @@
 				572487882BDF83D90096DDE4 /* DataInput */,
 				5700C2CC2BED169D00481FA7 /* PanelData.swift */,
 				5700C2C92BED162000481FA7 /* PanelModel.swift */,
-				5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */,
+				5700C2C72BEBC4A800481FA7 /* PanelView.swift */,
 				5700C2CB2BED165000481FA7 /* Views */,
 			);
 			path = Panel;
@@ -317,6 +327,39 @@
 			path = PathModel;
 			sourceTree = "<group>";
 		};
+		574CC7C82BF4FCE60042FEE3 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */,
+				574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */,
+				574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */,
+				574CC7BB2BF44C390042FEE3 /* Memo.swift */,
+				574CC7D52BF500190042FEE3 /* ViewSize.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		574CC7C92BF4FD050042FEE3 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				574CC7C52BF44E210042FEE3 /* CustomPublished.swift */,
+				572552822BF0572D002147AE /* OrderedMap.swift */,
+				574CC7BD2BF44C7B0042FEE3 /* Selected.swift */,
+				574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		574CC7CA2BF4FD210042FEE3 /* Math */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */,
+				574CC7CD2BF4FD7E0042FEE3 /* Geometry.swift */,
+				574CC7CF2BF4FDAF0042FEE3 /* MathProtocols.swift */,
+			);
+			path = Math;
+			sourceTree = "<group>";
+		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
@@ -369,17 +412,13 @@
 		57B5F13E2BD4A32E001E1B2E /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */,
-				574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */,
-				574CC7C52BF44E210042FEE3 /* CustomPublished.swift */,
 				572552842BF0F2F8002147AE /* Logging.swift */,
-				574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */,
-				57B5F1132BC62CFB001E1B2E /* Math.swift */,
-				574CC7BB2BF44C390042FEE3 /* Memo.swift */,
-				572552822BF0572D002147AE /* OrderedMap.swift */,
-				574CC7BD2BF44C7B0042FEE3 /* Selected.swift */,
+				574CC7D12BF4FE8F0042FEE3 /* Protocols.swift */,
 				572552862BF0F563002147AE /* SimpleTracer.swift */,
 				57B5F1432BD4A621001E1B2E /* Utils.swift */,
+				574CC7C92BF4FD050042FEE3 /* Data */,
+				574CC7CA2BF4FD210042FEE3 /* Math */,
+				574CC7C82BF4FCE60042FEE3 /* UI */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -545,7 +584,7 @@
 				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* HoldAction.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
-				57B5F1142BC62CFB001E1B2E /* Math.swift in Sources */,
+				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
 				572487872BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
@@ -559,6 +598,7 @@
 				575C3CFC2BDA14590035B758 /* PathModel.swift in Sources */,
 				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,
 				5700C2CA2BED162000481FA7 /* PanelModel.swift in Sources */,
+				574CC7D62BF500190042FEE3 /* ViewSize.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchPressDetector.swift in Sources */,
@@ -567,8 +607,10 @@
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
+				574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */,
+				574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,
 				5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */,
@@ -581,10 +623,12 @@
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
 				574CC7BE2BF44C7B0042FEE3 /* Selected.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
-				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
+				5700C2C82BEBC4A800481FA7 /* PanelView.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* Selection.swift in Sources */,
+				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */,
+				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */,
 				574CC7C62BF44E210042FEE3 /* CustomPublished.swift in Sources */,
 			);

@@ -72,7 +72,7 @@ extension PathEdge: PathEdgeImpl {
     }
 }
 
-extension PathEdge: Cloneable, TriviallyCloneable {}
+extension PathEdge: TriviallyCloneable {}
 
 // MARK: CustomStringConvertible
 
@@ -130,12 +130,12 @@ struct PathNode: Identifiable, Equatable {
     }
 }
 
-extension PathNode: Cloneable, TriviallyCloneable {}
+extension PathNode: TriviallyCloneable {}
 
 // MARK: - Path
 
 class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, EnableCachedLazy {
-    struct NodeEdgePair: Cloneable, TriviallyCloneable {
+    struct NodeEdgePair: TriviallyCloneable {
         var node: PathNode, edge: PathEdge
 
         init(_ node: PathNode, _ edge: PathEdge) {

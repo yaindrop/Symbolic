@@ -13,7 +13,7 @@ struct ActivePathPanel: View {
 
     // MARK: private
 
-    @State private var scrollViewModel = ManagedScrollViewModel()
+    @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     @State private var moveGesture = PanelModel.moveGestureModel()
 

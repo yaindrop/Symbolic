@@ -62,7 +62,7 @@ extension PanelAffinity: CustomStringConvertible {
 
 // MARK: - PanelData
 
-struct PanelData {
+struct PanelData: Identifiable {
     let id: UUID = UUID()
 
     let view: AnyView

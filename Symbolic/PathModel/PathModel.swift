@@ -100,7 +100,7 @@ struct PathService {
 
 extension PathService {
     func loadDocument(_ document: Document) {
-        let _r = tracer.range("Path load document"); defer { _r() }
+        let _r = tracer.range("Path load document", type: .intent); defer { _r() }
         targetPathMapUpdater {
             clear()
             for event in document.events {
@@ -110,6 +110,7 @@ extension PathService {
     }
 
     func loadEvent(_ event: DocumentEvent) {
+        let _r = tracer.range("Path load document event \(event.id)", type: .intent); defer { _r() }
         switch event.kind {
         case let .pathEvent(pathEvent):
             loadEvent(pathEvent)

@@ -4,13 +4,20 @@ import SwiftUI
 extension SimpleTracer {
     // MARK: - Node
 
+    enum NodeType {
+        case intent
+        case normal
+    }
+
     enum Node {
         struct Instant {
+            let type: NodeType
             let time: ContinuousClock.Instant
             let message: String
         }
 
         struct Range {
+            let type: NodeType
             let start: ContinuousClock.Instant
             let end: ContinuousClock.Instant
             let nodes: [Node]
@@ -26,6 +33,7 @@ extension SimpleTracer {
     // MARK: - PendingRange
 
     struct PendingRange {
+        let type: NodeType
         let start: ContinuousClock.Instant
         let message: String
         var nodes: [Node] = []
@@ -84,7 +92,7 @@ extension SimpleTracer.Node: CustomStringConvertible {
 extension SimpleTracer.Node.Range {
     var tree: String { buildTreeLines().joined(separator: "\n") }
 
-    private func buildTreeLines(asRoot: Bool = true) -> [String] {
+    func buildTreeLines(asRoot: Bool = true) -> [String] {
         var lines: [String] = []
         if asRoot {
             lines.append("\(message) (\(duration.readable))")
@@ -118,11 +126,11 @@ class SimpleTracer {
     }
 
     func instant(_ message: String) {
-        onNode(.instant(.init(time: .now, message: message)))
+        onNode(.instant(.init(type: .normal, time: .now, message: message)))
     }
 
-    func range(_ message: String) -> EndRange {
-        rangeStack.append(.init(start: .now, message: message))
+    func range(_ message: String, type: NodeType = .normal) -> EndRange {
+        rangeStack.append(.init(type: type, start: .now, message: message))
         return .init(tracer: self)
     }
 
@@ -136,7 +144,7 @@ class SimpleTracer {
     @discardableResult
     fileprivate func onEnd(_ endRange: EndRange) -> Node.Range? {
         guard let pending = rangeStack.popLast() else { return nil }
-        let range = Node.Range(start: pending.start, end: .now, nodes: pending.nodes, message: pending.message)
+        let range = Node.Range(type: pending.type, start: pending.start, end: .now, nodes: pending.nodes, message: pending.message)
         onNode(.range(range))
         return range
     }
@@ -148,7 +156,12 @@ class SimpleTracer {
         if rangeStack.isEmpty {
             nodes.append(node)
             if case let .range(r) = node {
-                logInfo(r.tree)
+                if r.type == .intent {
+                    logInfo("[intent] \(r.tree)")
+                } else {
+                    let tree = r.buildTreeLines().enumerated().map { $0 == 0 ? " ... \($1)" : "     \($1)" }.joined(separator: "\n")
+                    logInfo(tree)
+                }
             }
         } else {
             rangeStack[rangeStack.count - 1].nodes.append(node)

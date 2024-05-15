@@ -75,6 +75,30 @@ extension PanelModel {
     }
 }
 
+extension PanelModel {
+    func onResize(panelId: UUID, size: CGSize) {
+        let _r = tracer.range("[panel] resize \(panelId) to \(size)"); defer { _r() }
+        guard var panel = idToPanel[panelId] else { return }
+        panel.size = size
+        panel.origin += offsetByAffinities(of: panel)
+        withAnimation {
+            idToPanel[panel.id] = panel
+        }
+    }
+
+    func onResizeRoot(size: CGSize) {
+        let _r = tracer.range("[panel] resize root \(size)"); defer { _r() }
+        rootSize = size
+        withAnimation {
+            for id in panelIds {
+                guard var panel = idToPanel[id] else { return }
+                panel.origin += offsetByAffinities(of: panel)
+                idToPanel[panel.id] = panel
+            }
+        }
+    }
+}
+
 // MARK: - get affinities
 
 fileprivate func getKeyPath(axis: Axis, align: AxisAlign) -> KeyPath<CGRect, Scalar> {

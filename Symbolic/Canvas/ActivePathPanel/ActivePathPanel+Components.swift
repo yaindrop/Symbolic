@@ -30,8 +30,6 @@ extension ActivePathPanel {
         let edge: PathEdge
         let hasNext: Bool
 
-        @Selected var focused: Bool
-
         var body: some View {
             Group {
                 NodePanel(index: index, node: node)
@@ -50,6 +48,8 @@ extension ActivePathPanel {
             self.hasNext = hasNext
             _focused = .init { store.activePath.focusedPart?.id == node.id }
         }
+
+        @Selected private var focused: Bool
 
         @State private var scale: Double = 1
 

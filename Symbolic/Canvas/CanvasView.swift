@@ -21,17 +21,6 @@ struct CanvasView: View {
     @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-//    @State var viewport = ViewportModel()
-//    @State var viewportUpdate = ViewportUpdateModel()
-//
-//    @State var documentModel = DocumentModel()
-//
-//    @State var pathModel = PathModel()
-//    @State var pendingPathModel = PendingPathModel()
-//    @State var activePathModel = ActivePathModel()
-//
-//    @State var pathUpdateModel = PathUpdateModel()
-
     @StateObject var pendingSelectionModel = PendingSelectionModel()
 
     @StateObject var panelModel = PanelModel()
@@ -125,22 +114,15 @@ struct CanvasView: View {
             Text("sidebar")
                 .navigationTitle("Sidebar")
         } detail: {
-            ZStack {
-                background
-                inactivePaths
-                foreground
-                overlay
-            }
-//            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-//            .toolbar(.hidden, for: .navigationBar)
-            .clipped()
-            .edgesIgnoringSafeArea(.bottom)
-            .toolbar { toolbar }
+            canvas
+                .navigationBarTitleDisplayMode(.inline)
+                .clipped()
+                .edgesIgnoringSafeArea(.bottom)
+                .toolbar { toolbar }
         }
     }
 
-    @ViewBuilder private var background: some View {
+    @ViewBuilder private var background: some View { tracer.range("CanvasView background") {
         GeometryReader { geometry in
             Canvas { context, _ in
                 context.concatenate(store.viewport.toView)
@@ -178,27 +160,44 @@ struct CanvasView: View {
                 logInfo("Changing size from \(oldValue) to \(newValue)")
             }
         }
-    }
+    } }
 
-    @ViewBuilder private var inactivePaths: some View {
-        interactor.activePath.inactivePathsView
-            .transformEffect(store.viewport.toView)
-            .blur(radius: 1)
-    }
+    @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
+        ForEach(interactor.path.model.paths.filter { $0.id != interactor.activePath.activePathId }) { p in
+            SUPath { path in p.append(to: &path) }
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        }
+    } }
 
-    @ViewBuilder private var foreground: some View {
+    @ViewBuilder var activePath: some View { tracer.range("CanvasView activePath") { build {
+        if let pendingActivePath = interactor.activePath.pendingActivePath {
+            SUPath { path in pendingActivePath.append(to: &path) }
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                .allowsHitTesting(false)
+                .id(pendingActivePath.id)
+        }
+    } } }
+
+    @ViewBuilder private var foreground: some View { tracer.range("CanvasView foreground") {
         Color.white.opacity(0.1)
             .modifier(MultipleTouchModifier(model: $multipleTouch))
-    }
+    } }
 
-    @ViewBuilder private var activePaths: some View {
-        interactor.activePath.activePathView
-            .transformEffect(store.viewport.toView)
-    }
-
-    @ViewBuilder private var overlay: some View {
+    @ViewBuilder private var canvas: some View { tracer.range("CanvasView canvas") {
         ZStack {
-            activePaths
+            background
+            inactivePaths
+                .transformEffect(store.viewport.toView)
+                .blur(radius: 1)
+            foreground
+            overlay
+        }
+    }}
+
+    @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
+        ZStack {
+            activePath
+                .transformEffect(store.viewport.toView)
             ActivePathHandleRoot()
             PendingSelectionView()
                 .environmentObject(pendingSelectionModel)
@@ -207,9 +206,9 @@ struct CanvasView: View {
             HoldActionPopover(position: longPressPosition)
         }
         .allowsHitTesting(!multipleTouch.active)
-    }
+    } }
 
-    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
         ToolbarItem(placement: .topBarLeading) {
             Menu {
                 Text("Item 0")
@@ -248,7 +247,7 @@ struct CanvasView: View {
                 Image(systemName: "arrow.uturn.backward")
             }
         }
-    }
+    }}}
 }
 
 #Preview {

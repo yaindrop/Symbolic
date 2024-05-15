@@ -126,17 +126,9 @@ class SimpleTracer {
         return .init(tracer: self)
     }
 
-    func range(_ message: String, _ work: () -> Void) {
-        let _r = range(message)
-        work()
-        _r()
-    }
-
-    func range(_ message: String, @ViewBuilder _ builder: () -> some View) -> some View {
-        let _r = range(message)
-        let view = builder()
-        _r()
-        return view
+    func range<Result>(_ message: String, _ work: () -> Result) -> Result {
+        let _r = range(message); defer { _r() }
+        return work()
     }
 
     // MARK: private

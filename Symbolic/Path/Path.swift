@@ -237,6 +237,7 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
 
 extension Path: SUPathAppendable {
     func append(to path: inout SUPath) {
+        let _r = tracer.range("Path append to"); defer { _r() }
         path.addPath(self.path)
     }
 }

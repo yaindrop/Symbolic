@@ -10,8 +10,6 @@ extension ActivePathPanel {
 
         var equatableTuple: some Equatable { index; node }
 
-        @Selected var focused: Bool
-
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
             HStack {
                 titleMenu
@@ -29,6 +27,8 @@ extension ActivePathPanel {
             _focused = .init { interactor.activePath.focusedNodeId == node.id }
         }
 
+        @Selected private var focused: Bool
+
         @ViewBuilder private var title: some View {
             Group {
                 Image(systemName: "smallcircle.filled.circle")
@@ -39,7 +39,7 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder var titleMenu: some View { tracer.range("ActivePathPanel NodePanel titleMenu") {
-            memo({ node; focused }) {
+            Memo({ node; focused }) {
                 Menu {
                     Label("\(node.id)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }

@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - ActivePathHandleRoot
 
 struct ActivePathHandleRoot: View {
-    var body: some View { tracer.range("ActivePathHandleRoot body") {
+    var body: some View { tracer.range("ActivePathHandleRoot body") { build {
         if let activePath = interactor.activePath.pendingActivePath {
             ZStack {
                 let nodes = activePath.nodes
@@ -23,5 +23,5 @@ struct ActivePathHandleRoot: View {
                 ForEach(idAndSegmentInView, id: \.fromId) { fromId, toId, segment in ActivePathEdgeKindHandle(fromId: fromId, toId: toId, segment: segment) }
             }
         }
-    }}
+    }}}
 }

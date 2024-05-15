@@ -45,6 +45,12 @@
 		57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E462BE2851D00C73434 /* MultipleGesture.swift */; };
 		57416E492BE5252000C73434 /* FlagInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E482BE5252000C73434 /* FlagInput.swift */; };
 		574CC7BA2BF3B2950042FEE3 /* GlobalState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7B92BF3B2950042FEE3 /* GlobalState.swift */; };
+		574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BB2BF44C390042FEE3 /* Memo.swift */; };
+		574CC7BE2BF44C7B0042FEE3 /* Selected.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BD2BF44C7B0042FEE3 /* Selected.swift */; };
+		574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */; };
+		574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */; };
+		574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */; };
+		574CC7C62BF44E210042FEE3 /* CustomPublished.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7C52BF44E210042FEE3 /* CustomPublished.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -126,6 +132,12 @@
 		57416E462BE2851D00C73434 /* MultipleGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleGesture.swift; sourceTree = "<group>"; };
 		57416E482BE5252000C73434 /* FlagInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagInput.swift; sourceTree = "<group>"; };
 		574CC7B92BF3B2950042FEE3 /* GlobalState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalState.swift; sourceTree = "<group>"; };
+		574CC7BB2BF44C390042FEE3 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
+		574CC7BD2BF44C7B0042FEE3 /* Selected.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selected.swift; sourceTree = "<group>"; };
+		574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+UIColor.swift"; sourceTree = "<group>"; };
+		574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedScrollView.swift; sourceTree = "<group>"; };
+		574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AxisAlign.swift; sourceTree = "<group>"; };
+		574CC7C52BF44E210042FEE3 /* CustomPublished.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPublished.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -357,9 +369,15 @@
 		57B5F13E2BD4A32E001E1B2E /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */,
+				574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */,
+				574CC7C52BF44E210042FEE3 /* CustomPublished.swift */,
 				572552842BF0F2F8002147AE /* Logging.swift */,
+				574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */,
 				57B5F1132BC62CFB001E1B2E /* Math.swift */,
+				574CC7BB2BF44C390042FEE3 /* Memo.swift */,
 				572552822BF0572D002147AE /* OrderedMap.swift */,
+				574CC7BD2BF44C7B0042FEE3 /* Selected.swift */,
 				572552862BF0F563002147AE /* SimpleTracer.swift */,
 				57B5F1432BD4A621001E1B2E /* Utils.swift */,
 			);
@@ -515,6 +533,7 @@
 				5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */,
 				5723BF7E2BC39844002209F2 /* Item.swift in Sources */,
 				574CC7BA2BF3B2950042FEE3 /* GlobalState.swift in Sources */,
+				574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */,
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
@@ -543,6 +562,8 @@
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchPressDetector.swift in Sources */,
+				574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */,
+				574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
@@ -556,13 +577,16 @@
 				57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */,
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
+				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
+				574CC7BE2BF44C7B0042FEE3 /* Selected.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
 				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* Selection.swift in Sources */,
 				576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */,
 				572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */,
+				574CC7C62BF44E210042FEE3 /* CustomPublished.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

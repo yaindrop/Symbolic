@@ -10,9 +10,6 @@ extension ActivePathPanel {
 
         var equatableTuple: some Equatable { fromNodeId; edge }
 
-        @Selected var segment: PathSegment?
-        @Selected var focused: Bool
-
         var body: some View { tracer.range("ActivePathPanel EdgePanel body") {
             HStack {
                 Spacer(minLength: 24)
@@ -35,6 +32,9 @@ extension ActivePathPanel {
             _segment = .init { interactor.activePath.activePath?.segment(from: fromNodeId) }
             _focused = .init { interactor.activePath.focusedNodeId == fromNodeId }
         }
+
+        @Selected private var segment: PathSegment?
+        @Selected private var focused: Bool
 
         @State private var expanded = false
 
@@ -67,8 +67,8 @@ extension ActivePathPanel {
         }}
 
         @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu \(fromNodeId)") {
-            memo({ edge; focused }) {
-                Menu { tracer.range("ActivePathPanel EdgePanel titleMenu menu") {
+            Memo({ edge; focused }) {
+                Menu {
                     Label("\(fromNodeId)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                     Divider()
@@ -85,7 +85,7 @@ extension ActivePathPanel {
                     Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
                     Divider()
                     Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }
-                }} label: {
+                } label: {
                     title
                 }
                 .tint(.label)
@@ -103,7 +103,7 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
-            memo({ expanded; edge }) {
+            Memo({ expanded; edge }) {
                 Group {
                     if case let .bezier(bezier) = edge {
                         BezierPanel(fromNodeId: fromNodeId, bezier: bezier)

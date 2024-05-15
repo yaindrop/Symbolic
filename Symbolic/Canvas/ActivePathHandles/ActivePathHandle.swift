@@ -4,13 +4,13 @@ import SwiftUI
 // MARK: - ActivePathHandle
 
 struct ActivePathHandle: View {
-    @Selected var boundingRect = interactor.activePath.pendingActivePath?.boundingRect
-
     var body: some View { tracer.range("ActivePathHandle body") {
         rect
     }}
 
     // MARK: private
+
+    @Selected private var boundingRect = interactor.activePath.pendingActivePath?.boundingRect
 
     private static let lineWidth: Scalar = 1
     private static let circleSize: Scalar = 16

@@ -7,8 +7,6 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     let nodeId: UUID
     let position: Point2
 
-    @Selected var focused: Bool
-
     var equatableTuple: some Equatable { nodeId; position }
 
     var body: some View { tracer.range("ActivePathNodeHandle body \(nodeId)") {
@@ -22,6 +20,8 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     }
 
     // MARK: private
+
+    @Selected private var focused: Bool
 
     private static let lineWidth: Scalar = 2
     private static let circleSize: Scalar = 16

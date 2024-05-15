@@ -10,13 +10,13 @@ struct ActivePathEdgeKindHandle: View, EquatableByTuple {
 
     var equatableTuple: some Equatable { fromId; toId; segment }
 
-    var body: some View { tracer.range("ActivePathEdgeKindHandle body") {
+    var body: some View { tracer.range("ActivePathEdgeKindHandle body") { build {
         if case let .arc(arc) = segment {
             ActivePathArcHandle(fromId: fromId, toId: toId, segment: arc)
         } else if case let .bezier(bezier) = segment {
             ActivePathBezierHandle(fromId: fromId, toId: toId, segment: bezier)
         }
-    }}
+    }}}
 }
 
 // MARK: - ActivePathBezierHandle
@@ -25,10 +25,6 @@ struct ActivePathBezierHandle: View {
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment.Bezier
-
-    @Selected var edgeFocused: Bool
-    @Selected var nodeFocused: Bool
-    @Selected var nextFocused: Bool
 
     var body: some View {
         ZStack {
@@ -65,6 +61,10 @@ struct ActivePathBezierHandle: View {
         _nodeFocused = .init { interactor.activePath.focusedNodeId == fromId }
         _nextFocused = .init { interactor.activePath.focusedNodeId == toId }
     }
+
+    @Selected private var edgeFocused: Bool
+    @Selected private var nodeFocused: Bool
+    @Selected private var nextFocused: Bool
 
     // MARK: private
 
@@ -110,10 +110,6 @@ struct ActivePathArcHandle: View {
     let toId: UUID
     let segment: PathSegment.Arc
 
-    @Selected var edgeFocused: Bool
-    @Selected var nodeFocused: Bool
-    @Selected var nextFocused: Bool
-
     var body: some View {
         if edgeFocused || nodeFocused || nextFocused {
             ZStack {
@@ -134,6 +130,10 @@ struct ActivePathArcHandle: View {
         _nodeFocused = .init { interactor.activePath.focusedNodeId == fromId }
         _nextFocused = .init { interactor.activePath.focusedNodeId == toId }
     }
+
+    @Selected private var edgeFocused: Bool
+    @Selected private var nodeFocused: Bool
+    @Selected private var nextFocused: Bool
 
     // MARK: private
 

@@ -7,8 +7,6 @@ struct ActivePathEdgeHandle: View, EquatableByTuple {
     let fromId: UUID
     let segment: PathSegment
 
-    @Selected var focused: Bool
-
     var equatableTuple: some Equatable { fromId; segment }
 
     var body: some View { tracer.range("ActivePathEdgeHandle body") {
@@ -23,6 +21,8 @@ struct ActivePathEdgeHandle: View, EquatableByTuple {
         self.segment = segment
         _focused = .init { interactor.activePath.focusedEdgeId == fromId }
     }
+
+    @Selected private var focused: Bool
 
     @State private var longPressParamT: Scalar?
     @State private var longPressSplitNodeId: UUID?
@@ -94,8 +94,6 @@ struct ActivePathFocusedEdgeHandle: View {
     let fromId: UUID
     let segment: PathSegment
 
-    @Selected var focused: Bool
-
     var body: some View {
         if let circlePosition, focused {
             circle(at: circlePosition, color: .cyan)
@@ -111,6 +109,8 @@ struct ActivePathFocusedEdgeHandle: View {
         self.segment = segment
         _focused = .init { interactor.activePath.focusedEdgeId == fromId }
     }
+
+    @Selected private var focused: Bool
 
     private var circlePosition: Point2? {
         let tessellated = segment.tessellated()

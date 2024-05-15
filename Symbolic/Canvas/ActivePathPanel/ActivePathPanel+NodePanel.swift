@@ -4,11 +4,11 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - NodePanel
 
-    struct NodePanel: View, EquatableByTuple {
+    struct NodePanel: View, EquatableBy {
         let index: Int
         let node: PathNode
 
-        var equatableTuple: some Equatable { index; node }
+        var equatableBy: some Equatable { index; node }
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
             HStack {
@@ -24,7 +24,7 @@ extension ActivePathPanel {
         init(index: Int, node: PathNode) {
             self.index = index
             self.node = node
-            _focused = .init { interactor.activePath.focusedNodeId == node.id }
+            _focused = .init { service.activePath.focusedNodeId == node.id }
         }
 
         @Selected private var focused: Bool
@@ -39,7 +39,7 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder var titleMenu: some View { tracer.range("ActivePathPanel NodePanel titleMenu") {
-            Memo({ node; focused }) {
+            Memo {
                 Menu {
                     Label("\(node.id)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
@@ -50,23 +50,23 @@ extension ActivePathPanel {
                     title
                 }
                 .tint(.label)
-            }
+            } deps: { node; focused }
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { interactor.pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
+            { service.pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
         }
 
         private func toggleFocus() {
-            focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(node: node.id)
+            focused ? service.activePath.clearFocus() : service.activePath.setFocus(node: node.id)
         }
 
         private func breakNode() {
-            interactor.pathUpdater.updateActivePath(breakAtNode: node.id)
+            service.pathUpdater.updateActivePath(breakAtNode: node.id)
         }
 
         private func deleteNode() {
-            interactor.pathUpdater.updateActivePath(deleteNode: node.id)
+            service.pathUpdater.updateActivePath(deleteNode: node.id)
         }
     }
 }

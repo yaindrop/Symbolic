@@ -33,9 +33,9 @@ class PendingPathModel {
     @ObservationIgnored fileprivate var pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 }
 
-// MARK: - PathInteractor
+// MARK: - PathService
 
-struct PathInteractor {
+struct PathService {
     let model: PathModel
     let pendingModel: PendingPathModel
 
@@ -98,7 +98,7 @@ struct PathInteractor {
 
 // MARK: - PathModel load events
 
-extension PathInteractor {
+extension PathService {
     func loadDocument(_ document: Document) {
         let _r = tracer.range("Path load document"); defer { _r() }
         targetPathMapUpdater {

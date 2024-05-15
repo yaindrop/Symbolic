@@ -10,7 +10,7 @@ struct ActivePathHandle: View {
 
     // MARK: private
 
-    @Selected private var boundingRect = interactor.activePath.pendingActivePath?.boundingRect
+    @Selected private var boundingRect = service.activePath.pendingActivePath?.boundingRect
 
     private static let lineWidth: Scalar = 1
     private static let circleSize: Scalar = 16
@@ -31,7 +31,7 @@ struct ActivePathHandle: View {
                 .position(boundingRectInView.center)
                 .multipleGesture(dragGesture, ()) {
                     func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in interactor.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending) }
+                        { v, _ in service.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending) }
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())

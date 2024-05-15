@@ -30,11 +30,11 @@ struct ActivePathPanel: View {
     }
 
     @ViewBuilder private var scrollView: some View {
-        if let pendingActivePath = interactor.activePath.pendingActivePath {
+        if let pendingActivePath = service.activePath.pendingActivePath {
             ManagedScrollView(model: scrollViewModel) { proxy in
                 Components(activePath: pendingActivePath).id(pendingActivePath.id)
-                    .onChange(of: interactor.activePath.focusedPart) {
-                        guard let id = interactor.activePath.focusedPart?.id else { return }
+                    .onChange(of: service.activePath.focusedPart) {
+                        guard let id = service.activePath.focusedPart?.id else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                     }
             }

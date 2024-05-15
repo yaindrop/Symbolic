@@ -3,11 +3,11 @@ import SwiftUI
 
 // MARK: - ActivePathEdgeHandle
 
-struct ActivePathEdgeHandle: View, EquatableByTuple {
+struct ActivePathEdgeHandle: View, EquatableBy {
     let fromId: UUID
     let segment: PathSegment
 
-    var equatableTuple: some Equatable { fromId; segment }
+    var equatableBy: some Equatable { fromId; segment }
 
     var body: some View { tracer.range("ActivePathEdgeHandle body") {
         outline
@@ -19,7 +19,7 @@ struct ActivePathEdgeHandle: View, EquatableByTuple {
     init(fromId: UUID, segment: PathSegment) {
         self.fromId = fromId
         self.segment = segment
-        _focused = .init { interactor.activePath.focusedEdgeId == fromId }
+        _focused = .init { service.activePath.focusedEdgeId == fromId }
     }
 
     @Selected private var focused: Bool
@@ -28,7 +28,7 @@ struct ActivePathEdgeHandle: View, EquatableByTuple {
     @State private var longPressSplitNodeId: UUID?
 
     private func toggleFocus() {
-        focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(edge: fromId)
+        focused ? service.activePath.clearFocus() : service.activePath.setFocus(edge: fromId)
     }
 
     @State private var multipleGesture = MultipleGestureModel<PathSegment>()
@@ -42,11 +42,11 @@ struct ActivePathEdgeHandle: View, EquatableByTuple {
                     longPressParamT = paramT
                     let id = UUID()
                     longPressSplitNodeId = id
-                    interactor.activePath.setFocus(node: id)
+                    service.activePath.setFocus(node: id)
                 }
                 func moveSplitNode(to p: Point2, pending: Bool = false) {
                     guard let longPressParamT, let longPressSplitNodeId else { return }
-                    interactor.pathUpdaterInView.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, position: p, pending: pending)
+                    service.pathUpdaterInView.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, position: p, pending: pending)
                     if !pending {
                         self.longPressParamT = nil
                     }
@@ -54,7 +54,7 @@ struct ActivePathEdgeHandle: View, EquatableByTuple {
                 func updateDrag(pending: Bool = false) -> (DragGesture.Value, Any) -> Void {
                     { v, _ in
                         if longPressSplitNodeId == nil {
-                            interactor.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending)
+                            service.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending)
                         } else {
                             moveSplitNode(to: v.location, pending: pending)
                         }
@@ -107,7 +107,7 @@ struct ActivePathFocusedEdgeHandle: View {
     init(fromId: UUID, segment: PathSegment) {
         self.fromId = fromId
         self.segment = segment
-        _focused = .init { interactor.activePath.focusedEdgeId == fromId }
+        _focused = .init { service.activePath.focusedEdgeId == fromId }
     }
 
     @Selected private var focused: Bool
@@ -146,7 +146,7 @@ struct ActivePathFocusedEdgeHandle: View {
             }}
             .multipleGesture(dragGesture, point) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { value, origin in interactor.pathUpdaterInView.updateActivePath(moveEdge: fromId, offset: origin.offset(to: value.location), pending: pending) }
+                    { value, origin in service.pathUpdaterInView.updateActivePath(moveEdge: fromId, offset: origin.offset(to: value.location), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

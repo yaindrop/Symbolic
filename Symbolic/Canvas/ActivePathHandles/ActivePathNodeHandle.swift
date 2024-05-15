@@ -3,11 +3,11 @@ import SwiftUI
 
 // MARK: - ActivePathNodeHandle
 
-struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
+struct ActivePathNodeHandle: View, EquatableBy {
     let nodeId: UUID
     let position: Point2
 
-    var equatableTuple: some Equatable { nodeId; position }
+    var equatableBy: some Equatable { nodeId; position }
 
     var body: some View { tracer.range("ActivePathNodeHandle body \(nodeId)") {
         circle(at: position, color: .blue)
@@ -16,7 +16,7 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     init(nodeId: UUID, position: Point2) {
         self.nodeId = nodeId
         self.position = position
-        _focused = .init { interactor.activePath.focusedNodeId == nodeId }
+        _focused = .init { service.activePath.focusedNodeId == nodeId }
     }
 
     // MARK: private
@@ -28,7 +28,7 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
     private static let touchablePadding: Scalar = 16
 
     private func toggleFocus() {
-        focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(node: nodeId)
+        focused ? service.activePath.clearFocus() : service.activePath.setFocus(node: nodeId)
     }
 
     @State private var dragGesture = MultipleGestureModel<Point2>()
@@ -49,7 +49,7 @@ struct ActivePathNodeHandle: View, Equatable, EquatableByTuple {
             .position(point)
             .multipleGesture(dragGesture, position) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { interactor.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending) }
+                    { service.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

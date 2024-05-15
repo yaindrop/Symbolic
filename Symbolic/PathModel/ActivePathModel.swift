@@ -23,9 +23,9 @@ class ActivePathModel {
     fileprivate(set) var focusedPart: ActivePathFocusedPart?
 }
 
-// MARK: - ActivePathInteractor
+// MARK: - ActivePathService
 
-struct ActivePathInteractor {
+struct ActivePathService {
     let pathModel: PathModel
     let pendingPathModel: PendingPathModel
     let model: ActivePathModel
@@ -52,11 +52,11 @@ struct ActivePathInteractor {
     func clearFocus() { withAnimation { model.focusedPart = nil } }
 
     var activePath: Path? {
-        interactor.path.model.paths.first { $0.id == activePathId }
+        service.path.model.paths.first { $0.id == activePathId }
     }
 
     var pendingActivePath: Path? {
-        interactor.path.pendingModel.hasPendingEvent ? interactor.path.pendingModel.paths.first { $0.id == activePathId } : activePath
+        service.path.pendingModel.hasPendingEvent ? service.path.pendingModel.paths.first { $0.id == activePathId } : activePath
     }
 
     func onActivePathChanged() {

@@ -4,11 +4,11 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - EdgePanel
 
-    struct EdgePanel: View, EquatableByTuple {
+    struct EdgePanel: View, EquatableBy {
         let fromNodeId: UUID
         let edge: PathEdge
 
-        var equatableTuple: some Equatable { fromNodeId; edge }
+        var equatableBy: some Equatable { fromNodeId; edge }
 
         var body: some View { tracer.range("ActivePathPanel EdgePanel body") {
             HStack {
@@ -29,8 +29,8 @@ extension ActivePathPanel {
         init(fromNodeId: UUID, edge: PathEdge) {
             self.fromNodeId = fromNodeId
             self.edge = edge
-            _segment = .init { interactor.activePath.activePath?.segment(from: fromNodeId) }
-            _focused = .init { interactor.activePath.focusedNodeId == fromNodeId }
+            _segment = .init { service.activePath.activePath?.segment(from: fromNodeId) }
+            _focused = .init { service.activePath.focusedNodeId == fromNodeId }
         }
 
         @Selected private var segment: PathSegment?
@@ -67,7 +67,7 @@ extension ActivePathPanel {
         }}
 
         @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu \(fromNodeId)") {
-            Memo({ edge; focused }) {
+            Memo {
                 Menu {
                     Label("\(fromNodeId)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
@@ -89,7 +89,7 @@ extension ActivePathPanel {
                     title
                 }
                 .tint(.label)
-            }
+            } deps: { edge; focused }
         }}
 
         @ViewBuilder private var expandButton: some View {
@@ -103,7 +103,7 @@ extension ActivePathPanel {
         }
 
         @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
-            Memo({ expanded; edge }) {
+            Memo {
                 Group {
                     if case let .bezier(bezier) = edge {
                         BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
@@ -114,15 +114,15 @@ extension ActivePathPanel {
                 .padding(.top, 6)
                 .frame(height: expanded ? nil : 0, alignment: .top)
                 .clipped()
-            }
+            } deps: { edge; focused }
         } }
 
         private func toggleFocus() {
-            focused ? interactor.activePath.clearFocus() : interactor.activePath.setFocus(edge: fromNodeId)
+            focused ? service.activePath.clearFocus() : service.activePath.setFocus(edge: fromNodeId)
         }
 
         private func changeEdge(to: PathEdge.Case) {
-            interactor.pathUpdater.updateActivePath(changeEdge: fromNodeId, to: to)
+            service.pathUpdater.updateActivePath(changeEdge: fromNodeId, to: to)
         }
 
         private func splitEdge() {
@@ -130,23 +130,23 @@ extension ActivePathPanel {
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let position = segment.position(paramT: paramT)
             let id = UUID()
-            interactor.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
-            interactor.activePath.setFocus(node: id)
+            service.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
+            service.activePath.setFocus(node: id)
         }
 
         private func breakEdge() {
-            interactor.pathUpdater.updateActivePath(deleteEdge: fromNodeId)
+            service.pathUpdater.updateActivePath(deleteEdge: fromNodeId)
         }
     }
 }
 
 // MARK: - BezierPanel
 
-fileprivate struct BezierPanel: View, EquatableByTuple {
+fileprivate struct BezierPanel: View, EquatableBy {
     let fromNodeId: UUID
     let bezier: PathEdge.Bezier
 
-    var equatableTuple: some Equatable { fromNodeId; bezier }
+    var equatableBy: some Equatable { fromNodeId; bezier }
 
     var body: some View { tracer.range("ActivePathPanel EdgePanel BezierPanel") {
         VStack(spacing: 12) {
@@ -170,21 +170,21 @@ fileprivate struct BezierPanel: View, EquatableByTuple {
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
-        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
+        { service.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
     }
 
     private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
-        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: pending) }
+        { service.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: pending) }
     }
 }
 
 // MARK: - ArcPanel
 
-fileprivate struct ArcPanel: View, EquatableByTuple {
+fileprivate struct ArcPanel: View, EquatableBy {
     let fromNodeId: UUID
     let arc: PathEdge.Arc
 
-    var equatableTuple: some Equatable { fromNodeId; arc }
+    var equatableBy: some Equatable { fromNodeId; arc }
 
     var body: some View { tracer.range("ActivePathPanel EdgePanel ArcPanel") {
         VStack(spacing: 12) {
@@ -222,18 +222,18 @@ fileprivate struct ArcPanel: View, EquatableByTuple {
     } }
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
-        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }
+        { service.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }
     }
 
     private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
-        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
+        { service.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
     }
 
     private var updateLargeArc: (Bool) -> Void {
-        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(largeArc: $0)) }
+        { service.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(largeArc: $0)) }
     }
 
     private var updateSweep: (Bool) -> Void {
-        { interactor.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(sweep: $0)) }
+        { service.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(sweep: $0)) }
     }
 }

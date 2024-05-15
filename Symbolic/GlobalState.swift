@@ -16,14 +16,14 @@ class GlobalStore {
 
 let store = GlobalStore()
 
-class GlobalInteractor {
+class GlobalService {
     let viewportUpdater = ViewportUpdater(viewport: store.viewport, model: store.viewportUpdate)
 
-    let path = PathInteractor(model: store.path, pendingModel: store.pendingPath)
-    let activePath = ActivePathInteractor(pathModel: store.path, pendingPathModel: store.pendingPath, model: store.activePath)
+    let path = PathService(model: store.path, pendingModel: store.pendingPath)
+    let activePath = ActivePathService(pathModel: store.path, pendingPathModel: store.pendingPath, model: store.activePath)
 
     let pathUpdater = PathUpdater(pathModel: store.path, pendingPathModel: store.pendingPath, activePathModel: store.activePath, model: store.pathUpdate)
     let pathUpdaterInView = PathUpdaterInView(viewport: store.viewport, pathModel: store.path, pendingPathModel: store.pendingPath, activePathModel: store.activePath, pathUpdateModel: store.pathUpdate)
 }
 
-let interactor = GlobalInteractor()
+let service = GlobalService()

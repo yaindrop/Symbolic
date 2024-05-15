@@ -47,7 +47,7 @@ extension EquatableTuple where T5 == Monostate {
 // MARK: - EquatableTupleBuilder
 
 @resultBuilder
-struct EquatableTupleBuilder {
+struct EquatableBuilder {
     static func buildBlock<T0: Equatable>(_ v0: T0) -> some Equatable {
         v0
     }
@@ -73,46 +73,29 @@ struct EquatableTupleBuilder {
     }
 }
 
-// MARK: - EquatableByKey
+// MARK: - EquatableBy
 
-protocol EquatableByKey: Equatable {
-    associatedtype Key: Equatable
-    var equatableKey: Key { get }
+protocol EquatableBy: Equatable {
+    associatedtype Value: Equatable
+    @EquatableBuilder var equatableBy: Value { get }
 }
 
-extension EquatableByKey {
-    static func == (lhs: Self, rhs: Self) -> Bool { lhs.equatableKey == rhs.equatableKey }
-}
-
-// MARK: - EquatableByTuple
-
-protocol EquatableByTuple: Equatable {
-    associatedtype Tuple: Equatable
-    @EquatableTupleBuilder var equatableTuple: Tuple { get }
-}
-
-extension EquatableByTuple {
-    static func == (lhs: Self, rhs: Self) -> Bool { lhs.equatableTuple == rhs.equatableTuple }
+extension EquatableBy {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.equatableBy == rhs.equatableBy }
 }
 
 // MARK: - Memo
 
-struct Memo<Key: Equatable, Content: View>: View, Equatable {
-    let key: Key
+struct Memo<Value: Equatable, Content: View>: View, EquatableBy {
+    let equatableBy: Value
     @ViewBuilder let content: () -> Content
 
     var body: some View { tracer.range("Memo") {
         content()
     } }
 
-    static func == (lhs: Self, rhs: Self) -> Bool { lhs.key == rhs.key }
-
-    init(_ key: Key, @ViewBuilder _ content: @escaping () -> Content) {
-        self.key = key
+    init(@ViewBuilder _ content: @escaping () -> Content, @EquatableBuilder deps: () -> Value) {
+        equatableBy = deps()
         self.content = content
-    }
-
-    init(@EquatableTupleBuilder _ key: () -> Key, @ViewBuilder _ content: @escaping () -> Content) {
-        self.init(key(), content)
     }
 }

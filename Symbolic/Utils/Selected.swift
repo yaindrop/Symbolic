@@ -16,6 +16,7 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
         init(selector: @escaping () -> Value) {
             self.selector = selector
+            setupSelectTask()
         }
 
         deinit {
@@ -27,6 +28,7 @@ struct Selected<Value: Equatable>: DynamicProperty {
         private var selectTask: Task<Void, Never>?
 
         private func setupSelectTask() {
+            selectTask?.cancel()
             selectTask = Task { @MainActor [weak self] in
                 self?.select()
             }

@@ -3,12 +3,12 @@ import SwiftUI
 
 // MARK: - ActivePathEdgeKindHandle
 
-struct ActivePathEdgeKindHandle: View, EquatableByTuple {
+struct ActivePathEdgeKindHandle: View, EquatableBy {
     let fromId: UUID
     let toId: UUID
     let segment: PathSegment
 
-    var equatableTuple: some Equatable { fromId; toId; segment }
+    var equatableBy: some Equatable { fromId; toId; segment }
 
     var body: some View { tracer.range("ActivePathEdgeKindHandle body") { build {
         if case let .arc(arc) = segment {
@@ -33,7 +33,7 @@ struct ActivePathBezierHandle: View {
                 circle(at: bezier.control0, color: .green)
                     .multipleGesture(dragControl0, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in interactor.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control0: v.location), pending: pending) }
+                            { v, _ in service.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control0: v.location), pending: pending) }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -44,7 +44,7 @@ struct ActivePathBezierHandle: View {
                 circle(at: bezier.control1, color: .orange)
                     .multipleGesture(dragControl1, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in interactor.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control1: v.location), pending: pending) }
+                            { v, _ in service.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control1: v.location), pending: pending) }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -57,9 +57,9 @@ struct ActivePathBezierHandle: View {
         self.fromId = fromId
         self.toId = toId
         self.segment = segment
-        _edgeFocused = .init { interactor.activePath.focusedEdgeId == fromId }
-        _nodeFocused = .init { interactor.activePath.focusedNodeId == fromId }
-        _nextFocused = .init { interactor.activePath.focusedNodeId == toId }
+        _edgeFocused = .init { service.activePath.focusedEdgeId == fromId }
+        _nodeFocused = .init { service.activePath.focusedNodeId == fromId }
+        _nextFocused = .init { service.activePath.focusedNodeId == toId }
     }
 
     @Selected private var edgeFocused: Bool
@@ -126,9 +126,9 @@ struct ActivePathArcHandle: View {
         self.fromId = fromId
         self.toId = toId
         self.segment = segment
-        _edgeFocused = .init { interactor.activePath.focusedEdgeId == fromId }
-        _nodeFocused = .init { interactor.activePath.focusedNodeId == fromId }
-        _nextFocused = .init { interactor.activePath.focusedNodeId == toId }
+        _edgeFocused = .init { service.activePath.focusedEdgeId == fromId }
+        _nodeFocused = .init { service.activePath.focusedNodeId == fromId }
+        _nextFocused = .init { service.activePath.focusedNodeId == toId }
     }
 
     @Selected private var edgeFocused: Bool
@@ -213,7 +213,7 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfWidthEnd)
             .multipleGesture(dragRadiusHeight, center) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { interactor.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
+                    { service.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())
@@ -233,7 +233,7 @@ struct ActivePathArcHandle: View {
             .position(radiusHalfHeightEnd)
             .multipleGesture(dragRadiusHeight, center) {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                    { interactor.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
+                    { service.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
                 }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())

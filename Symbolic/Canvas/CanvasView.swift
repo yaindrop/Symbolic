@@ -35,17 +35,17 @@ struct CanvasView: View {
                 withAnimation {
                     let _r = tracer.range("Reload document"); defer { _r() }
                     store.pendingPath.pendingEvent = nil
-                    interactor.path.loadDocument(store.document.activeDocument)
+                    service.path.loadDocument(store.document.activeDocument)
                 }
             }
-            .onChange(of: interactor.activePath.activePath) {
-                let _r = tracer.range("Active path change \(interactor.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
-                interactor.activePath.onActivePathChanged()
+            .onChange(of: service.activePath.activePath) {
+                let _r = tracer.range("Active path change \(service.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
+                service.activePath.onActivePathChanged()
             }
             .onAppear {
-                interactor.viewportUpdater.subscribe(to: multipleTouch)
+                service.viewportUpdater.subscribe(to: multipleTouch)
                 pressDetector.subscribe()
-                interactor.path.subscribe()
+                service.path.subscribe()
                 selectionUpdater.subscribe(to: multipleTouch)
             }
             .onAppear {
@@ -99,8 +99,6 @@ struct CanvasView: View {
     }}
 
     // MARK: private
-
-    // MARK: interactors
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
     private var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
@@ -163,14 +161,14 @@ struct CanvasView: View {
     } }
 
     @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
-        ForEach(interactor.path.model.paths.filter { $0.id != interactor.activePath.activePathId }) { p in
+        ForEach(service.path.model.paths.filter { $0.id != service.activePath.activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
     } }
 
     @ViewBuilder var activePath: some View { tracer.range("CanvasView activePath") { build {
-        if let pendingActivePath = interactor.activePath.pendingActivePath {
+        if let pendingActivePath = service.activePath.pendingActivePath {
             SUPath { path in pendingActivePath.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)

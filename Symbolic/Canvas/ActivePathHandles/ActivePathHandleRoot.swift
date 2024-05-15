@@ -5,7 +5,7 @@ import SwiftUI
 
 struct ActivePathHandleRoot: View {
     var body: some View { tracer.range("ActivePathHandleRoot body") { build {
-        if let activePath = interactor.activePath.pendingActivePath {
+        if let activePath = service.activePath.pendingActivePath {
             ZStack {
                 let nodes = activePath.nodes
                 let idAndNodePositionInView = nodes.compactMap { n -> (id: UUID, position: Point2)? in

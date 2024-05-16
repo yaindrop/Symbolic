@@ -71,7 +71,7 @@ extension Gesture {
 extension DragGesture.Value {
     var offset: Vector2 { .init(translation) }
 
-    var inertia: Vector2 { Vector2(predictedEndTranslation) - offset }
+    var speed: Vector2 { .init(velocity) }
 }
 
 // MARK: - readable time

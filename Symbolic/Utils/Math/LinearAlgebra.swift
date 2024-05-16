@@ -19,6 +19,8 @@ extension Vector2 {
 
     func with(dy: Scalar) -> Self { .init(dx: dx, dy: dy) }
 
+    func with(length: Scalar) -> Self { (length / self.length) * self }
+
     // MARK: geometric operation
 
     func dotProduct(_ rhs: Self) -> Scalar { dx * rhs.dx + dy * rhs.dy }

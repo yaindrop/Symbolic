@@ -9,7 +9,7 @@ struct PanelView: View {
 
     var body: some View {
         panel.view
-            .viewSizeReader { model.onResize(panelId: panel.id, size: $0) }
+            .viewSizeReader { model.onResized(panelId: panel.id, size: $0) }
             .offset(x: panel.origin.x, y: panel.origin.y)
             .environment(\.panelId, panel.id)
             .atPlaneAlign(.topLeading)
@@ -25,6 +25,6 @@ struct PanelRoot: View {
         ZStack {
             ForEach(model.panels) { PanelView(panel: $0) }
         }
-        .viewSizeReader { model.onResizeRoot(size: $0) }
+        .viewSizeReader { model.onRootResized(size: $0) }
     }
 }

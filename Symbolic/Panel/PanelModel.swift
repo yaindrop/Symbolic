@@ -27,9 +27,12 @@ extension PanelModel {
 }
 
 extension PanelModel {
-    func onMoving(panelId: UUID, origin: Point2) {
+    func onMoving(panelId: UUID, origin: Point2, _ v: DragGesture.Value) {
+        let offset = v.offset
+        let _r = tracer.range("[panel] moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
-        panel.origin = origin
+        panel.origin = origin + offset
+        panel.origin += panel.rect.clampingOffset(by: rootRect)
         idToPanel[panelId] = panel
         if panelIds.last != panelId {
             panelIds.removeAll { $0.id == panelId }
@@ -37,24 +40,33 @@ extension PanelModel {
         }
     }
 
-    func onMoved(panelId: UUID, origin: Point2, inertia: Vector2) {
+    func onMoved(panelId: UUID, origin: Point2, _ v: DragGesture.Value) {
+        let offset = v.offset, speed = v.speed
+        let _r = tracer.range("[panel] moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
-        panel.origin = origin
+        panel.origin = origin + offset
+        panel.origin += panel.rect.clampingOffset(by: rootRect)
         idToPanel[panelId] = panel
 
-        var finalOrigin = origin
-        if inertia.length > 240 {
-            finalOrigin = origin + inertia / 4
+        let inertiaDuration: TimeInterval = 0.1
+        var inertia = speed * inertiaDuration
+        if inertia.length > offset.length {
+            inertia = inertia.with(length: offset.length)
         }
 
         // TODO: prioritize clamp over affinity
-        finalOrigin = CGRect(origin: finalOrigin, size: panel.size).clamped(by: CGRect(rootSize)).origin
-        panel.origin = finalOrigin
+        panel.origin += inertia
+        let clamping = panel.rect.clampingOffset(by: rootRect)
+        panel.origin += clamping
 
         panel.affinities = getAffinities(of: panel)
-        panel.origin += offsetByAffinities(of: panel)
+        panel.origin += affinityOffset(of: panel)
 
-        withAnimation {
+        if panel.origin == origin + offset {
+            return
+        }
+
+        withAnimation(.easeOut(duration: inertiaDuration)) {
             idToPanel[panelId] = panel
         }
     }
@@ -65,34 +77,34 @@ extension PanelModel {
         {
             $0.onDrag { v, panel in
                 guard let panel else { return }
-                self.onMoving(panelId: panel.id, origin: panel.origin + v.offset)
+                self.onMoving(panelId: panel.id, origin: panel.origin, v)
             }
             $0.onDragEnd { v, panel in
                 guard let panel else { return }
-                self.onMoved(panelId: panel.id, origin: panel.origin + v.offset, inertia: v.inertia)
+                self.onMoved(panelId: panel.id, origin: panel.origin, v)
             }
         }
     }
 }
 
 extension PanelModel {
-    func onResize(panelId: UUID, size: CGSize) {
+    func onResized(panelId: UUID, size: CGSize) {
         let _r = tracer.range("[panel] resize \(panelId) to \(size)"); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.size = size
-        panel.origin += offsetByAffinities(of: panel)
+        panel.origin += affinityOffset(of: panel)
         withAnimation {
             idToPanel[panel.id] = panel
         }
     }
 
-    func onResizeRoot(size: CGSize) {
+    func onRootResized(size: CGSize) {
         let _r = tracer.range("[panel] resize root \(size)"); defer { _r() }
         rootSize = size
         withAnimation {
             for id in panelIds {
                 guard var panel = idToPanel[id] else { return }
-                panel.origin += offsetByAffinities(of: panel)
+                panel.origin += affinityOffset(of: panel)
                 idToPanel[panel.id] = panel
             }
         }
@@ -215,7 +227,7 @@ extension PanelModel {
         }
     }
 
-    func offsetByAffinities(of panel: PanelData) -> Vector2 {
+    func affinityOffset(of panel: PanelData) -> Vector2 {
         var sum = Vector2.zero
         for affinity in panel.affinities {
             sum += offset(of: panel, by: affinity)

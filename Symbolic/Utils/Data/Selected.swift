@@ -24,7 +24,7 @@ struct Selected<Value: Equatable>: DynamicProperty {
         }
 
         private let selector: () -> Value
-        private var value: Value?
+        @Published private var value: Value?
         private var selectTask: Task<Void, Never>?
 
         private func setupSelectTask() {
@@ -38,9 +38,8 @@ struct Selected<Value: Equatable>: DynamicProperty {
             withObservationTracking {
                 let newValue = selector()
                 if value != newValue {
-                    objectWillChange.send()
+                    value = newValue
                 }
-                value = newValue
             } onChange: { [weak self] in
                 self?.setupSelectTask()
             }

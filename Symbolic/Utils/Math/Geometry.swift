@@ -22,12 +22,14 @@ extension CGRect {
     var maxPoint: Point2 { .init(maxX, maxY) }
     var center: Point2 { midPoint }
 
-    func clamped(by rect: CGRect) -> Self {
+    func clampingOffset(by rect: CGRect) -> Vector2 {
         let offsetMax = maxPoint.offset(to: maxPoint.clamped(by: rect))
         let r = self + offsetMax
         let offsetMin = r.minPoint.offset(to: r.minPoint.clamped(by: rect))
-        return r + offsetMin
+        return offsetMax + offsetMin
     }
+
+    func clamped(by rect: CGRect) -> Self { self + clampingOffset(by: rect) }
 
     // MARK: operator
 

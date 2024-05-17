@@ -9,12 +9,8 @@ protocol SUPathAppendable {
 
 // MARK: - PathEdge
 
-fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable, Equatable {}
-
 enum PathEdge {
-    fileprivate typealias Impl = PathEdgeImpl
-
-    struct Arc: Impl {
+    struct Arc {
         let radius: CGSize
         let rotation: Angle
         let largeArc: Bool
@@ -26,7 +22,7 @@ enum PathEdge {
         func with(sweep: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
     }
 
-    struct Bezier: Impl {
+    struct Bezier {
         let control0: Point2
         let control1: Point2
 
@@ -38,7 +34,7 @@ enum PathEdge {
         func with(offset1: Vector2) -> Self { .init(control0: control0, control1: control1 + offset1) }
     }
 
-    struct Line: Impl {}
+    struct Line {}
 
     enum Case { case arc, bezier, line }
     var `case`: Case {
@@ -54,8 +50,20 @@ enum PathEdge {
     case line(Line)
 }
 
+// MARK: Impl
+
+fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable, Equatable {}
+
+extension PathEdge.Arc: PathEdgeImpl {}
+
+extension PathEdge.Bezier: PathEdgeImpl {}
+
+extension PathEdge.Line: PathEdgeImpl {}
+
 extension PathEdge: PathEdgeImpl {
-    private var impl: any Impl {
+    fileprivate typealias Impl = any PathEdgeImpl
+
+    private var impl: Impl {
         switch self {
         case let .arc(a): a
         case let .bezier(b): b
@@ -63,7 +71,7 @@ extension PathEdge: PathEdgeImpl {
         }
     }
 
-    private func impl(_ transform: (any Impl) -> any Impl) -> Self {
+    private func impl(_ transform: (Impl) -> Impl) -> Self {
         switch self {
         case let .arc(a): .arc(transform(a) as! Arc)
         case let .bezier(b): .bezier(transform(b) as! Bezier)

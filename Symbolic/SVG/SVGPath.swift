@@ -3,17 +3,12 @@ import SwiftUI
 
 // MARK: - SVGPathCommand
 
-fileprivate protocol SVGPathCommandImpl: CustomStringConvertible {
-    var position: Point2 { get }
-}
-
 enum SVGPathCommand {
-    fileprivate typealias Impl = SVGPathCommandImpl
-    struct ArcTo: Impl {
+    struct ArcTo {
         let radius: CGSize, rotation: Angle, largeArc: Bool, sweep: Bool, position: Point2
     }
 
-    struct BezierTo: Impl {
+    struct BezierTo {
         let control0: Point2, control1: Point2, position: Point2
 
         func toQuadratic(current: Point2) -> QuadraticBezierTo? {
@@ -24,11 +19,11 @@ enum SVGPathCommand {
         }
     }
 
-    struct LineTo: Impl {
+    struct LineTo {
         let position: Point2
     }
 
-    struct QuadraticBezierTo: Impl {
+    struct QuadraticBezierTo {
         let control: Point2, position: Point2
 
         func toCubic(current: Point2) -> BezierTo {
@@ -38,13 +33,29 @@ enum SVGPathCommand {
         }
     }
 
-    case lineTo(LineTo)
     case arcTo(ArcTo)
     case bezierTo(BezierTo)
+    case lineTo(LineTo)
     case quadraticBezierTo(QuadraticBezierTo)
 }
 
+// MARK: Impl
+
+fileprivate protocol SVGPathCommandImpl: CustomStringConvertible {
+    var position: Point2 { get }
+}
+
+extension SVGPathCommand.ArcTo: SVGPathCommandImpl {}
+
+extension SVGPathCommand.BezierTo: SVGPathCommandImpl {}
+
+extension SVGPathCommand.LineTo: SVGPathCommandImpl {}
+
+extension SVGPathCommand.QuadraticBezierTo: SVGPathCommandImpl {}
+
 extension SVGPathCommand: SVGPathCommandImpl {
+    fileprivate typealias Impl = any SVGPathCommandImpl
+
     var position: Point2 { impl.position }
 
     private var impl: Impl {

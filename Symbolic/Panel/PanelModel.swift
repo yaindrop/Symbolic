@@ -46,42 +46,42 @@ extension PanelModel {
         panel.origin = origin + offset
         idToPanel[panelId] = panel
 
-        let endOffset = moveEndOffset(panel: panel, v)
-        if endOffset == .zero {
+        let newPanel = moveEndOffset(panel: panel, v)
+        if panel.origin == newPanel.origin && panel.affinities == newPanel.affinities {
             return
         }
 
-        do {
-            let _r = tracer.range("[panel] endOffset \(endOffset)"); defer { _r() }
-            panel.origin += endOffset
-
-            withAnimation(.snappy(duration: 0.2)) {
-                idToPanel[panelId] = panel
-            }
+        withAnimation(.snappy(duration: 0.2)) {
+            idToPanel[panelId] = newPanel
         }
     }
 
-    private func moveEndOffset(panel: PanelData, _ v: DragGesture.Value) -> Vector2 {
+    private func moveEndOffset(panel: PanelData, _ v: DragGesture.Value) -> PanelData {
         let offset = v.offset, speed = v.speed
 
-        var inertia = Vector2.zero
+        var inertiaOffset = Vector2.zero
         if speed.length > 500 {
-            inertia = speed * 0.2
+            inertiaOffset = speed * 0.2
         }
-        if inertia.length > offset.length * 2 {
-            inertia = inertia.with(length: offset.length)
+        if inertiaOffset.length > offset.length * 2 {
+            inertiaOffset = inertiaOffset.with(length: offset.length)
         }
 
         var newPanel = panel
-        newPanel.origin += inertia
+        newPanel.origin += inertiaOffset
+        tracer.instant("[panel] inertiaOffset \(inertiaOffset)")
 
-        let clamping = newPanel.rect.clampingOffset(by: rootRect)
-        newPanel.origin += clamping
+        let clampingOffset = newPanel.rect.clampingOffset(by: rootRect)
+        newPanel.origin += clampingOffset
+        tracer.instant("[panel] clampingOffset \(clampingOffset)")
 
         newPanel.affinities = getAffinities(of: newPanel)
-        newPanel.origin += affinityOffset(of: newPanel)
 
-        return panel.origin.offset(to: newPanel.origin)
+        let affinityOffset = affinityOffset(of: newPanel)
+        newPanel.origin += affinityOffset
+        tracer.instant("[panel] affinityOffset \(affinityOffset)")
+
+        return newPanel
     }
 
     static func moveGestureModel() -> MultipleGestureModel<PanelData?> { .init(configs: .init(coordinateSpace: .global)) }
@@ -108,6 +108,13 @@ extension PanelModel {
         panel.origin += affinityOffset(of: panel)
         withAnimation {
             idToPanel[panel.id] = panel
+        }
+
+        for (id, panel) in idToPanel {
+            if panel.affinities.contains(where: { $0.related(to: panelId) }) {
+                idToPanel[id]?.affinities = getAffinities(of: panel)
+                idToPanel[id]?.origin += affinityOffset(of: panel)
+            }
         }
     }
 

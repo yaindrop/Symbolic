@@ -2,27 +2,19 @@ import Foundation
 
 // MARK: - Line
 
-fileprivate protocol LineImpl {
-    func projected(from point: Point2) -> Point2
-}
-
 enum Line {
-    fileprivate typealias Impl = LineImpl
-    struct SlopeIntercept: Impl {
+    struct SlopeIntercept {
         let m: Scalar, b: Scalar
 
         func y(x: Scalar) -> Scalar { m * x + b }
 
-        func projected(from point: Point2) -> Point2 {
-            let x = (m * (point.y - b) + point.x) / (m * m + 1)
-            return Point2(x, y(x: x))
-        }
+        func point(x: Scalar) -> Point2 { .init(x, y(x: x)) }
     }
 
-    struct Vertical: Impl {
+    struct Vertical {
         let x: Scalar
 
-        func projected(from point: Point2) -> Point2 { Point2(x, point.y) }
+        func point(y: Scalar) -> Point2 { .init(x, y) }
     }
 
     case slopeIntercept(SlopeIntercept)
@@ -39,7 +31,23 @@ enum Line {
     }
 }
 
+// MARK: Impl
+
+fileprivate protocol LineImpl: Equatable {
+    func projected(from point: Point2) -> Point2
+}
+
+extension Line.SlopeIntercept: LineImpl {
+    func projected(from point: Point2) -> Point2 { self.point(x: (m * (point.y - b) + point.x) / (m * m + 1)) }
+}
+
+extension Line.Vertical: LineImpl {
+    func projected(from point: Point2) -> Point2 { self.point(y: point.y) }
+}
+
 extension Line: LineImpl {
+    fileprivate typealias Impl = any LineImpl
+
     func projected(from point: Point2) -> Point2 { impl.projected(from: point) }
 
     private var impl: Impl {

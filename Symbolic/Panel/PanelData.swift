@@ -41,6 +41,33 @@ enum PanelAffinity {
     }
 }
 
+// MARK: Impl
+
+fileprivate protocol PanelAffinityImpl: Equatable {
+    func related(to peerId: UUID) -> Bool
+}
+
+extension PanelAffinity.Root: PanelAffinityImpl {
+    func related(to peerId: UUID) -> Bool { false }
+}
+
+extension PanelAffinity.Peer: PanelAffinityImpl {
+    func related(to peerId: UUID) -> Bool { self.peerId == peerId }
+}
+
+extension PanelAffinity: PanelAffinityImpl {
+    fileprivate typealias Impl = any PanelAffinityImpl
+
+    func related(to peerId: UUID) -> Bool { impl.related(to: peerId) }
+
+    private var impl: Impl {
+        switch self {
+        case let .root(root): root
+        case let .peer(peer): peer
+        }
+    }
+}
+
 // MARK: CustomStringConvertible
 
 extension PanelAffinity.Root: CustomStringConvertible {

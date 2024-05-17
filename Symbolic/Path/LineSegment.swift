@@ -2,38 +2,19 @@ import Foundation
 
 // MARK: - LineSegment
 
-fileprivate protocol LineSegmentImpl: Parametrizable, InverseParametrizable {
-    var line: Line { get }
-    var start: Point2 { get }
-    var end: Point2 { get }
-    var length: Scalar { get }
-}
-
 enum LineSegment {
-    fileprivate typealias Impl = LineSegmentImpl
-
     // MARK: SlopeIntercept
 
-    struct SlopeIntercept: Impl {
+    struct SlopeIntercept {
         let slopeIntercept: Line.SlopeIntercept
         let x0: Scalar, x1: Scalar
-
-        var line: Line { .slopeIntercept(slopeIntercept) }
-        var start: Point2 { Point2(x0, slopeIntercept.y(x: x0)) }
-        var end: Point2 { Point2(x1, slopeIntercept.y(x: x1)) }
-        var length: Scalar { start.distance(to: end) }
     }
 
     // MARK: Vertical
 
-    struct Vertical: Impl {
+    struct Vertical {
         let vertical: Line.Vertical
         let y0: Scalar, y1: Scalar
-
-        var line: Line { .vertical(vertical) }
-        var start: Point2 { Point2(vertical.x, y0) }
-        var end: Point2 { Point2(vertical.x, y1) }
-        var length: Scalar { abs(y0 - y1) }
     }
 
     case slopeIntercept(SlopeIntercept)
@@ -47,7 +28,32 @@ enum LineSegment {
     }
 }
 
+// MARK: Impl
+
+fileprivate protocol LineSegmentImpl: Equatable, Parametrizable, InverseParametrizable {
+    var line: Line { get }
+    var start: Point2 { get }
+    var end: Point2 { get }
+    var length: Scalar { get }
+}
+
+extension LineSegment.SlopeIntercept: LineSegmentImpl {
+    var line: Line { .slopeIntercept(slopeIntercept) }
+    var start: Point2 { slopeIntercept.point(x: x0) }
+    var end: Point2 { slopeIntercept.point(x: x1) }
+    var length: Scalar { start.distance(to: end) }
+}
+
+extension LineSegment.Vertical: LineSegmentImpl {
+    var line: Line { .vertical(vertical) }
+    var start: Point2 { vertical.point(y: y0) }
+    var end: Point2 { vertical.point(y: y1) }
+    var length: Scalar { abs(y0 - y1) }
+}
+
 extension LineSegment: LineSegmentImpl {
+    fileprivate typealias Impl = any LineSegmentImpl
+
     var line: Line { impl.line }
     var start: Point2 { impl.start }
     var end: Point2 { impl.end }

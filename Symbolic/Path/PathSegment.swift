@@ -3,34 +3,24 @@ import SwiftUI
 
 // MARK: - PathSegment
 
-fileprivate protocol PathSegmentImpl: Equatable, Transformable, Parametrizable, Tessellatable, InverseParametrizable, SUPathAppendable, ParamSplittable {
-    var from: Point2 { get }
-    var to: Point2 { get }
-    var edge: PathEdge { get }
-}
-
 enum PathSegment {
-    fileprivate typealias Impl = PathSegmentImpl
-    struct Arc: Impl {
+    struct Arc {
         let arc: PathEdge.Arc
         let from: Point2, to: Point2
-        var edge: PathEdge { .arc(arc) }
 
         var params: EndpointParams {
-            EndpointParams(from: from, to: to, radius: arc.radius, rotation: arc.rotation, largeArc: arc.largeArc, sweep: arc.sweep)
+            .init(from: from, to: to, radius: arc.radius, rotation: arc.rotation, largeArc: arc.largeArc, sweep: arc.sweep)
         }
     }
 
-    struct Bezier: Impl {
+    struct Bezier {
         let bezier: PathEdge.Bezier
         let from: Point2, to: Point2
-        var edge: PathEdge { .bezier(bezier) }
     }
 
-    struct Line: Impl {
+    struct Line {
         let line: PathEdge.Line
         let from: Point2, to: Point2
-        var edge: PathEdge { .line(line) }
     }
 
     case arc(Arc)
@@ -48,12 +38,34 @@ enum PathSegment {
     }
 }
 
+// MARK: Impl
+
+fileprivate protocol PathSegmentImpl: Equatable, Transformable, Parametrizable, Tessellatable, InverseParametrizable, SUPathAppendable, ParamSplittable {
+    var from: Point2 { get }
+    var to: Point2 { get }
+    var edge: PathEdge { get }
+}
+
+extension PathSegment.Arc: PathSegmentImpl {
+    var edge: PathEdge { .arc(arc) }
+}
+
+extension PathSegment.Bezier: PathSegmentImpl {
+    var edge: PathEdge { .bezier(bezier) }
+}
+
+extension PathSegment.Line: PathSegmentImpl {
+    var edge: PathEdge { .line(line) }
+}
+
 extension PathSegment: PathSegmentImpl {
+    fileprivate typealias Impl = any PathSegmentImpl
+
     var from: Point2 { impl.from }
     var to: Point2 { impl.to }
     var edge: PathEdge { impl.edge }
 
-    private var impl: any Impl {
+    private var impl: Impl {
         switch self {
         case let .arc(a): a
         case let .bezier(b): b
@@ -61,7 +73,7 @@ extension PathSegment: PathSegmentImpl {
         }
     }
 
-    private func impl(_ transform: (any Impl) -> any Impl) -> Self {
+    private func impl(_ transform: (Impl) -> Impl) -> Self {
         switch self {
         case let .arc(a): .arc(transform(a) as! Arc)
         case let .bezier(b): .bezier(transform(b) as! Bezier)
@@ -69,7 +81,7 @@ extension PathSegment: PathSegmentImpl {
         }
     }
 
-    private func impl(_ transform: (any Impl) -> (any Impl, any Impl)) -> (Self, Self) {
+    private func impl(_ transform: (Impl) -> (Impl, Impl)) -> (Self, Self) {
         switch self {
         case let .arc(a):
             let (a0, a1) = transform(a) as! (Arc, Arc)

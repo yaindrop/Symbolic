@@ -56,6 +56,7 @@
 		574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D12BF4FE8F0042FEE3 /* Protocols.swift */; };
 		574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */; };
 		574CC7D62BF500190042FEE3 /* ViewSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D52BF500190042FEE3 /* ViewSize.swift */; };
+		574CC7D82BF757630042FEE3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D72BF757630042FEE3 /* Store.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -148,6 +149,7 @@
 		574CC7D12BF4FE8F0042FEE3 /* Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Protocols.swift; sourceTree = "<group>"; };
 		574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyWrappers.swift; sourceTree = "<group>"; };
 		574CC7D52BF500190042FEE3 /* ViewSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewSize.swift; sourceTree = "<group>"; };
+		574CC7D72BF757630042FEE3 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -346,6 +348,7 @@
 				572552822BF0572D002147AE /* OrderedMap.swift */,
 				574CC7BD2BF44C7B0042FEE3 /* Selected.swift */,
 				574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */,
+				574CC7D72BF757630042FEE3 /* Store.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -587,6 +590,7 @@
 				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
 				572487872BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift in Sources */,
+				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,

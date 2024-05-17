@@ -13,6 +13,41 @@ struct BlurView: UIViewRepresentable {
     }
 }
 
+
+class FooStore: Store {
+    @Trackable var bar0: Int = 1
+    @Trackable var bar1: Int = 1
+
+    func update() {
+        updater {
+            $0(\._bar0, bar0 + 1)
+            $0(\._bar1, bar1 + 1)
+        }
+    }
+}
+
+let fooStore = FooStore()
+
+struct FooView: View {
+    @StoreSelected var selected = fooStore.bar0 + fooStore.bar1
+
+    var body: some View {
+        Color.clear
+            .onChange(of: selected) {
+                print("FooView", selected)
+            }
+            .onAppear {
+                tick()
+            }
+    }
+
+    func tick() {
+        fooStore.update()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: { tick() })
+    }
+}
+
+
 // MARK: - CanvasView
 
 struct CanvasView: View {
@@ -109,6 +144,7 @@ struct CanvasView: View {
 
     @ViewBuilder private var navigationView: some View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
+            FooView()
             Text("sidebar")
                 .navigationTitle("Sidebar")
         } detail: {

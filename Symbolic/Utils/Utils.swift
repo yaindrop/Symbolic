@@ -15,6 +15,22 @@ extension Optional {
     }
 }
 
+func setIfChanged<T: Equatable>(_ value: inout T, _ newValue: T) {
+    if value != newValue {
+        value = newValue
+    }
+}
+
+class IncrementalIdGenerator {
+    func generate() -> Int {
+        let id = next
+        next += 1
+        return id
+    }
+
+    private var next: Int = 0
+}
+
 // MARK: - tuple applying
 
 func apply<Input, Output>(_ function: (Input) -> Output, _ tuple: Input) -> Output {

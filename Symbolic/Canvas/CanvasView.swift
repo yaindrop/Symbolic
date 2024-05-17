@@ -13,13 +13,12 @@ struct BlurView: UIViewRepresentable {
     }
 }
 
-
 class FooStore: Store {
     @Trackable var bar0: Int = 1
     @Trackable var bar1: Int = 1
 
     func update() {
-        updater {
+        update {
             $0(\._bar0, bar0 + 1)
             $0(\._bar1, bar1 + 1)
         }
@@ -29,7 +28,7 @@ class FooStore: Store {
 let fooStore = FooStore()
 
 struct FooView: View {
-    @StoreSelected var selected = fooStore.bar0 + fooStore.bar1
+    @Selected var selected = fooStore.bar0 + fooStore.bar1
 
     var body: some View {
         Color.clear
@@ -46,7 +45,6 @@ struct FooView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: { tick() })
     }
 }
-
 
 // MARK: - CanvasView
 
@@ -66,11 +64,11 @@ struct CanvasView: View {
 
     var body: some View { tracer.range("CanvasView body") {
         navigationView
-            .onChange(of: store.document.activeDocument) {
+            .onChange(of: activeDocument) {
                 withAnimation {
                     let _r = tracer.range("Reload document"); defer { _r() }
-                    store.pendingPath.pendingEvent = nil
-                    service.path.loadDocument(store.document.activeDocument)
+                    store.pendingPath.update(pendingEvent: nil)
+                    service.path.loadDocument(activeDocument)
                 }
             }
             .onChange(of: service.activePath.activePath) {
@@ -85,16 +83,16 @@ struct CanvasView: View {
             }
             .onAppear {
                 multipleTouchPress.onTap { info in
-                    let worldLocation = info.location.applying(store.viewport.toWorld)
+                    let worldLocation = info.location.applying(toWorld)
                     let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
                     withAnimation {
-                        store.activePath.activePathId = store.path.hitTest(worldPosition: worldLocation)?.id
+                        store.activePath.update(activePathId: store.path.hitTest(worldPosition: worldLocation)?.id)
                     }
                 }
                 multipleTouchPress.onLongPress { info in
-                    let worldLocation = info.current.applying(store.viewport.toWorld)
+                    let worldLocation = info.current.applying(toWorld)
                     let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
-                    store.viewportUpdate.blocked = true
+                    store.viewportUpdate.setBlocked(true)
                     if !pendingSelectionModel.active {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
@@ -103,15 +101,15 @@ struct CanvasView: View {
                 }
                 multipleTouchPress.onLongPressEnd { _ in
                     let _r = tracer.range("On long press end", type: .intent); defer { _r() }
-                    store.viewportUpdate.blocked = false
+                    store.viewportUpdate.setBlocked(false)
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
                     selectionUpdater.onEnd()
                 }
             }
             .onAppear {
-                store.pathUpdate.onPendingEvent { e in
-                    store.pendingPath.pendingEvent = e
+                store.pathUpdate.onPendingEvent {
+                    store.pendingPath.update(pendingEvent: $0)
                 }
                 store.pathUpdate.onEvent { e in
                     withAnimation {
@@ -129,11 +127,17 @@ struct CanvasView: View {
                 }
             }
             .onAppear {
-                store.document.activeDocument = Document(from: fooSvg)
+                store.document.setDocument(.init(from: fooSvg))
             }
     }}
 
     // MARK: private
+
+    @Selected private var toView = store.viewport.toView
+    @Selected private var toWorld = store.viewport.toWorld
+    @Selected private var activeDocument = store.document.activeDocument
+    @Selected private var paths = store.path.paths
+    @Selected private var pendingActivePath = service.activePath.pendingActivePath
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
     private var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
@@ -144,7 +148,7 @@ struct CanvasView: View {
 
     @ViewBuilder private var navigationView: some View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
-            FooView()
+//            FooView()
             Text("sidebar")
                 .navigationTitle("Sidebar")
         } detail: {
@@ -159,7 +163,7 @@ struct CanvasView: View {
     @ViewBuilder private var background: some View { tracer.range("CanvasView background") {
         GeometryReader { geometry in
             Canvas { context, _ in
-                context.concatenate(store.viewport.toView)
+                context.concatenate(toView)
                 let path = SUPath { path in
                     for index in 0 ... 10240 {
                         let vOffset: Scalar = Scalar(index) * 10
@@ -197,14 +201,14 @@ struct CanvasView: View {
     } }
 
     @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
-        ForEach(service.path.model.paths.filter { $0.id != service.activePath.activePathId }) { p in
+        ForEach(paths.filter { $0.id != pendingActivePath?.id }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
     } }
 
     @ViewBuilder var activePath: some View { tracer.range("CanvasView activePath") { build {
-        if let pendingActivePath = service.activePath.pendingActivePath {
+        if let pendingActivePath {
             SUPath { path in pendingActivePath.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
@@ -221,7 +225,7 @@ struct CanvasView: View {
         ZStack {
             background
             inactivePaths
-                .transformEffect(store.viewport.toView)
+                .transformEffect(toView)
                 .blur(radius: 1)
             foreground
             overlay
@@ -231,7 +235,7 @@ struct CanvasView: View {
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
         ZStack {
             activePath
-                .transformEffect(store.viewport.toView)
+                .transformEffect(toView)
             ActivePathHandleRoot()
             PendingSelectionView()
                 .environmentObject(pendingSelectionModel)
@@ -268,7 +272,7 @@ struct CanvasView: View {
         }
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                var events = store.document.activeDocument.events
+                var events = activeDocument.events
                 guard let last = events.last else { return }
                 if case let .pathAction(p) = last.action {
                     if case let .load(l) = p {
@@ -276,7 +280,7 @@ struct CanvasView: View {
                     }
                 }
                 events.removeLast()
-                store.document.activeDocument = Document(events: events)
+                store.document.setDocument(.init(events: events))
             } label: {
                 Image(systemName: "arrow.uturn.backward")
             }

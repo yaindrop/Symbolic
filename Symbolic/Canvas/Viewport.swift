@@ -3,19 +3,19 @@ import Foundation
 
 // MARK: - ViewportInfo
 
-struct ViewportInfo {
+struct ViewportInfo: Equatable {
     let origin: Point2 // world position of the view origin (top left corner)
     let scale: Scalar
-    let worldToView: CGAffineTransform
-    let viewToWorld: CGAffineTransform
+
+    var worldToView: CGAffineTransform { .init(scale: scale).translatedBy(-Vector2(origin)) }
+
+    var viewToWorld: CGAffineTransform { worldToView.inverted() }
 
     func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
 
     init(origin: Point2, scale: Scalar) {
         self.origin = origin
         self.scale = scale
-        worldToView = CGAffineTransform(scale: scale).translatedBy(-Vector2(origin))
-        viewToWorld = worldToView.inverted()
     }
 
     init(origin: Point2) { self.init(origin: origin, scale: 1) }
@@ -29,20 +29,30 @@ extension ViewportInfo: CustomStringConvertible {
 
 // MARK: - ViewportModel
 
-@Observable
-class ViewportModel {
-    fileprivate(set) var info: ViewportInfo = .init()
+class ViewportModel: Store {
+    @Trackable var info: ViewportInfo = .init()
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
+
+    fileprivate func update(info: ViewportInfo) {
+        update { $0(\._info, info) }
+    }
 }
 
-@Observable
-class ViewportUpdateModel {
-    var blocked: Bool = false
-    fileprivate(set) var previousInfo: ViewportInfo = .init()
+class ViewportUpdateModel: Store {
+    @Trackable var blocked: Bool = false
+    @Trackable var previousInfo: ViewportInfo = .init()
 
-    @ObservationIgnored fileprivate var subscriptions = Set<AnyCancellable>()
+    fileprivate var subscriptions = Set<AnyCancellable>()
+
+    func setBlocked(_ blocked: Bool) {
+        update { $0(\._blocked, blocked) }
+    }
+
+    fileprivate func update(previousInfo: ViewportInfo) {
+        update { $0(\._previousInfo, previousInfo) }
+    }
 }
 
 // MARK: - ViewportUpdater
@@ -73,7 +83,7 @@ struct ViewportUpdater {
         let previousInfo = model.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
-        viewport.info = .init(origin: origin, scale: scale)
+        viewport.update(info: .init(origin: origin, scale: scale))
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
@@ -83,11 +93,11 @@ struct ViewportUpdater {
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
         let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
-        viewport.info = .init(origin: origin, scale: scale)
+        viewport.update(info: .init(origin: origin, scale: scale))
     }
 
     private func onCommit() {
         let _r = tracer.range("Viewport commit", type: .intent); defer { _r() }
-        model.previousInfo = viewport.info
+        model.update(previousInfo: viewport.info)
     }
 }

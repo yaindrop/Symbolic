@@ -26,9 +26,11 @@ struct HistoryPanel: View {
 
     // MARK: private
 
+    @Selected private var document = store.document.activeDocument
+
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
-    @State var moveGesture = PanelModel.moveGestureModel()
+    @State private var moveGesture = PanelModel.moveGestureModel()
 
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
@@ -42,7 +44,7 @@ struct HistoryPanel: View {
         .cornerRadius(12)
     }
 
-    @ViewBuilder var scrollView: some View {
+    @ViewBuilder private var scrollView: some View {
         ManagedScrollView(model: scrollViewModel) { _ in
             content
         }
@@ -51,8 +53,7 @@ struct HistoryPanel: View {
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
     }
 
-    @ViewBuilder var content: some View {
-        let document = store.document.activeDocument
+    @ViewBuilder private var content: some View {
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Events")
             VStack(spacing: 12) {

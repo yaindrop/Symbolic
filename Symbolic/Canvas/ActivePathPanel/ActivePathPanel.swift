@@ -13,6 +13,8 @@ struct ActivePathPanel: View {
 
     // MARK: private
 
+    @Selected private var activePath = service.activePath.pendingActivePath
+
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     @State private var moveGesture = PanelModel.moveGestureModel()
@@ -30,9 +32,9 @@ struct ActivePathPanel: View {
     }
 
     @ViewBuilder private var scrollView: some View {
-        if let pendingActivePath = service.activePath.pendingActivePath {
+        if let activePath {
             ManagedScrollView(model: scrollViewModel) { proxy in
-                Components(activePath: pendingActivePath).id(pendingActivePath.id)
+                Components(activePath: activePath).id(activePath.id)
                     .onChange(of: service.activePath.focusedPart) {
                         guard let id = service.activePath.focusedPart?.id else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }

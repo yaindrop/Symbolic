@@ -6,31 +6,38 @@ typealias PathMap = OrderedMap<UUID, Path>
 
 // MARK: - PathModel
 
-@Observable
-class PathModel {
-    var pathMap = PathMap()
+class PathModel: Store {
+    @Trackable var pathMap = PathMap()
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var pathMapUpdater: (() -> Void) -> Void { { $0() } }
+    fileprivate func update(pathMap: PathMap) {
+        update { $0(\._pathMap, pathMap) }
+    }
 }
 
 // MARK: - PendingPathModel
 
-@Observable
-class PendingPathModel {
-    var pendingEvent: DocumentEvent? { didSet { pendingEventSubject.send(pendingEvent) } }
-    fileprivate(set) var pathMap = PathMap()
+class PendingPathModel: Store {
+    @Trackable var pendingEvent: DocumentEvent?
+    @Trackable var pathMap = PathMap()
 
     var hasPendingEvent: Bool { pendingEvent != nil }
 
     var paths: [Path] { pathMap.values }
 
-    fileprivate var pathMapUpdater: (() -> Void) -> Void { { $0() } }
+    fileprivate var loading = false
+    fileprivate var subscriptions = Set<AnyCancellable>()
+    fileprivate var pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 
-    @ObservationIgnored fileprivate var loading = false
-    @ObservationIgnored fileprivate var subscriptions = Set<AnyCancellable>()
-    @ObservationIgnored fileprivate var pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
+    func update(pendingEvent: DocumentEvent?) {
+        pendingEventSubject.send(pendingEvent)
+        update { $0(\._pendingEvent, pendingEvent) }
+    }
+
+    fileprivate func update(pathMap: PathMap) {
+        update { $0(\._pathMap, pathMap) }
+    }
 }
 
 // MARK: - PathService
@@ -76,12 +83,8 @@ struct PathService {
     private var targetPathMap: PathMap {
         get { pendingModel.loading ? pendingModel.pathMap : model.pathMap }
         nonmutating set {
-            if pendingModel.loading { pendingModel.pathMap = newValue } else { model.pathMap = newValue }
+            if pendingModel.loading { pendingModel.update(pathMap: newValue) } else { model.update(pathMap: newValue) }
         }
-    }
-
-    private var targetPathMapUpdater: (() -> Void) -> Void {
-        pendingModel.loading ? pendingModel.pathMapUpdater : model.pathMapUpdater
     }
 
     private func loadPendingEvent(_ event: DocumentEvent?) {
@@ -89,8 +92,8 @@ struct PathService {
         guard let event else { return }
         pendingModel.loading = true
         defer { pendingModel.loading = false }
-        pendingModel.pathMap = model.pathMap.cloned
-        targetPathMapUpdater {
+        withStoreUpdating {
+            pendingModel.update(pathMap: model.pathMap.cloned)
             loadEvent(event)
         }
     }
@@ -101,7 +104,7 @@ struct PathService {
 extension PathService {
     func loadDocument(_ document: Document) {
         let _r = tracer.range("Path load document", type: .intent); defer { _r() }
-        targetPathMapUpdater {
+        withStoreUpdating {
             clear()
             for event in document.events {
                 loadEvent(event)

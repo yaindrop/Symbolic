@@ -1,10 +1,10 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Selected
+// MARK: - Observed
 
 @propertyWrapper
-struct Selected<Value: Equatable>: DynamicProperty {
+struct Observed<Value: Equatable>: DynamicProperty {
     private class Storage: ObservableObject {
         var wrappedValue: Value {
             if let value {
@@ -50,7 +50,7 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
     var wrappedValue: Value { storage.wrappedValue }
 
-    var projectedValue: Selected<Value> { self }
+    var projectedValue: Observed<Value> { self }
 
     init(_ selector: @escaping () -> Value) {
         _storage = StateObject(wrappedValue: Storage(selector: selector))

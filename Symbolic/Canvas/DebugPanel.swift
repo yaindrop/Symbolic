@@ -24,6 +24,8 @@ struct DebugPanel: View {
 
     @State var moveGesture = PanelModel.moveGestureModel()
 
+    @Selected private var viewportInfo = store.viewport.info
+
     @ViewBuilder private var panel: some View {
         VStack {
             title
@@ -33,7 +35,7 @@ struct DebugPanel: View {
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
             Divider()
-            Row(name: "Viewport", value: store.viewport.info.description)
+            Row(name: "Viewport", value: viewportInfo.description)
         }
         .padding(12)
         .background(.regularMaterial)

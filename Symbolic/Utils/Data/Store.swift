@@ -9,38 +9,59 @@ private struct StoreSubscription {
 
 private class StoreManager {
     var subscriptionIdGen = IncrementalIdGenerator()
-
     var idToSubscription: [Int: StoreSubscription] = [:]
 
-    var trackingSubscriptionId: Int?
+    struct TrackingContext {
+        var subscriptionId: Int
+    }
 
-    var pendingUpdateSubscriptions: [StoreSubscription] = []
-    var pendingUpdateTask: Task<Void, Never>?
+    var tracking: TrackingContext?
+
+    struct UpdatingContext {
+        var subscriptions: [StoreSubscription] = []
+    }
+
+    var updating: UpdatingContext?
 
     func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> T {
-        guard trackingSubscriptionId == nil else {
+        guard tracking == nil else {
+            print(tracer.rangeStack)
             fatalError("Nested tracking of store properties is not supported.")
         }
         let id = subscriptionIdGen.generate()
-        trackingSubscriptionId = id
-        defer { trackingSubscriptionId = nil }
+        let _r = tracer.range("[store] Tracking \(id)"); defer { _r() }
+        tracking = TrackingContext(subscriptionId: id)
+        defer { self.tracking = nil }
 
         let result = apply()
+
         idToSubscription[id] = .init(callback: onUpdate)
         return result
     }
 
-    func trigger(subscription id: Int) {
-        guard let subscription = idToSubscription.removeValue(forKey: id) else { return }
-        pendingUpdateSubscriptions.append(subscription)
+    func withUpdating(_ apply: () -> Void) {
+        let _r = tracer.range("[store] Updating"); defer { _r() }
+        guard updating == nil else { apply(); return }
 
-        guard pendingUpdateTask == nil else { return }
-        pendingUpdateTask = Task { @MainActor in
-            for subscription in pendingUpdateSubscriptions {
-                subscription.callback()
-            }
-            pendingUpdateSubscriptions = []
-            pendingUpdateTask = nil
+        self.updating = UpdatingContext()
+        defer { self.updating = nil }
+
+        apply()
+
+        guard let updating else { return }
+        for subscription in updating.subscriptions {
+            subscription.callback()
+        }
+        tracer.instant("[store] subscriptions.count \(updating.subscriptions.count)")
+    }
+
+    func trigger(subscription id: Int) {
+        let _r = tracer.range("[store] Trigger \(id)"); defer { _r() }
+        guard let subscription = idToSubscription.removeValue(forKey: id) else { return }
+        if updating != nil {
+            updating?.subscriptions.append(subscription)
+        } else {
+            subscription.callback()
         }
     }
 }
@@ -61,14 +82,18 @@ class Store {
     fileprivate func generatePropertyId() -> Int { propertyIdGen.generate() }
 
     fileprivate func onAccess(of propertyId: Int) {
-        guard let subscriptionId = manager.trackingSubscriptionId else { return }
+        let _r = tracer.range("[store] On access of \(propertyId)"); defer { _r() }
+        guard let subscriptionId = manager.tracking?.subscriptionId else { return }
+        tracer.instant("[store] subscriptionId \(subscriptionId)")
         var ids = propertyIdToSubscriptionIds[propertyId] ?? []
         ids.insert(subscriptionId)
         propertyIdToSubscriptionIds[propertyId] = ids
     }
 
     fileprivate func onChange(of propertyId: Int) {
+        let _r = tracer.range("[store] On change of \(propertyId)"); defer { _r() }
         guard let subscriptionIds = propertyIdToSubscriptionIds.removeValue(forKey: propertyId) else { return }
+        tracer.instant("[store] subscriptionIds.count \(subscriptionIds.count)")
         for id in subscriptionIds {
             manager.trigger(subscription: id)
         }
@@ -78,9 +103,9 @@ class Store {
 // MARK: - Trackable
 
 @propertyWrapper
-struct _Trackable<Instance: StoreProtocol, Value: Equatable> {
-    var id: Int?
-    var value: Value
+struct _Trackable<Instance: _StoreProtocol, Value> {
+    fileprivate var id: Int?
+    fileprivate var value: Value
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
     var wrappedValue: Value {
@@ -102,17 +127,28 @@ struct _Trackable<Instance: StoreProtocol, Value: Equatable> {
     }
 }
 
-protocol StoreProtocol: Store {
-    typealias Trackable<T: Equatable> = _Trackable<Self, T>
+extension _Trackable {
+    fileprivate func needUpdate(newValue: Value) -> Bool { true }
 }
 
-extension Store: StoreProtocol {}
+extension _Trackable where Value: Equatable {
+    fileprivate func needUpdate(newValue: Value) -> Bool { value != newValue }
+}
 
-struct StoreUpdater<S: StoreProtocol> {
+// MARK: - StoreProtocol
+
+protocol _StoreProtocol: Store {
+    typealias Trackable<T> = _Trackable<Self, T>
+}
+
+extension Store: _StoreProtocol {}
+
+struct StoreUpdater<S: _StoreProtocol> {
     let store: S
 
     func callAsFunction<T>(_ keypath: WritableKeyPath<S, _Trackable<S, T>>, _ value: T) {
         store.update(keypath, value)
+//        print("[intent] StoreUpdater", keypath, value)
     }
 
     fileprivate init(store: S) {
@@ -120,8 +156,9 @@ struct StoreUpdater<S: StoreProtocol> {
     }
 }
 
-extension StoreProtocol {
+extension _StoreProtocol {
     fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
+        let _r = tracer.range("[store] Access \(keypath)"); defer { _r() }
         let wrapper = self[keyPath: keypath]
         let id = wrapper.id ?? generatePropertyId()
         if wrapper.id == nil {
@@ -132,47 +169,56 @@ extension StoreProtocol {
     }
 
     fileprivate func update<T>(_ keypath: WritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
+        let _r = tracer.range("[store] Update \(keypath) with \(newValue)"); defer { _r() }
         var mutableSelf = self
         let wrapper = self[keyPath: keypath]
         let id = wrapper.id ?? generatePropertyId()
         if wrapper.id == nil {
             mutableSelf[keyPath: keypath].id = id
         }
-        guard wrapper.value != newValue else { return }
+        guard wrapper.needUpdate(newValue: newValue) else { return }
         onChange(of: id)
         mutableSelf[keyPath: keypath].value = newValue
     }
 
-    func updater(_ callback: (StoreUpdater<Self>) -> Void) {
-        callback(StoreUpdater(store: self))
+    func update(_ callback: (StoreUpdater<Self>) -> Void) {
+        manager.withUpdating {
+            callback(StoreUpdater(store: self))
+        }
     }
+}
+
+func withStoreUpdating(_ apply: () -> Void) {
+    manager.withUpdating(apply)
 }
 
 // MARK: - Selected
 
 @propertyWrapper
-struct StoreSelected<Value: Equatable>: DynamicProperty {
-    private class Storage: ObservableObject {
-        @Published var value: Value
+struct Selected<Value>: DynamicProperty {
+    fileprivate class Storage: ObservableObject {
+        @Published var value: Value?
 
         init(selector: @escaping () -> Value) {
             self.selector = selector
-            value = selector()
-            manager.withTracking { _ = selector() } onUpdate: { [weak self] in self?.select() }
+            select()
         }
 
         private let selector: () -> Value
 
         private func select() {
-            manager.withTracking { setIfChanged(&value, selector()) } onUpdate: { [weak self] in self?.select() }
+            let newValue = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
+            if needUpdate(newValue: newValue) {
+                value = newValue
+            }
         }
     }
 
     @StateObject private var storage: Storage
 
-    var wrappedValue: Value { storage.value }
+    var wrappedValue: Value { storage.value! }
 
-    var projectedValue: StoreSelected<Value> { self }
+    var projectedValue: Selected<Value> { self }
 
     init(_ selector: @escaping () -> Value) {
         _storage = StateObject(wrappedValue: Storage(selector: selector))
@@ -181,4 +227,12 @@ struct StoreSelected<Value: Equatable>: DynamicProperty {
     init(wrappedValue: @autoclosure @escaping () -> Value) {
         self.init(wrappedValue)
     }
+}
+
+extension Selected.Storage {
+    fileprivate func needUpdate(newValue: Value) -> Bool { true }
+}
+
+extension Selected.Storage where Value: Equatable {
+    fileprivate func needUpdate(newValue: Value) -> Bool { value != newValue }
 }

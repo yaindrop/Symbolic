@@ -113,9 +113,9 @@ struct OrderedMap<Key: Hashable, Value> {
 
     // MARK: private
 
-    private func getValue(key: Key) -> Value? { dict[key] }
+    func getValue(key: Key) -> Value? { dict[key] }
 
-    private mutating func setValue(key: Key, value: Value?) {
+    mutating func setValue(key: Key, value: Value?) {
         if let value {
             updateValue(value, forKey: key)
         } else {

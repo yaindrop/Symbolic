@@ -5,16 +5,16 @@ import SwiftUI
 
 struct ActivePathHandleRoot: View {
     var body: some View { tracer.range("ActivePathHandleRoot body") { build {
-        if let activePath = service.activePath.pendingActivePath {
+        if let activePath {
             ZStack {
                 let nodes = activePath.nodes
                 let idAndNodePositionInView = nodes.compactMap { n -> (id: UUID, position: Point2)? in
-                    (id: n.id, position: n.position.applying(store.viewport.toView))
+                    (id: n.id, position: n.position.applying(toView))
                 }
                 let idAndSegmentInView = nodes.compactMap { n -> (fromId: UUID, toId: UUID, segment: PathSegment)? in
                     guard let s = activePath.segment(from: n.id) else { return nil }
                     guard let toId = activePath.node(after: n.id)?.id else { return nil }
-                    return (fromId: n.id, toId: toId, segment: s.applying(store.viewport.toView))
+                    return (fromId: n.id, toId: toId, segment: s.applying(toView))
                 }
                 ActivePathHandle()
                 ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in ActivePathEdgeHandle(fromId: fromId, segment: segment) }
@@ -24,4 +24,7 @@ struct ActivePathHandleRoot: View {
             }
         }
     }}}
+
+    @Selected private var toView = store.viewport.toView
+    @Selected private var activePath = service.activePath.pendingActivePath
 }

@@ -17,10 +17,17 @@ enum ActivePathFocusedPart: Equatable {
 
 // MARK: - ActivePathModel
 
-@Observable
-class ActivePathModel {
-    var activePathId: UUID?
-    fileprivate(set) var focusedPart: ActivePathFocusedPart?
+class ActivePathModel: Store {
+    @Trackable var activePathId: UUID?
+    @Trackable var focusedPart: ActivePathFocusedPart?
+
+    func update(activePathId: UUID?) {
+        update { $0(\._activePathId, activePathId) }
+    }
+
+    fileprivate func update(focusedPart: ActivePathFocusedPart?) {
+        update { $0(\._focusedPart, focusedPart) }
+    }
 }
 
 // MARK: - ActivePathService
@@ -56,17 +63,17 @@ struct ActivePathService {
 
     func setFocus(node id: UUID) {
         let _r = tracer.range("[active-path] set focus", type: .intent); defer { _r() }
-        withAnimation { model.focusedPart = .node(id) }
+        withAnimation { model.update(focusedPart: .node(id)) }
     }
 
     func setFocus(edge fromNodeId: UUID) {
         let _r = tracer.range("[active-path] set focus", type: .intent); defer { _r() }
-        withAnimation { model.focusedPart = .edge(fromNodeId) }
+        withAnimation { model.update(focusedPart: .edge(fromNodeId)) }
     }
 
     func clearFocus() {
         let _r = tracer.range("[active-path] clear focus", type: .intent); defer { _r() }
-        withAnimation { model.focusedPart = nil }
+        withAnimation { model.update(focusedPart: nil) }
     }
 
     func onActivePathChanged() {

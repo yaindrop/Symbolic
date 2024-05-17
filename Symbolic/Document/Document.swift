@@ -32,13 +32,17 @@ struct Document: Equatable {
     }
 }
 
-@Observable
-class DocumentModel {
-    var activeDocument: Document = Document()
+class DocumentModel: Store {
+    @Trackable var activeDocument: Document = Document()
+
+    func setDocument(_ document: Document) {
+        let _r = tracer.range("Document set"); defer { _r() }
+        update { $0(\._activeDocument, document) }
+    }
 
     func sendEvent(_ event: DocumentEvent) {
         let _r = tracer.range("Document send event"); defer { _r() }
-        activeDocument = Document(events: activeDocument.events + [event])
+        update { $0(\._activeDocument, Document(events: activeDocument.events + [event])) }
     }
 }
 

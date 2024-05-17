@@ -113,12 +113,15 @@ extension SimpleTracer.Node.Range {
 // MARK: - SimpleTracer
 
 class SimpleTracer {
+    let enabled = true
+
     func start() {
         nodes.removeAll()
         rangeStack.removeAll()
     }
 
     func end() -> [Node] {
+        guard enabled else { return [] }
         let recorded = nodes
         nodes.removeAll()
         rangeStack.removeAll()
@@ -126,15 +129,18 @@ class SimpleTracer {
     }
 
     func instant(_ message: String) {
+        guard enabled else { return }
         onNode(.instant(.init(type: .normal, time: .now, message: message)))
     }
 
     func range(_ message: String, type: NodeType = .normal) -> EndRange {
+        guard enabled else { return .init(tracer: self) }
         rangeStack.append(.init(type: type, start: .now, message: message))
         return .init(tracer: self)
     }
 
     func range<Result>(_ message: String, _ work: () -> Result) -> Result {
+        guard enabled else { return work() }
         let _r = range(message); defer { _r() }
         return work()
     }
@@ -143,6 +149,7 @@ class SimpleTracer {
 
     @discardableResult
     fileprivate func onEnd(_ endRange: EndRange) -> Node.Range? {
+        guard enabled else { return nil }
         guard let pending = rangeStack.popLast() else { return nil }
         let range = Node.Range(type: pending.type, start: pending.start, end: .now, nodes: pending.nodes, message: pending.message)
         onNode(.range(range))
@@ -150,7 +157,7 @@ class SimpleTracer {
     }
 
     private var nodes: [Node] = []
-    private var rangeStack: [PendingRange] = []
+    var rangeStack: [PendingRange] = []
 
     private func onNode(_ node: Node) {
         if rangeStack.isEmpty {

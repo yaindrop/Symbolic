@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+func selectBoundingRect() -> CGRect? { service.activePath.pendingActivePath?.boundingRect }
+
 // MARK: - ActivePathHandle
 
 struct ActivePathHandle: View {
@@ -10,17 +12,14 @@ struct ActivePathHandle: View {
 
     // MARK: private
 
-    @Selected private var boundingRect = service.activePath.pendingActivePath?.boundingRect
+    @Selected private var boundingRect = selectBoundingRect
+    @Selected private var boundingRectInView = selectBoundingRect()?.applying(store.viewport.toView)
 
     private static let lineWidth: Scalar = 1
     private static let circleSize: Scalar = 16
     private static let touchablePadding: Scalar = 16
 
     @State private var dragGesture = MultipleGestureModel<Void>()
-
-    var boundingRectInView: CGRect? {
-        boundingRect?.applying(store.viewport.toView)
-    }
 
     @ViewBuilder private var rect: some View {
         if let boundingRectInView {

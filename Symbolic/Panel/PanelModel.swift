@@ -32,7 +32,6 @@ extension PanelModel {
         let _r = tracer.range("[panel] moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin + offset
-        panel.origin += panel.rect.clampingOffset(by: rootRect)
         idToPanel[panelId] = panel
         if panelIds.last != panelId {
             panelIds.removeAll { $0.id == panelId }
@@ -45,30 +44,44 @@ extension PanelModel {
         let _r = tracer.range("[panel] moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin + offset
-        panel.origin += panel.rect.clampingOffset(by: rootRect)
         idToPanel[panelId] = panel
 
-        let inertiaDuration: TimeInterval = 0.1
-        var inertia = speed * inertiaDuration
-        if inertia.length > offset.length {
-            inertia = inertia.with(length: offset.length)
-        }
-
-        // TODO: prioritize clamp over affinity
-        panel.origin += inertia
-        let clamping = panel.rect.clampingOffset(by: rootRect)
-        panel.origin += clamping
-
-        panel.affinities = getAffinities(of: panel)
-        panel.origin += affinityOffset(of: panel)
-
-        if panel.origin == origin + offset {
+        let endOffset = moveEndOffset(panel: panel, v)
+        if endOffset == .zero {
             return
         }
 
-        withAnimation(.easeOut(duration: inertiaDuration)) {
-            idToPanel[panelId] = panel
+        do {
+            let _r = tracer.range("[panel] endOffset \(endOffset)"); defer { _r() }
+            panel.origin += endOffset
+
+            withAnimation(.snappy(duration: 0.2)) {
+                idToPanel[panelId] = panel
+            }
         }
+    }
+
+    private func moveEndOffset(panel: PanelData, _ v: DragGesture.Value) -> Vector2 {
+        let offset = v.offset, speed = v.speed
+
+        var inertia = Vector2.zero
+        if speed.length > 500 {
+            inertia = speed * 0.2
+        }
+        if inertia.length > offset.length * 2 {
+            inertia = inertia.with(length: offset.length)
+        }
+
+        var newPanel = panel
+        newPanel.origin += inertia
+
+        let clamping = newPanel.rect.clampingOffset(by: rootRect)
+        newPanel.origin += clamping
+
+        newPanel.affinities = getAffinities(of: newPanel)
+        newPanel.origin += affinityOffset(of: newPanel)
+
+        return panel.origin.offset(to: newPanel.origin)
     }
 
     static func moveGestureModel() -> MultipleGestureModel<PanelData?> { .init(configs: .init(coordinateSpace: .global)) }
@@ -131,8 +144,8 @@ fileprivate func getKeyPath(axis: Axis, align: AxisAlign) -> KeyPath<CGRect, Sca
 }
 
 extension PanelModel {
-    static let rootAffinityThreshold = 48.0
-    static let peerAffinityThreshold = 24.0
+    static let rootAffinityThreshold = 32.0
+    static let peerAffinityThreshold = 16.0
     static let rootAffinityGap = 12.0
     static let peerAffinityGap = 6.0
 
@@ -161,24 +174,34 @@ extension PanelModel {
     }
 
     private func getAffinities(of panel: PanelData) -> [PanelAffinity] {
+        func isValid(candidate: PanelAffinityCandidate) -> Bool {
+            let (affinity, distance) = candidate
+            var threshold: Scalar
+            switch affinity {
+            case .root: threshold = Self.rootAffinityThreshold
+            case .peer: threshold = Self.peerAffinityThreshold
+            }
+            if distance > threshold {
+                return false
+            }
+
+            if !rootRect.contains(panel.rect + offset(of: panel, by: affinity)) {
+                return false
+            }
+
+            if case let .peer(peer) = affinity {
+                return peer.selfAlign != .center && peer.peerAlign != .center || peer.selfAlign == .center && peer.peerAlign == .center
+            }
+            return true
+        }
+
         var candidates = getRootAffinityCandidates(of: panel.rect)
         for peer in panels {
             guard peer.id != panel.id else { continue }
             candidates += getPeerAffinityCandidates(of: panel.rect, peer: peer)
         }
-        candidates = candidates.filter { affinity, distance in
-            switch affinity {
-            case .root: distance < Self.rootAffinityThreshold
-            case .peer: distance < Self.peerAffinityThreshold
-            }
-        }
-        candidates = candidates.filter { affinity, _ in
-            switch affinity {
-            case .root: true
-            case let .peer(peer):
-                peer.selfAlign != .center && peer.peerAlign != .center || peer.selfAlign == .center && peer.peerAlign == .center
-            }
-        }
+        candidates = candidates.filter { isValid(candidate: $0) }
+
         let horizontal = candidates
             .filter { $0.affinity.axis == .horizontal }
             .max { $0.distance < $1.distance }
@@ -193,31 +216,23 @@ extension PanelModel {
 
 extension PanelModel {
     private func offset(of panel: PanelData, by affinity: PanelAffinity.Root) -> Vector2 {
-        let axis = affinity.axis, align = affinity.align
-        let kp = getKeyPath(axis: axis, align: align)
+        let axis = affinity.axis, align = affinity.align, keyPath = getKeyPath(axis: axis, align: align)
 
-        var offset = rootRect[keyPath: kp] - panel.rect[keyPath: kp]
+        var offset = rootRect[keyPath: keyPath] - panel.rect[keyPath: keyPath]
         offset += align == .start ? Self.rootAffinityGap : align == .end ? -Self.rootAffinityGap : 0
 
-        switch axis {
-        case .horizontal: return .init(offset, 0)
-        case .vertical: return .init(0, offset)
-        }
+        return .init(axis: axis, offset)
     }
 
     private func offset(of panel: PanelData, by affinity: PanelAffinity.Peer) -> Vector2 {
         guard let peerPanel = idToPanel[affinity.peerId] else { return .zero }
         let axis = affinity.axis, selfAlign = affinity.selfAlign, peerAlign = affinity.peerAlign
-        let panelKeyPath = getKeyPath(axis: axis, align: selfAlign)
-        let peerKeyPath = getKeyPath(axis: axis, align: peerAlign)
+        let panelKeyPath = getKeyPath(axis: axis, align: selfAlign), peerKeyPath = getKeyPath(axis: axis, align: peerAlign)
 
         var offset = peerPanel.rect[keyPath: peerKeyPath] - panel.rect[keyPath: panelKeyPath]
         offset += selfAlign == peerAlign ? 0 : selfAlign == .start ? Self.peerAffinityGap : selfAlign == .end ? -Self.peerAffinityGap : 0
 
-        switch axis {
-        case .horizontal: return .init(offset, 0)
-        case .vertical: return .init(0, offset)
-        }
+        return .init(axis: axis, offset)
     }
 
     private func offset(of panel: PanelData, by affinity: PanelAffinity) -> Vector2 {
@@ -229,9 +244,8 @@ extension PanelModel {
 
     func affinityOffset(of panel: PanelData) -> Vector2 {
         var sum = Vector2.zero
-        for affinity in panel.affinities {
-            sum += offset(of: panel, by: affinity)
-        }
+        sum += panel.affinities.first { $0.axis == .horizontal }.map { offset(of: panel, by: $0) } ?? .zero
+        sum += panel.affinities.first { $0.axis == .vertical }.map { offset(of: panel, by: $0) } ?? .zero
         return sum
     }
 }

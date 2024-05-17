@@ -42,6 +42,13 @@ extension Vector2 {
     init(_ point: Point2) { self.init(point.x, point.y) }
 
     init(_ size: CGSize) { self.init(size.width, size.height) }
+
+    init(axis: Axis, _ v: Scalar) {
+        switch axis {
+        case .horizontal: self.init(v, 0)
+        case .vertical: self.init(0, v)
+        }
+    }
 }
 
 // MARK: - Point2

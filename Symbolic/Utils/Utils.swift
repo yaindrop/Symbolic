@@ -7,6 +7,14 @@ extension UUID: Identifiable {
     public var id: UUID { self }
 }
 
+extension Optional {
+    func forSome(_ callback: (Wrapped) -> Void) {
+        if case let .some(v) = self {
+            callback(v)
+        }
+    }
+}
+
 // MARK: - ClosedRange
 
 extension ClosedRange {

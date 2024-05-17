@@ -48,29 +48,19 @@ extension EquatableTuple where T5 == Monostate {
 
 @resultBuilder
 struct EquatableBuilder {
-    static func buildBlock<T0: Equatable>(_ v0: T0) -> some Equatable {
-        v0
-    }
+    static func buildBlock<T0: Equatable>(_ v0: T0) -> some Equatable { v0 }
 
-    static func buildBlock<T0: Equatable, T1: Equatable>(_ v0: T0, _ v1: T1) -> some Equatable {
-        EquatableTuple(v0, v1)
-    }
+    static func buildBlock<T0: Equatable, T1: Equatable>(_ tuple: (T0, T1)) -> some Equatable { EquatableTuple.init <- tuple }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable>(_ tuple: (T0, T1, T2)) -> some Equatable { EquatableTuple.init <- tuple }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable>(_ tuple: (T0, T1, T2, T3)) -> some Equatable { EquatableTuple.init <- tuple }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable>(_ tuple: (T0, T1, T2, T3, T4)) -> some Equatable { EquatableTuple.init <- tuple }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>(_ tuple: (T0, T1, T2, T3, T4, T5)) -> some Equatable { EquatableTuple.init <- tuple }
 
-    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2) -> some Equatable {
-        EquatableTuple(v0, v1, v2)
-    }
-
-    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3) -> some Equatable {
-        EquatableTuple(v0, v1, v2, v3)
-    }
-
-    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4) -> some Equatable {
-        EquatableTuple(v0, v1, v2, v3, v4)
-    }
-
-    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4, _ v5: T5) -> some Equatable {
-        EquatableTuple(v0, v1, v2, v3, v4, v5)
-    }
+    static func buildBlock<T0: Equatable, T1: Equatable>(_ v0: T0, _ v1: T1) -> some Equatable { EquatableTuple(v0, v1) }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2) -> some Equatable { EquatableTuple(v0, v1, v2) }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3) -> some Equatable { EquatableTuple(v0, v1, v2, v3) }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4) -> some Equatable { EquatableTuple(v0, v1, v2, v3, v4) }
+    static func buildBlock<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4, _ v5: T5) -> some Equatable { EquatableTuple(v0, v1, v2, v3, v4, v5) }
 }
 
 // MARK: - EquatableBy

@@ -51,14 +51,14 @@ struct CanvasView: View {
             .onAppear {
                 multipleTouchPress.onTap { info in
                     let worldLocation = info.location.applying(store.viewport.toWorld)
-                    let _r = tracer.range("On tap \(worldLocation)"); defer { _r() }
+                    let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
                     withAnimation {
                         store.activePath.activePathId = store.path.hitTest(worldPosition: worldLocation)?.id
                     }
                 }
                 multipleTouchPress.onLongPress { info in
                     let worldLocation = info.current.applying(store.viewport.toWorld)
-                    let _r = tracer.range("On long press \(worldLocation)"); defer { _r() }
+                    let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
                     store.viewportUpdate.blocked = true
                     if !pendingSelectionModel.active {
                         canvasActionModel.onStart(triggering: .longPressViewport)
@@ -67,7 +67,7 @@ struct CanvasView: View {
                     }
                 }
                 multipleTouchPress.onLongPressEnd { _ in
-                    let _r = tracer.range("On long press end"); defer { _r() }
+                    let _r = tracer.range("On long press end", type: .intent); defer { _r() }
                     store.viewportUpdate.blocked = false
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)

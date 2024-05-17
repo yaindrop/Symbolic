@@ -51,7 +51,7 @@ extension PanelModel {
             return
         }
 
-        withAnimation(.snappy(duration: 0.2)) {
+        withAnimation(.easeOut(duration: 0.1)) {
             idToPanel[panelId] = newPanel
         }
     }

@@ -106,9 +106,9 @@ class MultipleTouchModel {
     fileprivate func onAllTouchesEnded() {
         startTimeSubject.send(nil)
         startTime = nil
-        touchesCount = 0
-        panInfo = nil
-        pinchInfo = nil
+        onTouchesCount(0)
+        onPanInfo(nil)
+        onPinchInfo(nil)
     }
 }
 

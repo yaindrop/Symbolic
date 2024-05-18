@@ -2,6 +2,10 @@ import Combine
 import Foundation
 import SwiftUI
 
+fileprivate let storeTracer = tracer.tagged("store")
+fileprivate let managerTracer = storeTracer.tagged("manager")
+fileprivate let trackableTracer = storeTracer.tagged("trackable")
+
 private struct StoreSubscription {
     let id: Int
     let callback: () -> Void
@@ -26,7 +30,7 @@ private class StoreManager {
             fatalError("Nested tracking of store properties is not supported.")
         }
         let id = subscriptionIdGen.generate()
-        let _r = tracer.range("[store-manager] Tracking \(id)"); defer { _r() }
+        let _r = managerTracer.range("Tracking \(id)"); defer { _r() }
 
         tracking = TrackingContext(subscriptionId: id)
         defer { self.tracking = nil }
@@ -47,37 +51,39 @@ private class StoreManager {
 
     func withUpdating(_ apply: () -> Void) {
         if updating != nil {
-            let _r = tracer.range("[store-manager] Reenter updating"); defer { _r() }
+            let _r = managerTracer.range("Reenter updating"); defer { _r() }
             apply()
             return
         }
-        let _r = tracer.range("[store-manager] Updating"); defer { _r() }
+        let _r = managerTracer.range("Updating"); defer { _r() }
 
-        self.updating = UpdatingContext()
+        updating = UpdatingContext()
         defer { self.updating = nil }
 
         apply()
 
-        guard let updating else { return }
-        do {
-            let _r = tracer.range("[store-manager] Triggering \(updating.subscriptions.map { $0.id })"); defer { _r() }
-            for subscription in updating.subscriptions {
-                subscription.callback()
-            }
-        }
+        notifyAllUpdating()
     }
 
-    func trigger(subscription id: Int) {
+    func notify(subscription id: Int) {
         guard let subscription = idToSubscription.removeValue(forKey: id) else {
-            tracer.instant("[store-manager] Triggering expired \(id)")
+            managerTracer.instant("Notifying expired \(id)")
             return
         }
 
         updating.forSome {
-            tracer.instant("[store-manager] Append triggering of \(id)")
+            managerTracer.instant("Append notifying of \(id)")
             $0.subscriptions.append(subscription)
         } else: {
-            let _r = tracer.range("[store-manager] Triggering \(id)"); defer { _r() }
+            let _r = managerTracer.range("Notifying \(id)"); defer { _r() }
+            subscription.callback()
+        }
+    }
+
+    private func notifyAllUpdating() {
+        guard let updating else { return }
+        let _r = managerTracer.range("Notifying all \(updating.subscriptions.map { $0.id })"); defer { _r() }
+        for subscription in updating.subscriptions {
             subscription.callback()
         }
     }
@@ -100,7 +106,7 @@ class Store {
 
     fileprivate func onAccess(of propertyId: Int) {
         let subscriptionId = manager.tracking?.subscriptionId
-        let _r = tracer.range("[store] On access of \(propertyId), \(subscriptionId.map { "with tracking \($0)" } else: { "without tracking" })"); defer { _r() }
+        let _r = storeTracer.range("On access of \(propertyId), \(subscriptionId.map { "with tracking \($0)" } else: { "without tracking" })"); defer { _r() }
         guard let subscriptionId else { return }
         var ids = propertyIdToSubscriptionIds[propertyId] ?? []
         ids.insert(subscriptionId)
@@ -109,10 +115,10 @@ class Store {
 
     fileprivate func onChange(of propertyId: Int) {
         let subscriptionIds = propertyIdToSubscriptionIds.removeValue(forKey: propertyId)
-        let _r = tracer.range("[store] On change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } else: { "without subscription" })"); defer { _r() }
+        let _r = storeTracer.range("On change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } else: { "without subscription" })"); defer { _r() }
         guard let subscriptionIds else { return }
         for id in subscriptionIds {
-            manager.trigger(subscription: id)
+            manager.notify(subscription: id)
         }
     }
 }
@@ -177,7 +183,7 @@ extension Store: _StoreProtocol {
 
 extension _StoreProtocol {
     fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
-        let _r = tracer.range("[store-trackable] Access \(keypath)"); defer { _r() }
+        let _r = trackableTracer.range("Access \(keypath)"); defer { _r() }
         @Ref(self, keypath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
@@ -191,7 +197,7 @@ extension _StoreProtocol {
     }
 
     fileprivate func update<T>(_ keypath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
-        let _r = tracer.range("[store-trackable] Update \(keypath) with \(newValue)"); defer { _r() }
+        let _r = trackableTracer.range("Update \(keypath) with \(newValue)"); defer { _r() }
         @Ref(self, keypath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {

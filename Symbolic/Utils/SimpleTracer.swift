@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-extension SimpleTracer {
+extension Tracer {
     // MARK: - Node
 
     enum NodeType {
@@ -50,35 +50,35 @@ extension SimpleTracer {
 
         deinit {
             if !ended {
-                logWarning("not ended!")
+                logWarning("Range not ended manually.")
                 tracer?.onEnd(self)
             }
         }
 
-        fileprivate init(tracer: SimpleTracer) {
+        fileprivate init(tracer: Tracer) {
             self.tracer = tracer
         }
 
-        private weak var tracer: SimpleTracer?
+        private weak var tracer: Tracer?
         private var ended: Bool = false
     }
 }
 
 // MARK: - CustomStringConvertible
 
-extension SimpleTracer.Node.Instant: CustomStringConvertible {
+extension Tracer.Node.Instant: CustomStringConvertible {
     var description: String {
         "Instant(\(message))"
     }
 }
 
-extension SimpleTracer.Node.Range: CustomStringConvertible {
+extension Tracer.Node.Range: CustomStringConvertible {
     var description: String {
         "Range(\(message), \(duration.readable))"
     }
 }
 
-extension SimpleTracer.Node: CustomStringConvertible {
+extension Tracer.Node: CustomStringConvertible {
     var description: String {
         switch self {
         case let .instant(i): i.description
@@ -89,7 +89,7 @@ extension SimpleTracer.Node: CustomStringConvertible {
 
 // MARK: - tree
 
-extension SimpleTracer.Node.Range {
+extension Tracer.Node.Range {
     var tree: String { buildTreeLines().joined(separator: "\n") }
 
     func buildTreeLines(asRoot: Bool = true) -> [String] {
@@ -110,10 +110,10 @@ extension SimpleTracer.Node.Range {
     }
 }
 
-// MARK: - SimpleTracer
+// MARK: - Tracer
 
-class SimpleTracer {
-    let enabled = true
+class Tracer {
+    var enabled = true
 
     func start() {
         nodes.removeAll()
@@ -139,10 +139,14 @@ class SimpleTracer {
         return .init(tracer: self)
     }
 
-    func range<Result>(_ message: String, _ work: () -> Result) -> Result {
+    func range<Result>(_ message: String, type: Tracer.NodeType = .normal, _ work: () -> Result) -> Result {
         guard enabled else { return work() }
-        let _r = range(message); defer { _r() }
+        let _r = range(message, type: type); defer { _r() }
         return work()
+    }
+
+    func tagged(_ tag: String, enabled: Bool = true) -> SubTracer {
+        .init(tags: [tag], tracer: self, enabled: enabled)
     }
 
     // MARK: private
@@ -157,7 +161,7 @@ class SimpleTracer {
     }
 
     private var nodes: [Node] = []
-    var rangeStack: [PendingRange] = []
+    private var rangeStack: [PendingRange] = []
 
     private func onNode(_ node: Node) {
         if rangeStack.isEmpty {
@@ -176,4 +180,28 @@ class SimpleTracer {
     }
 }
 
-let tracer = SimpleTracer()
+struct SubTracer {
+    let tags: [String]
+    let tracer: Tracer
+    var enabled = true
+
+    var prefix: String { tags.map { "[\($0)]" }.joined(separator: " ") }
+
+    func instant(_ message: String) {
+        tracer.instant("\(prefix) \(message)")
+    }
+
+    func range(_ message: String, type: Tracer.NodeType = .normal) -> Tracer.EndRange {
+        tracer.range("\(prefix) \(message)", type: type)
+    }
+
+    func range<Result>(_ message: String, type: Tracer.NodeType = .normal, _ work: () -> Result) -> Result {
+        tracer.range("\(prefix) \(message)", type: type, work)
+    }
+
+    func tagged(_ tag: String, enabled: Bool = true) -> SubTracer {
+        .init(tags: tags + [tag], tracer: tracer, enabled: enabled)
+    }
+}
+
+let tracer = Tracer()

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DebugPanel: View {
-    @Bindable var multipleTouch: MultipleTouchModel
+    var multipleTouch: MultipleTouchModel
     var multipleTouchPress: MultipleTouchPressModel
 
     @Environment(\.panelId) private var panelId

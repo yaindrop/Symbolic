@@ -62,13 +62,13 @@ struct ViewportUpdater {
     let model: ViewportUpdateModel
 
     func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.panInfoSubject
+        multipleTouch.$panInfo
             .sink { value in
                 guard !self.model.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
             .store(in: &model.subscriptions)
-        multipleTouch.pinchInfoSubject
+        multipleTouch.$pinchInfo
             .sink { value in
                 guard !self.model.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)

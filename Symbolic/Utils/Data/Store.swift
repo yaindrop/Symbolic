@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import SwiftUI
 
@@ -122,12 +123,15 @@ class Store {
 struct _Trackable<Instance: _StoreProtocol, Value> {
     fileprivate var id: Int?
     fileprivate var value: Value
+    fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
     var wrappedValue: Value {
         get { fatalError() }
         set { fatalError() }
     }
+
+    var projectedValue: PassthroughSubject<Value, Never> { didSetSubject }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -157,17 +161,17 @@ protocol _StoreProtocol: Store {
     typealias Trackable<T> = _Trackable<Self, T>
 }
 
-extension Store: _StoreProtocol {}
+extension Store: _StoreProtocol {
+    struct Updater<S: _StoreProtocol> {
+        let store: S
 
-struct StoreUpdater<S: _StoreProtocol> {
-    let store: S
+        func callAsFunction<T>(_ keypath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
+            store.update(keypath, value)
+        }
 
-    func callAsFunction<T>(_ keypath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
-        store.update(keypath, value)
-    }
-
-    fileprivate init(store: S) {
-        self.store = store
+        fileprivate init(_ store: S) {
+            self.store = store
+        }
     }
 }
 
@@ -199,11 +203,12 @@ extension _StoreProtocol {
         guard wrapper.needUpdate(newValue: newValue) else { return }
         onChange(of: id)
         wrapper.value = newValue
+        wrapper.didSetSubject.send(newValue)
     }
 
-    func update(_ callback: (StoreUpdater<Self>) -> Void) {
+    func update(_ callback: (Updater<Self>) -> Void) {
         manager.withUpdating {
-            callback(StoreUpdater(store: self))
+            callback(Updater(self))
         }
     }
 }

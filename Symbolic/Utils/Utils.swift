@@ -26,6 +26,7 @@ extension Optional {
 }
 
 extension Equatable {
+    @discardableResult
     mutating func setIfChanged(_ newValue: Self) -> Bool {
         if self != newValue {
             self = newValue

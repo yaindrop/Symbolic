@@ -75,7 +75,7 @@ struct MultipleTouchPressDetector {
     var pressLocation: Point2? { isPress ? location : nil }
 
     func subscribe() {
-        multipleTouch.startTimeSubject
+        multipleTouch.$startTime
             .sink { time in
                 if time != nil {
                     self.onPressStarted()
@@ -85,7 +85,7 @@ struct MultipleTouchPressDetector {
                 }
             }
             .store(in: &model.subscriptions)
-        multipleTouch.panInfoSubject
+        multipleTouch.$panInfo
             .sink { info in
                 if let info {
                     self.context?.onValue(info)
@@ -93,7 +93,7 @@ struct MultipleTouchPressDetector {
                 }
             }
             .store(in: &model.subscriptions)
-        multipleTouch.touchesCountSubject
+        multipleTouch.$touchesCount
             .sink { count in
                 if count != 1 {
                     self.onPressCanceled()

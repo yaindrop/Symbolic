@@ -64,51 +64,24 @@ extension PinchInfo: CustomStringConvertible {
 
 // MARK: - MultipleTouchModel
 
-@Observable
 class MultipleTouchModel {
-    private(set) var startTime: Date?
+    @Published fileprivate(set) var startTime: Date?
 
-    private(set) var touchesCount: Int = 0
-    private(set) var panInfo: PanInfo?
-    private(set) var pinchInfo: PinchInfo?
-
-    @ObservationIgnored let startTimeSubject = PassthroughSubject<Date?, Never>()
-
-    @ObservationIgnored let touchesCountSubject = PassthroughSubject<Int?, Never>()
-    @ObservationIgnored let panInfoSubject = PassthroughSubject<PanInfo?, Never>()
-    @ObservationIgnored let pinchInfoSubject = PassthroughSubject<PinchInfo?, Never>()
+    @Published fileprivate(set) var touchesCount: Int = 0
+    @Published fileprivate(set) var panInfo: PanInfo?
+    @Published fileprivate(set) var pinchInfo: PinchInfo?
 
     var active: Bool { startTime != nil }
 
-    fileprivate func onTouchesCount(_ count: Int) {
-        guard touchesCount != count else { return }
-        touchesCountSubject.send(count)
-        touchesCount = count
-    }
-
-    fileprivate func onPanInfo(_ info: PanInfo?) {
-        guard panInfo != info else { return }
-        panInfoSubject.send(info)
-        panInfo = info
-    }
-
-    fileprivate func onPinchInfo(_ info: PinchInfo?) {
-        guard pinchInfo != info else { return }
-        pinchInfoSubject.send(info)
-        pinchInfo = info
-    }
-
     fileprivate func onFirstTouchBegan() {
-        startTimeSubject.send(.now)
         startTime = .now
     }
 
     fileprivate func onAllTouchesEnded() {
-        startTimeSubject.send(nil)
         startTime = nil
-        onTouchesCount(0)
-        onPanInfo(nil)
-        onPinchInfo(nil)
+        touchesCount.setIfChanged(0)
+        panInfo.setIfChanged(nil)
+        pinchInfo.setIfChanged(nil)
     }
 }
 
@@ -186,21 +159,21 @@ class MultipleTouchView: TouchDebugView {
     private func location(of touch: UITouch) -> Point2 { touch.location(in: self) }
 
     private func onActiveTouchesChanged() {
-        model.onTouchesCount(activeTouches.count)
-        model.onPanInfo(nil)
-        model.onPinchInfo(nil)
+        model.touchesCount.setIfChanged(activeTouches.count)
+        model.panInfo.setIfChanged(nil)
+        model.pinchInfo.setIfChanged(nil)
         if let panTouch {
-            model.onPanInfo(.init(origin: location(of: panTouch)))
+            model.panInfo.setIfChanged(.init(origin: location(of: panTouch)))
         } else if let pinchTouches {
-            model.onPinchInfo(.init(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1))))
+            model.pinchInfo.setIfChanged(.init(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1))))
         }
     }
 
     private func onActiveTouchesMoved() {
         if let info = model.panInfo, let panTouch {
-            model.onPanInfo(.init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin)))
+            model.panInfo.setIfChanged(.init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin)))
         } else if let info = model.pinchInfo, let pinchTouches {
-            model.onPinchInfo(.init(
+            model.pinchInfo.setIfChanged(.init(
                 origin: info.origin,
                 offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1))
             ))

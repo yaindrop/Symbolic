@@ -8,16 +8,30 @@ extension UUID: Identifiable {
 }
 
 extension Optional {
-    func forSome(_ callback: (Wrapped) -> Void) {
+    func map<U>(_ then: (Wrapped) throws -> U, else: () throws -> U) rethrows -> U {
         if case let .some(v) = self {
-            callback(v)
+            try then(v)
+        } else {
+            try `else`()
+        }
+    }
+
+    mutating func forSome(_ then: (inout Wrapped) throws -> Void, else: (() throws -> Void)? = nil) rethrows {
+        if case .some = self {
+            try then(&self!)
+        } else {
+            try `else`?()
         }
     }
 }
 
-func setIfChanged<T: Equatable>(_ value: inout T, _ newValue: T) {
-    if value != newValue {
-        value = newValue
+extension Equatable {
+    mutating func setIfChanged(_ newValue: Self) -> Bool {
+        if self != newValue {
+            self = newValue
+            return true
+        }
+        return false
     }
 }
 

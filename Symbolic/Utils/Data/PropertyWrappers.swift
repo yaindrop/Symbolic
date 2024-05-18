@@ -81,3 +81,19 @@ struct _CachedLazy<Instance, Value> {
 protocol EnableCachedLazy {
     typealias CachedLazy<T> = _CachedLazy<Self, T>
 }
+
+@propertyWrapper
+struct Ref<Instance, Value> {
+    let instance: Instance
+    let keypath: ReferenceWritableKeyPath<Instance, Value>
+
+    var wrappedValue: Value {
+        get { instance[keyPath: keypath] }
+        nonmutating set { instance[keyPath: keypath] = newValue }
+    }
+
+    init(_ instance: Instance, _ keypath: ReferenceWritableKeyPath<Instance, Value>) {
+        self.instance = instance
+        self.keypath = keypath
+    }
+}

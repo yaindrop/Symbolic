@@ -38,7 +38,7 @@ extension UUID: TriviallyCloneable {}
 
 // MARK: - ReflectedStringConvertible
 
-public protocol ReflectedStringConvertible: CustomStringConvertible { }
+protocol ReflectedStringConvertible: CustomStringConvertible { }
 
 extension ReflectedStringConvertible {
     public var description: String {

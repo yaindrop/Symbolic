@@ -13,7 +13,7 @@
 		5700C2CA2BED162000481FA7 /* PanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelModel.swift */; };
 		5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CC2BED169D00481FA7 /* PanelData.swift */; };
 		5700C2CF2BEDB6EB00481FA7 /* Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CE2BEDB6EB00481FA7 /* Selection.swift */; };
-		5700C2D12BEF0F0A00481FA7 /* HoldAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */; };
+		5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */; };
 		5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */; };
 		5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF792BC39844002209F2 /* SymbolicApp.swift */; };
 		5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7B2BC39844002209F2 /* ContentView.swift */; };
@@ -57,6 +57,7 @@
 		574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */; };
 		574CC7D62BF500190042FEE3 /* ViewSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D52BF500190042FEE3 /* ViewSize.swift */; };
 		574CC7D82BF757630042FEE3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D72BF757630042FEE3 /* Store.swift */; };
+		574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -103,7 +104,7 @@
 		5700C2C92BED162000481FA7 /* PanelModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelModel.swift; sourceTree = "<group>"; };
 		5700C2CC2BED169D00481FA7 /* PanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelData.swift; sourceTree = "<group>"; };
 		5700C2CE2BEDB6EB00481FA7 /* Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selection.swift; sourceTree = "<group>"; };
-		5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldAction.swift; sourceTree = "<group>"; };
+		5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddingPath.swift; sourceTree = "<group>"; };
 		5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasAction.swift; sourceTree = "<group>"; };
 		5723BF762BC39844002209F2 /* Symbolic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Symbolic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5723BF792BC39844002209F2 /* SymbolicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicApp.swift; sourceTree = "<group>"; };
@@ -150,6 +151,7 @@
 		574CC7D32BF4FFCB0042FEE3 /* PropertyWrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyWrappers.swift; sourceTree = "<group>"; };
 		574CC7D52BF500190042FEE3 /* ViewSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewSize.swift; sourceTree = "<group>"; };
 		574CC7D72BF757630042FEE3 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -363,18 +365,27 @@
 			path = Math;
 			sourceTree = "<group>";
 		};
+		574CC7DE2BFA0DB00042FEE3 /* Action */ = {
+			isa = PBXGroup;
+			children = (
+				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
+				5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */,
+				5700C2CE2BEDB6EB00481FA7 /* Selection.swift */,
+				574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */,
+				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
+			);
+			path = Action;
+			sourceTree = "<group>";
+		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
+				574CC7DE2BFA0DB00042FEE3 /* Action */,
 				572487812BDF82180096DDE4 /* ActivePathHandles */,
 				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
-				5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
-				5700C2D02BEF0F0A00481FA7 /* HoldAction.swift */,
-				5700C2CE2BEDB6EB00481FA7 /* Selection.swift */,
-				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -585,7 +596,7 @@
 				575C3CFA2BD9F11E0035B758 /* ActivePathHandleRoot.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
-				5700C2D12BEF0F0A00481FA7 /* HoldAction.swift in Sources */,
+				5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
@@ -623,6 +634,7 @@
 				57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */,
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
+				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
 				574CC7BE2BF44C7B0042FEE3 /* Observed.swift in Sources */,

@@ -2,6 +2,8 @@ import Combine
 import Foundation
 import SwiftUI
 
+fileprivate let pathUpdaterTracer = tracer.tagged("active-path")
+
 class PathUpdateModel {
     func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
         eventSubject.sink(receiveValue: callback).store(in: &subscriptions)
@@ -92,7 +94,7 @@ struct PathUpdater {
     // MARK: handle action
 
     private func handle(_ action: DocumentAction, pending: Bool) {
-        let _r = tracer.range("[path-updater] handle action, pending: \(pending)", type: .intent); defer { _r() }
+        let _r = pathUpdaterTracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
         switch action {
         case let .pathAction(pathAction):
             handle(pathAction, pending: pending)
@@ -112,11 +114,11 @@ struct PathUpdater {
         }
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending || pendingPathModel.hasPendingEvent {
-            let _r = tracer.range("Path updater send pending event"); defer { _r() }
+            let _r = pathUpdaterTracer.range("send pending event"); defer { _r() }
             model.pendingEventSubject.send(event)
         }
         if !pending {
-            let _r = tracer.range("Path updater send event"); defer { _r() }
+            let _r = pathUpdaterTracer.range("send event"); defer { _r() }
             model.eventSubject.send(event)
         }
     }

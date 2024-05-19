@@ -44,6 +44,23 @@ class DocumentModel: Store {
         let _r = tracer.range("Document send event"); defer { _r() }
         update { $0(\._activeDocument, Document(events: activeDocument.events + [event])) }
     }
+
+    var undoable: Bool {
+        guard let last = activeDocument.events.last else { return false }
+        if case let .pathAction(p) = last.action {
+            if case .load = p {
+                return false
+            }
+        }
+        return true
+    }
+
+    func undo() {
+        guard undoable else { return }
+        var events = activeDocument.events
+        events.removeLast()
+        store.document.setDocument(.init(events: events))
+    }
 }
 
 let fooSvg = """

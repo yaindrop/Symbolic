@@ -12,6 +12,10 @@ class GlobalStore {
     let activePath = ActivePathModel()
 
     let pathUpdate = PathUpdateModel()
+
+    let toolbar = ToolbarModel()
+    let pendingSelection = PendingSelectionModel()
+    let addingPath = AddingPathModel()
 }
 
 let store = GlobalStore()

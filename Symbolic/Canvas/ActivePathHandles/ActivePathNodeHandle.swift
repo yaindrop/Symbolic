@@ -51,6 +51,7 @@ struct ActivePathNodeHandle: View, EquatableBy {
                 func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
                     { service.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending) }
                 }
+                $0.onTap { _, _ in toggleFocus() }
                 $0.onDrag(update(pending: true))
                 $0.onDragEnd(update())
             }

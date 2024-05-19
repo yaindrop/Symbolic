@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+fileprivate let activePathTracer = tracer.tagged("active-path")
+
 // MARK: - ActivePathFocusedPart
 
 enum ActivePathFocusedPart: Equatable {
@@ -62,17 +64,17 @@ struct ActivePathService {
     }
 
     func setFocus(node id: UUID) {
-        let _r = tracer.range("[active-path] set focus", type: .intent); defer { _r() }
+        let _r = activePathTracer.range("set focus", type: .intent); defer { _r() }
         withAnimation { model.update(focusedPart: .node(id)) }
     }
 
     func setFocus(edge fromNodeId: UUID) {
-        let _r = tracer.range("[active-path] set focus", type: .intent); defer { _r() }
+        let _r = activePathTracer.range("set focus", type: .intent); defer { _r() }
         withAnimation { model.update(focusedPart: .edge(fromNodeId)) }
     }
 
     func clearFocus() {
-        let _r = tracer.range("[active-path] clear focus", type: .intent); defer { _r() }
+        let _r = activePathTracer.range("clear focus", type: .intent); defer { _r() }
         withAnimation { model.update(focusedPart: nil) }
     }
 

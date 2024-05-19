@@ -14,6 +14,7 @@ struct ActivePathPanel: View {
     // MARK: private
 
     @Selected private var activePath = service.activePath.pendingActivePath
+    @Selected private var focusedPart = service.activePath.focusedPart
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
@@ -35,8 +36,8 @@ struct ActivePathPanel: View {
         if let activePath {
             ManagedScrollView(model: scrollViewModel) { proxy in
                 Components(activePath: activePath).id(activePath.id)
-                    .onChange(of: service.activePath.focusedPart) {
-                        guard let id = service.activePath.focusedPart?.id else { return }
+                    .onChange(of: focusedPart) {
+                        guard let id = focusedPart?.id else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                     }
             }

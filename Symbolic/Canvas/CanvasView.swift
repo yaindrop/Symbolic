@@ -54,8 +54,6 @@ struct CanvasView: View {
     @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @StateObject var pendingSelectionModel = PendingSelectionModel()
-
     @StateObject var panelModel = PanelModel()
 
     @State var canvasActionModel = CanvasActionModel()
@@ -78,8 +76,10 @@ struct CanvasView: View {
             .onAppear {
                 service.viewportUpdater.subscribe(to: multipleTouch)
                 pressDetector.subscribe()
+                store.pendingSelection.subscribe(to: multipleTouch)
+                store.addingPath.subscribe(to: multipleTouch)
+
                 service.path.subscribe()
-                selectionUpdater.subscribe(to: multipleTouch)
             }
             .onAppear {
                 multipleTouchPress.onTap { info in
@@ -93,10 +93,12 @@ struct CanvasView: View {
                     let worldLocation = info.current.applying(toWorld)
                     let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
                     store.viewportUpdate.setBlocked(true)
-                    if !pendingSelectionModel.active {
+                    if case .select = toolbarMode, !pendingSelectionActive {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
-                        selectionUpdater.onStart(from: info.current)
+                        store.pendingSelection.onStart(from: info.current)
+                    } else if case let .addPath(addPath) = toolbarMode {
+                        store.addingPath.onStart(from: info.current)
                     }
                 }
                 multipleTouchPress.onLongPressEnd { _ in
@@ -104,7 +106,8 @@ struct CanvasView: View {
                     store.viewportUpdate.setBlocked(false)
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
-                    selectionUpdater.onEnd()
+                    store.pendingSelection.onEnd()
+                    store.addingPath.onEnd()
                 }
             }
             .onAppear {
@@ -138,9 +141,13 @@ struct CanvasView: View {
     @Selected private var activeDocument = store.document.activeDocument
     @Selected private var paths = store.path.paths
     @Selected private var pendingActivePath = service.activePath.pendingActivePath
+    @Selected private var pendingSelectionActive = store.pendingSelection.active
+    @Selected private var toolbarMode = store.toolbar.mode
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
-    private var selectionUpdater: SelectionUpdater { .init(pendingSelectionModel: pendingSelectionModel) }
+
+    private var isToolbarSelect: Bool { if case .select = toolbarMode { true } else { false } }
+    private var isToolbarAddPath: Bool { if case .addPath = toolbarMode { true } else { false } }
 
     @State private var longPressPosition: Point2?
 
@@ -152,11 +159,14 @@ struct CanvasView: View {
             Text("sidebar")
                 .navigationTitle("Sidebar")
         } detail: {
-            canvas
-                .navigationBarTitleDisplayMode(.inline)
-                .clipped()
-                .edgesIgnoringSafeArea(.bottom)
-                .toolbar { toolbar }
+            ZStack {
+                canvas
+                overlay
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .clipped()
+            .edgesIgnoringSafeArea(.bottom)
+            .modifier(ToolbarModifier())
         }
     }
 
@@ -205,6 +215,8 @@ struct CanvasView: View {
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
+        .transformEffect(toView)
+        .blur(radius: 1)
     } }
 
     @ViewBuilder var activePath: some View { tracer.range("CanvasView activePath") { build {
@@ -213,6 +225,7 @@ struct CanvasView: View {
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
                 .id(pendingActivePath.id)
+                .transformEffect(toView)
         }
     } } }
 
@@ -225,67 +238,21 @@ struct CanvasView: View {
         ZStack {
             background
             inactivePaths
-                .transformEffect(toView)
-                .blur(radius: 1)
             foreground
-            overlay
         }
     }}
 
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
         ZStack {
             activePath
-                .transformEffect(toView)
             ActivePathHandleRoot()
-            PendingSelectionView()
-                .environmentObject(pendingSelectionModel)
+            PendingSelection()
+            AddingPath()
             PanelRoot()
                 .environmentObject(panelModel)
-            HoldActionPopover(position: longPressPosition)
         }
         .allowsHitTesting(!multipleTouch.active)
     } }
-
-    @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
-        ToolbarItem(placement: .topBarLeading) {
-            Menu {
-                Text("Item 0")
-                Divider()
-                Text("Item 1")
-            } label: {
-                HStack {
-                    Text("未命名2").font(.headline)
-                    Image(systemName: "chevron.down.circle.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.label.opacity(0.5))
-                        .font(.footnote)
-                        .fontWeight(.black)
-                }
-                .tint(.label)
-            }
-        }
-        ToolbarItem(placement: .principal) {
-            HStack {
-                Button {} label: { Image(systemName: "rectangle.and.hand.point.up.left") }
-                Button {} label: { Image(systemName: "plus.circle") }
-            }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-            Button {
-                var events = activeDocument.events
-                guard let last = events.last else { return }
-                if case let .pathAction(p) = last.action {
-                    if case let .load(l) = p {
-                        return
-                    }
-                }
-                events.removeLast()
-                store.document.setDocument(.init(events: events))
-            } label: {
-                Image(systemName: "arrow.uturn.backward")
-            }
-        }
-    }}}
 }
 
 #Preview {

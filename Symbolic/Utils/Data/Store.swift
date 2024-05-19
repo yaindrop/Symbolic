@@ -30,7 +30,7 @@ private class StoreManager {
             fatalError("Nested tracking of store properties is not supported.")
         }
         let id = subscriptionIdGen.generate()
-        let _r = managerTracer.range("Tracking \(id)"); defer { _r() }
+        let _r = managerTracer.range("tracking \(id)"); defer { _r() }
 
         tracking = TrackingContext(subscriptionId: id)
         defer { self.tracking = nil }
@@ -51,11 +51,11 @@ private class StoreManager {
 
     func withUpdating(_ apply: () -> Void) {
         if updating != nil {
-            let _r = managerTracer.range("Reenter updating"); defer { _r() }
+            let _r = managerTracer.range("reenter updating"); defer { _r() }
             apply()
             return
         }
-        let _r = managerTracer.range("Updating"); defer { _r() }
+        let _r = managerTracer.range("updating"); defer { _r() }
 
         updating = UpdatingContext()
         defer { self.updating = nil }
@@ -67,22 +67,22 @@ private class StoreManager {
 
     func notify(subscription id: Int) {
         guard let subscription = idToSubscription.removeValue(forKey: id) else {
-            managerTracer.instant("Notifying expired \(id)")
+            managerTracer.instant("notifying expired \(id)")
             return
         }
 
         updating.forSome {
-            managerTracer.instant("Append notifying of \(id)")
+            managerTracer.instant("append notifying of \(id)")
             $0.subscriptions.append(subscription)
         } else: {
-            let _r = managerTracer.range("Notifying \(id)"); defer { _r() }
+            let _r = managerTracer.range("notifying \(id)"); defer { _r() }
             subscription.callback()
         }
     }
 
     private func notifyAllUpdating() {
         guard let updating else { return }
-        let _r = managerTracer.range("Notifying all \(updating.subscriptions.map { $0.id })"); defer { _r() }
+        let _r = managerTracer.range("notifying all \(updating.subscriptions.map { $0.id })"); defer { _r() }
         for subscription in updating.subscriptions {
             subscription.callback()
         }
@@ -106,7 +106,7 @@ class Store {
 
     fileprivate func onAccess(of propertyId: Int) {
         let subscriptionId = manager.tracking?.subscriptionId
-        let _r = storeTracer.range("On access of \(propertyId), \(subscriptionId.map { "with tracking \($0)" } else: { "without tracking" })"); defer { _r() }
+        let _r = storeTracer.range("on access of \(propertyId), \(subscriptionId.map { "with tracking \($0)" } else: { "without tracking" })"); defer { _r() }
         guard let subscriptionId else { return }
         var ids = propertyIdToSubscriptionIds[propertyId] ?? []
         ids.insert(subscriptionId)
@@ -115,7 +115,7 @@ class Store {
 
     fileprivate func onChange(of propertyId: Int) {
         let subscriptionIds = propertyIdToSubscriptionIds.removeValue(forKey: propertyId)
-        let _r = storeTracer.range("On change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } else: { "without subscription" })"); defer { _r() }
+        let _r = storeTracer.range("on change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } else: { "without subscription" })"); defer { _r() }
         guard let subscriptionIds else { return }
         for id in subscriptionIds {
             manager.notify(subscription: id)
@@ -183,7 +183,7 @@ extension Store: _StoreProtocol {
 
 extension _StoreProtocol {
     fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
-        let _r = trackableTracer.range("Access \(keypath)"); defer { _r() }
+        let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
         @Ref(self, keypath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
@@ -197,7 +197,7 @@ extension _StoreProtocol {
     }
 
     fileprivate func update<T>(_ keypath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
-        let _r = trackableTracer.range("Update \(keypath) with \(newValue)"); defer { _r() }
+        let _r = trackableTracer.range("update \(keypath) with \(newValue)"); defer { _r() }
         @Ref(self, keypath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {

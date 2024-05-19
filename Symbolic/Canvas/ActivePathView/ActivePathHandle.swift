@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-func selectBoundingRect() -> CGRect? { service.activePath.pendingActivePath?.boundingRect }
+var selectBoundingRect: CGRect? { service.activePath.pendingActivePath?.boundingRect }
 
 // MARK: - ActivePathHandle
 
@@ -13,7 +13,7 @@ struct ActivePathHandle: View {
     // MARK: private
 
     @Selected private var boundingRect = selectBoundingRect
-    @Selected private var boundingRectInView = selectBoundingRect()?.applying(store.viewport.toView)
+    @Selected private var boundingRectInView = selectBoundingRect?.applying(store.viewport.toView)
 
     private static let lineWidth: Scalar = 1
     private static let circleSize: Scalar = 16

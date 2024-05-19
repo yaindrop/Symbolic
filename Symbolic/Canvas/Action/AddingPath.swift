@@ -7,10 +7,6 @@ class AddingPathModel: Store {
     @Trackable var to: Point2 = .zero
 
     var active: Bool { from != nil }
-    var segment: PathSegment? {
-        guard let from else { return nil }
-        return .init(from: from, to: to, edge: .line(.init()))
-    }
 
     func onStart(from: Point2) {
         update {
@@ -41,12 +37,27 @@ class AddingPathModel: Store {
 }
 
 struct AddingPath: View {
-    @Selected var addingPathSegment = store.addingPath.segment
+    @Selected var from = store.addingPath.from
+    @Selected var to = store.addingPath.to
+    @Selected var toWorld = store.viewport.toWorld
+
+    var addingPath: Path? {
+        guard let from else { return nil }
+        let fromNode = PathNode(position: from.applying(toWorld))
+        let toNode = PathNode(position: to.applying(toWorld))
+        let pairs: Path.PairMap = [
+            fromNode.id: .init(fromNode, .line(.init())),
+            toNode.id: .init(toNode, .line(.init())),
+        ]
+        return .init(pairs: pairs, isClosed: false)
+    }
 
     var body: some View {
-        if let addingPathSegment {
-            SUPath { addingPathSegment.append(to: &$0) }
-                .stroke(.blue, style: .init(lineWidth: 4))
+        if let addingPath {
+            PathView(path: addingPath, focusedPart: nil)
+                .environmentObject(PathViewModel())
+//            SUPath { addingPathSegment.append(to: &$0) }
+//                .stroke(.blue, style: .init(lineWidth: 4))
 //            HStack {
 //                Color.clear
 //                    .popover(isPresented: .constant(true)) {

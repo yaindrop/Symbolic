@@ -37,6 +37,8 @@ struct Selection: View {
                 .frame(width: bounds.width, height: bounds.height)
                 .position(bounds.center)
                 .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
+            ContextMenu()
+                .position(bounds.center)
         }
         ForEach(selectedPaths) {
             let rect = $0.boundingRect.applying(toView)

@@ -3,9 +3,9 @@ import SwiftUI
 
 fileprivate let activePathTracer = tracer.tagged("active-path")
 
-// MARK: - ActivePathFocusedPart
+// MARK: - PathFocusedPart
 
-enum ActivePathFocusedPart: Equatable {
+enum PathFocusedPart: Equatable {
     case node(UUID)
     case edge(UUID)
 
@@ -15,19 +15,27 @@ enum ActivePathFocusedPart: Equatable {
         case let .edge(id): id
         }
     }
+
+    var edgeId: UUID? {
+        if case let .edge(id) = self { id } else { nil }
+    }
+
+    var nodeId: UUID? {
+        if case let .edge(id) = self { id } else { nil }
+    }
 }
 
 // MARK: - ActivePathModel
 
 class ActivePathModel: Store {
     @Trackable var activePathId: UUID?
-    @Trackable var focusedPart: ActivePathFocusedPart?
+    @Trackable var focusedPart: PathFocusedPart?
 
     func update(activePathId: UUID?) {
         update { $0(\._activePathId, activePathId) }
     }
 
-    fileprivate func update(focusedPart: ActivePathFocusedPart?) {
+    fileprivate func update(focusedPart: PathFocusedPart?) {
         update { $0(\._focusedPart, focusedPart) }
     }
 }
@@ -49,19 +57,7 @@ struct ActivePathService {
         service.path.pendingModel.hasPendingEvent ? service.path.pendingModel.paths.first { $0.id == activePathId } : activePath
     }
 
-    var focusedPart: ActivePathFocusedPart? { model.focusedPart }
-
-    var focusedEdgeId: UUID? {
-        guard let focusedPart,
-              case let .edge(id) = focusedPart else { return nil }
-        return id
-    }
-
-    var focusedNodeId: UUID? {
-        guard let focusedPart,
-              case let .node(id) = focusedPart else { return nil }
-        return id
-    }
+    var focusedPart: PathFocusedPart? { model.focusedPart }
 
     func setFocus(node id: UUID) {
         let _r = activePathTracer.range("set focus", type: .intent); defer { _r() }

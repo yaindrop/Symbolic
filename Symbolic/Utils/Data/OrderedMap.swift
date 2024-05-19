@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - OrderedMap
 
-struct OrderedMap<Key: Hashable, Value> {
+struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
     typealias Element = (Key, Value)
 
     private(set) var dict: [Key: Value] = [:]
@@ -108,6 +108,20 @@ struct OrderedMap<Key: Hashable, Value> {
 
         removed.forEach { dict.removeValue(forKey: $0) }
         keys = mutated
+        refreshIndexOf()
+    }
+
+    init(_ dict: [Key: Value]) {
+        self.dict = dict
+        keys = Array(dict.keys)
+        refreshIndexOf()
+    }
+
+    init(dictionaryLiteral elements: (Key, Value)...) {
+        for (key, value) in elements {
+            dict[key] = value
+            keys.append(key)
+        }
         refreshIndexOf()
     }
 

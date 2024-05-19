@@ -1,71 +1,64 @@
 import Foundation
 import SwiftUI
 
-extension ActivePathView {
+extension PathView {
     // MARK: - EdgeKindHandle
 
-    struct EdgeKindHandle: View, EquatableBy {
+    struct EdgeKindHandle: View {
         let fromId: UUID
         let toId: UUID
         let segment: PathSegment
+        let focusedPart: PathFocusedPart?
 
-        var equatableBy: some Equatable { fromId; toId; segment }
-
-        var body: some View { tracer.range("ActivePathView EdgeKindHandle body") { build {
+        var body: some View { tracer.range("PathView EdgeKindHandle") { build {
             if case let .arc(arc) = segment {
-                ArcHandle(fromId: fromId, toId: toId, segment: arc)
+                ArcHandle(fromId: fromId, toId: toId, segment: arc, focusedPart: focusedPart)
             } else if case let .bezier(bezier) = segment {
-                BezierHandle(fromId: fromId, toId: toId, segment: bezier)
+                BezierHandle(fromId: fromId, toId: toId, segment: bezier, focusedPart: focusedPart)
             }
         }}}
     }
 
     // MARK: - BezierHandle
 
-    struct BezierHandle: View {
+    struct BezierHandle: View, EquatableBy {
+        @EnvironmentObject var viewModel: PathViewModel
+
         let fromId: UUID
         let toId: UUID
         let segment: PathSegment.Bezier
+        let focusedPart: PathFocusedPart?
+
+        var nodeFocused: Bool { focusedPart?.nodeId == fromId }
+        var edgeFocused: Bool { focusedPart?.edgeId == fromId }
+        var nextFocused: Bool { focusedPart?.nodeId == toId }
+
+        var equatableBy: some Equatable { fromId; toId; segment; nodeFocused; edgeFocused; nextFocused }
 
         var body: some View {
             ZStack {
                 if edgeFocused || nodeFocused {
                     line(from: segment.from, to: bezier.control0, color: .green)
                     circle(at: bezier.control0, color: .green)
-                        .multipleGesture(dragControl0, ()) {
-                            func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                                { v, _ in service.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control0: v.location), pending: pending) }
-                            }
-                            $0.onDrag(update(pending: true))
-                            $0.onDragEnd(update())
+                        .if(gesture0) {
+                            $0.multipleGesture($1, ())
+                        }
+                        .onAppear {
+                            gesture1 = viewModel.bezierGesture(fromId: fromId, updater: { bezier.with(control0: $0) })
                         }
                 }
                 if edgeFocused || nextFocused {
                     line(from: segment.to, to: bezier.control1, color: .orange)
                     circle(at: bezier.control1, color: .orange)
-                        .multipleGesture(dragControl1, ()) {
-                            func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                                { v, _ in service.pathUpdaterInView.updateActivePath(edge: fromId, bezier: bezier.with(control1: v.location), pending: pending) }
-                            }
-                            $0.onDrag(update(pending: true))
-                            $0.onDragEnd(update())
+                        .if(gesture1) {
+                            $0.multipleGesture($1, ())
+                        }
+                        .onAppear {
+                            gesture1 = viewModel.bezierGesture(fromId: fromId, updater: { bezier.with(control1: $0) })
                         }
                 }
             }
         }
-
-        init(fromId: UUID, toId: UUID, segment: PathSegment.Bezier) {
-            self.fromId = fromId
-            self.toId = toId
-            self.segment = segment
-            _edgeFocused = .init { service.activePath.focusedEdgeId == fromId }
-            _nodeFocused = .init { service.activePath.focusedNodeId == fromId }
-            _nextFocused = .init { service.activePath.focusedNodeId == toId }
-        }
-
-        @Selected private var edgeFocused: Bool
-        @Selected private var nodeFocused: Bool
-        @Selected private var nextFocused: Bool
 
         // MARK: private
 
@@ -73,8 +66,8 @@ extension ActivePathView {
         private static let circleSize: Scalar = 12
         private static let touchablePadding: Scalar = 12
 
-        @State private var dragControl0 = MultipleGestureModel<Void>()
-        @State private var dragControl1 = MultipleGestureModel<Void>()
+        @State private var gesture0: MultipleGestureModel<Void>?
+        @State private var gesture1: MultipleGestureModel<Void>?
 
         private var bezier: PathEdge.Bezier { segment.bezier }
 
@@ -106,10 +99,19 @@ extension ActivePathView {
 
     // MARK: - ArcHandle
 
-    struct ArcHandle: View {
+    struct ArcHandle: View, EquatableBy {
+        @EnvironmentObject var viewModel: PathViewModel
+
         let fromId: UUID
         let toId: UUID
         let segment: PathSegment.Arc
+        let focusedPart: PathFocusedPart?
+
+        var nodeFocused: Bool { focusedPart?.nodeId == fromId }
+        var edgeFocused: Bool { focusedPart?.edgeId == fromId }
+        var nextFocused: Bool { focusedPart?.nodeId == toId }
+
+        var equatableBy: some Equatable { fromId; toId; segment; nodeFocused; edgeFocused; nextFocused }
 
         var body: some View {
             if edgeFocused || nodeFocused || nextFocused {
@@ -122,19 +124,6 @@ extension ActivePathView {
                 }
             }
         }
-
-        init(fromId: UUID, toId: UUID, segment: PathSegment.Arc) {
-            self.fromId = fromId
-            self.toId = toId
-            self.segment = segment
-            _edgeFocused = .init { service.activePath.focusedEdgeId == fromId }
-            _nodeFocused = .init { service.activePath.focusedNodeId == fromId }
-            _nextFocused = .init { service.activePath.focusedNodeId == toId }
-        }
-
-        @Selected private var edgeFocused: Bool
-        @Selected private var nodeFocused: Bool
-        @Selected private var nextFocused: Bool
 
         // MARK: private
 
@@ -201,7 +190,7 @@ extension ActivePathView {
         //            .position(center)
         //    }
 
-        @State private var dragRadiusWidth = MultipleGestureModel<Point2>()
+        @State private var gestureWidth: MultipleGestureModel<Point2>?
 
         @ViewBuilder private var radiusWidthRect: some View {
             Rectangle()
@@ -212,16 +201,15 @@ extension ActivePathView {
                 .invisibleSoildOverlay()
                 .rotationEffect(arc.rotation)
                 .position(radiusHalfWidthEnd)
-                .multipleGesture(dragRadiusHeight, center) {
-                    func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                        { service.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(width: $0.location.distance(to: $1) * 2)), pending: pending) }
-                    }
-                    $0.onDrag(update(pending: true))
-                    $0.onDragEnd(update())
+                .if(gestureWidth) {
+                    $0.multipleGesture($1, center)
+                }
+                .onAppear {
+                    gestureWidth = viewModel.arcGesture(fromId: fromId, updater: { arc.with(radius: radius.with(width: $0)) })
                 }
         }
 
-        @State private var dragRadiusHeight = MultipleGestureModel<Point2>()
+        @State private var gestureHeight: MultipleGestureModel<Point2>?
 
         @ViewBuilder private var radiusHeightRect: some View {
             Rectangle()
@@ -232,12 +220,11 @@ extension ActivePathView {
                 .invisibleSoildOverlay()
                 .rotationEffect(arc.rotation)
                 .position(radiusHalfHeightEnd)
-                .multipleGesture(dragRadiusHeight, center) {
-                    func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-                        { service.pathUpdaterInView.updateActivePath(edge: fromId, arc: arc.with(radius: radius.with(height: $0.location.distance(to: $1) * 2)), pending: pending) }
-                    }
-                    $0.onDrag(update(pending: true))
-                    $0.onDragEnd(update())
+                .if(gestureHeight) {
+                    $0.multipleGesture($1, center)
+                }
+                .onAppear {
+                    gestureHeight = viewModel.arcGesture(fromId: fromId, updater: { arc.with(radius: radius.with(height: $0)) })
                 }
         }
     }

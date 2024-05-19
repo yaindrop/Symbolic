@@ -24,7 +24,7 @@ extension ActivePathPanel {
         init(index: Int, node: PathNode) {
             self.index = index
             self.node = node
-            _focused = .init { service.activePath.focusedNodeId == node.id }
+            _focused = .init { service.activePath.focusedPart?.nodeId == node.id }
         }
 
         @Selected private var focused: Bool

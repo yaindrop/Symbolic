@@ -76,6 +76,17 @@ extension ClosedRange {
 // MARK: - conditional modifier
 
 extension View {
+    @ViewBuilder func `if`<Value, T: View>(
+        _ value: @autoclosure () -> Optional<Value>,
+        then content: (Self, Value) -> T
+    ) -> some View {
+        if let value = value() {
+            content(self, value)
+        } else {
+            self
+        }
+    }
+
     @ViewBuilder func `if`<T: View>(
         _ condition: @autoclosure () -> Bool,
         then content: (Self) -> T
@@ -114,20 +125,6 @@ extension View {
     func invisibleSoildOverlay() -> some View {
         overlay(Color.invisibleSolid)
     }
-}
-
-// MARK: - Gesture
-
-extension Gesture {
-    @inlinable public func updating(flag: GestureState<Bool>) -> GestureStateGesture<Self, Bool> {
-        updating(flag) { _, state, _ in state = true }
-    }
-}
-
-extension DragGesture.Value {
-    var offset: Vector2 { .init(translation) }
-
-    var speed: Vector2 { .init(velocity) }
 }
 
 // MARK: - readable time

@@ -30,7 +30,7 @@ extension ActivePathPanel {
             self.fromNodeId = fromNodeId
             self.edge = edge
             _segment = .init { service.activePath.activePath?.segment(from: fromNodeId) }
-            _focused = .init { service.activePath.focusedEdgeId == fromNodeId }
+            _focused = .init { service.activePath.focusedPart?.edgeId == fromNodeId }
         }
 
         @Selected private var segment: PathSegment?

@@ -21,7 +21,7 @@ enum PathFocusedPart: Equatable {
     }
 
     var nodeId: UUID? {
-        if case let .edge(id) = self { id } else { nil }
+        if case let .node(id) = self { id } else { nil }
     }
 }
 

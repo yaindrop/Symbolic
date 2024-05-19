@@ -1,7 +1,9 @@
 import Foundation
 import SwiftUI
 
-// MARK: - PathView
+fileprivate let subtracer = tracer.tagged("PathView")
+
+// MARK: - PathViewModel
 
 class PathViewModel: ObservableObject {
     class EdgeGestureContext {
@@ -23,7 +25,7 @@ struct PathView: View {
     let path: Path
     let focusedPart: PathFocusedPart?
 
-    var body: some View { tracer.range("PathView") { build {
+    var body: some View { subtracer.range("body") { build {
         ZStack {
             PathBody(path: path, toView: toView)
             PathHandle(path: path, toView: toView)
@@ -60,7 +62,7 @@ extension PathView {
         let path: Path
         let toView: CGAffineTransform
 
-        var body: some View { tracer.range("PathView PathBody") {
+        var body: some View { subtracer.range("PathBody") {
             SUPath { path.append(to: &$0) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
@@ -77,7 +79,7 @@ extension PathView {
         let path: Path
         let toView: CGAffineTransform
 
-        var body: some View { tracer.range("PathView PathHandle") {
+        var body: some View { subtracer.range("PathHandle") {
             rect
         }}
 

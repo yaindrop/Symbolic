@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+fileprivate let subtracer = tracer.tagged("PathView")
+
 extension PathView {
     // MARK: - NodeHandle
 
@@ -15,7 +17,7 @@ extension PathView {
 
         var equatableBy: some Equatable { nodeId; position; focused }
 
-        var body: some View { tracer.range("PathView NodeHandle \(nodeId)") {
+        var body: some View { subtracer.range("NodeHandle \(nodeId)") {
             circle(at: position, color: .blue)
         }}
 

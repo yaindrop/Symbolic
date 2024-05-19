@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+fileprivate let subtracer = tracer.tagged("PathView")
+
 extension PathView {
     // MARK: - EdgeKindHandle
 
@@ -10,7 +12,7 @@ extension PathView {
         let segment: PathSegment
         let focusedPart: PathFocusedPart?
 
-        var body: some View { tracer.range("PathView EdgeKindHandle") { build {
+        var body: some View { subtracer.range("EdgeKindHandle") { build {
             if case let .arc(arc) = segment {
                 ArcHandle(fromId: fromId, toId: toId, segment: arc, focusedPart: focusedPart)
             } else if case let .bezier(bezier) = segment {

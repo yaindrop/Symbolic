@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+fileprivate let subtracer = tracer.tagged("PathView")
+
 extension PathView {
     // MARK: - EdgeHandle
 
@@ -15,7 +17,7 @@ extension PathView {
 
         var equatableBy: some Equatable { fromId; segment; focused }
 
-        var body: some View { tracer.range("PathView EdgeHandle") {
+        var body: some View { subtracer.range("EdgeHandle") {
             outline
             //        if let longPressPosition {
             //            circle(at: p, color: .teal)
@@ -65,11 +67,11 @@ extension PathView {
 
         var equatableBy: some Equatable { fromId; segment; focused }
 
-        var body: some View {
+        var body: some View { subtracer.range("FocusedEdgeHandle") { build {
             if let circlePosition, focused {
                 circle(at: circlePosition, color: .cyan)
             }
-        }
+        }}}
 
         private static let lineWidth: Scalar = 2
         private static let circleSize: Scalar = 16

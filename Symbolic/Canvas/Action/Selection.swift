@@ -36,9 +36,7 @@ struct Selection: View {
                 .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
                 .frame(width: bounds.width, height: bounds.height)
                 .position(bounds.center)
-                .animation(.linear(duration: 0.4).repeatForever(autoreverses: false), value: dashPhase)
-                .onAppear { dashPhase = 16 }
-                .onDisappear { dashPhase = 0 }
+                .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
         }
         ForEach(selectedPaths) {
             let rect = $0.boundingRect.applying(toView)

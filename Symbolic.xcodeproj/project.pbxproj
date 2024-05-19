@@ -28,9 +28,9 @@
 		5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */; };
 		5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */; };
 		572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */; };
-		572487832BDF82420096DDE4 /* ActivePathNodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* ActivePathNodeHandle.swift */; };
-		572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* ActivePathEdgeHandle.swift */; };
-		572487872BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift */; };
+		572487832BDF82420096DDE4 /* ActivePathView+NodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* ActivePathView+NodeHandle.swift */; };
+		572487852BDF832D0096DDE4 /* ActivePathView+EdgeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* ActivePathView+EdgeHandle.swift */; };
+		572487872BDF83620096DDE4 /* ActivePathView+EdgeKindHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* ActivePathView+EdgeKindHandle.swift */; };
 		5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487892BDF84070096DDE4 /* PositionPicker.swift */; };
 		5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878B2BDF841E0096DDE4 /* SizePicker.swift */; };
 		5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878D2BDF84310096DDE4 /* AnglePicker.swift */; };
@@ -59,12 +59,12 @@
 		574CC7D82BF757630042FEE3 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7D72BF757630042FEE3 /* Store.swift */; };
 		574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */; };
 		574CC7E02BFA2BD40042FEE3 /* Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7DF2BFA2BD40042FEE3 /* Selection.swift */; };
+		574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E12BFA39BD0042FEE3 /* Animation.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
 		575C3CFA2BD9F11E0035B758 /* ActivePathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* ActivePathView.swift */; };
 		575C3CFC2BDA14590035B758 /* PathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CFB2BDA14590035B758 /* PathModel.swift */; };
-		576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */; };
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
@@ -123,9 +123,9 @@
 		5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+Components.swift"; sourceTree = "<group>"; };
 		5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+NodePanel.swift"; sourceTree = "<group>"; };
 		5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+EdgePanel.swift"; sourceTree = "<group>"; };
-		572487822BDF82420096DDE4 /* ActivePathNodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathNodeHandle.swift; sourceTree = "<group>"; };
-		572487842BDF832D0096DDE4 /* ActivePathEdgeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathEdgeHandle.swift; sourceTree = "<group>"; };
-		572487862BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathEdgeKindHandle.swift; sourceTree = "<group>"; };
+		572487822BDF82420096DDE4 /* ActivePathView+NodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathView+NodeHandle.swift"; sourceTree = "<group>"; };
+		572487842BDF832D0096DDE4 /* ActivePathView+EdgeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathView+EdgeHandle.swift"; sourceTree = "<group>"; };
+		572487862BDF83620096DDE4 /* ActivePathView+EdgeKindHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathView+EdgeKindHandle.swift"; sourceTree = "<group>"; };
 		572487892BDF84070096DDE4 /* PositionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPicker.swift; sourceTree = "<group>"; };
 		5724878B2BDF841E0096DDE4 /* SizePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SizePicker.swift; sourceTree = "<group>"; };
 		5724878D2BDF84310096DDE4 /* AnglePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnglePicker.swift; sourceTree = "<group>"; };
@@ -154,12 +154,12 @@
 		574CC7D72BF757630042FEE3 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		574CC7DF2BFA2BD40042FEE3 /* Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selection.swift; sourceTree = "<group>"; };
+		574CC7E12BFA39BD0042FEE3 /* Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animation.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
 		575C3CF92BD9F11E0035B758 /* ActivePathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathView.swift; sourceTree = "<group>"; };
 		575C3CFB2BDA14590035B758 /* PathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathModel.swift; sourceTree = "<group>"; };
-		576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathHandle.swift; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -302,11 +302,10 @@
 		572487812BDF82180096DDE4 /* ActivePathView */ = {
 			isa = PBXGroup;
 			children = (
-				572487842BDF832D0096DDE4 /* ActivePathEdgeHandle.swift */,
-				572487862BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift */,
-				576A61DC2BEFB66F00B46424 /* ActivePathHandle.swift */,
-				572487822BDF82420096DDE4 /* ActivePathNodeHandle.swift */,
 				575C3CF92BD9F11E0035B758 /* ActivePathView.swift */,
+				572487842BDF832D0096DDE4 /* ActivePathView+EdgeHandle.swift */,
+				572487862BDF83620096DDE4 /* ActivePathView+EdgeKindHandle.swift */,
+				572487822BDF82420096DDE4 /* ActivePathView+NodeHandle.swift */,
 			);
 			path = ActivePathView;
 			sourceTree = "<group>";
@@ -341,6 +340,7 @@
 				574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */,
 				574CC7BB2BF44C390042FEE3 /* Memo.swift */,
 				574CC7D52BF500190042FEE3 /* ViewSize.swift */,
+				574CC7E12BFA39BD0042FEE3 /* Animation.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -603,7 +603,7 @@
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
-				572487872BDF83620096DDE4 /* ActivePathEdgeKindHandle.swift in Sources */,
+				572487872BDF83620096DDE4 /* ActivePathView+EdgeKindHandle.swift in Sources */,
 				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */,
@@ -633,11 +633,12 @@
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,
 				5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */,
-				572487832BDF82420096DDE4 /* ActivePathNodeHandle.swift in Sources */,
+				572487832BDF82420096DDE4 /* ActivePathView+NodeHandle.swift in Sources */,
 				572487762BDBAF860096DDE4 /* PathUpdater.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */,
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
+				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
@@ -647,9 +648,8 @@
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* PendingSelection.swift in Sources */,
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
-				576A61DD2BEFB66F00B46424 /* ActivePathHandle.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
-				572487852BDF832D0096DDE4 /* ActivePathEdgeHandle.swift in Sources */,
+				572487852BDF832D0096DDE4 /* ActivePathView+EdgeHandle.swift in Sources */,
 				574CC7C62BF44E210042FEE3 /* CustomPublished.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

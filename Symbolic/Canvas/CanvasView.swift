@@ -86,6 +86,7 @@ struct CanvasView: View {
                     let worldLocation = info.location.applying(toWorld)
                     let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
                     withAnimation {
+                        store.selection.update(pathIds: [])
                         store.activePath.update(activePathId: store.path.hitTest(worldPosition: worldLocation)?.id)
                     }
                 }
@@ -106,7 +107,12 @@ struct CanvasView: View {
                     store.viewportUpdate.setBlocked(false)
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
+
+                    if let paths = service.pendingSelection.intersectedPaths {
+                        store.selection.update(pathIds: Set(paths.map { $0.id }))
+                    }
                     store.pendingSelection.onEnd()
+
                     store.addingPath.onEnd()
                 }
             }
@@ -140,7 +146,7 @@ struct CanvasView: View {
     @Selected private var toWorld = store.viewport.toWorld
     @Selected private var activeDocument = store.document.activeDocument
     @Selected private var paths = store.path.paths
-    @Selected private var pendingActivePath = service.activePath.pendingActivePath
+    @Selected private var activePathId = service.activePath.activePathId
     @Selected private var pendingSelectionActive = store.pendingSelection.active
     @Selected private var toolbarMode = store.toolbar.mode
 
@@ -211,23 +217,13 @@ struct CanvasView: View {
     } }
 
     @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
-        ForEach(paths.filter { $0.id != pendingActivePath?.id }) { p in
+        ForEach(paths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
         .transformEffect(toView)
         .blur(radius: 1)
     } }
-
-    @ViewBuilder var activePath: some View { tracer.range("CanvasView activePath") { build {
-        if let pendingActivePath {
-            SUPath { path in pendingActivePath.append(to: &path) }
-                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                .allowsHitTesting(false)
-                .id(pendingActivePath.id)
-                .transformEffect(toView)
-        }
-    } } }
 
     @ViewBuilder private var foreground: some View { tracer.range("CanvasView foreground") {
         Color.white.opacity(0.1)
@@ -244,9 +240,9 @@ struct CanvasView: View {
 
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
         ZStack {
-            activePath
-            ActivePathHandleRoot()
+            ActivePathView()
             PendingSelection()
+            Selection()
             AddingPath()
             PanelRoot()
                 .environmentObject(panelModel)

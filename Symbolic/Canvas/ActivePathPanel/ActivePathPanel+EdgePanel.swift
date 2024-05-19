@@ -114,7 +114,7 @@ extension ActivePathPanel {
                 .padding(.top, 6)
                 .frame(height: expanded ? nil : 0, alignment: .top)
                 .clipped()
-            } deps: { edge; focused }
+            } deps: { edge; expanded }
         } }
 
         private func toggleFocus() {
@@ -217,7 +217,7 @@ fileprivate struct ArcPanel: View, EquatableBy {
             }
         }
         .padding(12)
-        .background(Color.secondarySystemBackground)
+        .background(.regularMaterial)
         .cornerRadius(12)
     } }
 

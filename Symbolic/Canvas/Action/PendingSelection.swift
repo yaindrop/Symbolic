@@ -40,14 +40,22 @@ class PendingSelectionModel: Store {
     private var subscriptions = Set<AnyCancellable>()
 }
 
-var selectPendingRect: CGRect? { store.pendingSelection.rect }
+struct PendingSelectionService {
+    let path: PathModel
+    let viewport: ViewportModel
+    let model: PendingSelectionModel
+
+    var intersectedPaths: [Path]? {
+        store.pendingSelection.rect.map {
+            let rectInWorld = $0.applying(store.viewport.toWorld)
+            return store.path.paths.filter { $0.boundingRect.intersects(rectInWorld) }
+        }
+    }
+}
 
 struct PendingSelection: View {
-    @Selected var pendingSelectionRect = selectPendingRect
-    @Selected var intersectedPaths = selectPendingRect.map {
-        let rectInWorld = $0.applying(store.viewport.toWorld)
-        return store.path.paths.filter { $0.boundingRect.intersects(rectInWorld) }
-    }
+    @Selected var pendingSelectionRect = store.pendingSelection.rect
+    @Selected var intersectedPaths = service.pendingSelection.intersectedPaths
 
     @Selected var toView = store.viewport.toView
 

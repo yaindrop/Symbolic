@@ -14,7 +14,10 @@ class GlobalStore {
     let pathUpdate = PathUpdateModel()
 
     let toolbar = ToolbarModel()
+
+    let selection = SelectionModel()
     let pendingSelection = PendingSelectionModel()
+
     let addingPath = AddingPathModel()
 }
 
@@ -28,6 +31,8 @@ class GlobalService {
 
     let pathUpdater = PathUpdater(pathModel: store.path, pendingPathModel: store.pendingPath, activePathModel: store.activePath, model: store.pathUpdate)
     let pathUpdaterInView = PathUpdaterInView(viewport: store.viewport, pathModel: store.path, pendingPathModel: store.pendingPath, activePathModel: store.activePath, pathUpdateModel: store.pathUpdate)
+
+    let pendingSelection = PendingSelectionService(path: store.path, viewport: store.viewport, model: store.pendingSelection)
 }
 
 let service = GlobalService()

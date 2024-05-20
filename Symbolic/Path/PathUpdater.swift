@@ -87,6 +87,14 @@ struct PathUpdater {
         handle(.pathAction(.movePath(.init(pathId: activePath.id, offset: offset))), pending: pending)
     }
 
+    func update(pathIds: [UUID], moveByOffset offset: Vector2, pending: Bool = false) {
+        handle(.pathAction(.movePaths(.init(pathIds: pathIds, offset: offset))), pending: pending)
+    }
+
+    func delete(pathIds: [UUID]) {
+        handle(.pathAction(.deletePaths(.init(pathIds: pathIds))), pending: false)
+    }
+
     // MARK: private
 
     private var activePath: Path? { service.activePath.activePath }
@@ -141,6 +149,8 @@ struct PathUpdater {
         case let .moveEdge(moveEdge): collectEvents(to: &events, moveEdge)
         case let .moveNode(moveNode): collectEvents(to: &events, moveNode)
         case let .movePath(movePath): collectEvents(to: &events, movePath)
+        case let .movePaths(movePaths): collectEvents(to: &events, movePaths)
+        case let .deletePaths(deletePaths): collectEvents(to: &events, deletePaths)
         }
     }
 
@@ -274,6 +284,19 @@ struct PathUpdater {
         let pathId = movePath.pathId, offset = movePath.offset
         events.append(.init(in: pathId, move: offset))
     }
+
+    private func collectEvents(to events: inout [PathEvent], _ movePaths: PathAction.MovePaths) {
+        let offset = movePaths.offset
+        for pathId in movePaths.pathIds {
+            events.append(.init(in: pathId, move: offset))
+        }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ deletePaths: PathAction.DeletePaths) {
+        for pathId in deletePaths.pathIds {
+            events.append(.delete(.init(pathId: pathId)))
+        }
+    }
 }
 
 // MARK: - PathUpdaterInView
@@ -315,5 +338,9 @@ struct PathUpdaterInView {
 
     func updateActivePath(moveByOffset offset: Vector2, pending: Bool = false) {
         service.pathUpdater.updateActivePath(moveByOffset: offset.applying(viewport.toWorld), pending: pending)
+    }
+
+    func update(pathIds: [UUID], moveByOffset offset: Vector2, pending: Bool = false) {
+        service.pathUpdater.update(pathIds: pathIds, moveByOffset: offset.applying(viewport.toWorld), pending: pending)
     }
 }

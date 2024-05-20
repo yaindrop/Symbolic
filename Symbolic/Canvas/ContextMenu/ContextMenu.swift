@@ -2,13 +2,15 @@ import Foundation
 import SwiftUI
 
 struct ContextMenu: View {
+    var onDelete: (() -> Void)?
+
     @State var size: CGSize = .zero
 
     var body: some View {
         HStack {
             Image(systemName: "rectangle.3.group")
             Divider()
-            Image(systemName: "trash")
+            Button("", systemImage: "trash", role: .destructive) { onDelete?() }
         }
         .padding(12)
         .background(.thickMaterial)

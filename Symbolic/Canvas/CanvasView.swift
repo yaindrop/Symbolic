@@ -149,7 +149,7 @@ struct CanvasView: View {
     @Selected private var toView = store.viewport.toView
     @Selected private var toWorld = store.viewport.toWorld
     @Selected private var activeDocument = store.document.activeDocument
-    @Selected private var paths = store.path.paths
+    @Selected private var pendingPaths = service.path.pendingPaths
     @Selected private var activePathId = service.activePath.activePathId
     @Selected private var pendingSelectionActive = store.pendingSelection.active
     @Selected private var toolbarMode = store.toolbar.mode
@@ -221,7 +221,7 @@ struct CanvasView: View {
     } }
 
     @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
-        ForEach(paths.filter { $0.id != activePathId }) { p in
+        ForEach(pendingPaths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
@@ -246,7 +246,7 @@ struct CanvasView: View {
         ZStack {
             ActivePathView()
             PendingSelection()
-            Selection()
+            SelectionView()
             AddingPath()
             PanelRoot()
                 .environmentObject(panelModel)

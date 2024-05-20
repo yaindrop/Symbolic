@@ -46,6 +46,8 @@ struct PathService {
     let model: PathModel
     let pendingModel: PendingPathModel
 
+    var pendingPaths: [Path] { pendingModel.hasPendingEvent ? pendingModel.paths : model.paths }
+
     func add(path: Path) {
         let _r = tracer.range("Add path"); defer { _r() }
         guard path.count > 1 else { return }

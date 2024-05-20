@@ -22,6 +22,9 @@ enum PathAction {
     struct MoveNode { let pathId: UUID, nodeId: UUID, offset: Vector2 }
     struct MoveEdge { let pathId: UUID, fromNodeId: UUID, offset: Vector2 }
 
+    struct MovePaths { let pathIds: [UUID], offset: Vector2 }
+    struct DeletePaths { let pathIds: [UUID] }
+
     case load(Load)
 
     case create(Create)
@@ -42,6 +45,9 @@ enum PathAction {
     case movePath(MovePath)
     case moveNode(MoveNode)
     case moveEdge(MoveEdge)
+
+    case movePaths(MovePaths)
+    case deletePaths(DeletePaths)
 }
 
 enum DocumentAction {

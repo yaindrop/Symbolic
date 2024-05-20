@@ -367,10 +367,8 @@
 			children = (
 				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
 				5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */,
-				5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */,
 				574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */,
 				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
-				574CC7DF2BFA2BD40042FEE3 /* Selection.swift */,
 			);
 			path = Action;
 			sourceTree = "<group>";
@@ -396,9 +394,19 @@
 			path = ContextMenu;
 			sourceTree = "<group>";
 		};
+		574CC7ED2BFAF2150042FEE3 /* Selection */ = {
+			isa = PBXGroup;
+			children = (
+				5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */,
+				574CC7DF2BFA2BD40042FEE3 /* Selection.swift */,
+			);
+			path = Selection;
+			sourceTree = "<group>";
+		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
+				574CC7ED2BFAF2150042FEE3 /* Selection */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,

@@ -32,7 +32,7 @@ struct Document: Equatable {
     }
 }
 
-class DocumentModel: Store {
+class DocumentStore: Store {
     @Trackable var activeDocument: Document = Document()
 
     func setDocument(_ document: Document) {
@@ -44,9 +44,15 @@ class DocumentModel: Store {
         let _r = tracer.range("Document send event"); defer { _r() }
         update { $0(\._activeDocument, Document(events: activeDocument.events + [event])) }
     }
+}
+
+struct DocumentService {
+    let store: DocumentStore
+
+    var activeDocument: Document { store.activeDocument }
 
     var undoable: Bool {
-        guard let last = activeDocument.events.last else { return false }
+        guard let last = store.activeDocument.events.last else { return false }
         if case let .pathAction(p) = last.action {
             if case .load = p {
                 return false
@@ -57,9 +63,9 @@ class DocumentModel: Store {
 
     func undo() {
         guard undoable else { return }
-        var events = activeDocument.events
+        var events = store.activeDocument.events
         events.removeLast()
-        store.document.setDocument(.init(events: events))
+        store.setDocument(.init(events: events))
     }
 }
 

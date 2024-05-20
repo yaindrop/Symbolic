@@ -27,24 +27,19 @@ extension ViewportInfo: CustomStringConvertible {
     public var description: String { return "(\(origin.shortDescription), \(scale.shortDescription))" }
 }
 
-// MARK: - ViewportModel
+// MARK: - stores
 
-class ViewportModel: Store {
+class ViewportStore: Store {
     @Trackable var info: ViewportInfo = .init()
-
-    var toWorld: CGAffineTransform { info.viewToWorld }
-    var toView: CGAffineTransform { info.worldToView }
 
     fileprivate func update(info: ViewportInfo) {
         update { $0(\._info, info) }
     }
 }
 
-class ViewportUpdateModel: Store {
+class ViewportUpdateStore: Store {
     @Trackable var blocked: Bool = false
     @Trackable var previousInfo: ViewportInfo = .init()
-
-    fileprivate var subscriptions = Set<AnyCancellable>()
 
     func setBlocked(_ blocked: Bool) {
         update { $0(\._blocked, blocked) }
@@ -53,34 +48,43 @@ class ViewportUpdateModel: Store {
     fileprivate func update(previousInfo: ViewportInfo) {
         update { $0(\._previousInfo, previousInfo) }
     }
+
+    fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
-// MARK: - ViewportUpdater
+// MARK: - services
+
+struct ViewportService {
+    let store: ViewportStore
+
+    var toWorld: CGAffineTransform { store.info.viewToWorld }
+    var toView: CGAffineTransform { store.info.worldToView }
+}
 
 struct ViewportUpdater {
-    let viewport: ViewportModel
-    let model: ViewportUpdateModel
+    let viewport: ViewportStore
+    let store: ViewportUpdateStore
 
     func subscribe(to multipleTouch: MultipleTouchModel) {
         multipleTouch.$panInfo
             .sink { value in
-                guard !self.model.blocked, let info = value else { self.onCommit(); return }
+                guard !self.store.blocked, let info = value else { self.onCommit(); return }
                 self.onPanInfo(info)
             }
-            .store(in: &model.subscriptions)
+            .store(in: &store.subscriptions)
         multipleTouch.$pinchInfo
             .sink { value in
-                guard !self.model.blocked, let info = value else { self.onCommit(); return }
+                guard !self.store.blocked, let info = value else { self.onCommit(); return }
                 self.onPinchInfo(info)
             }
-            .store(in: &model.subscriptions)
+            .store(in: &store.subscriptions)
     }
 
     // MARK: private
 
     private func onPanInfo(_ pan: PanInfo) {
         let _r = tracer.range("Viewport pan \(pan)", type: .intent); defer { _r() }
-        let previousInfo = model.previousInfo
+        let previousInfo = store.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
         viewport.update(info: .init(origin: origin, scale: scale))
@@ -88,7 +92,7 @@ struct ViewportUpdater {
 
     private func onPinchInfo(_ pinch: PinchInfo) {
         let _r = tracer.range("Viewport pinch \(pinch)", type: .intent); defer { _r() }
-        let previousInfo = model.previousInfo
+        let previousInfo = store.previousInfo
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
@@ -98,6 +102,6 @@ struct ViewportUpdater {
 
     private func onCommit() {
         let _r = tracer.range("Viewport commit", type: .intent); defer { _r() }
-        model.update(previousInfo: viewport.info)
+        store.update(previousInfo: viewport.info)
     }
 }

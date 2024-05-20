@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-class SelectionModel: Store {
+class SelectionStore: Store {
     @Trackable var selectedPathIds: Set<UUID> = []
 
     func update(pathIds: Set<UUID>) {
@@ -12,13 +12,13 @@ class SelectionModel: Store {
 }
 
 fileprivate var selectedPathsSelector: [Path] {
-    let pathIds = store.selection.selectedPathIds
-    return service.path.pendingPaths.filter { pathIds.contains($0.id) }
+    let pathIds = global.selection.selectedPathIds
+    return global.path.pendingPaths.filter { pathIds.contains($0.id) }
 }
 
 struct SelectionView: View {
     @Selected var selectedPaths = selectedPathsSelector
-    @Selected var toView = store.viewport.toView
+    @Selected var toView = global.viewport.toView
 
     @State private var dashPhase: CGFloat = 0
 
@@ -43,7 +43,7 @@ struct SelectionView: View {
                 .position(bounds.center)
                 .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
             ContextMenu(onDelete: {
-                service.pathUpdater.delete(pathIds: selectedPathIds)
+                global.pathUpdater.delete(pathIds: selectedPathIds)
             })
             .position(bounds.center)
         }
@@ -67,7 +67,7 @@ extension SelectionView {
                 .position(rect.center)
                 .multipleGesture(gesture, ()) {
                     func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in service.pathUpdaterInView.update(pathIds: selectedPathIds, moveByOffset: Vector2(v.translation), pending: pending) }
+                        { v, _ in global.pathUpdaterInView.update(pathIds: selectedPathIds, moveByOffset: Vector2(v.translation), pending: pending) }
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())

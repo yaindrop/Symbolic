@@ -2,28 +2,11 @@ import Combine
 import Foundation
 import SwiftUI
 
-class AddingPathModel: Store {
+class AddingPathStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
 
     var active: Bool { from != nil }
-
-    func segment(edgeCase: PathEdge.Case) -> PathSegment? {
-        guard let from else { return nil }
-        let edge: PathEdge
-        switch edgeCase {
-        case .arc:
-            let radius = from.distance(to: to) / 2
-            edge = .arc(.init(radius: .init(radius, radius), rotation: .zero, largeArc: false, sweep: false))
-        case .bezier:
-            let mid = from.midPoint(to: to)
-            let offset = mid.offset(to: to)
-            edge = .bezier(.init(control0: mid + offset.normalLeft / 2, control1: mid + offset.normalRight / 2))
-        case .line:
-            edge = .line(.init())
-        }
-        return .init(from: from, to: to, edge: edge)
-    }
 
     func onStart(from: Point2) {
         update {
@@ -39,32 +22,53 @@ class AddingPathModel: Store {
         }
     }
 
-    func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.$panInfo
-            .sink { self.onPan($0) }
-            .store(in: &subscriptions)
-    }
-
-    private func onPan(_ info: PanInfo?) {
+    fileprivate func onPan(_ info: PanInfo?) {
         guard active, let info else { return }
         update { $0(\._to, info.current) }
     }
 
-    private var subscriptions = Set<AnyCancellable>()
+    fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
 struct AddingPathService {
-    let toolbar: ToolbarModel
-    let viewport: ViewportModel
-    let model: AddingPathModel
+    let toolbar: ToolbarStore
+    let viewport: ViewportService
+    let store: AddingPathStore
+
+    var from: Point2? { store.from }
+    var to: Point2 { store.to }
+    var active: Bool { store.active }
+
+    func segment(edgeCase: PathEdge.Case) -> PathSegment? {
+        guard let from = store.from else { return nil }
+        let edge: PathEdge
+        switch edgeCase {
+        case .arc:
+            let radius = from.distance(to: to) / 2
+            edge = .arc(.init(radius: .init(radius, radius), rotation: .zero, largeArc: false, sweep: false))
+        case .bezier:
+            let mid = from.midPoint(to: to)
+            let offset = mid.offset(to: to)
+            edge = .bezier(.init(control0: mid + offset.normalLeft / 2, control1: mid + offset.normalRight / 2))
+        case .line:
+            edge = .line(.init())
+        }
+        return .init(from: from, to: to, edge: edge)
+    }
+
+    func subscribe(to multipleTouch: MultipleTouchModel) {
+        multipleTouch.$panInfo
+            .sink { self.store.onPan($0) }
+            .store(in: &store.subscriptions)
+    }
 
     var edgeCase: PathEdge.Case {
-        guard case let .addPath(addPath) = store.toolbar.mode else { return .line }
+        guard case let .addPath(addPath) = toolbar.mode else { return .line }
         return addPath.edgeCase
     }
 
     var segment: PathSegment? {
-        store.addingPath.segment(edgeCase: edgeCase)
+        segment(edgeCase: edgeCase)
     }
 
     var addingPath: Path? {
@@ -81,7 +85,7 @@ struct AddingPathService {
 }
 
 struct AddingPath: View {
-    @Selected var addingPath = service.addingPath.addingPath
+    @Selected var addingPath = global.addingPath.addingPath
 
     var body: some View {
         if let addingPath {

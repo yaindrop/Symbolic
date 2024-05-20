@@ -38,7 +38,7 @@ struct PathView: View {
 
     // MARK: private
 
-    @Selected private var toView = store.viewport.toView
+    @Selected private var toView = global.viewport.toView
 
     @ViewBuilder private func handles(path: Path) -> some View {
         let nodes = path.nodes

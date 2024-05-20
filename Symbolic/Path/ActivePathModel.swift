@@ -27,7 +27,7 @@ enum PathFocusedPart: Equatable {
 
 // MARK: - ActivePathModel
 
-class ActivePathModel: Store {
+class ActivePathStore: Store {
     @Trackable var activePathId: UUID?
     @Trackable var focusedPart: PathFocusedPart?
 
@@ -43,39 +43,39 @@ class ActivePathModel: Store {
 // MARK: - ActivePathService
 
 struct ActivePathService {
-    let pathModel: PathModel
-    let pendingPathModel: PendingPathModel
-    let model: ActivePathModel
+    let pathStore: PathStore
+    let pendingPathStore: PendingPathStore
+    let store: ActivePathStore
 
-    var activePathId: UUID? { model.activePathId }
+    var activePathId: UUID? { store.activePathId }
 
     var activePath: Path? {
-        service.path.model.paths.first { $0.id == activePathId }
+        pathStore.paths.first { $0.id == activePathId }
     }
 
     var pendingActivePath: Path? {
-        service.path.pendingModel.hasPendingEvent ? service.path.pendingModel.paths.first { $0.id == activePathId } : activePath
+        pendingPathStore.hasPendingEvent ? pendingPathStore.paths.first { $0.id == activePathId } : activePath
     }
 
-    var focusedPart: PathFocusedPart? { model.focusedPart }
+    var focusedPart: PathFocusedPart? { store.focusedPart }
 
     func setFocus(node id: UUID) {
         let _r = activePathTracer.range("set focus", type: .intent); defer { _r() }
-        withAnimation { model.update(focusedPart: .node(id)) }
+        withAnimation { store.update(focusedPart: .node(id)) }
     }
 
     func setFocus(edge fromNodeId: UUID) {
         let _r = activePathTracer.range("set focus", type: .intent); defer { _r() }
-        withAnimation { model.update(focusedPart: .edge(fromNodeId)) }
+        withAnimation { store.update(focusedPart: .edge(fromNodeId)) }
     }
 
     func clearFocus() {
         let _r = activePathTracer.range("clear focus", type: .intent); defer { _r() }
-        withAnimation { model.update(focusedPart: nil) }
+        withAnimation { store.update(focusedPart: nil) }
     }
 
     func onActivePathChanged() {
-        if let part = model.focusedPart {
+        if let part = store.focusedPart {
             if let path = activePath {
                 if path.node(id: part.id) == nil {
                     clearFocus()

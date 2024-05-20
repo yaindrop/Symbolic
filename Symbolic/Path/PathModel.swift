@@ -6,7 +6,7 @@ typealias PathMap = OrderedMap<UUID, Path>
 
 // MARK: - PathModel
 
-class PathModel: Store {
+class PathStore: Store {
     @Trackable var pathMap = PathMap()
 
     var paths: [Path] { pathMap.values }
@@ -18,7 +18,7 @@ class PathModel: Store {
 
 // MARK: - PendingPathModel
 
-class PendingPathModel: Store {
+class PendingPathStore: Store {
     @Trackable var pendingEvent: DocumentEvent?
     @Trackable var pathMap = PathMap()
 
@@ -43,10 +43,10 @@ class PendingPathModel: Store {
 // MARK: - PathService
 
 struct PathService {
-    let model: PathModel
-    let pendingModel: PendingPathModel
+    let store: PathStore
+    let pendingStore: PendingPathStore
 
-    var pendingPaths: [Path] { pendingModel.hasPendingEvent ? pendingModel.paths : model.paths }
+    var pendingPaths: [Path] { pendingStore.hasPendingEvent ? pendingStore.paths : store.paths }
 
     func add(path: Path) {
         let _r = tracer.range("Add path"); defer { _r() }
@@ -77,25 +77,25 @@ struct PathService {
     }
 
     func subscribe() {
-        pendingModel.pendingEventSubject.sink { self.loadPendingEvent($0) }.store(in: &pendingModel.subscriptions)
+        pendingStore.pendingEventSubject.sink { self.loadPendingEvent($0) }.store(in: &pendingStore.subscriptions)
     }
 
     // MARK: private
 
     private var targetPathMap: PathMap {
-        get { pendingModel.loading ? pendingModel.pathMap : model.pathMap }
+        get { pendingStore.loading ? pendingStore.pathMap : store.pathMap }
         nonmutating set {
-            if pendingModel.loading { pendingModel.update(pathMap: newValue) } else { model.update(pathMap: newValue) }
+            if pendingStore.loading { pendingStore.update(pathMap: newValue) } else { store.update(pathMap: newValue) }
         }
     }
 
     private func loadPendingEvent(_ event: DocumentEvent?) {
         let _r = tracer.range("Path load pending event"); defer { _r() }
         guard let event else { return }
-        pendingModel.loading = true
-        defer { pendingModel.loading = false }
+        pendingStore.loading = true
+        defer { pendingStore.loading = false }
         withStoreUpdating {
-            pendingModel.update(pathMap: model.pathMap.cloned)
+            pendingStore.update(pathMap: store.pathMap.cloned)
             loadEvent(event)
         }
     }
@@ -211,8 +211,8 @@ extension PathService {
     }
 }
 
-extension PathModel {
+extension PathService {
     func hitTest(worldPosition: Point2) -> Path? {
-        paths.first { p in p.hitPath.contains(worldPosition) }
+        store.paths.first { p in p.hitPath.contains(worldPosition) }
     }
 }

@@ -24,7 +24,7 @@ struct DebugPanel: View {
 
     @State var moveGesture = PanelModel.moveGestureModel()
 
-    @Selected private var viewportInfo = store.viewport.info
+    @Selected private var viewportInfo = global.viewportStore.info
 
     @ViewBuilder private var panel: some View {
         VStack {

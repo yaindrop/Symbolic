@@ -26,7 +26,7 @@ struct HistoryPanel: View {
 
     // MARK: private
 
-    @Selected private var document = store.document.activeDocument
+    @Selected private var document = global.document.activeDocument
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 

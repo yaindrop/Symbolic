@@ -46,7 +46,7 @@ extension ActivePathPanel {
             self.node = node
             self.edge = edge
             self.hasNext = hasNext
-            _focused = .init { store.activePath.focusedPart?.id == node.id }
+            _focused = .init { global.activePath.focusedPart?.id == node.id }
         }
 
         @Selected private var focused: Bool

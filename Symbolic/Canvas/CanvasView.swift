@@ -65,68 +65,68 @@ struct CanvasView: View {
             .onChange(of: activeDocument) {
                 withAnimation {
                     let _r = tracer.range("Reload document"); defer { _r() }
-                    store.pendingPath.update(pendingEvent: nil)
-                    service.path.loadDocument(activeDocument)
+                    global.pendingPathStore.update(pendingEvent: nil)
+                    global.path.loadDocument(activeDocument)
                 }
             }
-            .onChange(of: service.activePath.activePath) {
-                let _r = tracer.range("Active path change \(service.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
-                service.activePath.onActivePathChanged()
+            .onChange(of: global.activePath.activePath) {
+                let _r = tracer.range("Active path change \(global.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
+                global.activePath.onActivePathChanged()
             }
             .onAppear {
-                service.viewportUpdater.subscribe(to: multipleTouch)
+                global.viewportUpdater.subscribe(to: multipleTouch)
                 pressDetector.subscribe()
-                store.pendingSelection.subscribe(to: multipleTouch)
-                store.addingPath.subscribe(to: multipleTouch)
+                global.pendingSelection.subscribe(to: multipleTouch)
+                global.addingPath.subscribe(to: multipleTouch)
 
-                service.path.subscribe()
+                global.path.subscribe()
             }
             .onAppear {
                 multipleTouchPress.onTap { info in
                     let worldLocation = info.location.applying(toWorld)
                     let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
                     withAnimation {
-                        store.selection.update(pathIds: [])
-                        store.activePath.update(activePathId: store.path.hitTest(worldPosition: worldLocation)?.id)
+                        global.selection.update(pathIds: [])
+                        global.activePathStore.update(activePathId: global.path.hitTest(worldPosition: worldLocation)?.id)
                     }
                 }
                 multipleTouchPress.onLongPress { info in
                     let worldLocation = info.current.applying(toWorld)
                     let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
-                    store.viewportUpdate.setBlocked(true)
+                    global.viewportUpdateStore.setBlocked(true)
                     if case .select = toolbarMode, !pendingSelectionActive {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
-                        store.pendingSelection.onStart(from: info.current)
+                        global.pendingSelectionStore.onStart(from: info.current)
                     } else if case let .addPath(addPath) = toolbarMode {
-                        store.addingPath.onStart(from: info.current)
+                        global.addingPathStore.onStart(from: info.current)
                     }
                 }
                 multipleTouchPress.onLongPressEnd { _ in
                     let _r = tracer.range("On long press end", type: .intent); defer { _r() }
-                    store.viewportUpdate.setBlocked(false)
+                    global.viewportUpdateStore.setBlocked(false)
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
 
-                    if let paths = service.pendingSelection.intersectedPaths {
-                        store.selection.update(pathIds: Set(paths.map { $0.id }))
+                    if let paths = global.pendingSelection.intersectedPaths {
+                        global.selection.update(pathIds: Set(paths.map { $0.id }))
                     }
-                    store.pendingSelection.onEnd()
+                    global.pendingSelectionStore.onEnd()
 
-                    if let path = service.addingPath.addingPath {
-                        store.document.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
-                        store.activePath.update(activePathId: path.id)
+                    if let path = global.addingPath.addingPath {
+                        global.documentStore.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
+                        global.activePathStore.update(activePathId: path.id)
                     }
-                    store.addingPath.onEnd()
+                    global.addingPathStore.onEnd()
                 }
             }
             .onAppear {
-                store.pathUpdate.onPendingEvent {
-                    store.pendingPath.update(pendingEvent: $0)
+                global.pathUpdater.onPendingEvent {
+                    global.pendingPathStore.update(pendingEvent: $0)
                 }
-                store.pathUpdate.onEvent { e in
+                global.pathUpdater.onEvent { e in
                     withAnimation {
-                        store.document.sendEvent(e)
+                        global.documentStore.sendEvent(e)
                     }
                 }
             }
@@ -140,19 +140,19 @@ struct CanvasView: View {
                 }
             }
             .onAppear {
-                store.document.setDocument(.init(from: fooSvg))
+                global.documentStore.setDocument(.init(from: fooSvg))
             }
     }}
 
     // MARK: private
 
-    @Selected private var toView = store.viewport.toView
-    @Selected private var toWorld = store.viewport.toWorld
-    @Selected private var activeDocument = store.document.activeDocument
-    @Selected private var pendingPaths = service.path.pendingPaths
-    @Selected private var activePathId = service.activePath.activePathId
-    @Selected private var pendingSelectionActive = store.pendingSelection.active
-    @Selected private var toolbarMode = store.toolbar.mode
+    @Selected private var toView = global.viewport.toView
+    @Selected private var toWorld = global.viewport.toWorld
+    @Selected private var activeDocument = global.document.activeDocument
+    @Selected private var pendingPaths = global.path.pendingPaths
+    @Selected private var activePathId = global.activePath.activePathId
+    @Selected private var pendingSelectionActive = global.pendingSelection.active
+    @Selected private var toolbarMode = global.toolbar.mode
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 

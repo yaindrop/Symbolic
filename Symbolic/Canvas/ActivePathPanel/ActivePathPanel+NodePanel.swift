@@ -24,7 +24,7 @@ extension ActivePathPanel {
         init(index: Int, node: PathNode) {
             self.index = index
             self.node = node
-            _focused = .init { service.activePath.focusedPart?.nodeId == node.id }
+            _focused = .init { global.activePath.focusedPart?.nodeId == node.id }
         }
 
         @Selected private var focused: Bool
@@ -54,19 +54,19 @@ extension ActivePathPanel {
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { service.pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
+            { global.pathUpdater.updateActivePath(node: node.id, position: $0, pending: pending) }
         }
 
         private func toggleFocus() {
-            focused ? service.activePath.clearFocus() : service.activePath.setFocus(node: node.id)
+            focused ? global.activePath.clearFocus() : global.activePath.setFocus(node: node.id)
         }
 
         private func breakNode() {
-            service.pathUpdater.updateActivePath(breakAtNode: node.id)
+            global.pathUpdater.updateActivePath(breakAtNode: node.id)
         }
 
         private func deleteNode() {
-            service.pathUpdater.updateActivePath(deleteNode: node.id)
+            global.pathUpdater.updateActivePath(deleteNode: node.id)
         }
     }
 }

@@ -2,15 +2,11 @@ import Combine
 import Foundation
 import SwiftUI
 
-class PendingSelectionModel: Store {
+class PendingSelectionStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
 
     var active: Bool { from != nil }
-    var rect: CGRect? {
-        guard let from else { return nil }
-        return .init(from: from, to: to)
-    }
 
     func onStart(from: Point2) {
         update {
@@ -26,38 +22,44 @@ class PendingSelectionModel: Store {
         }
     }
 
-    func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.$panInfo
-            .sink { self.onPan($0) }
-            .store(in: &subscriptions)
-    }
-
-    private func onPan(_ info: PanInfo?) {
+    fileprivate func onPan(_ info: PanInfo?) {
         guard active, let info else { return }
         update { $0(\._to, info.current) }
     }
 
-    private var subscriptions = Set<AnyCancellable>()
+    fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
 struct PendingSelectionService {
-    let path: PathModel
-    let viewport: ViewportModel
-    let model: PendingSelectionModel
+    let pathStore: PathStore
+    let viewport: ViewportService
+    let store: PendingSelectionStore
+
+    var active: Bool { store.active }
+
+    var rect: CGRect? {
+        guard let from = store.from else { return nil }
+        return .init(from: from, to: store.to)
+    }
 
     var intersectedPaths: [Path]? {
-        store.pendingSelection.rect.map {
-            let rectInWorld = $0.applying(store.viewport.toWorld)
-            return store.path.paths.filter { $0.boundingRect.intersects(rectInWorld) }
+        rect.map {
+            let rectInWorld = $0.applying(viewport.toWorld)
+            return pathStore.paths.filter { $0.boundingRect.intersects(rectInWorld) }
         }
+    }
+
+    func subscribe(to multipleTouch: MultipleTouchModel) {
+        multipleTouch.$panInfo
+            .sink { self.store.onPan($0) }
+            .store(in: &store.subscriptions)
     }
 }
 
 struct PendingSelection: View {
-    @Selected var pendingSelectionRect = store.pendingSelection.rect
-    @Selected var intersectedPaths = service.pendingSelection.intersectedPaths
-
-    @Selected var toView = store.viewport.toView
+    @Selected var pendingSelectionRect = global.pendingSelection.rect
+    @Selected var intersectedPaths = global.pendingSelection.intersectedPaths
+    @Selected var toView = global.viewport.toView
 
     var body: some View {
         if let rect = pendingSelectionRect {

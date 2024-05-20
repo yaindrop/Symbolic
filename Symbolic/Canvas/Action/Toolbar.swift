@@ -13,7 +13,7 @@ enum ToolbarMode {
     case addPath(AddPath)
 }
 
-class ToolbarModel: Store {
+class ToolbarStore: Store {
     @Trackable var mode: ToolbarMode = .select(.init())
 
     func setMode(_ mode: ToolbarMode) {
@@ -26,8 +26,8 @@ struct ToolbarModifier: ViewModifier {
         content.toolbar { toolbar }
     }
 
-    @Selected private var toolbarMode = store.toolbar.mode
-    @Selected private var undoable = store.document.undoable
+    @Selected private var toolbarMode = global.toolbar.mode
+    @Selected private var undoable = global.document.undoable
 
     private var isToolbarSelect: Bool { if case .select = toolbarMode { true } else { false } }
     private var isToolbarAddPath: Bool { if case .addPath = toolbarMode { true } else { false } }
@@ -61,12 +61,12 @@ struct ToolbarModifier: ViewModifier {
     private var principal: some View {
         HStack {
             Button {
-                store.toolbar.setMode(.select(.init()))
+                global.toolbar.setMode(.select(.init()))
             } label: {
                 Image(systemName: isToolbarSelect ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
             }
             Button {
-                store.toolbar.setMode(.addPath(.init(edgeCase: lastEdgeCase)))
+                global.toolbar.setMode(.addPath(.init(edgeCase: lastEdgeCase)))
             } label: {
                 Image(systemName: isToolbarAddPath ? "plus.circle.fill" : "plus.circle")
             }
@@ -74,17 +74,17 @@ struct ToolbarModifier: ViewModifier {
                 Menu {
                     Button("Arc", systemImage: "circle") {
                         lastEdgeCase = .arc
-                        store.toolbar.setMode(.addPath(.init(edgeCase: .arc)))
+                        global.toolbar.setMode(.addPath(.init(edgeCase: .arc)))
                     }
                     .disabled(lastEdgeCase == .arc)
                     Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") {
                         lastEdgeCase = .bezier
-                        store.toolbar.setMode(.addPath(.init(edgeCase: .bezier)))
+                        global.toolbar.setMode(.addPath(.init(edgeCase: .bezier)))
                     }
                     .disabled(lastEdgeCase == .bezier)
                     Button("Line", systemImage: "chart.xyaxis.line") {
                         lastEdgeCase = .line
-                        store.toolbar.setMode(.addPath(.init(edgeCase: .line)))
+                        global.toolbar.setMode(.addPath(.init(edgeCase: .line)))
                     }
                     .disabled(lastEdgeCase == .line)
                 } label: {
@@ -97,7 +97,7 @@ struct ToolbarModifier: ViewModifier {
 
     private var trailing: some View {
         Button {
-            store.document.undo()
+            global.document.undo()
         } label: {
             Image(systemName: "arrow.uturn.backward")
         }

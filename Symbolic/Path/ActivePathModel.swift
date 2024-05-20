@@ -31,7 +31,7 @@ class ActivePathStore: Store {
     @Trackable var activePathId: UUID?
     @Trackable var focusedPart: PathFocusedPart?
 
-    func update(activePathId: UUID?) {
+    fileprivate func update(activePathId: UUID?) {
         update { $0(\._activePathId, activePathId) }
     }
 
@@ -58,6 +58,14 @@ struct ActivePathService {
     }
 
     var focusedPart: PathFocusedPart? { store.focusedPart }
+
+    func activate(pathId: UUID) {
+        store.update(activePathId: pathId)
+    }
+
+    func deactivate() {
+        store.update(activePathId: nil)
+    }
 
     func setFocus(node id: UUID) {
         let _r = activePathTracer.range("set focus", type: .intent); defer { _r() }

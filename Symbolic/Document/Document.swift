@@ -35,14 +35,8 @@ struct Document: Equatable {
 class DocumentStore: Store {
     @Trackable var activeDocument: Document = Document()
 
-    func setDocument(_ document: Document) {
-        let _r = tracer.range("Document set"); defer { _r() }
-        update { $0(\._activeDocument, document) }
-    }
-
-    func sendEvent(_ event: DocumentEvent) {
-        let _r = tracer.range("Document send event"); defer { _r() }
-        update { $0(\._activeDocument, Document(events: activeDocument.events + [event])) }
+    fileprivate func update(activeDocument: Document) {
+        update { $0(\._activeDocument, activeDocument) }
     }
 }
 
@@ -50,6 +44,16 @@ struct DocumentService {
     let store: DocumentStore
 
     var activeDocument: Document { store.activeDocument }
+
+    func setDocument(_ document: Document) {
+        let _r = tracer.range("Document set"); defer { _r() }
+        store.update(activeDocument: document)
+    }
+
+    func sendEvent(_ event: DocumentEvent) {
+        let _r = tracer.range("Document send event"); defer { _r() }
+        store.update(activeDocument: .init(events: activeDocument.events + [event]))
+    }
 
     var undoable: Bool {
         guard let last = store.activeDocument.events.last else { return false }
@@ -65,7 +69,7 @@ struct DocumentService {
         guard undoable else { return }
         var events = store.activeDocument.events
         events.removeLast()
-        store.setDocument(.init(events: events))
+        setDocument(.init(events: events))
     }
 }
 

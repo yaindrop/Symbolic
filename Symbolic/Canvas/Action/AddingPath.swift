@@ -8,23 +8,17 @@ class AddingPathStore: Store {
 
     var active: Bool { from != nil }
 
-    func onStart(from: Point2) {
+    fileprivate func update(from: Point2?) {
         update {
             $0(\._from, from)
-            $0(\._to, from)
+            $0(\._to, from ?? .zero)
         }
     }
 
-    func onEnd() {
+    fileprivate func update(to: Point2) {
         update {
-            $0(\._from, nil)
-            $0(\._to, .zero)
+            $0(\._to, to)
         }
-    }
-
-    fileprivate func onPan(_ info: PanInfo?) {
-        guard active, let info else { return }
-        update { $0(\._to, info.current) }
     }
 
     fileprivate var subscriptions = Set<AnyCancellable>()
@@ -58,7 +52,7 @@ struct AddingPathService {
 
     func subscribe(to multipleTouch: MultipleTouchModel) {
         multipleTouch.$panInfo
-            .sink { self.store.onPan($0) }
+            .sink { self.onPan($0) }
             .store(in: &store.subscriptions)
     }
 
@@ -81,6 +75,19 @@ struct AddingPathService {
             toNode.id: .init(toNode, .line(.init())),
         ]
         return .init(pairs: pairs, isClosed: false)
+    }
+
+    func onStart(from: Point2) {
+        store.update(from: from)
+    }
+
+    func onEnd() {
+        store.update(from: nil)
+    }
+
+    private func onPan(_ info: PanInfo?) {
+        guard active, let info else { return }
+        store.update(to: info.current)
     }
 }
 

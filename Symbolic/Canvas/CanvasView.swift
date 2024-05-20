@@ -65,7 +65,7 @@ struct CanvasView: View {
             .onChange(of: activeDocument) {
                 withAnimation {
                     let _r = tracer.range("Reload document"); defer { _r() }
-                    global.pendingPathStore.update(pendingEvent: nil)
+                    global.path.onPendingEvent(nil)
                     global.path.loadDocument(activeDocument)
                 }
             }
@@ -87,46 +87,50 @@ struct CanvasView: View {
                     let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
                     withAnimation {
                         global.selection.update(pathIds: [])
-                        global.activePathStore.update(activePathId: global.path.hitTest(worldPosition: worldLocation)?.id)
+                        if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
+                            global.activePath.activate(pathId: pathId)
+                        } else {
+                            global.activePath.deactivate()
+                        }
                     }
                 }
                 multipleTouchPress.onLongPress { info in
                     let worldLocation = info.current.applying(toWorld)
                     let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
-                    global.viewportUpdateStore.setBlocked(true)
+                    global.viewportUpdater.setBlocked(true)
                     if case .select = toolbarMode, !pendingSelectionActive {
                         canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
-                        global.pendingSelectionStore.onStart(from: info.current)
+                        global.pendingSelection.onStart(from: info.current)
                     } else if case let .addPath(addPath) = toolbarMode {
-                        global.addingPathStore.onStart(from: info.current)
+                        global.addingPath.onStart(from: info.current)
                     }
                 }
                 multipleTouchPress.onLongPressEnd { _ in
                     let _r = tracer.range("On long press end", type: .intent); defer { _r() }
-                    global.viewportUpdateStore.setBlocked(false)
+                    global.viewportUpdater.setBlocked(false)
                     //                    longPressPosition = nil
                     canvasActionModel.onEnd(triggering: .longPressViewport)
 
                     if let paths = global.pendingSelection.intersectedPaths {
                         global.selection.update(pathIds: Set(paths.map { $0.id }))
                     }
-                    global.pendingSelectionStore.onEnd()
+                    global.pendingSelection.onEnd()
 
                     if let path = global.addingPath.addingPath {
-                        global.documentStore.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
-                        global.activePathStore.update(activePathId: path.id)
+                        global.document.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
+                        global.activePath.activate(pathId: path.id)
                     }
-                    global.addingPathStore.onEnd()
+                    global.addingPath.onEnd()
                 }
             }
             .onAppear {
                 global.pathUpdater.onPendingEvent {
-                    global.pendingPathStore.update(pendingEvent: $0)
+                    global.path.onPendingEvent($0)
                 }
                 global.pathUpdater.onEvent { e in
                     withAnimation {
-                        global.documentStore.sendEvent(e)
+                        global.document.sendEvent(e)
                     }
                 }
             }
@@ -140,7 +144,7 @@ struct CanvasView: View {
                 }
             }
             .onAppear {
-                global.documentStore.setDocument(.init(from: fooSvg))
+                global.document.setDocument(.init(from: fooSvg))
             }
     }}
 

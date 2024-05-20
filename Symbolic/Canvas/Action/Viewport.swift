@@ -41,7 +41,7 @@ class ViewportUpdateStore: Store {
     @Trackable var blocked: Bool = false
     @Trackable var previousInfo: ViewportInfo = .init()
 
-    func setBlocked(_ blocked: Bool) {
+    fileprivate func update(blocked: Bool) {
         update { $0(\._blocked, blocked) }
     }
 
@@ -57,13 +57,19 @@ class ViewportUpdateStore: Store {
 struct ViewportService {
     let store: ViewportStore
 
-    var toWorld: CGAffineTransform { store.info.viewToWorld }
-    var toView: CGAffineTransform { store.info.worldToView }
+    var info: ViewportInfo { store.info }
+
+    var toWorld: CGAffineTransform { info.viewToWorld }
+    var toView: CGAffineTransform { info.worldToView }
 }
 
 struct ViewportUpdater {
     let viewport: ViewportStore
     let store: ViewportUpdateStore
+
+    func setBlocked(_ blocked: Bool) {
+        store.update(blocked: blocked)
+    }
 
     func subscribe(to multipleTouch: MultipleTouchModel) {
         multipleTouch.$panInfo

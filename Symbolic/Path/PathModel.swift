@@ -28,10 +28,8 @@ class PendingPathStore: Store {
 
     fileprivate var loading = false
     fileprivate var subscriptions = Set<AnyCancellable>()
-    fileprivate var pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 
-    func update(pendingEvent: DocumentEvent?) {
-        pendingEventSubject.send(pendingEvent)
+    fileprivate func update(pendingEvent: DocumentEvent?) {
         update { $0(\._pendingEvent, pendingEvent) }
     }
 
@@ -47,6 +45,10 @@ struct PathService {
     let pendingStore: PendingPathStore
 
     var pendingPaths: [Path] { pendingStore.hasPendingEvent ? pendingStore.paths : store.paths }
+
+    func onPendingEvent(_ pendingEvent: DocumentEvent?) {
+        pendingStore.update(pendingEvent: pendingEvent)
+    }
 
     func add(path: Path) {
         let _r = tracer.range("Add path"); defer { _r() }
@@ -77,7 +79,7 @@ struct PathService {
     }
 
     func subscribe() {
-        pendingStore.pendingEventSubject.sink { self.loadPendingEvent($0) }.store(in: &pendingStore.subscriptions)
+        pendingStore.$pendingEvent.sink { self.loadPendingEvent($0) }.store(in: &pendingStore.subscriptions)
     }
 
     // MARK: private

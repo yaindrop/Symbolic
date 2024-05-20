@@ -12,9 +12,12 @@ class PathViewModel: ObservableObject {
     }
 
     func boundsGesture() -> MultipleGestureModel<Void>? { nil }
+
     func nodeGesture(nodeId: UUID) -> MultipleGestureModel<Point2>? { nil }
+
     func edgeGesture(fromId: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext)? { nil }
     func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2>? { nil }
+
     func bezierGesture(fromId: UUID, updater: @escaping (Point2) -> PathEdge.Bezier) -> MultipleGestureModel<Void>? { nil }
     func arcGesture(fromId: UUID, updater: @escaping (Scalar) -> PathEdge.Arc) -> MultipleGestureModel<Point2>? { nil }
 }
@@ -27,8 +30,8 @@ struct PathView: View {
 
     var body: some View { subtracer.range("body") { build {
         ZStack {
-            PathBody(path: path, toView: toView)
-            PathHandle(path: path, toView: toView)
+            BoundsHandle(path: path, toView: toView)
+            Stroke(path: path, toView: toView)
             handles(path: path)
         }
     }}}
@@ -39,30 +42,30 @@ struct PathView: View {
 
     @ViewBuilder private func handles(path: Path) -> some View {
         let nodes = path.nodes
-        let idAndNodePositionInView = nodes.compactMap { n -> (id: UUID, position: Point2)? in
-            (id: n.id, position: n.position.applying(toView))
+        let nodeData = nodes.compactMap { n -> (nodeId: UUID, positionInView: Point2)? in
+            (nodeId: n.id, positionInView: n.position.applying(toView))
         }
-        let idAndSegmentInView = nodes.compactMap { n -> (fromId: UUID, toId: UUID, segment: PathSegment)? in
+        let segmentData = nodes.compactMap { n -> (fromId: UUID, toId: UUID, segmentInView: PathSegment)? in
             guard let s = path.segment(from: n.id) else { return nil }
             guard let toId = path.node(after: n.id)?.id else { return nil }
-            return (fromId: n.id, toId: toId, segment: s.applying(toView))
+            return (fromId: n.id, toId: toId, segmentInView: s.applying(toView))
         }
 
-        ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in EdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
-        ForEach(idAndNodePositionInView, id: \.id) { id, position in NodeHandle(nodeId: id, position: position, focusedPart: focusedPart) }
-        ForEach(idAndSegmentInView, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
-        ForEach(idAndSegmentInView, id: \.fromId) { fromId, toId, segment in EdgeKindHandle(fromId: fromId, toId: toId, segment: segment, focusedPart: focusedPart) }
+        ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
+        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(nodeId: id, position: position, focusedPart: focusedPart) }
+        ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
+        ForEach(segmentData, id: \.fromId) { fromId, toId, segment in EdgeKindHandle(fromId: fromId, toId: toId, segment: segment, focusedPart: focusedPart) }
     }
 }
 
 extension PathView {
-    // MARK: - PathBody
+    // MARK: - Stroke
 
-    struct PathBody: View {
+    struct Stroke: View {
         let path: Path
         let toView: CGAffineTransform
 
-        var body: some View { subtracer.range("PathBody") {
+        var body: some View { subtracer.range("Stroke") {
             SUPath { path.append(to: &$0) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
@@ -71,15 +74,15 @@ extension PathView {
         }}
     }
 
-    // MARK: - PathHandle
+    // MARK: - BoundsHandle
 
-    struct PathHandle: View {
+    struct BoundsHandle: View {
         @EnvironmentObject var viewModel: PathViewModel
 
         let path: Path
         let toView: CGAffineTransform
 
-        var body: some View { subtracer.range("PathHandle") {
+        var body: some View { subtracer.range("BoundsHandle") {
             rect
         }}
 

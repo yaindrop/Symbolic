@@ -6,6 +6,7 @@ enum ToolbarMode {
     }
 
     struct AddPath {
+        let edgeCase: PathEdge.Case
     }
 
     case select(Select)
@@ -30,6 +31,8 @@ struct ToolbarModifier: ViewModifier {
 
     private var isToolbarSelect: Bool { if case .select = toolbarMode { true } else { false } }
     private var isToolbarAddPath: Bool { if case .addPath = toolbarMode { true } else { false } }
+
+    @State private var lastEdgeCase: PathEdge.Case = .line
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
         ToolbarItem(placement: .topBarLeading) { leading }
@@ -63,16 +66,27 @@ struct ToolbarModifier: ViewModifier {
                 Image(systemName: isToolbarSelect ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
             }
             Button {
-                store.toolbar.setMode(.addPath(.init()))
+                store.toolbar.setMode(.addPath(.init(edgeCase: lastEdgeCase)))
             } label: {
                 Image(systemName: isToolbarAddPath ? "plus.circle.fill" : "plus.circle")
             }
             .overlay {
                 Menu {
-                    Button {
-                    } label: {
-                        Text("Bezier")
+                    Button("Arc", systemImage: "circle") {
+                        lastEdgeCase = .arc
+                        store.toolbar.setMode(.addPath(.init(edgeCase: .arc)))
                     }
+                    .disabled(lastEdgeCase == .arc)
+                    Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") {
+                        lastEdgeCase = .bezier
+                        store.toolbar.setMode(.addPath(.init(edgeCase: .bezier)))
+                    }
+                    .disabled(lastEdgeCase == .bezier)
+                    Button("Line", systemImage: "chart.xyaxis.line") {
+                        lastEdgeCase = .line
+                        store.toolbar.setMode(.addPath(.init(edgeCase: .line)))
+                    }
+                    .disabled(lastEdgeCase == .line)
                 } label: {
                     Color.clear
                 }

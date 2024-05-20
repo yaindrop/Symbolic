@@ -113,6 +113,10 @@ struct CanvasView: View {
                     }
                     store.pendingSelection.onEnd()
 
+                    if let path = service.addingPath.addingPath {
+                        store.document.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
+                        store.activePath.update(activePathId: path.id)
+                    }
                     store.addingPath.onEnd()
                 }
             }

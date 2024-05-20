@@ -15,6 +15,12 @@ extension Vector2 {
 
     var length: Scalar { hypot(dx, dy) }
 
+    var normalLeft: Vector2 { .init(-dy, dx) }
+
+    var normalRight: Vector2 { .init(dy, -dx) }
+
+    var normalized: Vector2 { with(length: 1) }
+
     func with(dx: Scalar) -> Self { .init(dx: dx, dy: dy) }
 
     func with(dy: Scalar) -> Self { .init(dx: dx, dy: dy) }

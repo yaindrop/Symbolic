@@ -33,6 +33,8 @@ class GlobalService {
     let pathUpdaterInView = PathUpdaterInView(viewport: store.viewport, pathModel: store.path, pendingPathModel: store.pendingPath, activePathModel: store.activePath, pathUpdateModel: store.pathUpdate)
 
     let pendingSelection = PendingSelectionService(path: store.path, viewport: store.viewport, model: store.pendingSelection)
+
+    let addingPath = AddingPathService(toolbar: store.toolbar, viewport: store.viewport, model: store.addingPath)
 }
 
 let service = GlobalService()

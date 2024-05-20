@@ -127,6 +127,7 @@ struct PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ pathAction: PathAction) {
         switch pathAction {
+        case .create: break
         case .load: break
         case let .splitSegment(splitSegment): collectEvents(to: &events, splitSegment)
         case let .deleteNode(deleteNode): collectEvents(to: &events, deleteNode)

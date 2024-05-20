@@ -3,6 +3,8 @@ import Foundation
 enum PathAction {
     struct Load { let path: Path }
 
+    struct Create { let path: Path }
+
     struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: Scalar, newNode: PathNode }
 
     struct DeleteNode { let pathId: UUID, nodeId: UUID }
@@ -21,6 +23,8 @@ enum PathAction {
     struct MoveEdge { let pathId: UUID, fromNodeId: UUID, offset: Vector2 }
 
     case load(Load)
+
+    case create(Create)
 
     case splitSegment(SplitSegment)
 

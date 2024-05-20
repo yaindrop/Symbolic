@@ -8,6 +8,23 @@ class AddingPathModel: Store {
 
     var active: Bool { from != nil }
 
+    func segment(edgeCase: PathEdge.Case) -> PathSegment? {
+        guard let from else { return nil }
+        let edge: PathEdge
+        switch edgeCase {
+        case .arc:
+            let radius = from.distance(to: to) / 2
+            edge = .arc(.init(radius: .init(radius, radius), rotation: .zero, largeArc: false, sweep: false))
+        case .bezier:
+            let mid = from.midPoint(to: to)
+            let offset = mid.offset(to: to)
+            edge = .bezier(.init(control0: mid + offset.normalLeft / 2, control1: mid + offset.normalRight / 2))
+        case .line:
+            edge = .line(.init())
+        }
+        return .init(from: from, to: to, edge: edge)
+    }
+
     func onStart(from: Point2) {
         update {
             $0(\._from, from)
@@ -36,21 +53,35 @@ class AddingPathModel: Store {
     private var subscriptions = Set<AnyCancellable>()
 }
 
-struct AddingPath: View {
-    @Selected var from = store.addingPath.from
-    @Selected var to = store.addingPath.to
-    @Selected var toWorld = store.viewport.toWorld
+struct AddingPathService {
+    let toolbar: ToolbarModel
+    let viewport: ViewportModel
+    let model: AddingPathModel
+
+    var edgeCase: PathEdge.Case {
+        guard case let .addPath(addPath) = store.toolbar.mode else { return .line }
+        return addPath.edgeCase
+    }
+
+    var segment: PathSegment? {
+        store.addingPath.segment(edgeCase: edgeCase)
+    }
 
     var addingPath: Path? {
-        guard let from else { return nil }
-        let fromNode = PathNode(position: from.applying(toWorld))
-        let toNode = PathNode(position: to.applying(toWorld))
+        guard let segment else { return nil }
+        let segmentInWorld = segment.applying(viewport.toWorld)
+        let fromNode = PathNode(position: segmentInWorld.from)
+        let toNode = PathNode(position: segmentInWorld.to)
         let pairs: Path.PairMap = [
-            fromNode.id: .init(fromNode, .line(.init())),
+            fromNode.id: .init(fromNode, segmentInWorld.edge),
             toNode.id: .init(toNode, .line(.init())),
         ]
         return .init(pairs: pairs, isClosed: false)
     }
+}
+
+struct AddingPath: View {
+    @Selected var addingPath = service.addingPath.addingPath
 
     var body: some View {
         if let addingPath {

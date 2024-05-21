@@ -43,20 +43,20 @@ extension PathView {
                     line(from: segment.from, to: bezier.control0, color: .green)
                     circle(at: bezier.control0, color: .green)
                         .if(gesture0) {
-                            $0.multipleGesture($1, bezier)
+                            $0.multipleGesture($1, ())
                         }
                         .onAppear {
-                            gesture0 = viewModel.bezierGesture(fromId: fromId, updater: { $0.with(control0: $1) })
+                            gesture0 = viewModel.bezierGesture(fromId: fromId, isControl0: true)
                         }
                 }
                 if edgeFocused || nextFocused {
                     line(from: segment.to, to: bezier.control1, color: .orange)
                     circle(at: bezier.control1, color: .orange)
                         .if(gesture1) {
-                            $0.multipleGesture($1, bezier)
+                            $0.multipleGesture($1, ())
                         }
                         .onAppear {
-                            gesture1 = viewModel.bezierGesture(fromId: fromId, updater: { $0.with(control1: $1) })
+                            gesture1 = viewModel.bezierGesture(fromId: fromId, isControl0: false)
                         }
                 }
             }
@@ -68,8 +68,8 @@ extension PathView {
         private static let circleSize: Scalar = 12
         private static let touchablePadding: Scalar = 12
 
-        @State private var gesture0: MultipleGestureModel<PathEdge.Bezier>?
-        @State private var gesture1: MultipleGestureModel<PathEdge.Bezier>?
+        @State private var gesture0: MultipleGestureModel<Void>?
+        @State private var gesture1: MultipleGestureModel<Void>?
 
         private var bezier: PathEdge.Bezier { segment.bezier }
 

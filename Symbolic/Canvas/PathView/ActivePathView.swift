@@ -92,10 +92,10 @@ class ActivePathViewModel: PathViewModel {
         return model
     }
 
-    override func bezierGesture(fromId: UUID, updater: @escaping (PathEdge.Bezier, Point2) -> PathEdge.Bezier) -> MultipleGestureModel<PathEdge.Bezier>? {
-        let model = MultipleGestureModel<PathEdge.Bezier>()
-        func update(pending: Bool = false) -> (DragGesture.Value, PathEdge.Bezier) -> Void {
-            { global.pathUpdaterInView.updateActivePath(edge: fromId, bezier: updater($1, $0.location), pending: pending) }
+    override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGestureModel<Void>? {
+        let model = MultipleGestureModel<Void>()
+        func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
+            { v, _ in global.pathUpdaterInView.updateActivePath(edgeBezier: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset, pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())

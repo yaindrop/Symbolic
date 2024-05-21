@@ -14,13 +14,14 @@ enum PathAction {
     struct ChangeEdge { let pathId: UUID, fromNodeId: UUID, to: PathEdge.Case }
 
     struct SetNodePosition { let pathId: UUID, nodeId: UUID, position: Point2 }
-    struct SetEdgeLine { let pathId: UUID, fromNodeId: UUID }
-    struct SetEdgeBezier { let pathId: UUID, fromNodeId: UUID, bezier: PathEdge.Bezier }
     struct SetEdgeArc { let pathId: UUID, fromNodeId: UUID, arc: PathEdge.Arc }
+    struct SetEdgeBezier { let pathId: UUID, fromNodeId: UUID, bezier: PathEdge.Bezier }
+    struct SetEdgeLine { let pathId: UUID, fromNodeId: UUID }
 
     struct MovePath { let pathId: UUID, offset: Vector2 }
     struct MoveNode { let pathId: UUID, nodeId: UUID, offset: Vector2 }
     struct MoveEdge { let pathId: UUID, fromNodeId: UUID, offset: Vector2 }
+    struct MoveEdgeBezier { let pathId: UUID, fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
 
     struct MovePaths { let pathIds: [UUID], offset: Vector2 }
     struct DeletePaths { let pathIds: [UUID] }
@@ -38,13 +39,14 @@ enum PathAction {
     case changeEdge(ChangeEdge)
 
     case setNodePosition(SetNodePosition)
-    case setEdgeLine(SetEdgeLine)
-    case setEdgeBezier(SetEdgeBezier)
     case setEdgeArc(SetEdgeArc)
+    case setEdgeBezier(SetEdgeBezier)
+    case setEdgeLine(SetEdgeLine)
 
     case movePath(MovePath)
     case moveNode(MoveNode)
     case moveEdge(MoveEdge)
+    case moveEdgeBezier(MoveEdgeBezier)
 
     case movePaths(MovePaths)
     case deletePaths(DeletePaths)

@@ -1,28 +1,9 @@
 import SwiftUI
 
-func triggeringHint(_ action: CanvasAction.Triggering) -> String {
-    switch action {
-    case .addPath: "Hold to add path"
-    case .select: "Hold to select"
-    case .splitPathEdge: "Hold to split"
-    }
-}
-
-func continuousHint(_ action: CanvasAction.Continuous) -> String {
-    switch action {
-    case .panViewport: "Move"
-    case .pinchViewport: "Move and scale"
-    case .addingPath: "Drag to add path"
-    case .pendingSelection: "Drag to select"
-    case .splitAndMovePathNode: "Drag to split and move"
-    default: "\(action)"
-    }
-}
-
 struct CanvasActionPanel: View {
-    @Selected var triggeringHints = Array(global.canvasAction.triggering).map { triggeringHint($0) }
-    @Selected var continuousHints = Array(global.canvasAction.continuous).map { continuousHint($0) }
-    @Selected var instantHints = Array(global.canvasAction.instant).map { "\($0)" }
+    @Selected var triggeringHints = Array(global.canvasAction.triggering).map { $0.hint }
+    @Selected var continuousHints = Array(global.canvasAction.continuous).map { $0.hint }
+    @Selected var instantHints = Array(global.canvasAction.instant).map { $0.hint }
 
     var body: some View {
         VStack(alignment: .leading) {

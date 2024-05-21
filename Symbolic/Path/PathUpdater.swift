@@ -17,6 +17,7 @@ struct PathUpdater {
     let pathStore: PathStore
     let pendingPathStore: PendingPathStore
     let activePathService: ActivePathService
+    let grid: CanvasGridStore
     let store: PathUpdateStore
 
     func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
@@ -68,6 +69,11 @@ struct PathUpdater {
     func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {
         guard let activePath else { return }
         handle(.pathAction(.setEdgeArc(.init(pathId: activePath.id, fromNodeId: fromNodeId, arc: arc))), pending: pending)
+    }
+
+    func updateActivePath(edgeBezier fromNodeId: UUID, offset0: Vector2, offset1: Vector2, pending: Bool = false) {
+        guard let activePath else { return }
+        handle(.pathAction(.moveEdgeBezier(.init(pathId: activePath.id, fromNodeId: fromNodeId, offset0: offset0, offset1: offset1))), pending: pending)
     }
 
     // MARK: compound update
@@ -150,6 +156,7 @@ struct PathUpdater {
         case let .moveNode(moveNode): collectEvents(to: &events, moveNode)
         case let .movePath(movePath): collectEvents(to: &events, movePath)
         case let .movePaths(movePaths): collectEvents(to: &events, movePaths)
+        case let .moveEdgeBezier(moveEdgeBezier): collectEvents(to: &events, moveEdgeBezier)
         case let .deletePaths(deletePaths): collectEvents(to: &events, deletePaths)
         }
     }
@@ -252,12 +259,14 @@ struct PathUpdater {
         let pathId = moveNode.pathId, nodeId = moveNode.nodeId, offset = moveNode.offset
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let curr = path.pair(id: nodeId) else { return }
+        let snappedOffset = curr.node.position.offset(to: grid.grid.snap(curr.node.position + offset))
+
         if let prev = path.pair(before: nodeId), case let .bezier(b) = prev.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + offset))))
+            events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + snappedOffset))))
         }
-        events.append(.init(in: pathId, updateNode: curr.node.with(offset: offset)))
+        events.append(.init(in: pathId, updateNode: curr.node.with(offset: snappedOffset)))
         if case let .bezier(b) = curr.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: nodeId, .bezier(b.with(control0: b.control0 + offset))))
+            events.append(.init(in: pathId, updateEdgeFrom: nodeId, .bezier(b.with(control0: b.control0 + snappedOffset))))
         }
     }
 
@@ -265,17 +274,19 @@ struct PathUpdater {
         let pathId = moveEdge.pathId, fromNodeId = moveEdge.fromNodeId, offset = moveEdge.offset
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let curr = path.pair(id: fromNodeId) else { return }
+        let snappedOffset = curr.node.position.offset(to: grid.grid.snap(curr.node.position + offset))
+
         if let prev = path.pair(before: fromNodeId), case let .bezier(b) = prev.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(offset1: offset))))
+            events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(offset1: snappedOffset))))
         }
-        events.append(.init(in: pathId, updateNode: curr.node.with(offset: offset)))
+        events.append(.init(in: pathId, updateNode: curr.node.with(offset: snappedOffset)))
         if case let .bezier(b) = curr.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(b.with(offset: offset))))
+            events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(b.with(offset: snappedOffset))))
         }
         if let next = path.pair(after: fromNodeId) {
-            events.append(.init(in: pathId, updateNode: next.node.with(offset: offset)))
+            events.append(.init(in: pathId, updateNode: next.node.with(offset: snappedOffset)))
             if case let .bezier(b) = next.edge {
-                events.append(.init(in: pathId, updateEdgeFrom: next.node.id, .bezier(b.with(offset0: offset))))
+                events.append(.init(in: pathId, updateEdgeFrom: next.node.id, .bezier(b.with(offset0: snappedOffset))))
             }
         }
     }
@@ -283,6 +294,16 @@ struct PathUpdater {
     private func collectEvents(to events: inout [PathEvent], _ movePath: PathAction.MovePath) {
         let pathId = movePath.pathId, offset = movePath.offset
         events.append(.init(in: pathId, move: offset))
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ moveEdgeBezier: PathAction.MoveEdgeBezier) {
+        let pathId = moveEdgeBezier.pathId, fromNodeId = moveEdgeBezier.fromNodeId, offset0 = moveEdgeBezier.offset0, offset1 = moveEdgeBezier.offset1
+        guard let path = pathStore.pathMap.getValue(key: pathId),
+              let curr = path.edge(id: fromNodeId),
+              case let .bezier(bezier) = curr else { return }
+        let snappedOffset0 = offset0 == .zero ? .zero : bezier.control0.offset(to: grid.grid.snap(bezier.control0 + offset0))
+        let snappedOffset1 = offset1 == .zero ? .zero : bezier.control1.offset(to: grid.grid.snap(bezier.control1 + offset1))
+        events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier.with(offset0: snappedOffset0).with(offset1: snappedOffset1))))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ movePaths: PathAction.MovePaths) {
@@ -321,6 +342,10 @@ struct PathUpdaterInView {
 
     func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {
         pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.applying(viewport.toWorld), pending: pending)
+    }
+
+    func updateActivePath(edgeBezier fromNodeId: UUID, offset0: Vector2, offset1: Vector2, pending: Bool = false) {
+        pathUpdater.updateActivePath(edgeBezier: fromNodeId, offset0: offset0.applying(viewport.toWorld), offset1: offset1.applying(viewport.toWorld), pending: pending)
     }
 
     // MARK: compound update

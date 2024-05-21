@@ -36,11 +36,11 @@ struct PendingSelectionService {
         return .init(from: from, to: store.to)
     }
 
-    var intersectedPaths: [Path]? {
+    var intersectedPaths: [Path] {
         rect.map {
             let rectInWorld = $0.applying(viewport.toWorld)
             return pathStore.paths.filter { $0.boundingRect.intersects(rectInWorld) }
-        }
+        } ?? []
     }
 
     func subscribe(to multipleTouch: MultipleTouchModel) {
@@ -76,7 +76,7 @@ struct PendingSelection: View {
                 .frame(width: rect.width, height: rect.height)
                 .position(rect.center)
         }
-        if let intersectedPaths {
+        if !intersectedPaths.isEmpty {
             ForEach(intersectedPaths) {
                 let rect = $0.boundingRect.applying(toView)
                 RoundedRectangle(cornerRadius: 2)

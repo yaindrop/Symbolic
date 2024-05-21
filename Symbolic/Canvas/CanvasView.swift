@@ -132,8 +132,9 @@ struct CanvasView: View {
                     global.viewportUpdater.setBlocked(false)
                     //                    longPressPosition = nil
 
-                    if let paths = global.pendingSelection.intersectedPaths {
-                        global.selection.update(pathIds: Set(paths.map { $0.id }))
+                    let selectedPaths = global.pendingSelection.intersectedPaths
+                    if !selectedPaths.isEmpty {
+                        global.selection.update(pathIds: Set(selectedPaths.map { $0.id }))
                         global.canvasAction.on(instant: .selectPaths)
                     }
                     global.pendingSelection.onEnd()

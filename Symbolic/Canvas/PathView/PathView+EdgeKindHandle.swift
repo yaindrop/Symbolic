@@ -43,20 +43,20 @@ extension PathView {
                     line(from: segment.from, to: bezier.control0, color: .green)
                     circle(at: bezier.control0, color: .green)
                         .if(gesture0) {
-                            $0.multipleGesture($1, ())
+                            $0.multipleGesture($1, bezier)
                         }
                         .onAppear {
-                            gesture1 = viewModel.bezierGesture(fromId: fromId, updater: { bezier.with(control0: $0) })
+                            gesture0 = viewModel.bezierGesture(fromId: fromId, updater: { $0.with(control0: $1) })
                         }
                 }
                 if edgeFocused || nextFocused {
                     line(from: segment.to, to: bezier.control1, color: .orange)
                     circle(at: bezier.control1, color: .orange)
                         .if(gesture1) {
-                            $0.multipleGesture($1, ())
+                            $0.multipleGesture($1, bezier)
                         }
                         .onAppear {
-                            gesture1 = viewModel.bezierGesture(fromId: fromId, updater: { bezier.with(control1: $0) })
+                            gesture1 = viewModel.bezierGesture(fromId: fromId, updater: { $0.with(control1: $1) })
                         }
                 }
             }
@@ -68,8 +68,8 @@ extension PathView {
         private static let circleSize: Scalar = 12
         private static let touchablePadding: Scalar = 12
 
-        @State private var gesture0: MultipleGestureModel<Void>?
-        @State private var gesture1: MultipleGestureModel<Void>?
+        @State private var gesture0: MultipleGestureModel<PathEdge.Bezier>?
+        @State private var gesture1: MultipleGestureModel<PathEdge.Bezier>?
 
         private var bezier: PathEdge.Bezier { segment.bezier }
 
@@ -192,7 +192,7 @@ extension PathView {
         //            .position(center)
         //    }
 
-        @State private var gestureWidth: MultipleGestureModel<Point2>?
+        @State private var gestureWidth: MultipleGestureModel<(PathEdge.Arc, Point2)>?
 
         @ViewBuilder private var radiusWidthRect: some View {
             Rectangle()
@@ -204,14 +204,14 @@ extension PathView {
                 .rotationEffect(arc.rotation)
                 .position(radiusHalfWidthEnd)
                 .if(gestureWidth) {
-                    $0.multipleGesture($1, center)
+                    $0.multipleGesture($1, (arc, center))
                 }
                 .onAppear {
-                    gestureWidth = viewModel.arcGesture(fromId: fromId, updater: { arc.with(radius: radius.with(width: $0)) })
+                    gestureWidth = viewModel.arcGesture(fromId: fromId, updater: { $0.with(radius: $0.radius.with(width: $1)) })
                 }
         }
 
-        @State private var gestureHeight: MultipleGestureModel<Point2>?
+        @State private var gestureHeight: MultipleGestureModel<(PathEdge.Arc, Point2)>?
 
         @ViewBuilder private var radiusHeightRect: some View {
             Rectangle()
@@ -223,10 +223,10 @@ extension PathView {
                 .rotationEffect(arc.rotation)
                 .position(radiusHalfHeightEnd)
                 .if(gestureHeight) {
-                    $0.multipleGesture($1, center)
+                    $0.multipleGesture($1, (arc, center))
                 }
                 .onAppear {
-                    gestureHeight = viewModel.arcGesture(fromId: fromId, updater: { arc.with(radius: radius.with(height: $0)) })
+                    gestureHeight = viewModel.arcGesture(fromId: fromId, updater: { $0.with(radius: $0.radius.with(height: $1)) })
                 }
         }
     }

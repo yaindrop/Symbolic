@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 enum CanvasAction {
     enum Triggering {
@@ -14,19 +15,28 @@ enum CanvasAction {
         case pendingSelection
         case addingPath
 
+        case movePath
+        case moveSelection
         case movePathNode
         case movePathEdge
         case movePathBezierControl
+        case movePathArcControl
         case splitAndMovePathNode
     }
 
     enum Instant {
-        case focusPath
-        case blurPath
+        case activatePath
+        case deactivatePath
         case focusPathNode
         case blurPathNode
         case focusPathEdge
         case blurPathEdge
+
+        case selectPaths
+        case cancelSelection
+        case addPath
+
+        case undo
     }
 
     case triggering(Triggering)
@@ -39,24 +49,30 @@ class CanvasActionStore: Store {
     @Trackable var continuous = Set<CanvasAction.Continuous>()
     @Trackable var instant = Set<CanvasAction.Instant>()
 
-    func onStart(triggering action: CanvasAction.Triggering) {
+    func start(triggering action: CanvasAction.Triggering) {
         update { $0(\._triggering, triggering.with { $0.insert(action) }) }
     }
 
-    func onEnd(triggering action: CanvasAction.Triggering) {
+    func end(triggering action: CanvasAction.Triggering) {
         update { $0(\._triggering, triggering.with { $0.remove(action) }) }
     }
 
-    func onStart(continuous action: CanvasAction.Continuous) {
+    func start(continuous action: CanvasAction.Continuous) {
         update { $0(\._continuous, continuous.with { $0.insert(action) }) }
     }
 
-    func onEnd(continuous action: CanvasAction.Continuous) {
+    func end(continuous action: CanvasAction.Continuous) {
         update { $0(\._continuous, continuous.with { $0.remove(action) }) }
     }
 
     func on(instant action: CanvasAction.Instant) {
-        update { $0(\._instant, instant.with { $0.remove(action) }) }
+        if instant.contains(action) {
+            return
+        }
+        update { $0(\._instant, instant.with { $0.insert(action) }) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.update { $0(\._instant, self.instant.with { $0.remove(action) }) }
+        }
     }
 
     var subscriptions = Set<AnyCancellable>()

@@ -11,6 +11,8 @@ class ActivePathViewModel: PathViewModel {
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
+        model.onTouchDown { global.canvasAction.start(continuous: .movePath) }
+        model.onTouchUp { global.canvasAction.end(continuous: .movePath) }
         return model
     }
 
@@ -22,6 +24,8 @@ class ActivePathViewModel: PathViewModel {
         model.onTap { _, _ in self.toggleFocus(nodeId: nodeId) }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
+        model.onTouchDown { global.canvasAction.start(continuous: .movePathNode) }
+        model.onTouchUp { global.canvasAction.end(continuous: .movePathNode) }
         return model
     }
 
@@ -62,6 +66,17 @@ class ActivePathViewModel: PathViewModel {
         model.onLongPressEnd { _, s in updateLongPress(segment: s) }
         model.onDrag(updateDrag(pending: true))
         model.onDragEnd(updateDrag())
+
+        model.onTouchDown { global.canvasAction.start(triggering: .splitPathEdge) }
+        model.onDrag { _, _ in global.canvasAction.end(triggering: .splitPathEdge) }
+        model.onLongPress { _, _ in
+            global.canvasAction.end(triggering: .splitPathEdge)
+            global.canvasAction.start(continuous: .splitAndMovePathNode)
+        }
+        model.onTouchUp {
+            global.canvasAction.end(triggering: .splitPathEdge)
+            global.canvasAction.end(continuous: .splitAndMovePathNode)
+        }
         return (model, context)
     }
 
@@ -72,26 +87,32 @@ class ActivePathViewModel: PathViewModel {
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
+        model.onTouchDown { global.canvasAction.start(continuous: .movePathEdge) }
+        model.onTouchUp { global.canvasAction.end(continuous: .movePathEdge) }
         return model
     }
 
-    override func bezierGesture(fromId: UUID, updater: @escaping (Point2) -> PathEdge.Bezier) -> MultipleGestureModel<Void> {
-        let model = MultipleGestureModel<Void>()
-        func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in global.pathUpdaterInView.updateActivePath(edge: fromId, bezier: updater(v.location), pending: pending) }
+    override func bezierGesture(fromId: UUID, updater: @escaping (PathEdge.Bezier, Point2) -> PathEdge.Bezier) -> MultipleGestureModel<PathEdge.Bezier>? {
+        let model = MultipleGestureModel<PathEdge.Bezier>()
+        func update(pending: Bool = false) -> (DragGesture.Value, PathEdge.Bezier) -> Void {
+            { global.pathUpdaterInView.updateActivePath(edge: fromId, bezier: updater($1, $0.location), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
+        model.onTouchDown { global.canvasAction.start(continuous: .movePathBezierControl) }
+        model.onTouchUp { global.canvasAction.end(continuous: .movePathBezierControl) }
         return model
     }
 
-    override func arcGesture(fromId: UUID, updater: @escaping (Scalar) -> PathEdge.Arc) -> MultipleGestureModel<Point2> {
-        let model = MultipleGestureModel<Point2>()
-        func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { global.pathUpdaterInView.updateActivePath(edge: fromId, arc: updater($0.location.distance(to: $1) * 2), pending: pending) }
+    override func arcGesture(fromId: UUID, updater: @escaping (PathEdge.Arc, Scalar) -> PathEdge.Arc) -> MultipleGestureModel<(PathEdge.Arc, Point2)> {
+        let model = MultipleGestureModel<(PathEdge.Arc, Point2)>()
+        func update(pending: Bool = false) -> (DragGesture.Value, (PathEdge.Arc, Point2)) -> Void {
+            { global.pathUpdaterInView.updateActivePath(edge: fromId, arc: updater($1.0, $0.location.distance(to: $1.1) * 2), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
+        model.onTouchDown { global.canvasAction.start(continuous: .movePathArcControl) }
+        model.onTouchUp { global.canvasAction.end(continuous: .movePathArcControl) }
         return model
     }
 

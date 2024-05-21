@@ -82,23 +82,28 @@ struct CanvasView: View {
             .onAppear {
                 multipleTouchPress.onPress {
                     if case .select = toolbarMode {
-                        global.canvasAction.onStart(triggering: .select)
+                        global.canvasAction.start(triggering: .select)
                     } else if case .addPath = toolbarMode {
-                        global.canvasAction.onStart(triggering: .addPath)
+                        global.canvasAction.start(triggering: .addPath)
                     }
                 }
                 multipleTouchPress.onPressEnd {
-                    global.canvasAction.onEnd(triggering: .select)
-                    global.canvasAction.onEnd(triggering: .addPath)
+                    global.canvasAction.end(triggering: .select)
+                    global.canvasAction.end(triggering: .addPath)
                 }
                 multipleTouchPress.onTap { info in
                     let worldLocation = info.location.applying(toWorld)
                     let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
                     withAnimation {
-                        global.selection.update(pathIds: [])
+                        if !global.selection.selectedPathIds.isEmpty {
+                            global.selection.update(pathIds: [])
+                            global.canvasAction.on(instant: .cancelSelection)
+                        }
                         if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
+                            global.canvasAction.on(instant: .activatePath)
                             global.activePath.activate(pathId: pathId)
-                        } else {
+                        } else if global.activePath.activePathId != nil {
+                            global.canvasAction.on(instant: .deactivatePath)
                             global.activePath.deactivate()
                         }
                     }
@@ -108,17 +113,17 @@ struct CanvasView: View {
                     let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
 
                     global.viewportUpdater.setBlocked(true)
-                    global.canvasAction.onEnd(continuous: .panViewport)
+                    global.canvasAction.end(continuous: .panViewport)
 
-                    global.canvasAction.onEnd(triggering: .select)
-                    global.canvasAction.onEnd(triggering: .addPath)
+                    global.canvasAction.end(triggering: .select)
+                    global.canvasAction.end(triggering: .addPath)
 
                     if case .select = toolbarMode, !pendingSelectionActive {
                         longPressPosition = info.current
-                        global.canvasAction.onStart(continuous: .pendingSelection)
+                        global.canvasAction.start(continuous: .pendingSelection)
                         global.pendingSelection.onStart(from: info.current)
                     } else if case let .addPath(addPath) = toolbarMode {
-                        global.canvasAction.onStart(continuous: .addingPath)
+                        global.canvasAction.start(continuous: .addingPath)
                         global.addingPath.onStart(from: info.current)
                     }
                 }
@@ -129,16 +134,18 @@ struct CanvasView: View {
 
                     if let paths = global.pendingSelection.intersectedPaths {
                         global.selection.update(pathIds: Set(paths.map { $0.id }))
+                        global.canvasAction.on(instant: .selectPaths)
                     }
                     global.pendingSelection.onEnd()
-                    global.canvasAction.onEnd(continuous: .pendingSelection)
+                    global.canvasAction.end(continuous: .pendingSelection)
 
                     if let path = global.addingPath.addingPath {
                         global.document.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
                         global.activePath.activate(pathId: path.id)
+                        global.canvasAction.on(instant: .addPath)
                     }
                     global.addingPath.onEnd()
-                    global.canvasAction.onEnd(continuous: .addingPath)
+                    global.canvasAction.end(continuous: .addingPath)
                 }
             }
             .onAppear {

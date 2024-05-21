@@ -71,6 +71,12 @@ extension SelectionView {
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())
+                    $0.onTouchDown {
+                        global.canvasAction.start(continuous: .moveSelection)
+                    }
+                    $0.onTouchDown {
+                        global.canvasAction.end(continuous: .moveSelection)
+                    }
                 }
         }
     }

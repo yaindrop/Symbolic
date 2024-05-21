@@ -16,6 +16,14 @@ class MultipleGestureModel<Data> {
         var coordinateSpace: CoordinateSpace = .local
     }
 
+    func onTouchDown(_ callback: @escaping () -> Void) {
+        touchDownSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onTouchUp(_ callback: @escaping () -> Void) {
+        touchUpSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
     func onTap(_ callback: @escaping (Value, Data) -> Void) {
         tapSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
     }
@@ -67,6 +75,9 @@ class MultipleGestureModel<Data> {
 
     fileprivate var context: Context?
     fileprivate var subscriptions = Set<AnyCancellable>()
+
+    fileprivate let touchDownSubject = PassthroughSubject<Void, Never>()
+    fileprivate let touchUpSubject = PassthroughSubject<Void, Never>()
 
     fileprivate let tapSubject = PassthroughSubject<Void, Never>()
     fileprivate let longPressSubject = PassthroughSubject<Void, Never>()
@@ -139,6 +150,7 @@ struct MultipleGestureModifier<Data>: ViewModifier {
     private func onPressStarted(_ v: DragGesture.Value) {
         context = .init(data: getData(), value: v)
         setupLongPress()
+        model.touchDownSubject.send()
     }
 
     private func onPressChanged() {
@@ -165,10 +177,13 @@ struct MultipleGestureModifier<Data>: ViewModifier {
                 resetLongPress()
             }
         }
+        model.touchUpSubject.send()
+        self.context = nil
     }
 
     private func onPressCancelled() {
         resetLongPress()
+        model.touchUpSubject.send()
         context = nil
     }
 

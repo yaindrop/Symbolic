@@ -25,17 +25,6 @@ extension Optional {
     }
 }
 
-extension Equatable {
-    @discardableResult
-    mutating func setIfChanged(_ newValue: Self) -> Bool {
-        if self != newValue {
-            self = newValue
-            return true
-        }
-        return false
-    }
-}
-
 class IncrementalIdGenerator {
     func generate() -> Int {
         let id = next

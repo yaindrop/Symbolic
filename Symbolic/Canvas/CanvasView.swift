@@ -56,8 +56,6 @@ struct CanvasView: View {
 
     @StateObject var panelModel = PanelModel()
 
-    @State var canvasActionModel = CanvasActionModel()
-
     // MARK: body
 
     var body: some View { tracer.range("CanvasView body") {
@@ -82,6 +80,17 @@ struct CanvasView: View {
                 global.path.subscribe()
             }
             .onAppear {
+                multipleTouchPress.onPress {
+                    if case .select = toolbarMode {
+                        global.canvasAction.onStart(triggering: .select)
+                    } else if case .addPath = toolbarMode {
+                        global.canvasAction.onStart(triggering: .addPath)
+                    }
+                }
+                multipleTouchPress.onPressEnd {
+                    global.canvasAction.onEnd(triggering: .select)
+                    global.canvasAction.onEnd(triggering: .addPath)
+                }
                 multipleTouchPress.onTap { info in
                     let worldLocation = info.location.applying(toWorld)
                     let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
@@ -97,12 +106,19 @@ struct CanvasView: View {
                 multipleTouchPress.onLongPress { info in
                     let worldLocation = info.current.applying(toWorld)
                     let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
+
                     global.viewportUpdater.setBlocked(true)
+                    global.canvasAction.onEnd(continuous: .panViewport)
+
+                    global.canvasAction.onEnd(triggering: .select)
+                    global.canvasAction.onEnd(triggering: .addPath)
+
                     if case .select = toolbarMode, !pendingSelectionActive {
-                        canvasActionModel.onStart(triggering: .longPressViewport)
                         longPressPosition = info.current
+                        global.canvasAction.onStart(continuous: .pendingSelection)
                         global.pendingSelection.onStart(from: info.current)
                     } else if case let .addPath(addPath) = toolbarMode {
+                        global.canvasAction.onStart(continuous: .addingPath)
                         global.addingPath.onStart(from: info.current)
                     }
                 }
@@ -110,18 +126,19 @@ struct CanvasView: View {
                     let _r = tracer.range("On long press end", type: .intent); defer { _r() }
                     global.viewportUpdater.setBlocked(false)
                     //                    longPressPosition = nil
-                    canvasActionModel.onEnd(triggering: .longPressViewport)
 
                     if let paths = global.pendingSelection.intersectedPaths {
                         global.selection.update(pathIds: Set(paths.map { $0.id }))
                     }
                     global.pendingSelection.onEnd()
+                    global.canvasAction.onEnd(continuous: .pendingSelection)
 
                     if let path = global.addingPath.addingPath {
                         global.document.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
                         global.activePath.activate(pathId: path.id)
                     }
                     global.addingPath.onEnd()
+                    global.canvasAction.onEnd(continuous: .addingPath)
                 }
             }
             .onAppear {
@@ -138,10 +155,7 @@ struct CanvasView: View {
                 panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
                 panelModel.register(align: .bottomLeading) { HistoryPanel() }
                 panelModel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
-                panelModel.register(align: .topLeading) {
-                    Text("hello?")
-                        .padding()
-                }
+                panelModel.register(align: .topLeading) { CanvasActionPanel() }
             }
             .onAppear {
                 global.document.setDocument(.init(from: fooSvg))

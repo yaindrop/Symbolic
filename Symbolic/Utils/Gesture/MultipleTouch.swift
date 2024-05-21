@@ -65,9 +65,9 @@ extension PinchInfo: CustomStringConvertible {
 // MARK: - MultipleTouchModel
 
 class MultipleTouchModel {
-    @Published fileprivate(set) var startTime: Date?
+    @Published private(set) var startTime: Date?
+    @Published private(set) var touchesCount: Int = 0
 
-    @Published fileprivate(set) var touchesCount: Int = 0
     @Published fileprivate(set) var panInfo: PanInfo?
     @Published fileprivate(set) var pinchInfo: PinchInfo?
 
@@ -78,10 +78,18 @@ class MultipleTouchModel {
     }
 
     fileprivate func onAllTouchesEnded() {
+        onTouchesChanged(count: 0)
         startTime = nil
-        touchesCount.setIfChanged(0)
-        panInfo.setIfChanged(nil)
-        pinchInfo.setIfChanged(nil)
+    }
+
+    fileprivate func onTouchesChanged(count: Int) {
+        touchesCount = count
+        if panInfo != nil {
+            panInfo = nil
+        }
+        if pinchInfo != nil {
+            pinchInfo = nil
+        }
     }
 }
 
@@ -159,24 +167,22 @@ class MultipleTouchView: TouchDebugView {
     private func location(of touch: UITouch) -> Point2 { touch.location(in: self) }
 
     private func onActiveTouchesChanged() {
-        model.touchesCount.setIfChanged(activeTouches.count)
-        model.panInfo.setIfChanged(nil)
-        model.pinchInfo.setIfChanged(nil)
+        model.onTouchesChanged(count: activeTouches.count)
         if let panTouch {
-            model.panInfo.setIfChanged(.init(origin: location(of: panTouch)))
+            model.panInfo = .init(origin: location(of: panTouch))
         } else if let pinchTouches {
-            model.pinchInfo.setIfChanged(.init(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1))))
+            model.pinchInfo = .init(origin: (location(of: pinchTouches.0), location(of: pinchTouches.1)))
         }
     }
 
     private func onActiveTouchesMoved() {
         if let info = model.panInfo, let panTouch {
-            model.panInfo.setIfChanged(.init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin)))
+            model.panInfo = .init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
         } else if let info = model.pinchInfo, let pinchTouches {
-            model.pinchInfo.setIfChanged(.init(
+            model.pinchInfo = .init(
                 origin: info.origin,
                 offset: (Vector2(location(of: pinchTouches.0)) - Vector2(info.origin.0), Vector2(location(of: pinchTouches.1)) - Vector2(info.origin.1))
-            ))
+            )
         }
     }
 }

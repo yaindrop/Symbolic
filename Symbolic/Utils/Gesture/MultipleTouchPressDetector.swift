@@ -19,6 +19,14 @@ class MultipleTouchPressModel {
         var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
     }
 
+    func onPress(_ callback: @escaping () -> Void) {
+        pressSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
+    func onPressEnd(_ callback: @escaping () -> Void) {
+        pressEndSubject.sink(receiveValue: callback).store(in: &subscriptions)
+    }
+
     func onTap(_ callback: @escaping (TapInfo) -> Void) {
         tapSubject.sink(receiveValue: callback).store(in: &subscriptions)
     }
@@ -53,6 +61,9 @@ class MultipleTouchPressModel {
     fileprivate var context: Context?
     fileprivate var subscriptions = Set<AnyCancellable>()
 
+    fileprivate let pressSubject = PassthroughSubject<Void, Never>()
+    fileprivate let pressEndSubject = PassthroughSubject<Void, Never>()
+
     fileprivate let tapSubject = PassthroughSubject<TapInfo, Never>()
     fileprivate let longPressSubject = PassthroughSubject<PanInfo, Never>()
     fileprivate let longPressEndSubject = PassthroughSubject<PanInfo, Never>()
@@ -77,12 +88,9 @@ struct MultipleTouchPressDetector {
     func subscribe() {
         multipleTouch.$startTime
             .sink { time in
-                if time != nil {
-                    self.onPressStarted()
-                    self.onPressChanged()
-                } else {
-                    self.onPressEnded()
-                }
+                guard time != nil else { return }
+                self.onPressStarted()
+                self.onPressChanged()
             }
             .store(in: &model.subscriptions)
         multipleTouch.$panInfo
@@ -95,7 +103,10 @@ struct MultipleTouchPressDetector {
             .store(in: &model.subscriptions)
         multipleTouch.$touchesCount
             .sink { count in
-                if count != 1 {
+                guard count != 1 else { return }
+                if count == 0 {
+                    self.onPressEnded()
+                } else if count > 1 {
                     self.onPressCanceled()
                 }
             }
@@ -132,13 +143,14 @@ struct MultipleTouchPressDetector {
     private func onPressStarted() {
         context = .init()
         setupLongPress()
+        model.pressSubject.send()
     }
 
     private func onPressChanged() {
         guard let context else { return }
         if !isPress {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
-                resetLongPress()
+                onPressCanceled()
             }
         }
     }
@@ -159,10 +171,13 @@ struct MultipleTouchPressDetector {
                 resetLongPress()
             }
         }
+        model.pressEndSubject.send()
+        self.context = nil
     }
 
     private func onPressCanceled() {
         resetLongPress()
+        model.pressEndSubject.send()
         context = nil
     }
 

@@ -1,17 +1,18 @@
-import Foundation
+import Combine
 
 enum CanvasAction {
     enum Triggering {
-        case longPressViewport
-
-        case longPressPathEdge
+        case select
+        case addPath
+        case splitPathEdge
     }
 
     enum Continuous {
         case panViewport
         case pinchViewport
 
-        case dragSelection
+        case pendingSelection
+        case addingPath
 
         case movePathNode
         case movePathEdge
@@ -33,26 +34,30 @@ enum CanvasAction {
     case instant(Instant)
 }
 
-class CanvasActionModel {
-    @Published var actions: [CanvasAction] = []
+class CanvasActionStore: Store {
+    @Trackable var triggering = Set<CanvasAction.Triggering>()
+    @Trackable var continuous = Set<CanvasAction.Continuous>()
+    @Trackable var instant = Set<CanvasAction.Instant>()
 
-    func onStart(triggering: CanvasAction.Triggering) {
-        actions.append(.triggering(triggering))
+    func onStart(triggering action: CanvasAction.Triggering) {
+        update { $0(\._triggering, triggering.with { $0.insert(action) }) }
     }
 
-    func onEnd(triggering: CanvasAction.Triggering) {
-        actions.removeAll { if case let .triggering(t) = $0 { t == triggering } else { false }}
+    func onEnd(triggering action: CanvasAction.Triggering) {
+        update { $0(\._triggering, triggering.with { $0.remove(action) }) }
     }
 
-    func onStart(continuous: CanvasAction.Continuous) {
-        actions.append(.continuous(continuous))
+    func onStart(continuous action: CanvasAction.Continuous) {
+        update { $0(\._continuous, continuous.with { $0.insert(action) }) }
     }
 
-    func onEnd(continuous: CanvasAction.Continuous) {
-        actions.removeAll { if case let .continuous(c) = $0 { c == continuous } else { false }}
+    func onEnd(continuous action: CanvasAction.Continuous) {
+        update { $0(\._continuous, continuous.with { $0.remove(action) }) }
     }
 
-    func on(instant: CanvasAction.Instant) {
-        
+    func on(instant action: CanvasAction.Instant) {
+        update { $0(\._instant, instant.with { $0.remove(action) }) }
     }
+
+    var subscriptions = Set<AnyCancellable>()
 }

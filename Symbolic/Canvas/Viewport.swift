@@ -1,6 +1,8 @@
 import Combine
 import Foundation
 
+fileprivate let subtracer = tracer.tagged("viewport")
+
 // MARK: - ViewportInfo
 
 struct ViewportInfo: Equatable {
@@ -89,7 +91,9 @@ struct ViewportUpdater {
     // MARK: private
 
     private func onPanInfo(_ pan: PanInfo) {
-        let _r = tracer.range("Viewport pan \(pan)", type: .intent); defer { _r() }
+        global.canvasAction.onStart(continuous: .panViewport)
+        global.canvasAction.onEnd(continuous: .pinchViewport)
+        let _r = subtracer.range("pan \(pan)", type: .intent); defer { _r() }
         let previousInfo = store.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
@@ -97,7 +101,9 @@ struct ViewportUpdater {
     }
 
     private func onPinchInfo(_ pinch: PinchInfo) {
-        let _r = tracer.range("Viewport pinch \(pinch)", type: .intent); defer { _r() }
+        global.canvasAction.onStart(continuous: .pinchViewport)
+        global.canvasAction.onEnd(continuous: .panViewport)
+        let _r = subtracer.range("pinch \(pinch)", type: .intent); defer { _r() }
         let previousInfo = store.previousInfo
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
@@ -107,7 +113,10 @@ struct ViewportUpdater {
     }
 
     private func onCommit() {
-        let _r = tracer.range("Viewport commit", type: .intent); defer { _r() }
+        global.canvasAction.onEnd(continuous: .panViewport)
+        global.canvasAction.onEnd(continuous: .pinchViewport)
+        global.canvasAction.onEnd(continuous: .pinchViewport)
+        let _r = subtracer.range("commit", type: .intent); defer { _r() }
         store.update(previousInfo: viewport.info)
     }
 }

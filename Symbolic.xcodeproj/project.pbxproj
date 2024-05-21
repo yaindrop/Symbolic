@@ -63,6 +63,7 @@
 		574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */; };
 		574CC7E82BFA3EAF0042FEE3 /* ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */; };
 		574CC7EA2BFA53310042FEE3 /* PathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E92BFA53310042FEE3 /* PathView.swift */; };
+		574CC7EF2BFC42D10042FEE3 /* CanvasActionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
@@ -161,6 +162,7 @@
 		574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gesture+Extension.swift"; sourceTree = "<group>"; };
 		574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextMenu.swift; sourceTree = "<group>"; };
 		574CC7E92BFA53310042FEE3 /* PathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathView.swift; sourceTree = "<group>"; };
+		574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionPanel.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
@@ -365,10 +367,8 @@
 		574CC7DE2BFA0DB00042FEE3 /* Action */ = {
 			isa = PBXGroup;
 			children = (
-				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
 				5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */,
-				574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */,
-				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
+				574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */,
 			);
 			path = Action;
 			sourceTree = "<group>";
@@ -406,14 +406,17 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				574CC7ED2BFAF2150042FEE3 /* Selection */,
-				5723BFA52BC39865002209F2 /* CanvasView.swift */,
-				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
-				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
 				574CC7DE2BFA0DB00042FEE3 /* Action */,
 				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
-				572487812BDF82180096DDE4 /* PathView */,
+				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
+				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				574CC7E62BFA3E790042FEE3 /* ContextMenu */,
+				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
+				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
+				572487812BDF82180096DDE4 /* PathView */,
+				574CC7ED2BFAF2150042FEE3 /* Selection */,
+				574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */,
+				57B5F11B2BC639B2001E1B2E /* Viewport.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -656,6 +659,7 @@
 				574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */,
 				574CC7EA2BFA53310042FEE3 /* PathView.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
+				574CC7EF2BFC42D10042FEE3 /* CanvasActionPanel.swift in Sources */,
 				57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */,
 				574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,

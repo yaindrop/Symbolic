@@ -34,6 +34,8 @@ extension TriviallyCloneable {
 
 extension Array: Cloneable {}
 
+extension Set: Cloneable {}
+
 extension UUID: TriviallyCloneable {}
 
 // MARK: - ReflectedStringConvertible

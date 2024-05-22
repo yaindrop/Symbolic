@@ -17,6 +17,10 @@ extension Vector2 {
 
     var length: Scalar { hypot(dx, dy) }
 
+    var vectorX: Vector2 { .init(dx, 0) }
+
+    var vectorY: Vector2 { .init(0, dy) }
+
     var normalLeft: Vector2 { .init(-dy, dx) }
 
     var normalRight: Vector2 { .init(dy, -dx) }
@@ -71,6 +75,8 @@ extension Point2 {
     // MARK: geometric operation
 
     func offset(to point: Self) -> Vector2 { Vector2(point) - Vector2(self) }
+
+    func offset(by offset: Vector2) -> Self { self + offset }
 
     func distance(to point: Self) -> Scalar { offset(to: point).length }
 

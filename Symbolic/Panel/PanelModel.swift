@@ -15,9 +15,9 @@ class PanelModel: ObservableObject {
 }
 
 extension PanelModel {
-    func register(align: PlaneAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
+    func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
         var panelData = PanelData(view: AnyView(panel()))
-        panelData.affinities += Axis.allCases.map { axis in .root(.init(axis: axis, align: align.getAxisAlign(in: axis))) }
+        panelData.affinities += Axis.allCases.map { axis in .root(.init(axis: axis, align: align.getAxisInnerAlign(in: axis))) }
         idToPanel[panelData.id] = panelData
         panelIds.append(panelData.id)
     }
@@ -135,7 +135,7 @@ extension PanelModel {
 
 // MARK: - get affinities
 
-fileprivate func getKeyPath(axis: Axis, align: AxisAlign) -> KeyPath<CGRect, Scalar> {
+fileprivate func getKeyPath(axis: Axis, align: AxisInnerAlign) -> KeyPath<CGRect, Scalar> {
     switch axis {
     case .horizontal:
         switch align {
@@ -161,7 +161,7 @@ extension PanelModel {
     typealias PanelAffinityCandidate = (affinity: PanelAffinity, distance: Scalar)
     private func getRootAffinityCandidates(of rect: CGRect) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
-            AxisAlign.allCases.map { align in
+            AxisInnerAlign.allCases.map { align in
                 let kp = getKeyPath(axis: axis, align: align)
                 let distance = abs(rect[keyPath: kp] - rootRect[keyPath: kp])
                 return (.root(.init(axis: axis, align: align)), distance)
@@ -171,8 +171,8 @@ extension PanelModel {
 
     private func getPeerAffinityCandidates(of rect: CGRect, peer: PanelData) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
-            AxisAlign.allCases.flatMap { selfAlign in
-                AxisAlign.allCases.map { peerAlign in
+            AxisInnerAlign.allCases.flatMap { selfAlign in
+                AxisInnerAlign.allCases.map { peerAlign in
                     let selfKp = getKeyPath(axis: axis, align: selfAlign)
                     let peerKp = getKeyPath(axis: axis, align: peerAlign)
                     let distance = abs(rect[keyPath: selfKp] - peer.rect[keyPath: peerKp])

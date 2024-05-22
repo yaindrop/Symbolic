@@ -21,6 +21,7 @@ struct SelectionView: View {
     @Selected var toView = global.viewport.toView
 
     @State private var dashPhase: CGFloat = 0
+    @State private var menuSize: CGSize = .zero
 
     var selectedPathIds: [UUID] { selectedPaths.map { $0.id }}
 
@@ -45,7 +46,8 @@ struct SelectionView: View {
             ContextMenu(onDelete: {
                 global.pathUpdater.delete(pathIds: selectedPathIds)
             })
-            .position(bounds.center)
+            .viewSizeReader { menuSize = $0 }
+            .position(bounds.box(aligned: .topCenter, size: menuSize, gap: 8).center)
         }
     }
 }
@@ -74,7 +76,7 @@ extension SelectionView {
                     $0.onTouchDown {
                         global.canvasAction.start(continuous: .moveSelection)
                     }
-                    $0.onTouchDown {
+                    $0.onTouchUp {
                         global.canvasAction.end(continuous: .moveSelection)
                     }
                 }

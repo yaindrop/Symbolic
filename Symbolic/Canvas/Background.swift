@@ -9,7 +9,7 @@ fileprivate enum GridLineType: CaseIterable {
 struct Background: View {
     var body: some View {
         GeometryReader {
-            canvas(size: $0.size)
+            linePaths(size: $0.size)
         }
     }
 
@@ -30,7 +30,7 @@ struct Background: View {
         return cellSize * adjustedRatio
     }
 
-    private func lines(size: CGSize) -> (horizontal: [Scalar], vertical: [Scalar]) {
+    private func linePositions(size: CGSize) -> (horizontal: [Scalar], vertical: [Scalar]) {
         let cellSize = adjustedCellSize
         let worldRect = viewportInfo.worldRect(viewSize: size)
         let horizontal = Array(stride(from: round(worldRect.minX / cellSize) * cellSize, to: worldRect.maxX, by: cellSize))
@@ -38,40 +38,41 @@ struct Background: View {
         return (horizontal, vertical)
     }
 
-    private func canvas(size: CGSize) -> some View {
+    private func linePaths(size: CGSize) -> some View {
         let cellSize = adjustedCellSize
-        let (horizontal, vertical) = lines(size: size)
-        return Canvas { context, _ in
-            func gridLineType(_ position: Scalar) -> GridLineType {
-                if position / cellSize ~== 0 {
-                    .axis
-                } else if position / cellSize / 2 ~== round(position / cellSize / 2) {
-                    .principal
-                } else {
-                    .normal
-                }
+        let (horizontal, vertical) = linePositions(size: size)
+        func gridLineType(_ position: Scalar) -> GridLineType {
+            if position / cellSize ~== 0 {
+                .axis
+            } else if position / cellSize / 2 ~== round(position / cellSize / 2) {
+                .principal
+            } else {
+                .normal
             }
-            for type in GridLineType.allCases {
-                let lines = SUPath { path in
-                    for x in horizontal {
-                        guard gridLineType(x) == type else { continue }
-                        let xInView = Point2(x, 0).applying(toView).x
-                        path.move(to: .init(xInView, 0))
-                        path.addLine(to: .init(xInView, size.height))
-                    }
-                    for y in vertical {
-                        guard gridLineType(y) == type else { continue }
-                        let yInView = Point2(0, y).applying(toView).y
-                        path.move(to: .init(0, yInView))
-                        path.addLine(to: .init(size.width, yInView))
-                    }
+        }
+        func path(_ type: GridLineType) -> SUPath {
+            SUPath { path in
+                for x in horizontal {
+                    guard gridLineType(x) == type else { continue }
+                    let xInView = Point2(x, 0).applying(toView).x
+                    path.move(to: .init(xInView, 0))
+                    path.addLine(to: .init(xInView, size.height))
                 }
-                switch type {
-                case .normal: context.stroke(lines, with: .color(Self.gridLineColor.opacity(0.3)), lineWidth: 0.5)
-                case .principal: context.stroke(lines, with: .color(Self.gridLineColor.opacity(0.5)), lineWidth: 1)
-                case .axis: context.stroke(lines, with: .color(Self.gridLineColor.opacity(0.8)), lineWidth: 2)
+                for y in vertical {
+                    guard gridLineType(y) == type else { continue }
+                    let yInView = Point2(0, y).applying(toView).y
+                    path.move(to: .init(0, yInView))
+                    path.addLine(to: .init(size.width, yInView))
                 }
             }
         }
+        func styledPath(_ type: GridLineType) -> some View {
+            switch type {
+            case .normal: path(type).stroke(Self.gridLineColor.opacity(0.3), style: .init(lineWidth: 0.5))
+            case .principal: path(type).stroke(Self.gridLineColor.opacity(0.5), style: .init(lineWidth: 1))
+            case .axis: path(type).stroke(Self.gridLineColor.opacity(0.8), style: .init(lineWidth: 2))
+            }
+        }
+        return ForEach(Array(zip(GridLineType.allCases.indices, GridLineType.allCases)), id: \.0) { _, type in styledPath(type) }
     }
 }

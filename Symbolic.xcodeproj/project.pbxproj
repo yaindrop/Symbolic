@@ -336,12 +336,12 @@
 		574CC7C82BF4FCE60042FEE3 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				574CC7E12BFA39BD0042FEE3 /* Animation.swift */,
 				574CC7C32BF44DB00042FEE3 /* AxisAlign.swift */,
 				574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */,
 				574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */,
 				574CC7BB2BF44C390042FEE3 /* Memo.swift */,
 				574CC7D52BF500190042FEE3 /* ViewSize.swift */,
-				574CC7E12BFA39BD0042FEE3 /* Animation.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";

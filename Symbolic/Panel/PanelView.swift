@@ -12,7 +12,7 @@ struct PanelView: View {
             .viewSizeReader { model.onResized(panelId: panel.id, size: $0) }
             .offset(x: panel.origin.x, y: panel.origin.y)
             .environment(\.panelId, panel.id)
-            .atPlaneAlign(.topLeading)
+            .innerAligned(.topLeading)
     }
 }
 

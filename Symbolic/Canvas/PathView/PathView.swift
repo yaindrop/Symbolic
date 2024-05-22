@@ -112,6 +112,14 @@ extension PathView {
                 .onAppear {
                     gesture = viewModel.boundsGesture()
                 }
+            ForEach(Array(zip(PlaneOuterAlign.allCases.indices, PlaneOuterAlign.allCases)), id: \.0) { _, align in
+                let r = boundingRectInView.box(aligned: align, size: .init(8, 12), gap: 4)
+                Rectangle()
+                    .stroke(.blue, style: StrokeStyle(lineWidth: Self.lineWidth))
+                    .fill(.orange.opacity(0.2))
+                    .frame(width: r.width, height: r.height)
+                    .position(r.center)
+            }
         }
     }
 }

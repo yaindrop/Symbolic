@@ -122,19 +122,19 @@ extension ActivePathPanel {
         }
 
         private func changeEdge(to: PathEdge.Case) {
-            global.pathUpdater.updateActivePath(changeEdge: fromNodeId, to: to)
+            global.pathUpdater.updateActivePath(action: .changeEdge(.init(fromNodeId: fromNodeId, to: to)))
         }
 
         private func splitEdge() {
             guard let segment else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let id = UUID()
-            global.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)
+            global.pathUpdater.updateActivePath(action: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
             global.activePath.setFocus(node: id)
         }
 
         private func breakEdge() {
-            global.pathUpdater.updateActivePath(deleteEdge: fromNodeId)
+            global.pathUpdater.updateActivePath(action: .deleteNode(.init(nodeId: fromNodeId)))
         }
     }
 }
@@ -169,11 +169,11 @@ fileprivate struct BezierPanel: View, EquatableBy {
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
-        { global.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control0: $0), pending: pending) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .bezier(bezier.with(control0: $0)))), pending: pending) }
     }
 
     private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
-        { global.pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.with(control1: $0), pending: pending) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .bezier(bezier.with(control1: $0)))), pending: pending) }
     }
 }
 
@@ -221,18 +221,18 @@ fileprivate struct ArcPanel: View, EquatableBy {
     } }
 
     private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
-        { global.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(radius: $0), pending: pending) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(radius: $0)))), pending: pending) }
     }
 
     private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
-        { global.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(rotation: $0), pending: pending) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(rotation: $0)))), pending: pending) }
     }
 
     private var updateLargeArc: (Bool) -> Void {
-        { global.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(largeArc: $0)) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(largeArc: $0))))) }
     }
 
     private var updateSweep: (Bool) -> Void {
-        { global.pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.with(sweep: $0)) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(sweep: $0))))) }
     }
 }

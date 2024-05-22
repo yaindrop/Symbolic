@@ -17,8 +17,7 @@ struct GlobalStore {
     var activePath: ActivePathService { .init(pathStore: pathStore, pendingPathStore: pendingPathStore, store: activePathStore) }
 
     private let pathUpdateStore = PathUpdateStore()
-    var pathUpdater: PathUpdater { .init(pathStore: pathStore, pendingPathStore: pendingPathStore, activePathService: activePath, grid: canvasGrid, store: pathUpdateStore) }
-    var pathUpdaterInView: PathUpdaterInView { .init(viewport: viewport, pathUpdater: pathUpdater) }
+    var pathUpdater: PathUpdater { .init(pathStore: pathStore, pendingPathStore: pendingPathStore, activePathService: activePath, viewport: viewport, grid: canvasGrid, store: pathUpdateStore) }
 
     let toolbar = ToolbarStore()
 

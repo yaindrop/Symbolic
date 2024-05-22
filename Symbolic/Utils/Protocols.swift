@@ -1,11 +1,11 @@
 import Foundation
 
 protocol SelfTransformable {
-    func apply<T>(_ transform: (Self) -> T) -> T
+    func map<T>(_ transform: (Self) -> T) -> T
 }
 
 extension SelfTransformable {
-    func apply<T>(_ transform: (Self) -> T) -> T { transform(self) }
+    func map<T>(_ transform: (Self) -> T) -> T { transform(self) }
 }
 
 extension CGAffineTransform: SelfTransformable {}

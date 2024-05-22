@@ -67,7 +67,7 @@ extension SelectionView {
                 .position(rect.center)
                 .multipleGesture(gesture, ()) {
                     func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in global.pathUpdaterInView.update(pathIds: selectedPathIds, moveByOffset: Vector2(v.translation), pending: pending) }
+                        { v, _ in global.pathUpdater.updateInView(action: .init(pathIds: selectedPathIds, offset: v.offset), pending: pending) }
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())

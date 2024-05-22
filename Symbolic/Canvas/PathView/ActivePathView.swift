@@ -7,7 +7,7 @@ class ActivePathViewModel: PathViewModel {
     override func boundsGesture() -> MultipleGestureModel<Void> {
         let model = MultipleGestureModel<Void>()
         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in global.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending) }
+            { v, _ in global.pathUpdater.updateActivePathInView(action: .movePath(.init(offset: v.offset)), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
@@ -30,7 +30,7 @@ class ActivePathViewModel: PathViewModel {
             global.activePath.setFocus(node: id)
         }
         func moveAddedNode(newNodeId: UUID, offset: Vector2, pending: Bool = false) {
-            global.pathUpdaterInView.updateActivePath(addEndingNodeFrom: nodeId, newNodeId: newNodeId, offset: offset, pending: pending)
+            global.pathUpdater.updateActivePathInView(action: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: newNodeId, offset: offset)), pending: pending)
             if !pending {
                 context.longPressAddedNodeId = nil
             }
@@ -40,7 +40,7 @@ class ActivePathViewModel: PathViewModel {
                 if let newNodeId = context.longPressAddedNodeId {
                     moveAddedNode(newNodeId: newNodeId, offset: $0.offset, pending: pending)
                 } else {
-                    global.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending)
+                    global.pathUpdater.updateActivePathInView(action: .moveNode(.init(nodeId: nodeId, offset: $1.offset(to: $0.location))), pending: pending)
                 }
             }
         }
@@ -71,7 +71,8 @@ class ActivePathViewModel: PathViewModel {
             global.activePath.setFocus(node: id)
         }
         func moveSplitNode(paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
-            global.pathUpdaterInView.updateActivePath(splitSegment: fromId, paramT: paramT, newNodeId: newNodeId, offset: offset, pending: pending)
+            global.pathUpdater.updateActivePathInView(action: .splitSegment(.init(fromNodeId: fromId, paramT: paramT, newNodeId: newNodeId, offset: offset)), pending: pending)
+
             if !pending {
                 context.longPressParamT = nil
             }
@@ -81,7 +82,7 @@ class ActivePathViewModel: PathViewModel {
                 if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
                     moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
                 } else {
-                    global.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending)
+                    global.pathUpdater.updateActivePathInView(action: .movePath(.init(offset: v.offset)), pending: pending)
                 }
             }
         }
@@ -121,7 +122,7 @@ class ActivePathViewModel: PathViewModel {
     override func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2> {
         let model = MultipleGestureModel<Point2>()
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { value, origin in global.pathUpdaterInView.updateActivePath(moveEdge: fromId, offset: origin.offset(to: value.location), pending: pending) }
+            { global.pathUpdater.updateActivePath(action: .moveEdge(.init(fromNodeId: fromId, offset: $1.offset(to: $0.location))), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
@@ -133,7 +134,7 @@ class ActivePathViewModel: PathViewModel {
     override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGestureModel<Void>? {
         let model = MultipleGestureModel<Void>()
         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in global.pathUpdaterInView.updateActivePath(edgeBezier: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset, pending: pending) }
+            { v, _ in global.pathUpdater.updateActivePath(action: .moveEdgeBezier(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
@@ -145,7 +146,7 @@ class ActivePathViewModel: PathViewModel {
     override func arcGesture(fromId: UUID, updater: @escaping (PathEdge.Arc, Scalar) -> PathEdge.Arc) -> MultipleGestureModel<(PathEdge.Arc, Point2)> {
         let model = MultipleGestureModel<(PathEdge.Arc, Point2)>()
         func update(pending: Bool = false) -> (DragGesture.Value, (PathEdge.Arc, Point2)) -> Void {
-            { global.pathUpdaterInView.updateActivePath(edge: fromId, arc: updater($1.0, $0.location.distance(to: $1.1) * 2), pending: pending) }
+            { _, _ in }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())

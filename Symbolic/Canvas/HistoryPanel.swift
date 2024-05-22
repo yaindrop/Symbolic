@@ -7,7 +7,11 @@ fileprivate extension DocumentEvent {
         case let .pathAction(pathAction):
             switch pathAction {
             case .load: "PathLoad"
-            case let .moveEdge(moveEdge): "\(moveEdge.pathId) MoveEdge \(moveEdge.fromNodeId) offset \(moveEdge.offset)"
+            case let .single(single):
+                switch single.kind {
+                case let .moveEdge(moveEdge): "\(single.pathId) MoveEdge \(moveEdge.fromNodeId) offset \(moveEdge.offset)"
+                default: "single pathAction"
+                }
             default: "pathAction"
             }
         }

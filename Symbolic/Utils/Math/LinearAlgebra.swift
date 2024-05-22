@@ -135,7 +135,7 @@ extension CGAffineTransform: TriviallyCloneable {
 
     func centered(at anchor: Point2, _ transform: (Self) -> Self) -> Self {
         translatedBy(Vector2(anchor))
-            .apply(transform)
+            .map(transform)
             .translatedBy(-Vector2(anchor))
     }
 

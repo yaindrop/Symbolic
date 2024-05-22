@@ -1,28 +1,49 @@
 import Foundation
 
+fileprivate protocol PathActionSingleKind: SelfTransformable {}
+
+extension PathAction.Single {
+    struct AddEndingNode: PathActionSingleKind { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct SplitSegment: PathActionSingleKind { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
+
+    struct DeleteNode: PathActionSingleKind { let nodeId: UUID }
+    struct BreakAtNode: PathActionSingleKind { let nodeId: UUID }
+    struct BreakAtEdge: PathActionSingleKind { let fromNodeId: UUID }
+
+    struct SetNodePosition: PathActionSingleKind { let nodeId: UUID, position: Point2 }
+    struct SetEdge: PathActionSingleKind { let fromNodeId: UUID, edge: PathEdge }
+    struct ChangeEdge: PathActionSingleKind { let fromNodeId: UUID, to: PathEdge.Case }
+
+    struct MovePath: PathActionSingleKind { let offset: Vector2 }
+    struct MoveNode: PathActionSingleKind { let nodeId: UUID, offset: Vector2 }
+    struct MoveEdge: PathActionSingleKind { let fromNodeId: UUID, offset: Vector2 }
+    struct MoveEdgeBezier: PathActionSingleKind { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
+
+    enum Kind {
+        case addEndingNode(AddEndingNode)
+        case splitSegment(SplitSegment)
+
+        case deleteNode(DeleteNode)
+        case breakAtNode(BreakAtNode)
+        case breakAtEdge(BreakAtEdge)
+
+        case setNodePosition(SetNodePosition)
+        case setEdge(SetEdge)
+        case changeEdge(ChangeEdge)
+
+        case movePath(MovePath)
+        case moveNode(MoveNode)
+        case moveEdge(MoveEdge)
+        case moveEdgeBezier(MoveEdgeBezier)
+    }
+}
+
 enum PathAction {
     struct Load { let path: Path }
 
     struct Create { let path: Path }
 
-    struct DeleteNode { let pathId: UUID, nodeId: UUID }
-    struct BreakAtNode { let pathId: UUID, nodeId: UUID }
-    struct BreakAtEdge { let pathId: UUID, fromNodeId: UUID }
-
-    struct ChangeEdge { let pathId: UUID, fromNodeId: UUID, to: PathEdge.Case }
-
-    struct SetNodePosition { let pathId: UUID, nodeId: UUID, position: Point2 }
-    struct SetEdgeArc { let pathId: UUID, fromNodeId: UUID, arc: PathEdge.Arc }
-    struct SetEdgeBezier { let pathId: UUID, fromNodeId: UUID, bezier: PathEdge.Bezier }
-    struct SetEdgeLine { let pathId: UUID, fromNodeId: UUID }
-
-    struct AddEndingNode { let pathId: UUID, endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
-    struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
-
-    struct MovePath { let pathId: UUID, offset: Vector2 }
-    struct MoveNode { let pathId: UUID, nodeId: UUID, offset: Vector2 }
-    struct MoveEdge { let pathId: UUID, fromNodeId: UUID, offset: Vector2 }
-    struct MoveEdgeBezier { let pathId: UUID, fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
+    struct Single { let pathId: UUID, kind: Kind }
 
     struct MovePaths { let pathIds: [UUID], offset: Vector2 }
     struct DeletePaths { let pathIds: [UUID] }
@@ -31,24 +52,7 @@ enum PathAction {
 
     case create(Create)
 
-    case addEndingNode(AddEndingNode)
-    case splitSegment(SplitSegment)
-
-    case deleteNode(DeleteNode)
-    case breakAtNode(BreakAtNode)
-    case breakAtEdge(BreakAtEdge)
-
-    case changeEdge(ChangeEdge)
-
-    case setNodePosition(SetNodePosition)
-    case setEdgeArc(SetEdgeArc)
-    case setEdgeBezier(SetEdgeBezier)
-    case setEdgeLine(SetEdgeLine)
-
-    case movePath(MovePath)
-    case moveNode(MoveNode)
-    case moveEdge(MoveEdge)
-    case moveEdgeBezier(MoveEdgeBezier)
+    case single(Single)
 
     case movePaths(MovePaths)
     case deletePaths(DeletePaths)

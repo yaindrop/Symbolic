@@ -13,6 +13,8 @@ extension Vector2 {
 
     static let unitY: Self = .init(0, 1)
 
+    var isZero: Bool { self == .zero }
+
     var length: Scalar { hypot(dx, dy) }
 
     var normalLeft: Vector2 { .init(-dy, dx) }
@@ -60,6 +62,8 @@ extension Vector2 {
 // MARK: - Point2
 
 extension Point2 {
+    var isZero: Bool { self == .zero }
+
     func with(x: Scalar) -> Self { .init(x: x, y: y) }
 
     func with(y: Scalar) -> Self { .init(x: x, y: y) }

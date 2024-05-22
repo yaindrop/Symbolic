@@ -32,11 +32,9 @@ struct Background: View {
 
     private func lines(size: CGSize) -> (horizontal: [Scalar], vertical: [Scalar]) {
         let cellSize = adjustedCellSize
-        let viewRectInWorld = viewportInfo.worldRect(viewSize: size)
-        let minX = ceil(viewRectInWorld.minX / cellSize) * cellSize
-        let minY = ceil(viewRectInWorld.minY / cellSize) * cellSize
-        let horizontal = Array(stride(from: minX, to: viewRectInWorld.maxX, by: cellSize))
-        let vertical = Array(stride(from: minY, to: viewRectInWorld.maxY, by: cellSize))
+        let worldRect = viewportInfo.worldRect(viewSize: size)
+        let horizontal = Array(stride(from: round(worldRect.minX / cellSize) * cellSize, to: worldRect.maxX, by: cellSize))
+        let vertical = Array(stride(from: round(worldRect.minY / cellSize) * cellSize, to: worldRect.maxY, by: cellSize))
         return (horizontal, vertical)
     }
 

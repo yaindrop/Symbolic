@@ -8,7 +8,7 @@ class PathUpdateStore: Store {
     fileprivate var subscriptions = Set<AnyCancellable>()
 
     fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
-    fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent, Never>()
+    fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 }
 
 // MARK: - PathUpdater
@@ -24,10 +24,14 @@ struct PathUpdater {
         store.eventSubject.sink(receiveValue: callback).store(in: &store.subscriptions)
     }
 
-    func onPendingEvent(_ callback: @escaping (DocumentEvent) -> Void) {
+    func onPendingEvent(_ callback: @escaping (DocumentEvent?) -> Void) {
         store.pendingEventSubject.sink(receiveValue: callback).store(in: &store.subscriptions)
     }
+}
 
+// MARK: action builders
+
+extension PathUpdater {
     func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
         guard let activePath else { return }
         let newNode = PathNode(id: newNodeId, position: position)
@@ -54,8 +58,6 @@ struct PathUpdater {
         handle(.pathAction(.changeEdge(.init(pathId: activePath.id, fromNodeId: fromNodeId, to: to))), pending: false)
     }
 
-    // MARK: single update
-
     func updateActivePath(node id: UUID, position: Point2, pending: Bool = false) {
         guard let activePath else { return }
         handle(.pathAction(.setNodePosition(.init(pathId: activePath.id, nodeId: id, position: position))), pending: pending)
@@ -75,8 +77,6 @@ struct PathUpdater {
         guard let activePath else { return }
         handle(.pathAction(.moveEdgeBezier(.init(pathId: activePath.id, fromNodeId: fromNodeId, offset0: offset0, offset1: offset1))), pending: pending)
     }
-
-    // MARK: compound update
 
     func updateActivePath(moveNode id: UUID, offset: Vector2, pending: Bool = false) {
         guard let activePath else { return }
@@ -101,12 +101,12 @@ struct PathUpdater {
         handle(.pathAction(.deletePaths(.init(pathIds: pathIds))), pending: false)
     }
 
-    // MARK: private
-
     private var activePath: Path? { activePathService.activePath }
+}
 
-    // MARK: handle action
+// MARK: action handler
 
+extension PathUpdater {
     private func handle(_ action: DocumentAction, pending: Bool) {
         let _r = pathUpdaterTracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
         switch action {
@@ -118,14 +118,20 @@ struct PathUpdater {
     private func handle(_ pathAction: PathAction, pending: Bool) {
         var events: [PathEvent] = []
         collectEvents(to: &events, pathAction)
-        var kind: DocumentEvent.Kind
-        if events.isEmpty {
+        guard !events.isEmpty else {
+            if pending {
+                store.pendingEventSubject.send(nil)
+            }
             return
-        } else if events.count == 1 {
+        }
+
+        var kind: DocumentEvent.Kind
+        if events.count == 1 {
             kind = .pathEvent(events.first!)
         } else {
             kind = .compoundEvent(.init(events: events.map { .pathEvent($0) }))
         }
+
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending || pendingPathStore.hasPendingEvent {
             let _r = pathUpdaterTracer.range("send pending event"); defer { _r() }
@@ -136,9 +142,11 @@ struct PathUpdater {
             store.eventSubject.send(event)
         }
     }
+}
 
-    // MARK: collect events for action
+// MARK: collect events for action
 
+extension PathUpdater {
     private func collectEvents(to events: inout [PathEvent], _ pathAction: PathAction) {
         switch pathAction {
         case .create: break
@@ -259,7 +267,8 @@ struct PathUpdater {
         let pathId = moveNode.pathId, nodeId = moveNode.nodeId, offset = moveNode.offset
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let curr = path.pair(id: nodeId) else { return }
-        let snappedOffset = curr.node.position.offset(to: grid.grid.snap(curr.node.position + offset))
+        let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
+        guard !snappedOffset.isZero else { return }
 
         if let prev = path.pair(before: nodeId), case let .bezier(b) = prev.edge {
             events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + snappedOffset))))
@@ -274,7 +283,8 @@ struct PathUpdater {
         let pathId = moveEdge.pathId, fromNodeId = moveEdge.fromNodeId, offset = moveEdge.offset
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let curr = path.pair(id: fromNodeId) else { return }
-        let snappedOffset = curr.node.position.offset(to: grid.grid.snap(curr.node.position + offset))
+        let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
+        guard !snappedOffset.isZero else { return }
 
         if let prev = path.pair(before: fromNodeId), case let .bezier(b) = prev.edge {
             events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(offset1: snappedOffset))))
@@ -301,8 +311,9 @@ struct PathUpdater {
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let curr = path.edge(id: fromNodeId),
               case let .bezier(bezier) = curr else { return }
-        let snappedOffset0 = offset0 == .zero ? .zero : bezier.control0.offset(to: grid.grid.snap(bezier.control0 + offset0))
-        let snappedOffset1 = offset1 == .zero ? .zero : bezier.control1.offset(to: grid.grid.snap(bezier.control1 + offset1))
+        let snappedOffset0 = offset0 == .zero ? .zero : bezier.control0.offset(to: grid.snap(bezier.control0 + offset0))
+        let snappedOffset1 = offset1 == .zero ? .zero : bezier.control1.offset(to: grid.snap(bezier.control1 + offset1))
+        guard !snappedOffset0.isZero || !snappedOffset1.isZero else { return }
         events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier.with(offset0: snappedOffset0).with(offset1: snappedOffset1))))
     }
 
@@ -330,16 +341,6 @@ struct PathUpdaterInView {
         pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: newNodeId, position: position.applying(viewport.toWorld), pending: pending)
     }
 
-    // MARK: single update
-
-    func updateActivePath(node id: UUID, position: Point2, pending: Bool = false) {
-        pathUpdater.updateActivePath(node: id, position: position.applying(viewport.toWorld), pending: pending)
-    }
-
-    func updateActivePath(edge fromNodeId: UUID, bezier: PathEdge.Bezier, pending: Bool = false) {
-        pathUpdater.updateActivePath(edge: fromNodeId, bezier: bezier.applying(viewport.toWorld), pending: pending)
-    }
-
     func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {
         pathUpdater.updateActivePath(edge: fromNodeId, arc: arc.applying(viewport.toWorld), pending: pending)
     }
@@ -347,8 +348,6 @@ struct PathUpdaterInView {
     func updateActivePath(edgeBezier fromNodeId: UUID, offset0: Vector2, offset1: Vector2, pending: Bool = false) {
         pathUpdater.updateActivePath(edgeBezier: fromNodeId, offset0: offset0.applying(viewport.toWorld), offset1: offset1.applying(viewport.toWorld), pending: pending)
     }
-
-    // MARK: compound update
 
     func updateActivePath(moveNode id: UUID, offset: Vector2, pending: Bool = false) {
         pathUpdater.updateActivePath(moveNode: id, offset: offset.applying(viewport.toWorld), pending: pending)

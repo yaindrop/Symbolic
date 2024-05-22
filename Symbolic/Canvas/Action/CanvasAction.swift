@@ -5,6 +5,7 @@ enum CanvasAction {
     enum Triggering {
         case select
         case addPath
+        case addEndingNode
         case splitPathEdge
     }
 
@@ -21,6 +22,8 @@ enum CanvasAction {
         case movePathEdge
         case movePathBezierControl
         case movePathArcControl
+
+        case addAndMoveEndingNode
         case splitAndMovePathNode
     }
 
@@ -49,6 +52,8 @@ extension CanvasAction.Triggering {
         switch self {
         case .addPath: "Hold to add path"
         case .select: "Hold to select"
+
+        case .addEndingNode: "Hold to add node"
         case .splitPathEdge: "Hold to split"
         }
     }
@@ -69,7 +74,9 @@ extension CanvasAction.Continuous {
         case .movePathEdge: "Drag to move edge"
         case .movePathBezierControl: "Drag to move control"
         case .movePathArcControl: "Drag to move control"
-        case .splitAndMovePathNode: "Drag to split and move"
+
+        case .addAndMoveEndingNode: "Drag to move added node"
+        case .splitAndMovePathNode: "Drag to move split node"
         }
     }
 }

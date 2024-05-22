@@ -32,7 +32,12 @@ class ActivePathStore: Store {
     @Trackable var focusedPart: PathFocusedPart?
 
     fileprivate func update(activePathId: UUID?) {
-        update { $0(\._activePathId, activePathId) }
+        update {
+            if activePathId == nil {
+                $0(\._focusedPart, nil)
+            }
+            $0(\._activePathId, activePathId)
+        }
     }
 
     fileprivate func update(focusedPart: PathFocusedPart?) {

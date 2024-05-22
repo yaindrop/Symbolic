@@ -9,6 +9,7 @@ class ActivePathViewModel: PathViewModel {
         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
             { v, _ in global.pathUpdater.updateActivePathInView(action: .movePath(.init(offset: v.offset)), pending: pending) }
         }
+        model.onTap { _, _ in global.activePath.clearFocus() }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
         model.onTouchDown { global.canvasAction.start(continuous: .movePath) }
@@ -18,13 +19,13 @@ class ActivePathViewModel: PathViewModel {
 
     override func nodeGesture(nodeId: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext) {
         let context = NodeGestureContext()
-        let model = MultipleGestureModel<Point2>()
-        func canAddEndingNode() -> Bool {
+        let model = MultipleGestureModel<Point2>(configs: .init(durationThreshold: 0.2))
+        var canAddEndingNode: Bool {
             guard let activePath = global.activePath.activePath else { return false }
             return activePath.isEndingNode(id: nodeId)
         }
         func addEndingNode() {
-            guard canAddEndingNode() else { return }
+            guard canAddEndingNode else { return }
             let id = UUID()
             context.longPressAddedNodeId = id
             global.activePath.setFocus(node: id)
@@ -58,12 +59,34 @@ class ActivePathViewModel: PathViewModel {
         model.onDragEnd(updateDrag())
         model.onTouchDown { global.canvasAction.start(continuous: .movePathNode) }
         model.onTouchUp { global.canvasAction.end(continuous: .movePathNode) }
+
+        model.onTouchDown {
+            global.canvasAction.start(continuous: .movePathNode)
+            if canAddEndingNode {
+                global.canvasAction.start(triggering: .addEndingNode)
+            }
+        }
+        model.onDrag { _, _ in
+            global.canvasAction.end(triggering: .addEndingNode)
+        }
+        model.onLongPress { _, _ in
+            if canAddEndingNode {
+                global.canvasAction.end(continuous: .movePathNode)
+                global.canvasAction.end(triggering: .addEndingNode)
+                global.canvasAction.start(continuous: .addAndMoveEndingNode)
+            }
+        }
+        model.onTouchUp {
+            global.canvasAction.end(triggering: .addEndingNode)
+            global.canvasAction.end(continuous: .addAndMoveEndingNode)
+            global.canvasAction.end(continuous: .movePathNode)
+        }
         return (model, context)
     }
 
     override func edgeGesture(fromId: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext) {
         let context = EdgeGestureContext()
-        let model = MultipleGestureModel<PathSegment>()
+        let model = MultipleGestureModel<PathSegment>(configs: .init(durationThreshold: 0.2))
         func split(at paramT: Scalar) {
             context.longPressParamT = paramT
             let id = UUID()

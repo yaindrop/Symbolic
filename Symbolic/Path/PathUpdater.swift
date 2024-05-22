@@ -252,7 +252,13 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MovePath) {
         let offset = action.offset
-        events.append(.init(in: pathId, move: offset))
+        guard let path = pathStore.pathMap.getValue(key: pathId) else { return }
+
+        let position = path.boundingRect.minPoint
+        let snappedOffset = position.offset(to: grid.snap(position + offset))
+        guard !snappedOffset.isZero else { return }
+
+        events.append(.init(in: pathId, move: snappedOffset))
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MoveNode) {

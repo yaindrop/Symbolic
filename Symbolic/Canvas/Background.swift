@@ -8,14 +8,14 @@ fileprivate enum GridLineType: CaseIterable {
 
 struct Background: View {
     var body: some View {
-        GeometryReader {
-            linePaths(size: $0.size)
-        }
+        linePaths
     }
 
     // MARK: private
 
     @Selected private var viewportInfo = global.viewport.info
+    @Selected private var viewSize = global.viewport.store.viewSize
+    @Selected private var worldRect = global.viewport.worldRect
     @Selected private var cellSize = global.canvasGrid.grid.cellSize
 
     private static let targetCellSize: Scalar = 24
@@ -30,17 +30,16 @@ struct Background: View {
         return cellSize * adjustedRatio
     }
 
-    private func linePositions(size: CGSize) -> (horizontal: [Scalar], vertical: [Scalar]) {
+    private var linePositions: (horizontal: [Scalar], vertical: [Scalar]) {
         let cellSize = adjustedCellSize
-        let worldRect = viewportInfo.worldRect(viewSize: size)
         let horizontal = Array(stride(from: round(worldRect.minX / cellSize) * cellSize, to: worldRect.maxX, by: cellSize))
         let vertical = Array(stride(from: round(worldRect.minY / cellSize) * cellSize, to: worldRect.maxY, by: cellSize))
         return (horizontal, vertical)
     }
 
-    private func linePaths(size: CGSize) -> some View {
+    private var linePaths: some View {
         let cellSize = adjustedCellSize
-        let (horizontal, vertical) = linePositions(size: size)
+        let (horizontal, vertical) = linePositions
         func gridLineType(_ position: Scalar) -> GridLineType {
             if position / cellSize ~== 0 {
                 .axis
@@ -56,13 +55,13 @@ struct Background: View {
                     guard gridLineType(x) == type else { continue }
                     let xInView = Point2(x, 0).applying(toView).x
                     path.move(to: .init(xInView, 0))
-                    path.addLine(to: .init(xInView, size.height))
+                    path.addLine(to: .init(xInView, viewSize.height))
                 }
                 for y in vertical {
                     guard gridLineType(y) == type else { continue }
                     let yInView = Point2(0, y).applying(toView).y
                     path.move(to: .init(0, yInView))
-                    path.addLine(to: .init(size.width, yInView))
+                    path.addLine(to: .init(viewSize.width, yInView))
                 }
             }
         }

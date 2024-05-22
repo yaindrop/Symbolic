@@ -230,6 +230,7 @@ struct CanvasView: View {
             inactivePaths
             foreground
         }
+        .viewSizeReader { global.viewport.setViewSize($0) }
     }}
 
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {

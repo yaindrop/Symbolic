@@ -33,9 +33,14 @@ extension ViewportInfo: CustomStringConvertible {
 
 class ViewportStore: Store {
     @Trackable var info: ViewportInfo = .init()
+    @Trackable var viewSize: CGSize = .zero
 
     fileprivate func update(info: ViewportInfo) {
         update { $0(\._info, info) }
+    }
+
+    fileprivate func update(viewSize: CGSize) {
+        update { $0(\._viewSize, viewSize) }
     }
 }
 
@@ -63,6 +68,11 @@ struct ViewportService {
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
+    var worldRect: CGRect { info.worldRect(viewSize: store.viewSize) }
+
+    func setViewSize(_ viewSize: CGSize) {
+        store.update(viewSize: viewSize)
+    }
 }
 
 struct ViewportUpdater {

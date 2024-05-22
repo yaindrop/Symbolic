@@ -19,6 +19,7 @@ fileprivate var selectedPathsSelector: [Path] {
 struct SelectionView: View {
     @Selected var selectedPaths = selectedPathsSelector
     @Selected var toView = global.viewport.toView
+    @Selected var viewSize = global.viewport.store.viewSize
 
     @State private var dashPhase: CGFloat = 0
     @State private var menuSize: CGSize = .zero
@@ -43,11 +44,13 @@ struct SelectionView: View {
                 .frame(width: bounds.width, height: bounds.height)
                 .position(bounds.center)
                 .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
+
+            let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
             ContextMenu(onDelete: {
                 global.pathUpdater.delete(pathIds: selectedPathIds)
             })
             .viewSizeReader { menuSize = $0 }
-            .position(bounds.box(aligned: .topCenter, size: menuSize, gap: 8).center)
+            .position(bounds.box(aligned: menuAlign, size: menuSize, gap: 8).center)
         }
     }
 }

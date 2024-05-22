@@ -55,7 +55,7 @@ enum PlaneInnerAlign {
 }
 
 extension CGRect {
-    func point(aligned align: PlaneInnerAlign) -> Point2 {
+    func alignedPoint(at align: PlaneInnerAlign) -> Point2 {
         switch align {
         case .topLeading: minPoint
         case .topCenter: .init(midX, minY)
@@ -134,9 +134,9 @@ extension PlaneOuterAlign {
 }
 
 extension CGRect {
-    func box(aligned align: PlaneOuterAlign, size: CGSize, gap: Scalar) -> CGRect {
+    func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: Scalar) -> CGRect {
         func point(from align: PlaneInnerAlign, _ gapOffset: Vector2, _ sizeOffset: Vector2) -> Point2 {
-            self.point(aligned: align).offset(by: gapOffset).offset(by: sizeOffset)
+            self.alignedPoint(at: align).offset(by: gapOffset).offset(by: sizeOffset)
         }
         return {
             switch align {

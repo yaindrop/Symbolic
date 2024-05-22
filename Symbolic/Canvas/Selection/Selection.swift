@@ -46,11 +46,12 @@ struct SelectionView: View {
                 .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
 
             let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
+            let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
             ContextMenu(onDelete: {
                 global.pathUpdater.delete(pathIds: selectedPathIds)
             })
             .viewSizeReader { menuSize = $0 }
-            .position(bounds.box(aligned: menuAlign, size: menuSize, gap: 8).center)
+            .position(menuBox.center)
         }
     }
 }

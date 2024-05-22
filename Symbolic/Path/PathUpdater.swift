@@ -32,10 +32,14 @@ struct PathUpdater {
 // MARK: action builders
 
 extension PathUpdater {
-    func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
+    func updateActivePath(addEndingNodeFrom endingNodeId: UUID, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
         guard let activePath else { return }
-        let newNode = PathNode(id: newNodeId, position: position)
-        handle(.pathAction(.splitSegment(.init(pathId: activePath.id, fromNodeId: fromNodeId, paramT: paramT, newNode: newNode))), pending: pending)
+        handle(.pathAction(.addEndingNode(.init(pathId: activePath.id, endingNodeId: endingNodeId, newNodeId: newNodeId, offset: offset))), pending: pending)
+    }
+
+    func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+        guard let activePath else { return }
+        handle(.pathAction(.splitSegment(.init(pathId: activePath.id, fromNodeId: fromNodeId, paramT: paramT, newNodeId: newNodeId, offset: offset))), pending: pending)
     }
 
     func updateActivePath(deleteNode id: UUID) {
@@ -151,6 +155,7 @@ extension PathUpdater {
         switch pathAction {
         case .create: break
         case .load: break
+        case let .addEndingNode(addEndingNode): collectEvents(to: &events, addEndingNode)
         case let .splitSegment(splitSegment): collectEvents(to: &events, splitSegment)
         case let .deleteNode(deleteNode): collectEvents(to: &events, deleteNode)
         case let .breakAtEdge(breakAtEdge): collectEvents(to: &events, breakAtEdge)
@@ -169,21 +174,40 @@ extension PathUpdater {
         }
     }
 
+    private func collectEvents(to events: inout [PathEvent], _ addEndingNode: PathAction.AddEndingNode) {
+        let pathId = addEndingNode.pathId, endingNodeId = addEndingNode.endingNodeId, newNodeId = addEndingNode.newNodeId, offset = addEndingNode.offset
+        guard let path = pathStore.pathMap.getValue(key: pathId),
+              let endingNode = path.node(id: endingNodeId) else { return }
+        let prevNodeId: UUID?
+        if path.isFirstNode(id: endingNodeId) {
+            prevNodeId = nil
+        } else if path.isLastNode(id: endingNodeId) {
+            prevNodeId = endingNodeId
+        } else {
+            return
+        }
+        let snappedOffset = endingNode.position.offset(to: grid.snap(endingNode.position + offset))
+        guard !snappedOffset.isZero else { return }
+        events.append(.init(in: pathId, createNodeAfter: prevNodeId, .init(id: newNodeId, position: endingNode.position + snappedOffset)))
+    }
+
     private func collectEvents(to events: inout [PathEvent], _ splitSegment: PathAction.SplitSegment) {
-        let pathId = splitSegment.pathId, fromNodeId = splitSegment.fromNodeId, paramT = splitSegment.paramT, newNode = splitSegment.newNode
+        let pathId = splitSegment.pathId, fromNodeId = splitSegment.fromNodeId, paramT = splitSegment.paramT, newNodeId = splitSegment.newNodeId, offset = splitSegment.offset
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let segment = path.segment(from: fromNodeId) else { return }
-        events.append(.init(in: pathId, createNodeAfter: fromNodeId, newNode))
+        let position = segment.position(paramT: paramT)
         var (before, after) = segment.split(paramT: paramT)
-        let offset = segment.position(paramT: paramT).offset(to: newNode.position)
+        let snappedOffset = position.offset(to: grid.snap(position + offset))
+
+        events.append(.init(in: pathId, createNodeAfter: fromNodeId, .init(id: newNodeId, position: position + snappedOffset)))
         if case let .bezier(b) = before.edge {
-            before = before.with(edge: .bezier(b.with(control1: b.control1 + offset)))
+            before = before.with(edge: .bezier(b.with(control1: b.control1 + snappedOffset)))
         }
         events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, before.edge))
         if case let .bezier(b) = after.edge {
-            after = after.with(edge: .bezier(b.with(control0: b.control0 + offset)))
+            after = after.with(edge: .bezier(b.with(control0: b.control0 + snappedOffset)))
         }
-        events.append(.init(in: pathId, updateEdgeFrom: newNode.id, after.edge))
+        events.append(.init(in: pathId, updateEdgeFrom: newNodeId, after.edge))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ deleteNode: PathAction.DeleteNode) {
@@ -337,8 +361,12 @@ struct PathUpdaterInView {
     let viewport: ViewportService
     let pathUpdater: PathUpdater
 
-    func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, position: Point2, pending: Bool = false) {
-        pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: newNodeId, position: position.applying(viewport.toWorld), pending: pending)
+    func updateActivePath(addEndingNodeFrom endingNodeId: UUID, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+        pathUpdater.updateActivePath(addEndingNodeFrom: endingNodeId, newNodeId: newNodeId, offset: offset.applying(viewport.toWorld), pending: pending)
+    }
+
+    func updateActivePath(splitSegment fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+        pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: newNodeId, offset: offset.applying(viewport.toWorld), pending: pending)
     }
 
     func updateActivePath(edge fromNodeId: UUID, arc: PathEdge.Arc, pending: Bool = false) {

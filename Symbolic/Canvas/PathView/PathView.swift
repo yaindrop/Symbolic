@@ -6,14 +6,18 @@ fileprivate let subtracer = tracer.tagged("PathView")
 // MARK: - PathViewModel
 
 class PathViewModel: ObservableObject {
+    func boundsGesture() -> MultipleGestureModel<Void>? { nil }
+
+    class NodeGestureContext {
+        var longPressAddedNodeId: UUID?
+    }
+
+    func nodeGesture(nodeId: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext)? { nil }
+
     class EdgeGestureContext {
         var longPressParamT: Scalar?
         var longPressSplitNodeId: UUID?
     }
-
-    func boundsGesture() -> MultipleGestureModel<Void>? { nil }
-
-    func nodeGesture(nodeId: UUID) -> MultipleGestureModel<Point2>? { nil }
 
     func edgeGesture(fromId: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext)? { nil }
     func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2>? { nil }

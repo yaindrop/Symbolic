@@ -28,6 +28,7 @@ extension PathView {
         private static let touchablePadding: Scalar = 16
 
         @State private var gesture: MultipleGestureModel<Point2>?
+        @State private var gestureContext: PathViewModel.NodeGestureContext?
 
         @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
             Circle()
@@ -47,7 +48,9 @@ extension PathView {
                     $0.multipleGesture($1, position)
                 }
                 .onAppear {
-                    gesture = viewModel.nodeGesture(nodeId: nodeId)
+                    let pair = viewModel.nodeGesture(nodeId: nodeId)
+                    gesture = pair?.0
+                    gestureContext = pair?.1
                 }
         }
     }

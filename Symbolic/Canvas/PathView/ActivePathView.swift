@@ -16,17 +16,49 @@ class ActivePathViewModel: PathViewModel {
         return model
     }
 
-    override func nodeGesture(nodeId: UUID) -> MultipleGestureModel<Point2> {
+    override func nodeGesture(nodeId: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext) {
+        let context = NodeGestureContext()
         let model = MultipleGestureModel<Point2>()
-        func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { global.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending) }
+        func canAddEndingNode() -> Bool {
+            guard let activePath = global.activePath.activePath else { return false }
+            return activePath.isEndingNode(id: nodeId)
+        }
+        func addEndingNode() {
+            guard canAddEndingNode() else { return }
+            let id = UUID()
+            context.longPressAddedNodeId = id
+            global.activePath.setFocus(node: id)
+        }
+        func moveAddedNode(newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+            global.pathUpdaterInView.updateActivePath(addEndingNodeFrom: nodeId, newNodeId: newNodeId, offset: offset, pending: pending)
+            if !pending {
+                context.longPressAddedNodeId = nil
+            }
+        }
+        func updateDrag(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
+            {
+                if let newNodeId = context.longPressAddedNodeId {
+                    moveAddedNode(newNodeId: newNodeId, offset: $0.offset, pending: pending)
+                } else {
+                    global.pathUpdaterInView.updateActivePath(moveNode: nodeId, offset: $1.offset(to: $0.location), pending: pending)
+                }
+            }
+        }
+        func updateLongPress(position: Point2, pending: Bool = false) {
+            guard let newNodeId = context.longPressAddedNodeId else { return }
+            moveAddedNode(newNodeId: newNodeId, offset: .zero, pending: pending)
         }
         model.onTap { _, _ in self.toggleFocus(nodeId: nodeId) }
-        model.onDrag(update(pending: true))
-        model.onDragEnd(update())
+        model.onLongPress { _, p in
+            addEndingNode()
+            updateLongPress(position: p, pending: true)
+        }
+        model.onLongPressEnd { _, p in updateLongPress(position: p) }
+        model.onDrag(updateDrag(pending: true))
+        model.onDragEnd(updateDrag())
         model.onTouchDown { global.canvasAction.start(continuous: .movePathNode) }
         model.onTouchUp { global.canvasAction.end(continuous: .movePathNode) }
-        return model
+        return (model, context)
     }
 
     override func edgeGesture(fromId: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext) {
@@ -38,25 +70,24 @@ class ActivePathViewModel: PathViewModel {
             context.longPressSplitNodeId = id
             global.activePath.setFocus(node: id)
         }
-        func moveSplitNode(to p: Point2, pending: Bool = false) {
-            guard let longPressParamT = context.longPressParamT, let longPressSplitNodeId = context.longPressSplitNodeId else { return }
-            global.pathUpdaterInView.updateActivePath(splitSegment: fromId, paramT: longPressParamT, newNodeId: longPressSplitNodeId, position: p, pending: pending)
+        func moveSplitNode(paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+            global.pathUpdaterInView.updateActivePath(splitSegment: fromId, paramT: paramT, newNodeId: newNodeId, offset: offset, pending: pending)
             if !pending {
                 context.longPressParamT = nil
             }
         }
         func updateDrag(pending: Bool = false) -> (DragGesture.Value, Any) -> Void {
             { v, _ in
-                if context.longPressSplitNodeId == nil {
-                    global.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending)
+                if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
+                    moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
                 } else {
-                    moveSplitNode(to: v.location, pending: pending)
+                    global.pathUpdaterInView.updateActivePath(moveByOffset: Vector2(v.translation), pending: pending)
                 }
             }
         }
         func updateLongPress(segment: PathSegment, pending: Bool = false) {
-            guard let longPressParamT = context.longPressParamT else { return }
-            moveSplitNode(to: segment.position(paramT: longPressParamT), pending: pending)
+            guard let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId else { return }
+            moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: .zero, pending: pending)
         }
         model.onTap { _, _ in self.toggleFocus(edgeFromId: fromId) }
         model.onLongPress { v, s in
@@ -67,15 +98,22 @@ class ActivePathViewModel: PathViewModel {
         model.onDrag(updateDrag(pending: true))
         model.onDragEnd(updateDrag())
 
-        model.onTouchDown { global.canvasAction.start(triggering: .splitPathEdge) }
-        model.onDrag { _, _ in global.canvasAction.end(triggering: .splitPathEdge) }
+        model.onTouchDown {
+            global.canvasAction.start(continuous: .movePath)
+            global.canvasAction.start(triggering: .splitPathEdge)
+        }
+        model.onDrag { _, _ in
+            global.canvasAction.end(triggering: .splitPathEdge)
+        }
         model.onLongPress { _, _ in
+            global.canvasAction.end(continuous: .movePath)
             global.canvasAction.end(triggering: .splitPathEdge)
             global.canvasAction.start(continuous: .splitAndMovePathNode)
         }
         model.onTouchUp {
             global.canvasAction.end(triggering: .splitPathEdge)
             global.canvasAction.end(continuous: .splitAndMovePathNode)
+            global.canvasAction.end(continuous: .movePath)
         }
         return (model, context)
     }

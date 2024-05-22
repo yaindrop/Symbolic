@@ -128,9 +128,8 @@ extension ActivePathPanel {
         private func splitEdge() {
             guard let segment else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
-            let position = segment.position(paramT: paramT)
             let id = UUID()
-            global.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, position: position)
+            global.pathUpdater.updateActivePath(splitSegment: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)
             global.activePath.setFocus(node: id)
         }
 

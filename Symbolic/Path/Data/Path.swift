@@ -211,6 +211,18 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
     func edge(before: UUID) -> PathEdge? { pair(before: before)?.edge }
     func edge(after: UUID) -> PathEdge? { pair(after: after)?.edge }
 
+    func isFirstNode(id: UUID) -> Bool {
+        !isClosed && pairs.first?.node.id == id
+    }
+
+    func isLastNode(id: UUID) -> Bool {
+        !isClosed && pairs.last?.node.id == id
+    }
+
+    func isEndingNode(id: UUID) -> Bool {
+        isFirstNode(id: id) || isLastNode(id: id)
+    }
+
     var path: SUPath {
         SUPath { p in
             segments.forEach { $0.append(to: &p) }

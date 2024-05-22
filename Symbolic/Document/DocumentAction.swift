@@ -5,8 +5,6 @@ enum PathAction {
 
     struct Create { let path: Path }
 
-    struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: Scalar, newNode: PathNode }
-
     struct DeleteNode { let pathId: UUID, nodeId: UUID }
     struct BreakAtNode { let pathId: UUID, nodeId: UUID }
     struct BreakAtEdge { let pathId: UUID, fromNodeId: UUID }
@@ -17,6 +15,9 @@ enum PathAction {
     struct SetEdgeArc { let pathId: UUID, fromNodeId: UUID, arc: PathEdge.Arc }
     struct SetEdgeBezier { let pathId: UUID, fromNodeId: UUID, bezier: PathEdge.Bezier }
     struct SetEdgeLine { let pathId: UUID, fromNodeId: UUID }
+
+    struct AddEndingNode { let pathId: UUID, endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct SplitSegment { let pathId: UUID, fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
     struct MovePath { let pathId: UUID, offset: Vector2 }
     struct MoveNode { let pathId: UUID, nodeId: UUID, offset: Vector2 }
@@ -30,6 +31,7 @@ enum PathAction {
 
     case create(Create)
 
+    case addEndingNode(AddEndingNode)
     case splitSegment(SplitSegment)
 
     case deleteNode(DeleteNode)

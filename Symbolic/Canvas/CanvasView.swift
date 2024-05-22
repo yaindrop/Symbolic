@@ -207,43 +207,7 @@ struct CanvasView: View {
     }
 
     @ViewBuilder private var background: some View { tracer.range("CanvasView background") {
-        GeometryReader { geometry in
-            Canvas { context, _ in
-                context.concatenate(toView)
-                let path = SUPath { path in
-                    for index in 0 ... 10240 {
-                        let vOffset: Scalar = Scalar(index) * 10
-                        path.move(to: Point2(vOffset, 0))
-                        path.addLine(to: Point2(vOffset, 102400))
-                    }
-                    for index in 0 ... 10240 {
-                        let hOffset: Scalar = Scalar(index) * 10
-                        path.move(to: Point2(0, hOffset))
-                        path.addLine(to: Point2(102400, hOffset))
-                    }
-                }
-                context.stroke(path, with: .color(.red), lineWidth: 0.5)
-            }
-            //                Group {
-            //                    Path { path in
-            //                        for index in 0 ... 1024 {
-            //                            let vOffset: Scalar = Scalar(index) * 10
-            //                            path.move(to: Point2(x: vOffset, y: 0))
-            //                            path.addLine(to: Point2(x: vOffset, y: 10240))
-            //                        }
-            //                        for index in 0 ... 1024 {
-            //                            let hOffset: Scalar = Scalar(index) * 10
-            //                            path.move(to: Point2(x: 0, y: hOffset))
-            //                            path.addLine(to: Point2(x: 10240, y: hOffset))
-            //                        }
-            //                    }
-            //                    .stroke(.red)
-            //                }
-            //                .transformEffect(viewport.info.worldToView)
-            .onChange(of: geometry.size) { oldValue, newValue in
-                logInfo("Changing size from \(oldValue) to \(newValue)")
-            }
-        }
+        Background()
     } }
 
     @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {

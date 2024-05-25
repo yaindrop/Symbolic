@@ -6,6 +6,8 @@ class AddingPathStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
 
+    var subscriptions = Set<AnyCancellable>()
+
     var active: Bool { from != nil }
 
     fileprivate func update(from: Point2?) {
@@ -20,8 +22,6 @@ class AddingPathStore: Store {
             $0(\._to, to)
         }
     }
-
-    fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
 struct AddingPathService {
@@ -39,12 +39,6 @@ struct AddingPathService {
         let mid = from.midPoint(to: to)
         let offset = mid.offset(to: to)
         return .init(edge: .init(control0: from.offset(to: mid + offset.normalLeft / 2), control1: to.offset(to: mid + offset.normalRight / 2)), from: from, to: to)
-    }
-
-    func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.$panInfo
-            .sink { self.onPan($0) }
-            .store(in: &store.subscriptions)
     }
 
     var addingPath: Path? {
@@ -67,7 +61,7 @@ struct AddingPathService {
         store.update(from: nil)
     }
 
-    private func onPan(_ info: PanInfo?) {
+    func onPan(_ info: PanInfo?) {
         guard active, let info else { return }
         store.update(to: grid.snap(info.current))
     }

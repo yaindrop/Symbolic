@@ -23,21 +23,17 @@ class PathStore: Store {
 // MARK: - PendingPathModel
 
 class PendingPathStore: Store {
-    @Trackable var pendingEvent: DocumentEvent?
     @Trackable var pathMap = PathMap()
-
-    var hasPendingEvent: Bool { pendingEvent != nil }
+    @Trackable var hasPendingEvent: Bool = false
 
     var paths: [Path] { Array(pathMap.values) }
 
-    fileprivate var loadingPendingEvent = false
-
-    fileprivate func update(pendingEvent: DocumentEvent?) {
-        update { $0(\._pendingEvent, pendingEvent) }
-    }
-
     fileprivate func update(pathMap: PathMap) {
         update { $0(\._pathMap, pathMap) }
+    }
+
+    fileprivate func update(hasPendingEvent: Bool) {
+        update { $0(\._hasPendingEvent, hasPendingEvent) }
     }
 }
 
@@ -66,15 +62,12 @@ struct PathService {
     func loadPendingEvent(_ event: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
         guard let event else {
-            pendingStore.update(pendingEvent: event)
+            pendingStore.update(hasPendingEvent: false)
             return
         }
 
-        pendingStore.loadingPendingEvent = true
-        defer { pendingStore.loadingPendingEvent = false }
-
         withStoreUpdating {
-            pendingStore.update(pendingEvent: event)
+            pendingStore.update(hasPendingEvent: true)
             pendingStore.update(pathMap: store.pathMap.cloned)
             loadEvent(event)
         }
@@ -85,9 +78,9 @@ struct PathService {
 
 extension PathService {
     private var targetPathMap: PathMap {
-        get { pendingStore.loadingPendingEvent ? pendingStore.pathMap : store.pathMap }
+        get { pendingStore.hasPendingEvent ? pendingStore.pathMap : store.pathMap }
         nonmutating set {
-            if pendingStore.loadingPendingEvent { pendingStore.update(pathMap: newValue) } else { store.update(pathMap: newValue) }
+            if pendingStore.hasPendingEvent { pendingStore.update(pathMap: newValue) } else { store.update(pathMap: newValue) }
         }
     }
 

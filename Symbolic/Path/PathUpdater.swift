@@ -22,11 +22,15 @@ struct PathUpdater {
     let store: PathUpdateStore
 
     func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
-        store.eventSubject.sink(receiveValue: callback).store(in: &store.subscriptions)
+        store.eventSubject
+            .sink(receiveValue: callback)
+            .store(in: &store.subscriptions)
     }
 
     func onPendingEvent(_ callback: @escaping (DocumentEvent?) -> Void) {
-        store.pendingEventSubject.sink(receiveValue: callback).store(in: &store.subscriptions)
+        store.pendingEventSubject
+            .sink(receiveValue: callback)
+            .store(in: &store.subscriptions)
     }
 
     // MARK: updateActivePath

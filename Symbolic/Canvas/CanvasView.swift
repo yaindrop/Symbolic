@@ -65,17 +65,29 @@ struct CanvasView: View {
                 global.activePath.onActivePathChanged()
             }
             .onAppear {
-                global.viewportUpdater.subscribe(to: multipleTouch)
-                pressDetector.subscribe()
-                global.pendingSelection.subscribe(to: multipleTouch)
-                global.addingPath.subscribe(to: multipleTouch)
+                multipleTouch.$panInfo
+                    .sink { global.viewportUpdater.onPanInfo($0) }
+                    .store(in: &global.viewportUpdater.store.subscriptions)
+                multipleTouch.$pinchInfo
+                    .sink { global.viewportUpdater.onPinchInfo($0) }
+                    .store(in: &global.viewportUpdater.store.subscriptions)
 
-                global.document.store.$activeDocument.sink {
-                    global.path.loadDocument($0)
-                }.store(in: &global.path.store.subscriptions)
-                global.document.store.$pendingEvent.sink {
-                    global.path.loadPendingEvent($0)
-                }.store(in: &global.path.store.subscriptions)
+                pressDetector.subscribe()
+
+                multipleTouch.$panInfo
+                    .sink { global.pendingSelection.onPan($0) }
+                    .store(in: &global.addingPath.store.subscriptions)
+
+                multipleTouch.$panInfo
+                    .sink { global.addingPath.onPan($0) }
+                    .store(in: &global.addingPath.store.subscriptions)
+
+                global.document.store.$activeDocument
+                    .sink { global.path.loadDocument($0) }
+                    .store(in: &global.path.store.subscriptions)
+                global.document.store.$pendingEvent
+                    .sink { global.path.loadPendingEvent($0) }
+                    .store(in: &global.path.store.subscriptions)
             }
             .onAppear {
                 multipleTouchPress.onPress {

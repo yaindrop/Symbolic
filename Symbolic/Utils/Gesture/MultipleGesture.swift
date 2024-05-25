@@ -17,31 +17,49 @@ class MultipleGestureModel<Data> {
     }
 
     func onTouchDown(_ callback: @escaping () -> Void) {
-        touchDownSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        touchDownSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onTouchUp(_ callback: @escaping () -> Void) {
-        touchUpSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        touchUpSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onTap(_ callback: @escaping (Value, Data) -> Void) {
-        tapSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+        tapSubject
+            .compactMap(makeValue)
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onLongPress(_ callback: @escaping (Value, Data) -> Void) {
-        longPressSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+        longPressSubject
+            .compactMap(makeValue)
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onLongPressEnd(_ callback: @escaping (Value, Data) -> Void) {
-        longPressEndSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+        longPressEndSubject
+            .compactMap(makeValue)
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onDrag(_ callback: @escaping (Value, Data) -> Void) {
-        dragSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+        dragSubject.compactMap(makeValue)
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onDragEnd(_ callback: @escaping (Value, Data) -> Void) {
-        dragEndSubject.compactMap(makeValue).sink(receiveValue: callback).store(in: &subscriptions)
+        dragEndSubject
+            .compactMap(makeValue)
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     init(configs: Configs = Configs()) {

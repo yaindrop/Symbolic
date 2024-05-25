@@ -20,23 +20,33 @@ class MultipleTouchPressModel {
     }
 
     func onPress(_ callback: @escaping () -> Void) {
-        pressSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        pressSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onPressEnd(_ callback: @escaping () -> Void) {
-        pressEndSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        pressEndSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onTap(_ callback: @escaping (TapInfo) -> Void) {
-        tapSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        tapSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onLongPress(_ callback: @escaping (PanInfo) -> Void) {
-        longPressSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        longPressSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     func onLongPressEnd(_ callback: @escaping (PanInfo) -> Void) {
-        longPressEndSubject.sink(receiveValue: callback).store(in: &subscriptions)
+        longPressEndSubject
+            .sink(receiveValue: callback)
+            .store(in: &subscriptions)
     }
 
     init(configs: Configs) {

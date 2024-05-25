@@ -6,6 +6,8 @@ class PendingSelectionStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
 
+    var subscriptions = Set<AnyCancellable>()
+
     var active: Bool { from != nil }
 
     fileprivate func update(from: Point2?) {
@@ -20,8 +22,6 @@ class PendingSelectionStore: Store {
             $0(\._to, to)
         }
     }
-
-    fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
 struct PendingSelectionService {
@@ -43,12 +43,6 @@ struct PendingSelectionService {
         } ?? []
     }
 
-    func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.$panInfo
-            .sink { self.onPan($0) }
-            .store(in: &store.subscriptions)
-    }
-
     func onStart(from: Point2) {
         store.update(from: from)
     }
@@ -57,7 +51,7 @@ struct PendingSelectionService {
         store.update(from: nil)
     }
 
-    private func onPan(_ info: PanInfo?) {
+    func onPan(_ info: PanInfo?) {
         guard active, let info else { return }
         store.update(to: info.current)
     }

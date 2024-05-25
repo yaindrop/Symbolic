@@ -48,6 +48,8 @@ class ViewportUpdateStore: Store {
     @Trackable var blocked: Bool = false
     @Trackable var previousInfo: ViewportInfo = .init()
 
+    var subscriptions = Set<AnyCancellable>()
+
     fileprivate func update(blocked: Bool) {
         update { $0(\._blocked, blocked) }
     }
@@ -55,8 +57,6 @@ class ViewportUpdateStore: Store {
     fileprivate func update(previousInfo: ViewportInfo) {
         update { $0(\._previousInfo, previousInfo) }
     }
-
-    fileprivate var subscriptions = Set<AnyCancellable>()
 }
 
 // MARK: - services
@@ -83,24 +83,8 @@ struct ViewportUpdater {
         store.update(blocked: blocked)
     }
 
-    func subscribe(to multipleTouch: MultipleTouchModel) {
-        multipleTouch.$panInfo
-            .sink { value in
-                guard !self.store.blocked, let info = value else { self.onCommit(); return }
-                self.onPanInfo(info)
-            }
-            .store(in: &store.subscriptions)
-        multipleTouch.$pinchInfo
-            .sink { value in
-                guard !self.store.blocked, let info = value else { self.onCommit(); return }
-                self.onPinchInfo(info)
-            }
-            .store(in: &store.subscriptions)
-    }
-
-    // MARK: private
-
-    private func onPanInfo(_ pan: PanInfo) {
+    func onPanInfo(_ pan: PanInfo?) {
+        guard !store.blocked, let pan else { onCommit(); return }
         global.canvasAction.start(continuous: .panViewport)
         global.canvasAction.end(continuous: .pinchViewport)
         let _r = subtracer.range("pan \(pan)", type: .intent); defer { _r() }
@@ -110,7 +94,8 @@ struct ViewportUpdater {
         viewport.update(info: .init(origin: origin, scale: scale))
     }
 
-    private func onPinchInfo(_ pinch: PinchInfo) {
+    func onPinchInfo(_ pinch: PinchInfo?) {
+        guard !store.blocked, let pinch else { onCommit(); return }
         global.canvasAction.start(continuous: .pinchViewport)
         global.canvasAction.end(continuous: .panViewport)
         let _r = subtracer.range("pinch \(pinch)", type: .intent); defer { _r() }
@@ -121,6 +106,8 @@ struct ViewportUpdater {
         let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
         viewport.update(info: .init(origin: origin, scale: scale))
     }
+
+    // MARK: private
 
     private func onCommit() {
         global.canvasAction.end(continuous: .panViewport)

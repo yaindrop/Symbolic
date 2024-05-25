@@ -69,8 +69,8 @@ struct PathUpdater {
     func updateInView(_ action: PathAction, pending: Bool = false) {
         var actionInWorld: PathAction {
             switch action {
-            case let .movePaths(movePaths):
-                .movePaths(.init(pathIds: movePaths.pathIds, offset: movePaths.offset.applying(viewport.toWorld)))
+            case let .move(move):
+                .move(.init(pathIds: move.pathIds, offset: move.offset.applying(viewport.toWorld)))
             default: action
             }
         }
@@ -121,30 +121,54 @@ extension PathUpdater {
 // MARK: collect events for action
 
 extension PathUpdater {
-    private func collectEvents(to events: inout [PathEvent], _ pathAction: PathAction) {
-        switch pathAction {
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction) {
+        switch action {
         case .create: break
         case .load: break
-        case let .single(single):
-            switch single.kind {
-            case let .deleteNode(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .breakAtNode(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .breakAtEdge(action): collectEvents(to: &events, pathId: single.pathId, action)
-
-            case let .addEndingNode(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .splitSegment(action): collectEvents(to: &events, pathId: single.pathId, action)
-
-            case let .move(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .moveNode(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .moveEdge(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .moveEdgeControl(action): collectEvents(to: &events, pathId: single.pathId, action)
-
-            case let .setNodePosition(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .setEdge(action): collectEvents(to: &events, pathId: single.pathId, action)
-            }
-        case let .movePaths(movePaths): collectEvents(to: &events, movePaths)
-        case let .deletePaths(deletePaths): collectEvents(to: &events, deletePaths)
+        case let .move(action): collectEvents(to: &events, action)
+        case let .delete(action): collectEvents(to: &events, action)
+        case let .merge(action): collectEvents(to: &events, action)
+        case let .single(action): collectEvents(to: &events, action)
         }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Single) {
+        let pathId = action.pathId
+        switch action.kind {
+        case let .deleteNode(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .breakAtNode(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .breakAtEdge(action): collectEvents(to: &events, pathId: pathId, action)
+
+        case let .addEndingNode(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .splitSegment(action): collectEvents(to: &events, pathId: pathId, action)
+
+        case let .move(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .moveNode(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .moveEdge(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .moveEdgeControl(action): collectEvents(to: &events, pathId: pathId, action)
+
+        case let .setNodePosition(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .setEdge(action): collectEvents(to: &events, pathId: pathId, action)
+        }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Move) {
+        let offset = action.offset, pathIds = action.pathIds
+        for pathId in pathIds {
+            events.append(.init(in: pathId, .move(.init(offset: offset))))
+        }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Delete) {
+        let pathIds = action.pathIds
+        for pathId in pathIds {
+            events.append(.delete(.init(pathId: pathId)))
+        }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Merge) {
+        let pathId = action.pathId, endingNodeId = action.endingNodeId, mergedPathId = action.mergedPathId, mergedEndingNodeId = action.mergedEndingNodeId
+        events.append(.update(.init(pathId: pathId, kind: .merge(.init(endingNodeId: endingNodeId, mergedPathId: mergedPathId, mergedEndingNodeId: mergedEndingNodeId)))))
     }
 
     // MARK: single path actions
@@ -169,9 +193,9 @@ extension PathUpdater {
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let endingNode = path.node(id: endingNodeId) else { return }
         let prevNodeId: UUID?
-        if path.isFirstNode(id: endingNodeId) {
+        if path.isFirstEndingNode(id: endingNodeId) {
             prevNodeId = nil
-        } else if path.isLastNode(id: endingNodeId) {
+        } else if path.isLastEndingNode(id: endingNodeId) {
             prevNodeId = endingNodeId
         } else {
             return
@@ -252,18 +276,5 @@ extension PathUpdater {
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.SetEdge) {
         let fromNodeId = action.fromNodeId, edge = action.edge
         events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: fromNodeId, edge: edge))))
-    }
-
-    private func collectEvents(to events: inout [PathEvent], _ movePaths: PathAction.MovePaths) {
-        let offset = movePaths.offset
-        for pathId in movePaths.pathIds {
-            events.append(.init(in: pathId, .move(.init(offset: offset))))
-        }
-    }
-
-    private func collectEvents(to events: inout [PathEvent], _ deletePaths: PathAction.DeletePaths) {
-        for pathId in deletePaths.pathIds {
-            events.append(.delete(.init(pathId: pathId)))
-        }
     }
 }

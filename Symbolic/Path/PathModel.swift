@@ -155,6 +155,8 @@ extension PathService {
         switch event.kind {
         case let .move(move):
             loadPathUpdate(pathId: event.pathId, move)
+        case let .merge(merge):
+            loadPathUpdate(pathId: event.pathId, merge)
         case let .nodeCreate(nodeCreate):
             loadPathUpdate(pathId: event.pathId, nodeCreate)
         case let .nodeDelete(nodeDelete):
@@ -173,6 +175,17 @@ extension PathService {
     func loadPathUpdate(pathId: UUID, _ move: PathEvent.Update.Move) {
         guard let path = targetPathMap[pathId] else { return }
         path.update(move: move)
+        update(path: path)
+    }
+
+    func loadPathUpdate(pathId: UUID, _ merge: PathEvent.Update.Merge) {
+        let mergedPathId = merge.mergedPathId
+        guard let path = targetPathMap[pathId],
+              let mergedPath = targetPathMap[mergedPathId] else { return }
+        if mergedPath != path {
+            remove(pathId: mergedPathId)
+        }
+        path.update(merge: merge, mergedPath: mergedPath)
         update(path: path)
     }
 

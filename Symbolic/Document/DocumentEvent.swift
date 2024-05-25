@@ -16,6 +16,7 @@ enum PathEvent {
 
 extension PathEvent.Update {
     struct Move { let offset: Vector2 }
+    struct Merge { let endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
 
     struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
     struct NodeUpdate { let node: PathNode }
@@ -27,6 +28,7 @@ extension PathEvent.Update {
 
     enum Kind {
         case move(Move)
+        case merge(Merge)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)

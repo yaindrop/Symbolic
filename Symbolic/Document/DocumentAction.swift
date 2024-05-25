@@ -42,19 +42,22 @@ enum PathAction {
 
     struct Create { let path: Path }
 
+    struct Move { let pathIds: [UUID], offset: Vector2 }
+    struct Delete { let pathIds: [UUID] }
+
+    struct Merge { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+
     struct Single { let pathId: UUID, kind: Kind }
 
-    struct MovePaths { let pathIds: [UUID], offset: Vector2 }
-    struct DeletePaths { let pathIds: [UUID] }
-
     case load(Load)
-
     case create(Create)
 
-    case single(Single)
+    case move(Move)
+    case delete(Delete)
 
-    case movePaths(MovePaths)
-    case deletePaths(DeletePaths)
+    case merge(Merge)
+
+    case single(Single)
 }
 
 enum DocumentAction {

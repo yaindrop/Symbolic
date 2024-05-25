@@ -13,7 +13,7 @@ extension ActivePathPanel {
                 VStack(spacing: 12) {
                     ForEach(activePath.pairs.values, id: \.node.id) { p in
                         let i = activePath.nodeIndex(id: p.node.id) ?? 0
-                        NodeEdgeGroup(index: i, node: p.node, edge: p.edge, hasNext: activePath.isClosed || i + 1 < activePath.count)
+                        NodeEdgeGroup(path: activePath, index: i, node: p.node, edge: p.edge)
                     }
                 }
             }
@@ -25,15 +25,15 @@ extension ActivePathPanel {
     // MARK: - NodeEdgeGroup
 
     fileprivate struct NodeEdgeGroup: View {
+        let path: Path
         let index: Int
         let node: PathNode
         let edge: PathEdge
-        let hasNext: Bool
 
         var body: some View {
             Group {
-                NodePanel(index: index, node: node)
-                if hasNext {
+                NodePanel(path: path, index: index, node: node)
+                if !path.isLastEndingNode(id: node.id) {
                     EdgePanel(fromNodeId: node.id, edge: edge)
                 }
             }
@@ -41,11 +41,11 @@ extension ActivePathPanel {
             .onChange(of: focused) { animateOnFocused() }
         }
 
-        init(index: Int, node: PathNode, edge: PathEdge, hasNext: Bool) {
+        init(path: Path, index: Int, node: PathNode, edge: PathEdge) {
+            self.path = path
             self.index = index
             self.node = node
             self.edge = edge
-            self.hasNext = hasNext
             _focused = .init { global.activePath.focusedPart?.id == node.id }
         }
 

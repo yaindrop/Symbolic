@@ -54,6 +54,8 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
     struct NodeEdgePair: TriviallyCloneable {
         var node: PathNode, edge: PathEdge
 
+        var id: UUID { node.id }
+
         init(_ node: PathNode, _ edge: PathEdge) {
             self.node = node
             self.edge = edge
@@ -71,6 +73,11 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
     var count: Int { pairs.count }
 
     var nodes: [PathNode] { pairs.values.map { $0.node } }
+
+    var firstNode: PathNode { pairs.first!.node }
+
+    var lastNode: PathNode { pairs.last!.node }
+
     var segments: [PathSegment] { pairs.values.compactMap { segment(from: $0.node.id) } }
 
     func segment(from id: UUID) -> PathSegment? {
@@ -114,21 +121,20 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
     func node(before: UUID) -> PathNode? { pair(before: before)?.node }
     func node(after: UUID) -> PathNode? { pair(after: after)?.node }
 
-    func edge(at i: Int) -> PathEdge? { pair(at: i)?.edge }
-    func edge(id: UUID) -> PathEdge? { pair(id: id)?.edge }
-    func edge(before: UUID) -> PathEdge? { pair(before: before)?.edge }
-    func edge(after: UUID) -> PathEdge? { pair(after: after)?.edge }
+    func isFirstEndingNode(id: UUID) -> Bool { !isClosed && firstNode.id == id }
 
-    func isFirstNode(id: UUID) -> Bool {
-        !isClosed && pairs.first?.node.id == id
-    }
+    func isLastEndingNode(id: UUID) -> Bool { !isClosed && lastNode.id == id }
 
-    func isLastNode(id: UUID) -> Bool {
-        !isClosed && pairs.last?.node.id == id
-    }
+    func isEndingNode(id: UUID) -> Bool { isFirstEndingNode(id: id) || isLastEndingNode(id: id) }
 
-    func isEndingNode(id: UUID) -> Bool {
-        isFirstNode(id: id) || isLastNode(id: id)
+    func mergableNode(id: UUID) -> PathNode? {
+        guard let node = node(id: id) else { return nil }
+        if isFirstEndingNode(id: id) {
+            return node.position == lastNode.position ? lastNode : nil
+        } else if isLastEndingNode(id: id) {
+            return node.position == firstNode.position ? firstNode : nil
+        }
+        return nil
     }
 
     var path: SUPath {
@@ -184,6 +190,35 @@ extension Path {
         }
     }
 
+    func update(merge: PathEvent.Update.Merge, mergedPath: Path) {
+        let endingNodeId = merge.endingNodeId, mergedEndingNodeId = merge.mergedEndingNodeId
+        let _r = tracer.range("Path.update move"); defer { _r() }
+        guard let endingNode = node(id: endingNodeId),
+              let mergedEndingNode = mergedPath.node(id: mergedEndingNodeId),
+              isEndingNode(id: endingNodeId),
+              mergedPath.isEndingNode(id: mergedEndingNodeId),
+              endingNodeId != mergedEndingNodeId else { return }
+        let mergePosition = endingNode.position == mergedEndingNode.position
+        if mergedPath == self {
+            if mergePosition {
+                pairs.removeValue(forKey: lastNode.id)
+            }
+            isClosed = true
+            return
+        }
+//        let reversed = isLastEndingNode(id: endingNodeId) && mergedPath.isLastEndingNode(id: mergedEndingNodeId)
+//            || isFirstEndingNode(id: endingNodeId) && mergedPath.isFirstEndingNode(id: mergedEndingNodeId)
+//        let mergedPairs = reversed ? mergedPath.pairs.values.reversed() : mergedPath.pairs.values
+//        let prepend = isFirstEndingNode(id: endingNodeId)
+//        for pair in mergedPairs {
+//            if prepend {
+//                pairs.insert((pair.id, pair), at: 0)
+//            } else {
+//                pairs.append((pair.id, pair))
+//            }
+//        }
+    }
+
     func update(nodeCreate: PathEvent.Update.NodeCreate) {
         let _r = tracer.range("Path.update nodeCreate"); defer { _r() }
         let prevNodeId = nodeCreate.prevNodeId, node = nodeCreate.node
@@ -210,7 +245,7 @@ extension Path {
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
               let node = node(id: nodeId),
-              let edge = edge(id: nodeId) else { return nil }
+              let edge = segment(from: nodeId)?.edge else { return nil }
         let newPair = NodeEdgePair(.init(id: newNodeId, position: node.position), edge)
         if isClosed {
             pairs.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }

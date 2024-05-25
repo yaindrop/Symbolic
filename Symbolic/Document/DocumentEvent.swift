@@ -16,21 +16,23 @@ enum PathEvent {
 
 extension PathEvent.Update {
     struct Move { let offset: Vector2 }
-    struct BreakAfter { let nodeId: UUID } // break closed path after id, or delete nodes (exclusively) after id
-    struct BreakUntil { let nodeId: UUID } // break closed path after id, or delete nodes (inclusively) till id
-    struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
+
     struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
     struct NodeUpdate { let node: PathNode }
     struct NodeDelete { let nodeId: UUID }
+    struct NodeBreak { let nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
+
+    struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
+    struct EdgeBreak { let fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
 
     enum Kind {
         case move(Move)
-        case breakAfter(BreakAfter)
-        case breakUntil(BreakUntil)
-        case edgeUpdate(EdgeUpdate)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
+        case nodeBreak(NodeBreak)
+        case edgeUpdate(EdgeUpdate)
+        case edgeBreak(EdgeBreak)
     }
 }
 
@@ -59,38 +61,7 @@ struct DocumentEvent: Identifiable {
 }
 
 extension PathEvent {
-    init(in pathId: UUID, move offset: Vector2) {
-        self = .update(.init(pathId: pathId,
-                             kind: .move(.init(offset: offset))))
-    }
-
-    init(in pathId: UUID, breakAfter nodeId: UUID) {
-        self = .update(.init(pathId: pathId,
-                             kind: .breakAfter(.init(nodeId: nodeId))))
-    }
-
-    init(in pathId: UUID, breakUntil nodeId: UUID) {
-        self = .update(.init(pathId: pathId,
-                             kind: .breakUntil(.init(nodeId: nodeId))))
-    }
-
-    init(in pathId: UUID, updateEdgeFrom fromNodeId: UUID, _ edge: PathEdge) {
-        self = .update(.init(pathId: pathId,
-                             kind: .edgeUpdate(.init(fromNodeId: fromNodeId, edge: edge))))
-    }
-
-    init(in pathId: UUID, createNodeAfter prevNodeId: UUID?, _ node: PathNode) {
-        self = .update(.init(pathId: pathId,
-                             kind: .nodeCreate(.init(prevNodeId: prevNodeId, node: node))))
-    }
-
-    init(in pathId: UUID, updateNode node: PathNode) {
-        self = .update(.init(pathId: pathId,
-                             kind: .nodeUpdate(.init(node: node))))
-    }
-
-    init(in pathId: UUID, deleteNode nodeId: UUID) {
-        self = .update(.init(pathId: pathId,
-                             kind: .nodeDelete(.init(nodeId: nodeId))))
+    init(in pathId: UUID, _ kind: PathEvent.Update.Kind) {
+        self = .update(.init(pathId: pathId, kind: kind))
     }
 }

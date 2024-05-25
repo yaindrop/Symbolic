@@ -48,7 +48,7 @@ struct SelectionView: View {
             let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
             let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
             ContextMenu(onDelete: {
-                global.pathUpdater.delete(pathIds: selectedPathIds)
+                global.pathUpdater.update(.deletePaths(.init(pathIds: selectedPathIds)))
             })
             .viewSizeReader { menuSize = $0 }
             .position(menuBox.center)
@@ -73,7 +73,7 @@ extension SelectionView {
                 .position(rect.center)
                 .multipleGesture(gesture, ()) {
                     func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in global.pathUpdater.updateInView(action: .init(pathIds: selectedPathIds, offset: v.offset), pending: pending) }
+                        { v, _ in global.pathUpdater.updateInView(.movePaths(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending) }
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())

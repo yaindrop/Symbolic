@@ -380,12 +380,12 @@
 		574CC7E52BFA3E3A0042FEE3 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */,
 				57416E392BE0BAB600C73434 /* Line.swift */,
 				57416E422BE12D7100C73434 /* LineSegment.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
-				57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";

@@ -7,32 +7,33 @@ extension PathAction.Single {
     struct SplitSegment: PathActionSingleKind { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
     struct DeleteNode: PathActionSingleKind { let nodeId: UUID }
-    struct BreakAtNode: PathActionSingleKind { let nodeId: UUID }
-    struct BreakAtEdge: PathActionSingleKind { let fromNodeId: UUID }
+    struct BreakAtNode: PathActionSingleKind { let nodeId: UUID, newNodeId: UUID, newPathId: UUID }
+    struct BreakAtEdge: PathActionSingleKind { let fromNodeId: UUID, newPathId: UUID }
 
     struct SetNodePosition: PathActionSingleKind { let nodeId: UUID, position: Point2 }
     struct SetEdge: PathActionSingleKind { let fromNodeId: UUID, edge: PathEdge }
 
-    struct MovePath: PathActionSingleKind { let offset: Vector2 }
+    struct Move: PathActionSingleKind { let offset: Vector2 }
     struct MoveNode: PathActionSingleKind { let nodeId: UUID, offset: Vector2 }
     struct MoveEdge: PathActionSingleKind { let fromNodeId: UUID, offset: Vector2 }
-    struct MoveEdgeBezier: PathActionSingleKind { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
+    struct MoveEdgeControl: PathActionSingleKind { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
 
     enum Kind {
-        case addEndingNode(AddEndingNode)
-        case splitSegment(SplitSegment)
-
         case deleteNode(DeleteNode)
         case breakAtNode(BreakAtNode)
         case breakAtEdge(BreakAtEdge)
 
-        case setNodePosition(SetNodePosition)
-        case setEdge(SetEdge)
+        // handle actions
+        case addEndingNode(AddEndingNode)
+        case splitSegment(SplitSegment)
 
-        case movePath(MovePath)
+        case move(Move)
         case moveNode(MoveNode)
         case moveEdge(MoveEdge)
-        case moveEdgeBezier(MoveEdgeBezier)
+        case moveEdgeControl(MoveEdgeControl)
+
+        case setNodePosition(SetNodePosition)
+        case setEdge(SetEdge)
     }
 }
 

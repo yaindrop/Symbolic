@@ -54,7 +54,7 @@ extension ActivePathPanel {
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { global.pathUpdater.updateActivePath(action: .setNodePosition(.init(nodeId: node.id, position: $0)), pending: pending) }
+            { global.pathUpdater.updateActivePath(.setNodePosition(.init(nodeId: node.id, position: $0)), pending: pending) }
         }
 
         private func toggleFocus() {
@@ -62,11 +62,11 @@ extension ActivePathPanel {
         }
 
         private func breakNode() {
-            global.pathUpdater.updateActivePath(action: .breakAtEdge(.init(fromNodeId: node.id)))
+            global.pathUpdater.updateActivePath(.breakAtNode(.init(nodeId: node.id, newNodeId: UUID(), newPathId: UUID())))
         }
 
         private func deleteNode() {
-            global.pathUpdater.updateActivePath(action: .deleteNode(.init(nodeId: node.id)))
+            global.pathUpdater.updateActivePath(.deleteNode(.init(nodeId: node.id)))
         }
     }
 }

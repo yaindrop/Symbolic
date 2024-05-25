@@ -141,7 +141,7 @@ struct CanvasView: View {
                     global.canvasAction.end(continuous: .pendingSelection)
 
                     if let path = global.addingPath.addingPath {
-                        global.document.sendEvent(.init(kind: .pathEvent(.create(.init(path: path))), action: .pathAction(.create(.init(path: path)))))
+                        global.pathUpdater.update(.create(.init(path: path)))
                         global.activePath.activate(pathId: path.id)
                         global.canvasAction.on(instant: .addPath)
                     }

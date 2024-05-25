@@ -155,42 +155,24 @@ extension PathService {
         switch event.kind {
         case let .move(move):
             loadPathUpdate(pathId: event.pathId, move)
-        case let .breakAfter(breakAfter):
-            loadPathUpdate(pathId: event.pathId, breakAfter)
-        case let .breakUntil(breakUntil):
-            loadPathUpdate(pathId: event.pathId, breakUntil)
-        case let .edgeUpdate(edgeUpdate):
-            loadPathUpdate(pathId: event.pathId, edgeUpdate)
         case let .nodeCreate(nodeCreate):
             loadPathUpdate(pathId: event.pathId, nodeCreate)
         case let .nodeDelete(nodeDelete):
             loadPathUpdate(pathId: event.pathId, nodeDelete)
         case let .nodeUpdate(nodeUpdate):
             loadPathUpdate(pathId: event.pathId, nodeUpdate)
+        case let .nodeBreak(nodeBreak):
+            loadPathUpdate(pathId: event.pathId, nodeBreak)
+        case let .edgeUpdate(edgeUpdate):
+            loadPathUpdate(pathId: event.pathId, edgeUpdate)
+        case let .edgeBreak(edgeBreak):
+            loadPathUpdate(pathId: event.pathId, edgeBreak)
         }
     }
 
     func loadPathUpdate(pathId: UUID, _ move: PathEvent.Update.Move) {
         guard let path = targetPathMap[pathId] else { return }
         path.update(move: move)
-        update(path: path)
-    }
-
-    func loadPathUpdate(pathId: UUID, _ breakAfter: PathEvent.Update.BreakAfter) {
-        guard let path = targetPathMap[pathId] else { return }
-        path.update(breakAfter: breakAfter)
-        update(path: path)
-    }
-
-    func loadPathUpdate(pathId: UUID, _ breakUntil: PathEvent.Update.BreakUntil) {
-        guard let path = targetPathMap[pathId] else { return }
-        path.update(breakUntil: breakUntil)
-        update(path: path)
-    }
-
-    func loadPathUpdate(pathId: UUID, _ edgeUpdate: PathEvent.Update.EdgeUpdate) {
-        guard let path = targetPathMap[pathId] else { return }
-        path.update(edgeUpdate: edgeUpdate)
         update(path: path)
     }
 
@@ -210,6 +192,30 @@ extension PathService {
         guard let path = targetPathMap[pathId] else { return }
         path.update(nodeUpdate: nodeUpdate)
         update(path: path)
+    }
+
+    func loadPathUpdate(pathId: UUID, _ nodeBreak: PathEvent.Update.NodeBreak) {
+        guard let path = targetPathMap[pathId] else { return }
+        let newPath = path.update(nodeBreak: nodeBreak)
+        update(path: path)
+        if let newPath {
+            add(path: newPath)
+        }
+    }
+
+    func loadPathUpdate(pathId: UUID, _ edgeUpdate: PathEvent.Update.EdgeUpdate) {
+        guard let path = targetPathMap[pathId] else { return }
+        path.update(edgeUpdate: edgeUpdate)
+        update(path: path)
+    }
+
+    func loadPathUpdate(pathId: UUID, _ edgeBreak: PathEvent.Update.EdgeBreak) {
+        guard let path = targetPathMap[pathId] else { return }
+        let newPath = path.update(edgeBreak: edgeBreak)
+        update(path: path)
+        if let newPath {
+            add(path: newPath)
+        }
     }
 }
 

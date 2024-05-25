@@ -18,8 +18,6 @@ struct PathEdge: Equatable {
     func with(control0: Vector2) -> Self { .init(control0: control0, control1: control1) }
     func with(control1: Vector2) -> Self { .init(control0: control0, control1: control1) }
 
-    static var line: Self { Self() }
-
     init(control0: Vector2 = .zero, control1: Vector2 = .zero) {
         self.control0 = control0
         self.control1 = control1
@@ -198,33 +196,6 @@ extension Path {
         }
     }
 
-    func update(breakAfter: PathEvent.Update.BreakAfter) {
-        let _r = tracer.range("Path.update breakAfter"); defer { _r() }
-        guard let i = nodeIndex(id: breakAfter.nodeId) else { return }
-        if isClosed {
-            pairs.mutateKeys { $0 = Array($0[(i + 1)...]) + Array($0[...i]) }
-            isClosed = false
-        } else {
-            pairs.mutateKeys { $0 = Array($0[...i]) }
-        }
-    }
-
-    func update(breakUntil: PathEvent.Update.BreakUntil) {
-        let _r = tracer.range("Path.update breakUntil"); defer { _r() }
-        guard let i = nodeIndex(id: breakUntil.nodeId) else { return }
-        if isClosed {
-            pairs.mutateKeys { $0 = Array($0[(i + 1)...]) + Array($0[...i]) }
-            isClosed = false
-        } else {
-            pairs.mutateKeys { $0 = Array($0[(i + 1)...]) }
-        }
-    }
-
-    func update(edgeUpdate: PathEvent.Update.EdgeUpdate) {
-        let _r = tracer.range("Path.update edgeUpdate"); defer { _r() }
-        pairs[edgeUpdate.fromNodeId]?.edge = edgeUpdate.edge
-    }
-
     func update(nodeCreate: PathEvent.Update.NodeCreate) {
         let _r = tracer.range("Path.update nodeCreate"); defer { _r() }
         let prevNodeId = nodeCreate.prevNodeId, node = nodeCreate.node
@@ -244,5 +215,47 @@ extension Path {
     func update(nodeUpdate: PathEvent.Update.NodeUpdate) {
         let _r = tracer.range("Path.update nodeUpdate"); defer { _r() }
         pairs[nodeUpdate.node.id]?.node = nodeUpdate.node
+    }
+
+    func update(nodeBreak: PathEvent.Update.NodeBreak) -> Path? {
+        let nodeId = nodeBreak.nodeId, newNodeId = nodeBreak.newNodeId, newPathId = nodeBreak.newPathId
+        let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
+        guard let i = nodeIndex(id: nodeId),
+              let node = node(id: nodeId),
+              let edge = edge(id: nodeId) else { return nil }
+        let newPair = NodeEdgePair(.init(id: newNodeId, position: node.position), edge)
+        if isClosed {
+            pairs.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
+            pairs.insert((newNodeId, newPair), at: 0)
+            isClosed = false
+            return nil
+        } else {
+            var newPathPairs = pairs
+            pairs.mutateKeys { $0 = Array($0[...i]) }
+            newPathPairs.mutateKeys { $0 = Array($0[(i + 1)...]) }
+            newPathPairs.insert((newNodeId, newPair), at: 0)
+            return .init(id: newPathId, pairs: newPathPairs, isClosed: false)
+        }
+    }
+
+    func update(edgeUpdate: PathEvent.Update.EdgeUpdate) {
+        let _r = tracer.range("Path.update edgeUpdate"); defer { _r() }
+        pairs[edgeUpdate.fromNodeId]?.edge = edgeUpdate.edge
+    }
+
+    func update(edgeBreak: PathEvent.Update.EdgeBreak) -> Path? {
+        let nodeId = edgeBreak.fromNodeId, newPathId = edgeBreak.newPathId
+        let _r = tracer.range("Path.update edgeBreak"); defer { _r() }
+        guard let i = nodeIndex(id: nodeId) else { return nil }
+        if isClosed {
+            pairs.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
+            isClosed = false
+            return nil
+        } else {
+            var newPathPairs = pairs
+            pairs.mutateKeys { $0 = Array($0[...i]) }
+            newPathPairs.mutateKeys { $0 = Array($0[(i + 1)...]) }
+            return .init(id: newPathId, pairs: newPathPairs, isClosed: false)
+        }
     }
 }

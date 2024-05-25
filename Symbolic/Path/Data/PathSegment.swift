@@ -71,10 +71,11 @@ fileprivate protocol ParamSplittable {
 extension PathSegment: ParamSplittable {
     func split(paramT t: Scalar) -> (Self, Self) {
         if edge.isLine {
-            let pt = Point2(lerp(from: Vector2(from), to: Vector2(to), at: t))
+            let p0 = Vector2(from), p1 = Vector2(to)
+            let pt = lerp(from: p0, to: p1, at: t)
             return (
-                .init(edge: .init(), from: from, to: pt),
-                .init(edge: .init(), from: pt, to: to)
+                .init(edge: .init(), from: from, to: .init(pt)),
+                .init(edge: .init(), from: .init(pt), to: to)
             )
         }
         let p0 = Vector2(from), p3 = Vector2(to)
@@ -83,17 +84,18 @@ extension PathSegment: ParamSplittable {
         let p012 = lerp(from: p01, to: p12, at: t), p123 = lerp(from: p12, to: p23, at: t)
         let p0123 = lerp(from: p012, to: p123, at: t)
         return (
-            .init(edge: .init(control0: p01 - p0, control1: p012 - p0123), from: from, to: Point2(p0123)),
-            .init(edge: .init(control0: p123 - p0123, control1: p23 - p3), from: Point2(p0123), to: to)
+            .init(edge: .init(control0: p01 - p0, control1: p012 - p0123), from: from, to: .init(p0123)),
+            .init(edge: .init(control0: p123 - p0123, control1: p23 - p3), from: .init(p0123), to: to)
         )
     }
 
     func subsegment(fromT: Scalar, toT: Scalar) -> Self {
         assert((0.0 ... 1.0).contains(fromT) && (0.0 ... 1.0).contains(toT) && fromT < toT)
         if edge.isLine {
-            let pt0 = Point2(lerp(from: Vector2(from), to: Vector2(to), at: fromT))
-            let pt1 = Point2(lerp(from: Vector2(from), to: Vector2(to), at: toT))
-            return .init(edge: .init(), from: pt0, to: pt1)
+            let p0 = Vector2(from), p1 = Vector2(to)
+            let pt0 = lerp(from: p0, to: p1, at: fromT)
+            let pt1 = lerp(from: p0, to: p1, at: toT)
+            return .init(edge: .init(), from: .init(pt0), to: .init(pt1))
         }
         let (s0, _) = split(paramT: toT)
         let (_, s1) = s0.split(paramT: fromT / toT)

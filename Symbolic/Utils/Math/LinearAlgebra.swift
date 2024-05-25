@@ -112,7 +112,7 @@ struct Matrix2 {
 
     public static func * (lhs: Self, rhs: Vector2) -> Vector2 {
         let rows = lhs.rows
-        return Vector2(rows.0.dotProduct(rhs), rows.1.dotProduct(rhs))
+        return .init(rows.0.dotProduct(rhs), rows.1.dotProduct(rhs))
     }
 
     public static func * (lhs: Self, rhs: Self) -> Self {
@@ -131,7 +131,7 @@ struct Matrix2 {
 
     init(col0: Vector2, col1: Vector2) { self.init(a: col0.dx, b: col1.dx, c: col0.dy, d: col1.dy) }
 
-    init(_ row0: (Scalar, Scalar), _ row1: (Scalar, Scalar)) { self.init(row0: Vector2(row0.0, row0.1), row1: Vector2(row1.0, row1.1)) }
+    init(_ row0: (Scalar, Scalar), _ row1: (Scalar, Scalar)) { self.init(row0: .init(row0.0, row0.1), row1: .init(row1.0, row1.1)) }
 }
 
 // MARK: - CGAffineTransform
@@ -140,9 +140,9 @@ extension CGAffineTransform: TriviallyCloneable {
     var translation: Vector2 { Vector2(tx, ty) }
 
     func centered(at anchor: Point2, _ transform: (Self) -> Self) -> Self {
-        translatedBy(Vector2(anchor))
+        translatedBy(.init(anchor))
             .map(transform)
-            .translatedBy(-Vector2(anchor))
+            .translatedBy(-.init(anchor))
     }
 
     func translatedBy(_ vector: Vector2) -> Self { translatedBy(x: vector.dx, y: vector.dy) }

@@ -24,7 +24,7 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
     // MARK: map-like api
 
     subscript(key: Key) -> Value? {
-        get { getValue(key: key) }
+        get { value(key: key) }
         set { setValue(key: key, value: newValue) }
     }
 
@@ -52,7 +52,7 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
     // MARK: array-like api
 
     subscript(index: Int) -> Value? {
-        get { getValue(index: index) }
+        get { value(index: index) }
         set { setValue(index: index, value: newValue) }
     }
 
@@ -127,7 +127,7 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
 
     // MARK: private
 
-    func getValue(key: Key) -> Value? { dict[key] }
+    func value(key: Key) -> Value? { dict[key] }
 
     mutating func setValue(key: Key, value: Value?) {
         if let value {
@@ -137,7 +137,7 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
         }
     }
 
-    private func getValue(index: Int) -> Value? {
+    private func value(index: Int) -> Value? {
         guard keys.indices.contains(index) else { return nil }
         return dict[keys[index]]
     }
@@ -156,12 +156,12 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
 
 extension OrderedMap where Key == Int {
     subscript(key: Int) -> Value? {
-        get { getValue(key: key) }
+        get { value(key: key) }
         set { setValue(key: key, value: newValue) }
     }
 
     subscript(index index: Int) -> Value? {
-        get { getValue(index: index) }
+        get { value(index: index) }
         set { setValue(index: index, value: newValue) }
     }
 }

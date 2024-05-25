@@ -60,13 +60,6 @@ struct CanvasView: View {
 
     var body: some View { tracer.range("CanvasView body") {
         navigationView
-            .onChange(of: activeDocument) {
-                withAnimation {
-                    let _r = tracer.range("Reload document"); defer { _r() }
-                    global.path.onPendingEvent(nil)
-                    global.path.loadDocument(activeDocument)
-                }
-            }
             .onChange(of: global.activePath.activePath) {
                 let _r = tracer.range("Active path change \(global.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
                 global.activePath.onActivePathChanged()
@@ -77,7 +70,12 @@ struct CanvasView: View {
                 global.pendingSelection.subscribe(to: multipleTouch)
                 global.addingPath.subscribe(to: multipleTouch)
 
-                global.path.subscribe()
+                global.document.store.$activeDocument.sink {
+                    global.path.loadDocument($0)
+                }.store(in: &global.path.store.subscriptions)
+                global.document.store.$pendingEvent.sink {
+                    global.path.loadPendingEvent($0)
+                }.store(in: &global.path.store.subscriptions)
             }
             .onAppear {
                 multipleTouchPress.onPress {
@@ -151,7 +149,7 @@ struct CanvasView: View {
             }
             .onAppear {
                 global.pathUpdater.onPendingEvent {
-                    global.path.onPendingEvent($0)
+                    global.document.setPendingEvent($0)
                 }
                 global.pathUpdater.onEvent { e in
                     withAnimation {

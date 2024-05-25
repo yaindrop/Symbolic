@@ -34,9 +34,14 @@ struct Document: Equatable {
 
 class DocumentStore: Store {
     @Trackable var activeDocument: Document = Document()
+    @Trackable var pendingEvent: DocumentEvent?
 
     fileprivate func update(activeDocument: Document) {
         update { $0(\._activeDocument, activeDocument) }
+    }
+
+    fileprivate func update(pendingEvent: DocumentEvent?) {
+        update { $0(\._pendingEvent, pendingEvent) }
     }
 }
 
@@ -47,12 +52,23 @@ struct DocumentService {
 
     func setDocument(_ document: Document) {
         let _r = tracer.range("Document set"); defer { _r() }
-        store.update(activeDocument: document)
+        withStoreUpdating {
+            store.update(pendingEvent: nil)
+            store.update(activeDocument: document)
+        }
     }
 
     func sendEvent(_ event: DocumentEvent) {
         let _r = tracer.range("Document send event"); defer { _r() }
-        store.update(activeDocument: .init(events: activeDocument.events + [event]))
+        withStoreUpdating {
+            store.update(pendingEvent: nil)
+            store.update(activeDocument: .init(events: activeDocument.events + [event]))
+        }
+    }
+
+    func setPendingEvent(_ event: DocumentEvent?) {
+        let _r = tracer.range("Document set pending event"); defer { _r() }
+        store.update(pendingEvent: event)
     }
 
     var undoable: Bool {

@@ -38,6 +38,15 @@ extension Set: Cloneable {}
 
 extension UUID: TriviallyCloneable {}
 
+extension Dictionary: Cloneable where Key: Cloneable, Value: Cloneable {
+    init(_ map: Dictionary<Key, Value>) {
+        self.init()
+        for pair in map {
+            self[pair.key.cloned] = pair.value.cloned
+        }
+    }
+}
+
 // MARK: - ReflectedStringConvertible
 
 protocol ReflectedStringConvertible: CustomStringConvertible { }

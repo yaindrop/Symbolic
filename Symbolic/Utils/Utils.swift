@@ -170,3 +170,7 @@ extension Duration {
 func build<Content: View>(@ViewBuilder _ builder: () -> Content) -> Content { builder() }
 
 func build<Content: ToolbarContent>(@ToolbarContentBuilder _ builder: () -> Content) -> Content { builder() }
+
+extension Dictionary {
+    func value(key: Key) -> Value? { self[key] }
+}

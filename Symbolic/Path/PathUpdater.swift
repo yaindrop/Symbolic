@@ -74,7 +74,7 @@ struct PathUpdater {
             default: action
             }
         }
-        update(actionInWorld)
+        update(actionInWorld, pending: pending)
     }
 }
 
@@ -123,13 +123,23 @@ extension PathUpdater {
 extension PathUpdater {
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction) {
         switch action {
-        case .create: break
-        case .load: break
+        case let .load(action): collectEvents(to: &events, action)
+        case let .create(action): collectEvents(to: &events, action)
         case let .move(action): collectEvents(to: &events, action)
         case let .delete(action): collectEvents(to: &events, action)
         case let .merge(action): collectEvents(to: &events, action)
         case let .single(action): collectEvents(to: &events, action)
         }
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Load) {
+        let path = action.path
+        events.append(.create(.init(path: path)))
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Create) {
+        let path = action.path
+        events.append(.create(.init(path: path)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Single) {
@@ -190,7 +200,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.AddEndingNode) {
         let endingNodeId = action.endingNodeId, newNodeId = action.newNodeId, offset = action.offset
-        guard let path = pathStore.pathMap.getValue(key: pathId),
+        guard let path = pathStore.pathMap.value(key: pathId),
               let endingNode = path.node(id: endingNodeId) else { return }
         let prevNodeId: UUID?
         if path.isFirstEndingNode(id: endingNodeId) {
@@ -207,7 +217,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.SplitSegment) {
         let fromNodeId = action.fromNodeId, paramT = action.paramT, newNodeId = action.newNodeId, offset = action.offset
-        guard let path = pathStore.pathMap.getValue(key: pathId),
+        guard let path = pathStore.pathMap.value(key: pathId),
               let segment = path.segment(from: fromNodeId) else { return }
         let position = segment.position(paramT: paramT)
         let (before, after) = segment.split(paramT: paramT)
@@ -222,7 +232,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.Move) {
         let offset = action.offset
-        guard let path = pathStore.pathMap.getValue(key: pathId) else { return }
+        guard let path = pathStore.pathMap.value(key: pathId) else { return }
 
         let position = path.boundingRect.minPoint
         let snappedOffset = position.offset(to: grid.snap(position + offset))
@@ -233,7 +243,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MoveNode) {
         let nodeId = action.nodeId, offset = action.offset
-        guard let path = pathStore.pathMap.getValue(key: pathId),
+        guard let path = pathStore.pathMap.value(key: pathId),
               let curr = path.pair(id: nodeId) else { return }
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
@@ -243,7 +253,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MoveEdge) {
         let fromNodeId = action.fromNodeId, offset = action.offset
-        guard let path = pathStore.pathMap.getValue(key: pathId),
+        guard let path = pathStore.pathMap.value(key: pathId),
               let curr = path.pair(id: fromNodeId) else { return }
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
@@ -256,7 +266,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MoveEdgeControl) {
         let fromNodeId = action.fromNodeId, offset0 = action.offset0, offset1 = action.offset1
-        guard let path = pathStore.pathMap.getValue(key: pathId),
+        guard let path = pathStore.pathMap.value(key: pathId),
               let curr = path.segment(from: fromNodeId) else { return }
 
         let snappedOffset0 = offset0 == .zero ? .zero : curr.control0.offset(to: grid.snap(curr.control0 + offset0))
@@ -269,7 +279,7 @@ extension PathUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.SetNodePosition) {
         let nodeId = action.nodeId, position = action.position
-        guard let node = pathStore.pathMap.getValue(key: pathId)?.node(id: nodeId) else { return }
+        guard let node = pathStore.pathMap.value(key: pathId)?.node(id: nodeId) else { return }
         events.append(.init(in: pathId, .nodeUpdate(.init(node: node.with(position: position)))))
     }
 

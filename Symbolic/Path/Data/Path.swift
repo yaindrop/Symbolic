@@ -44,16 +44,6 @@ struct PathNode: Identifiable, Equatable {
 
     func with(position: Point2) -> Self { .init(id: id, position: position) }
     func with(offset: Vector2) -> Self { .init(id: id, position: position + offset) }
-
-    init(position: Point2) {
-        id = UUID()
-        self.position = position
-    }
-
-    init(id: UUID, position: Point2) {
-        self.id = id
-        self.position = position
-    }
 }
 
 extension PathNode: TriviallyCloneable {}
@@ -169,8 +159,6 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
         self.pairs = pairs
         self.isClosed = isClosed
     }
-
-    convenience init(pairs: PairMap, isClosed: Bool) { self.init(id: UUID(), pairs: pairs, isClosed: isClosed) }
 }
 
 extension Path: SUPathAppendable {

@@ -50,13 +50,13 @@ struct AddingPathService {
     var addingPath: Path? {
         guard let segment else { return nil }
         let segmentInWorld = segment.applying(viewport.toWorld)
-        let fromNode = PathNode(position: segmentInWorld.from)
-        let toNode = PathNode(position: segmentInWorld.to)
+        let fromNode = PathNode(id: UUID(), position: segmentInWorld.from)
+        let toNode = PathNode(id: UUID(), position: segmentInWorld.to)
         let pairs: Path.PairMap = [
             fromNode.id: .init(fromNode, segmentInWorld.edge),
             toNode.id: .init(toNode, .init()),
         ]
-        return .init(pairs: pairs, isClosed: false)
+        return .init(id: UUID(), pairs: pairs, isClosed: false)
     }
 
     func onStart(from: Point2) {

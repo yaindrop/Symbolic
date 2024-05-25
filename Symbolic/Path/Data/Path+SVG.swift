@@ -63,15 +63,15 @@ extension Path {
 
         current = svgPath.initial
         for command in arcApproximatedCommands {
-            let node = PathNode(position: current)
+            let node = PathNode(id: UUID(), position: current)
             pairs.append((node.id, .init(node, command.toEdge(current: current))))
             current = command.position
         }
 
         if svgPath.initial != svgPath.last {
-            let node = PathNode(position: svgPath.last)
+            let node = PathNode(id: UUID(),position: svgPath.last)
             pairs.append((node.id, .init(node, .init())))
         }
-        self.init(pairs: pairs, isClosed: svgPath.isClosed)
+        self.init(id: UUID(),pairs: pairs, isClosed: svgPath.isClosed)
     }
 }

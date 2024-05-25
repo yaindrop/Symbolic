@@ -80,7 +80,7 @@
 		57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */; };
 		57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */; };
 		57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */; };
-		57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift */; };
+		57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */; };
 		57B5F1402BD4A3EF001E1B2E /* ActivePathModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* ActivePathModel.swift */; };
 		57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* Utils.swift */; };
 		57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1482BD54279001E1B2E /* DocumentEvent.swift */; };
@@ -181,7 +181,7 @@
 		57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
 		57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGParser.swift; sourceTree = "<group>"; };
 		57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+SVG.swift"; sourceTree = "<group>"; };
-		57B5F12B2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathSegment+ArcParams.swift"; sourceTree = "<group>"; };
+		57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcParams.swift; sourceTree = "<group>"; };
 		57B5F13F2BD4A3EF001E1B2E /* ActivePathModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathModel.swift; sourceTree = "<group>"; };
 		57B5F1432BD4A621001E1B2E /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		57B5F1482BD54279001E1B2E /* DocumentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEvent.swift; sourceTree = "<group>"; };
@@ -385,17 +385,9 @@
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
-				57B5F12B2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift */,
+				57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */,
 			);
 			path = Data;
-			sourceTree = "<group>";
-		};
-		574CC7E62BFA3E790042FEE3 /* ContextMenu */ = {
-			isa = PBXGroup;
-			children = (
-				574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */,
-			);
-			path = ContextMenu;
 			sourceTree = "<group>";
 		};
 		574CC7ED2BFAF2150042FEE3 /* Selection */ = {
@@ -422,7 +414,7 @@
 				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
 				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
-				574CC7E62BFA3E790042FEE3 /* ContextMenu */,
+				574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
 				574CC7F02BFCCFBF0042FEE3 /* Grid */,
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
@@ -682,7 +674,7 @@
 				5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */,
 				572487832BDF82420096DDE4 /* PathView+NodeHandle.swift in Sources */,
 				572487762BDBAF860096DDE4 /* PathUpdater.swift in Sources */,
-				57B5F12C2BCE0FC0001E1B2E /* PathSegment+ArcParams.swift in Sources */,
+				57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */,
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,

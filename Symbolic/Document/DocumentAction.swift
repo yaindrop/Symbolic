@@ -12,7 +12,6 @@ extension PathAction.Single {
 
     struct SetNodePosition: PathActionSingleKind { let nodeId: UUID, position: Point2 }
     struct SetEdge: PathActionSingleKind { let fromNodeId: UUID, edge: PathEdge }
-    struct ChangeEdge: PathActionSingleKind { let fromNodeId: UUID, to: PathEdge.Case }
 
     struct MovePath: PathActionSingleKind { let offset: Vector2 }
     struct MoveNode: PathActionSingleKind { let nodeId: UUID, offset: Vector2 }
@@ -29,7 +28,6 @@ extension PathAction.Single {
 
         case setNodePosition(SetNodePosition)
         case setEdge(SetEdge)
-        case changeEdge(ChangeEdge)
 
         case movePath(MovePath)
         case moveNode(MoveNode)

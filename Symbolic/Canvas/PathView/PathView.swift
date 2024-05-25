@@ -23,7 +23,6 @@ class PathViewModel: ObservableObject {
     func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2>? { nil }
 
     func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGestureModel<Void>? { nil }
-    func arcGesture(fromId: UUID, updater: @escaping (PathEdge.Arc, Scalar) -> PathEdge.Arc) -> MultipleGestureModel<(PathEdge.Arc, Point2)>? { nil }
 }
 
 // MARK: - PathView

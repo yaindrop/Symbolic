@@ -145,7 +145,7 @@ class ActivePathViewModel: PathViewModel {
     override func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2> {
         let model = MultipleGestureModel<Point2>()
         func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { global.pathUpdater.updateActivePath(action: .moveEdge(.init(fromNodeId: fromId, offset: $1.offset(to: $0.location))), pending: pending) }
+            { global.pathUpdater.updateActivePathInView(action: .moveEdge(.init(fromNodeId: fromId, offset: $1.offset(to: $0.location))), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
@@ -157,24 +157,12 @@ class ActivePathViewModel: PathViewModel {
     override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGestureModel<Void>? {
         let model = MultipleGestureModel<Void>()
         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in global.pathUpdater.updateActivePath(action: .moveEdgeBezier(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending) }
+            { v, _ in global.pathUpdater.updateActivePathInView(action: .moveEdgeBezier(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending) }
         }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
         model.onTouchDown { global.canvasAction.start(continuous: .movePathBezierControl) }
         model.onTouchUp { global.canvasAction.end(continuous: .movePathBezierControl) }
-        return model
-    }
-
-    override func arcGesture(fromId: UUID, updater: @escaping (PathEdge.Arc, Scalar) -> PathEdge.Arc) -> MultipleGestureModel<(PathEdge.Arc, Point2)> {
-        let model = MultipleGestureModel<(PathEdge.Arc, Point2)>()
-        func update(pending: Bool = false) -> (DragGesture.Value, (PathEdge.Arc, Point2)) -> Void {
-            { _, _ in }
-        }
-        model.onDrag(update(pending: true))
-        model.onDragEnd(update())
-        model.onTouchDown { global.canvasAction.start(continuous: .movePathArcControl) }
-        model.onTouchUp { global.canvasAction.end(continuous: .movePathArcControl) }
         return model
     }
 

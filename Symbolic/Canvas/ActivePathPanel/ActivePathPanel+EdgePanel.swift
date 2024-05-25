@@ -39,11 +39,7 @@ extension ActivePathPanel {
         @State private var expanded = false
 
         private var name: String {
-            switch edge {
-            case .arc: "Arc"
-            case .bezier: "Bezier"
-            case .line: "Line"
-            }
+            "Edge"
         }
 
         @ViewBuilder private var header: some View { tracer.range("ActivePathPanel EdgePanel header") {
@@ -72,16 +68,16 @@ extension ActivePathPanel {
                     Label("\(fromNodeId)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                     Divider()
-                    ControlGroup {
-                        Button("Arc", systemImage: "circle") { changeEdge(to: .arc) }
-                            .disabled(edge.case == .arc)
-                        Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { changeEdge(to: .bezier) }
-                            .disabled(edge.case == .bezier)
-                        Button("Line", systemImage: "chart.xyaxis.line") { changeEdge(to: .line) }
-                            .disabled(edge.case == .line)
-                    } label: {
-                        Text("Type")
-                    }
+//                    ControlGroup {
+//                        Button("Arc", systemImage: "circle") { changeEdge(to: .arc) }
+//                            .disabled(edge.case == .arc)
+//                        Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { changeEdge(to: .bezier) }
+//                            .disabled(edge.case == .bezier)
+//                        Button("Line", systemImage: "chart.xyaxis.line") { changeEdge(to: .line) }
+//                            .disabled(edge.case == .line)
+//                    } label: {
+//                        Text("Type")
+//                    }
                     Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
                     Divider()
                     Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }
@@ -105,11 +101,7 @@ extension ActivePathPanel {
         @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
             Memo {
                 Group {
-                    if case let .bezier(bezier) = edge {
-                        BezierPanel(fromNodeId: fromNodeId, bezier: bezier)
-                    } else if case let .arc(arc) = edge {
-                        ArcPanel(fromNodeId: fromNodeId, arc: arc)
-                    }
+                    BezierPanel(fromNodeId: fromNodeId, edge: edge)
                 }
                 .padding(.top, 6)
                 .frame(height: expanded ? nil : 0, alignment: .top)
@@ -121,9 +113,9 @@ extension ActivePathPanel {
             focused ? global.activePath.clearFocus() : global.activePath.setFocus(edge: fromNodeId)
         }
 
-        private func changeEdge(to: PathEdge.Case) {
-            global.pathUpdater.updateActivePath(action: .changeEdge(.init(fromNodeId: fromNodeId, to: to)))
-        }
+//        private func changeEdge(to: PathEdge.Case) {
+//            global.pathUpdater.updateActivePath(action: .changeEdge(.init(fromNodeId: fromNodeId, to: to)))
+//        }
 
         private func splitEdge() {
             guard let segment else { return }
@@ -143,9 +135,9 @@ extension ActivePathPanel {
 
 fileprivate struct BezierPanel: View, EquatableBy {
     let fromNodeId: UUID
-    let bezier: PathEdge.Bezier
+    let edge: PathEdge
 
-    var equatableBy: some Equatable { fromNodeId; bezier }
+    var equatableBy: some Equatable { fromNodeId; edge }
 
     var body: some View { tracer.range("ActivePathPanel EdgePanel BezierPanel") {
         VStack(spacing: 12) {
@@ -153,14 +145,14 @@ fileprivate struct BezierPanel: View, EquatableBy {
                 Text("C₁")
                     .font(.callout.monospacedDigit())
                 Spacer(minLength: 12)
-                PositionPicker(position: bezier.control0, onChange: updateControl0(pending: true), onDone: updateControl0())
+                PositionPicker(position: Point2(edge.control0), onChange: updateControl0(pending: true), onDone: updateControl0())
             }
             Divider()
             HStack {
                 Text("C₂")
                     .font(.callout.monospacedDigit())
                 Spacer(minLength: 12)
-                PositionPicker(position: bezier.control1, onChange: updateControl1(pending: true), onDone: updateControl1())
+                PositionPicker(position: Point2(edge.control1), onChange: updateControl1(pending: true), onDone: updateControl1())
             }
         }
         .padding(12)
@@ -169,70 +161,70 @@ fileprivate struct BezierPanel: View, EquatableBy {
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
-        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .bezier(bezier.with(control0: $0)))), pending: pending) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control0: Vector2($0)))), pending: pending) }
     }
 
     private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
-        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .bezier(bezier.with(control1: $0)))), pending: pending) }
+        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control1: Vector2($0)))), pending: pending) }
     }
 }
 
-// MARK: - ArcPanel
-
-fileprivate struct ArcPanel: View, EquatableBy {
-    let fromNodeId: UUID
-    let arc: PathEdge.Arc
-
-    var equatableBy: some Equatable { fromNodeId; arc }
-
-    var body: some View { tracer.range("ActivePathPanel EdgePanel ArcPanel") {
-        VStack(spacing: 12) {
-            HStack {
-                Text("Radius")
-                    .font(.subheadline)
-                Spacer()
-                SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
-            }
-            Divider()
-            HStack {
-                Text("Rotation")
-                    .font(.subheadline)
-                Spacer()
-                AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
-            }
-            Divider()
-            HStack {
-                Text("Large Arc")
-                    .font(.subheadline)
-                Spacer()
-                FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
-            }
-            Divider()
-            HStack {
-                Text("Sweep")
-                    .font(.subheadline)
-                Spacer()
-                FlagInput(flag: arc.sweep, onChange: updateSweep)
-            }
-        }
-        .padding(12)
-        .background(.regularMaterial)
-        .cornerRadius(12)
-    } }
-
-    private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
-        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(radius: $0)))), pending: pending) }
-    }
-
-    private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
-        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(rotation: $0)))), pending: pending) }
-    }
-
-    private var updateLargeArc: (Bool) -> Void {
-        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(largeArc: $0))))) }
-    }
-
-    private var updateSweep: (Bool) -> Void {
-        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(sweep: $0))))) }
-    }
-}
+//// MARK: - ArcPanel
+//
+// fileprivate struct ArcPanel: View, EquatableBy {
+//    let fromNodeId: UUID
+//    let arc: PathEdge.Arc
+//
+//    var equatableBy: some Equatable { fromNodeId; arc }
+//
+//    var body: some View { tracer.range("ActivePathPanel EdgePanel ArcPanel") {
+//        VStack(spacing: 12) {
+//            HStack {
+//                Text("Radius")
+//                    .font(.subheadline)
+//                Spacer()
+//                SizePicker(size: arc.radius, onChange: updateRadius(pending: true), onDone: updateRadius())
+//            }
+//            Divider()
+//            HStack {
+//                Text("Rotation")
+//                    .font(.subheadline)
+//                Spacer()
+//                AnglePicker(angle: arc.rotation, onChange: updateRotation(pending: true), onDone: updateRotation())
+//            }
+//            Divider()
+//            HStack {
+//                Text("Large Arc")
+//                    .font(.subheadline)
+//                Spacer()
+//                FlagInput(flag: arc.largeArc, onChange: updateLargeArc)
+//            }
+//            Divider()
+//            HStack {
+//                Text("Sweep")
+//                    .font(.subheadline)
+//                Spacer()
+//                FlagInput(flag: arc.sweep, onChange: updateSweep)
+//            }
+//        }
+//        .padding(12)
+//        .background(.regularMaterial)
+//        .cornerRadius(12)
+//    } }
+//
+//    private func updateRadius(pending: Bool = false) -> (CGSize) -> Void {
+//        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(radius: $0)))), pending: pending) }
+//    }
+//
+//    private func updateRotation(pending: Bool = false) -> (Angle) -> Void {
+//        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(rotation: $0)))), pending: pending) }
+//    }
+//
+//    private var updateLargeArc: (Bool) -> Void {
+//        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(largeArc: $0))))) }
+//    }
+//
+//    private var updateSweep: (Bool) -> Void {
+//        { global.pathUpdater.updateActivePath(action: .setEdge(.init(fromNodeId: fromNodeId, edge: .arc(arc.with(sweep: $0))))) }
+//    }
+// }

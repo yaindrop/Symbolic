@@ -29,6 +29,8 @@ extension PathView {
 
         @State private var gesture: MultipleGestureModel<Point2>?
         @State private var gestureContext: PathViewModel.NodeGestureContext?
+        @State private var menuSize: CGSize = .zero
+        @State private var viewSize = global.viewport.store.viewSize
 
         @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
             Circle()
@@ -52,6 +54,14 @@ extension PathView {
                     gesture = pair?.0
                     gestureContext = pair?.1
                 }
+            if focused {
+                let menuBox = CGRect(x: point.x, y: point.y, width: 0, height: 0).alignedBox(at: .topCenter, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
+                ContextMenu(onDelete: {
+                    //                global.pathUpdater.delete(pathIds: selectedPathIds)
+                })
+                .viewSizeReader { menuSize = $0 }
+                .position(menuBox.center)
+            }
         }
     }
 }

@@ -130,7 +130,6 @@ extension PathUpdater {
 
             case let .setNodePosition(action): collectEvents(to: &events, pathId: single.pathId, action)
             case let .setEdge(action): collectEvents(to: &events, pathId: single.pathId, action)
-            case let .changeEdge(action): collectEvents(to: &events, pathId: single.pathId, action)
 
             case let .movePath(action): collectEvents(to: &events, pathId: single.pathId, action)
             case let .moveNode(action): collectEvents(to: &events, pathId: single.pathId, action)
@@ -164,17 +163,11 @@ extension PathUpdater {
         guard let path = pathStore.pathMap.getValue(key: pathId),
               let segment = path.segment(from: fromNodeId) else { return }
         let position = segment.position(paramT: paramT)
-        var (before, after) = segment.split(paramT: paramT)
+        let (before, after) = segment.split(paramT: paramT)
         let snappedOffset = position.offset(to: grid.snap(position + offset))
 
         events.append(.init(in: pathId, createNodeAfter: fromNodeId, .init(id: newNodeId, position: position + snappedOffset)))
-        if case let .bezier(b) = before.edge {
-            before = before.with(edge: .bezier(b.with(control1: b.control1 + snappedOffset)))
-        }
         events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, before.edge))
-        if case let .bezier(b) = after.edge {
-            after = after.with(edge: .bezier(b.with(control0: b.control0 + snappedOffset)))
-        }
         events.append(.init(in: pathId, updateEdgeFrom: newNodeId, after.edge))
     }
 
@@ -239,17 +232,6 @@ extension PathUpdater {
         events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, edge))
     }
 
-    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.ChangeEdge) {
-        let fromNodeId = action.fromNodeId, to = action.to
-        guard let path = pathStore.pathMap.getValue(key: pathId),
-              let segment = path.segment(from: fromNodeId) else { return }
-        switch to {
-        case .arc: events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .arc(.init(radius: CGSize(10, 10), rotation: .zero, largeArc: false, sweep: false))))
-        case .bezier: events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(.init(control0: segment.from, control1: segment.to))))
-        case .line: events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .line(.init())))
-        }
-    }
-
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MovePath) {
         let offset = action.offset
         guard let path = pathStore.pathMap.getValue(key: pathId) else { return }
@@ -267,14 +249,7 @@ extension PathUpdater {
               let curr = path.pair(id: nodeId) else { return }
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
-
-        if let prev = path.pair(before: nodeId), case let .bezier(b) = prev.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(control1: b.control1 + snappedOffset))))
-        }
         events.append(.init(in: pathId, updateNode: curr.node.with(offset: snappedOffset)))
-        if case let .bezier(b) = curr.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: nodeId, .bezier(b.with(control0: b.control0 + snappedOffset))))
-        }
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MoveEdge) {
@@ -284,30 +259,21 @@ extension PathUpdater {
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
 
-        if let prev = path.pair(before: fromNodeId), case let .bezier(b) = prev.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: prev.node.id, .bezier(b.with(offset1: snappedOffset))))
-        }
         events.append(.init(in: pathId, updateNode: curr.node.with(offset: snappedOffset)))
-        if case let .bezier(b) = curr.edge {
-            events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(b.with(offset: snappedOffset))))
-        }
         if let next = path.pair(after: fromNodeId) {
             events.append(.init(in: pathId, updateNode: next.node.with(offset: snappedOffset)))
-            if case let .bezier(b) = next.edge {
-                events.append(.init(in: pathId, updateEdgeFrom: next.node.id, .bezier(b.with(offset0: snappedOffset))))
-            }
         }
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.MoveEdgeBezier) {
         let fromNodeId = action.fromNodeId, offset0 = action.offset0, offset1 = action.offset1
         guard let path = pathStore.pathMap.getValue(key: pathId),
-              let curr = path.edge(id: fromNodeId),
-              case let .bezier(bezier) = curr else { return }
-        let snappedOffset0 = offset0 == .zero ? .zero : bezier.control0.offset(to: grid.snap(bezier.control0 + offset0))
-        let snappedOffset1 = offset1 == .zero ? .zero : bezier.control1.offset(to: grid.snap(bezier.control1 + offset1))
+              let curr = path.segment(from: fromNodeId) else { return }
+
+        let snappedOffset0 = offset0 == .zero ? .zero : curr.control0.offset(to: grid.snap(curr.control0 + offset0))
+        let snappedOffset1 = offset1 == .zero ? .zero : curr.control1.offset(to: grid.snap(curr.control1 + offset1))
         guard !snappedOffset0.isZero || !snappedOffset1.isZero else { return }
-        events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .bezier(bezier.with(offset0: snappedOffset0).with(offset1: snappedOffset1))))
+        events.append(.init(in: pathId, updateEdgeFrom: fromNodeId, .init(control0: curr.edge.control0 + snappedOffset0, control1: curr.edge.control1 + snappedOffset1)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ movePaths: PathAction.MovePaths) {

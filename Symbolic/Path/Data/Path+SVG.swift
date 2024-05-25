@@ -1,28 +1,47 @@
 import Foundation
 
-extension PathEdge.Arc {
-    init(from command: SVGPathCommand.ArcTo) {
-        self.init(radius: command.radius, rotation: command.rotation, largeArc: command.largeArc, sweep: command.sweep)
+extension SVGPathCommand.ArcTo {
+    func approximate(current: Point2) -> [SVGPathCommand] {
+        var commands: [SVGPathCommand] = []
+        let params = ArcEndpointParams(from: current, to: position, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep).centerParams
+        SUPath {
+            $0.addRelativeArc(center: params.center, radius: 1, startAngle: params.startAngle, delta: params.deltaAngle, transform: params.transform)
+        }
+        .forEach {
+            switch $0 {
+            case .closeSubpath: break
+            case let .curve(to, control1, control2):
+                commands.append(.bezierTo(.init(control0: control1, control1: control2, position: to)))
+            case let .line(to):
+                commands.append(.lineTo(.init(position: to)))
+            case .move: break
+            case let .quadCurve(to, control):
+                commands.append(.quadraticBezierTo(.init(control: control, position: to)))
+            }
+        }
+        return commands
     }
 }
 
-extension PathEdge.Bezier {
-    init(from command: SVGPathCommand.BezierTo) {
-        self.init(control0: command.control0, control1: command.control1)
+extension SVGPathCommand.BezierTo {
+    func toEdge(current: Point2) -> PathEdge {
+        .init(control0: current.offset(to: control0), control1: position.offset(to: control1))
     }
 }
 
-extension PathEdge {
-    init(from command: SVGPathCommand, at current: Point2) {
-        switch command {
-        case let .arcTo(c):
-            self = .arc(Arc(from: c))
-        case let .bezierTo(c):
-            self = .bezier(Bezier(from: c))
+extension SVGPathCommand {
+    func toEdge(current: Point2) -> PathEdge {
+        switch self {
+        case .arcTo:
+            logError("Arc should have been approximated")
+            return .init()
+        case let .bezierTo(bezierTo):
+            return bezierTo.toEdge(current: current)
         case .lineTo:
-            self = .line(Line())
-        case let .quadraticBezierTo(c):
-            self = .bezier(Bezier(from: c.toCubic(current: current)))
+            return .init()
+        case let .quadraticBezierTo(quadraticBezierTo):
+            let bezierTo = quadraticBezierTo.toCubic(current: current)
+            return bezierTo.toEdge(current: current)
         }
     }
 }
@@ -30,15 +49,28 @@ extension PathEdge {
 extension Path {
     convenience init(from svgPath: SVGPath) {
         var pairs = PairMap()
+        var arcApproximatedCommands: [SVGPathCommand] = []
+
         var current = svgPath.initial
         for command in svgPath.commands {
-            let node = PathNode(position: current)
-            pairs.append((node.id, .init(node, .init(from: command, at: current))))
+            if case let .arcTo(arcTo) = command {
+                arcApproximatedCommands += arcTo.approximate(current: current)
+            } else {
+                arcApproximatedCommands.append(command)
+            }
             current = command.position
         }
+
+        current = svgPath.initial
+        for command in arcApproximatedCommands {
+            let node = PathNode(position: current)
+            pairs.append((node.id, .init(node, command.toEdge(current: current))))
+            current = command.position
+        }
+
         if svgPath.initial != svgPath.last {
             let node = PathNode(position: svgPath.last)
-            pairs.append((node.id, .init(node, .line(PathEdge.Line()))))
+            pairs.append((node.id, .init(node, .init())))
         }
         self.init(pairs: pairs, isClosed: svgPath.isClosed)
     }

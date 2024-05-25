@@ -27,7 +27,7 @@ struct GlobalStore {
     var pendingSelection: PendingSelectionService { .init(pathStore: pathStore, viewport: viewport, store: pendingSelectionStore) }
 
     private let addingPathStore = AddingPathStore()
-    var addingPath: AddingPathService { .init(toolbar: toolbar, viewport: viewport, store: addingPathStore) }
+    var addingPath: AddingPathService { .init(toolbar: toolbar, viewport: viewport, grid: canvasGrid, store: addingPathStore) }
 
     let canvasAction = CanvasActionStore()
 

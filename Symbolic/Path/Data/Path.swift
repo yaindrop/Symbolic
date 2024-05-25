@@ -9,113 +9,33 @@ protocol SUPathAppendable {
 
 // MARK: - PathEdge
 
-enum PathEdge {
-    struct Arc {
-        let radius: CGSize
-        let rotation: Angle
-        let largeArc: Bool
-        let sweep: Bool
+struct PathEdge: Equatable {
+    let control0: Vector2
+    let control1: Vector2
 
-        func with(radius: CGSize) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-        func with(rotation: Angle) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-        func with(largeArc: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-        func with(sweep: Bool) -> Self { .init(radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep) }
-    }
+    var isLine: Bool { control0 == .zero && control1 == .zero }
 
-    struct Bezier {
-        let control0: Point2
-        let control1: Point2
+    func with(control0: Vector2) -> Self { .init(control0: control0, control1: control1) }
+    func with(control1: Vector2) -> Self { .init(control0: control0, control1: control1) }
 
-        func with(control0: Point2) -> Self { .init(control0: control0, control1: control1) }
-        func with(control1: Point2) -> Self { .init(control0: control0, control1: control1) }
+    static var line: Self { Self() }
 
-        func with(offset: Vector2) -> Self { .init(control0: control0 + offset, control1: control1 + offset) }
-        func with(offset0: Vector2) -> Self { .init(control0: control0 + offset0, control1: control1) }
-        func with(offset1: Vector2) -> Self { .init(control0: control0, control1: control1 + offset1) }
-    }
-
-    struct Line {}
-
-    enum Case { case arc, bezier, line }
-    var `case`: Case {
-        switch self {
-        case .arc: .arc
-        case .bezier: .bezier
-        case .line: .line
-        }
-    }
-
-    case arc(Arc)
-    case bezier(Bezier)
-    case line(Line)
-}
-
-// MARK: Impl
-
-fileprivate protocol PathEdgeImpl: CustomStringConvertible, Transformable, Equatable {}
-
-extension PathEdge.Arc: PathEdgeImpl {}
-
-extension PathEdge.Bezier: PathEdgeImpl {}
-
-extension PathEdge.Line: PathEdgeImpl {}
-
-extension PathEdge: PathEdgeImpl {
-    fileprivate typealias Impl = any PathEdgeImpl
-
-    private var impl: Impl {
-        switch self {
-        case let .arc(a): a
-        case let .bezier(b): b
-        case let .line(l): l
-        }
-    }
-
-    private func impl(_ transform: (Impl) -> Impl) -> Self {
-        switch self {
-        case let .arc(a): .arc(transform(a) as! Arc)
-        case let .bezier(b): .bezier(transform(b) as! Bezier)
-        case let .line(l): .line(transform(l) as! Line)
-        }
+    init(control0: Vector2 = .zero, control1: Vector2 = .zero) {
+        self.control0 = control0
+        self.control1 = control1
     }
 }
-
-extension PathEdge: TriviallyCloneable {}
 
 // MARK: CustomStringConvertible
 
-extension PathEdge.Arc: CustomStringConvertible {
-    var description: String { "Arc(radius: \(radius.shortDescription), rotation: \(rotation.shortDescription), largeArc: \(largeArc), sweep: \(sweep))" }
-}
-
-extension PathEdge.Bezier: CustomStringConvertible {
-    var description: String { "Bezier(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
-}
-
-extension PathEdge.Line: CustomStringConvertible {
-    var description: String { "Line" }
-}
-
 extension PathEdge: CustomStringConvertible {
-    var description: String { impl.description }
+    var description: String { "PathEdge(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
 }
 
 // MARK: Transformable
 
-extension PathEdge.Arc: Transformable {
-    func applying(_ t: CGAffineTransform) -> Self { .init(radius: radius.applying(t), rotation: rotation, largeArc: largeArc, sweep: sweep) }
-}
-
-extension PathEdge.Bezier: Transformable {
-    func applying(_ t: CGAffineTransform) -> Self { .init(control0: control0.applying(t), control1: control1.applying(t)) }
-}
-
-extension PathEdge.Line: Transformable {
-    func applying(_ t: CGAffineTransform) -> Self { .init() }
-}
-
 extension PathEdge: Transformable {
-    func applying(_ t: CGAffineTransform) -> Self { impl { $0.applying(t) } }
+    func applying(_ t: CGAffineTransform) -> Self { .init(control0: control0.applying(t), control1: control1.applying(t)) }
 }
 
 // MARK: - PathNode
@@ -172,7 +92,7 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
             return nil
         }
         guard let curr = pairs[i], let next = pairs[isLast ? 0 : i + 1] else { return nil }
-        return PathSegment(from: curr.node.position, to: next.node.position, edge: curr.edge)
+        return PathSegment(edge: curr.edge, from: curr.node.position, to: next.node.position)
     }
 
     func pair(at i: Int) -> NodeEdgePair? {
@@ -274,9 +194,6 @@ extension Path {
         for id in pairs.keys {
             guard var pair = pairs[id] else { return }
             pair.node = pair.node.with(offset: move.offset)
-            if case let .bezier(b) = pair.edge {
-                pair.edge = .bezier(b.with(offset: move.offset))
-            }
             pairs[id] = pair
         }
     }
@@ -316,7 +233,7 @@ extension Path {
             guard let prev = nodeIndex(id: prevNodeId) else { return }
             i = prev + 1
         }
-        pairs.insert((node.id, .init(nodeCreate.node, .line(PathEdge.Line()))), at: i)
+        pairs.insert((node.id, .init(nodeCreate.node, .init(control0: .zero, control1: .zero))), at: i)
     }
 
     func update(nodeDelete: PathEvent.Update.NodeDelete) {

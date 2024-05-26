@@ -124,10 +124,12 @@ extension PathService {
     private func loadEvent(_ event: DocumentEvent) {
         let _r = subtracer.range("load document event \(event.id)", type: .intent); defer { _r() }
         switch event.kind {
-        case let .pathEvent(event):
-            loadEvent(event)
         case let .compoundEvent(event):
             loadEvent(event)
+        case let .pathEvent(event):
+            loadEvent(event)
+        case .groupEvent, .itemEvent:
+            break
         }
     }
 
@@ -136,9 +138,13 @@ extension PathService {
             switch $0 {
             case let .pathEvent(pathEvent):
                 loadEvent(pathEvent)
+            case .groupEvent, .itemEvent:
+                break
             }
         }
     }
+
+    // MARK: path event
 
     private func loadEvent(_ event: PathEvent) {
         let _r = subtracer.range("load event"); defer { _r() }
@@ -148,6 +154,8 @@ extension PathService {
         case let .delete(event):
             loadEvent(event)
         case let .update(event):
+            loadEvent(event)
+        case let .compound(event):
             loadEvent(event)
         }
     }
@@ -160,14 +168,10 @@ extension PathService {
         remove(pathId: event.pathId)
     }
 
-    // MARK: path update event loaders
-
     private func loadEvent(_ event: PathEvent.Update) {
         let pathId = event.pathId
         switch event.kind {
         case let .move(event):
-            loadEvent(pathId: pathId, event)
-        case let .merge(event):
             loadEvent(pathId: pathId, event)
         case let .nodeCreate(event):
             loadEvent(pathId: pathId, event)
@@ -175,29 +179,27 @@ extension PathService {
             loadEvent(pathId: pathId, event)
         case let .nodeUpdate(event):
             loadEvent(pathId: pathId, event)
-        case let .nodeBreak(event):
-            loadEvent(pathId: pathId, event)
         case let .edgeUpdate(event):
-            loadEvent(pathId: pathId, event)
-        case let .edgeBreak(event):
             loadEvent(pathId: pathId, event)
         }
     }
+
+    private func loadEvent(_ event: PathEvent.Compound) {
+        switch event {
+        case let .merge(event):
+            loadEvent(event)
+        case let .nodeBreak(event):
+            loadEvent(event)
+        case let .edgeBreak(event):
+            loadEvent(event)
+        }
+    }
+
+    // MARK: path update
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.Move) {
         guard let path = path(id: pathId) else { return }
         path.update(move: event)
-        update(path: path)
-    }
-
-    private func loadEvent(pathId: UUID, _ event: PathEvent.Update.Merge) {
-        let mergedPathId = event.mergedPathId
-        guard let path = path(id: pathId),
-              let mergedPath = self.path(id: mergedPathId) else { return }
-        if mergedPath != path {
-            remove(pathId: mergedPathId)
-        }
-        path.update(merge: event, mergedPath: mergedPath)
         update(path: path)
     }
 
@@ -219,7 +221,27 @@ extension PathService {
         update(path: path)
     }
 
-    private func loadEvent(pathId: UUID, _ event: PathEvent.Update.NodeBreak) {
+    private func loadEvent(pathId: UUID, _ event: PathEvent.Update.EdgeUpdate) {
+        guard let path = path(id: pathId) else { return }
+        path.update(edgeUpdate: event)
+        update(path: path)
+    }
+
+    // MARK: path compound
+
+    private func loadEvent(_ event: PathEvent.Compound.Merge) {
+        let pathId = event.pathId, mergedPathId = event.mergedPathId
+        guard let path = path(id: pathId),
+              let mergedPath = self.path(id: mergedPathId) else { return }
+        if mergedPath != path {
+            remove(pathId: mergedPathId)
+        }
+        path.update(merge: event, mergedPath: mergedPath)
+        update(path: path)
+    }
+
+    private func loadEvent(_ event: PathEvent.Compound.NodeBreak) {
+        let pathId = event.pathId
         guard let path = path(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
         update(path: path)
@@ -228,13 +250,8 @@ extension PathService {
         }
     }
 
-    private func loadEvent(pathId: UUID, _ event: PathEvent.Update.EdgeUpdate) {
-        guard let path = path(id: pathId) else { return }
-        path.update(edgeUpdate: event)
-        update(path: path)
-    }
-
-    private func loadEvent(pathId: UUID, _ event: PathEvent.Update.EdgeBreak) {
+    private func loadEvent(_ event: PathEvent.Compound.EdgeBreak) {
+        let pathId = event.pathId
         guard let path = path(id: pathId) else { return }
         let newPath = path.update(edgeBreak: event)
         update(path: path)

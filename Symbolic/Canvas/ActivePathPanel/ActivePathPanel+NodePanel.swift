@@ -77,7 +77,9 @@ extension ActivePathPanel {
         }
 
         private func breakNode() {
-            global.pathUpdater.updateActivePath(.breakAtNode(.init(nodeId: node.id, newNodeId: UUID(), newPathId: UUID())))
+            if let activePathId = global.activePath.activePathId {
+                global.pathUpdater.update(.breakAtNode(.init(pathId: activePathId, nodeId: node.id, newNodeId: UUID(), newPathId: UUID())))
+            }
         }
 
         private func deleteNode() {

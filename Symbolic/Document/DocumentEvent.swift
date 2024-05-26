@@ -1,51 +1,70 @@
 import Foundation
 
+// MARK: - CompoundEvent
+
+struct CompoundEvent {
+    enum Kind {
+        case pathEvent(PathEvent)
+        case groupEvent(GroupEvent)
+        case itemEvent(ItemEvent)
+    }
+
+    let events: [Kind]
+}
+
 // MARK: - PathEvent
 
 enum PathEvent {
     struct Create { let path: Path }
     struct Delete { let pathId: UUID }
     struct Update { let pathId: UUID, kind: Kind }
+    enum Compound {
+        struct Merge { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+
+        struct NodeBreak { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
+        struct EdgeBreak { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
+
+        case merge(Merge)
+        case nodeBreak(NodeBreak)
+        case edgeBreak(EdgeBreak)
+    }
 
     case create(Create)
     case update(Update)
     case delete(Delete)
+    case compound(Compound)
 }
 
 // MARK: Update
 
 extension PathEvent.Update {
     struct Move { let offset: Vector2 }
-    struct Merge { let endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
 
     struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
     struct NodeUpdate { let node: PathNode }
     struct NodeDelete { let nodeId: UUID }
-    struct NodeBreak { let nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
 
     struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
-    struct EdgeBreak { let fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
 
     enum Kind {
         case move(Move)
-        case merge(Merge)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
-        case nodeBreak(NodeBreak)
         case edgeUpdate(EdgeUpdate)
-        case edgeBreak(EdgeBreak)
     }
 }
 
-// MARK: - CompoundEvent
+// MARK: - GroupEvent
 
-struct CompoundEvent {
-    enum Kind {
-        case pathEvent(PathEvent)
-    }
+struct GroupEvent {
+    let group: CanvasGroup
+}
 
-    let events: [Kind]
+// MARK: - ItemEvent
+
+struct ItemEvent {
+    let item: CanvasItem
 }
 
 // MARK: - DocumentEvent
@@ -54,6 +73,8 @@ struct DocumentEvent: Identifiable {
     enum Kind {
         case compoundEvent(CompoundEvent)
         case pathEvent(PathEvent)
+        case groupEvent(GroupEvent)
+        case itemEvent(ItemEvent)
     }
 
     let id: UUID = UUID()

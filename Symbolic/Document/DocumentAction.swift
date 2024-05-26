@@ -3,15 +3,13 @@ import Foundation
 fileprivate protocol PathActionSingleKind: SelfTransformable {}
 
 extension PathAction.Single {
-    struct AddEndingNode: PathActionSingleKind { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
-    struct SplitSegment: PathActionSingleKind { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
-
     struct DeleteNode: PathActionSingleKind { let nodeId: UUID }
-    struct BreakAtNode: PathActionSingleKind { let nodeId: UUID, newNodeId: UUID, newPathId: UUID }
-    struct BreakAtEdge: PathActionSingleKind { let fromNodeId: UUID, newPathId: UUID }
 
     struct SetNodePosition: PathActionSingleKind { let nodeId: UUID, position: Point2 }
     struct SetEdge: PathActionSingleKind { let fromNodeId: UUID, edge: PathEdge }
+
+    struct AddEndingNode: PathActionSingleKind { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct SplitSegment: PathActionSingleKind { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
     struct Move: PathActionSingleKind { let offset: Vector2 }
     struct MoveNode: PathActionSingleKind { let nodeId: UUID, offset: Vector2 }
@@ -20,8 +18,9 @@ extension PathAction.Single {
 
     enum Kind {
         case deleteNode(DeleteNode)
-        case breakAtNode(BreakAtNode)
-        case breakAtEdge(BreakAtEdge)
+
+        case setNodePosition(SetNodePosition)
+        case setEdge(SetEdge)
 
         // handle actions
         case addEndingNode(AddEndingNode)
@@ -31,9 +30,6 @@ extension PathAction.Single {
         case moveNode(MoveNode)
         case moveEdge(MoveEdge)
         case moveEdgeControl(MoveEdgeControl)
-
-        case setNodePosition(SetNodePosition)
-        case setEdge(SetEdge)
     }
 }
 
@@ -45,9 +41,11 @@ enum PathAction {
     struct Move { let pathIds: [UUID], offset: Vector2 }
     struct Delete { let pathIds: [UUID] }
 
-    struct Merge { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-
     struct Single { let pathId: UUID, kind: Kind }
+
+    struct Merge { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct BreakAtNode { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
+    struct BreakAtEdge { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
 
     case load(Load)
     case create(Create)
@@ -55,9 +53,11 @@ enum PathAction {
     case move(Move)
     case delete(Delete)
 
-    case merge(Merge)
-
     case single(Single)
+
+    case merge(Merge)
+    case breakAtNode(BreakAtNode)
+    case breakAtEdge(BreakAtEdge)
 }
 
 enum DocumentAction {

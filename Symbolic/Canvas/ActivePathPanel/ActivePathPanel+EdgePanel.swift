@@ -120,7 +120,9 @@ extension ActivePathPanel {
         }
 
         private func breakEdge() {
-            global.pathUpdater.updateActivePath(.breakAtEdge(.init(fromNodeId: fromNodeId, newPathId: UUID())))
+            if let activePathId = global.activePath.activePathId {
+                global.pathUpdater.update(.breakAtEdge(.init(pathId: activePathId, fromNodeId: fromNodeId, newPathId: UUID())))
+            }
         }
     }
 }

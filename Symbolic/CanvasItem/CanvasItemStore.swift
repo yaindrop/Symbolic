@@ -145,6 +145,10 @@ extension CanvasItemService {
             loadEvent(event)
         case let .compoundEvent(event):
             loadEvent(event)
+        case .itemEvent:
+            break
+        case .groupEvent:
+            break
         }
     }
 
@@ -153,6 +157,10 @@ extension CanvasItemService {
             switch $0 {
             case let .pathEvent(pathEvent):
                 loadEvent(pathEvent)
+            case .itemEvent:
+                break
+            case .groupEvent:
+                break
             }
         }
     }
@@ -165,23 +173,20 @@ extension CanvasItemService {
         case let .delete(event):
             loadAffectedPaths(event.pathId)
         case let .update(event):
+            loadAffectedPaths(event.pathId)
+        case let .compound(event):
             loadEvent(event)
         }
     }
 
-    // MARK: path update event loaders
-
-    private func loadEvent(_ event: PathEvent.Update) {
-        let pathId = event.pathId
-        switch event.kind {
-        case .move, .nodeCreate, .nodeDelete, .nodeUpdate, .edgeUpdate:
-            loadAffectedPaths(pathId)
+    private func loadEvent(_ event: PathEvent.Compound) {
+        switch event {
         case let .merge(event):
-            loadAffectedPaths(pathId, event.mergedPathId)
+            loadAffectedPaths(event.pathId, event.mergedPathId)
         case let .nodeBreak(event):
-            loadAffectedPaths(pathId, event.newPathId)
+            loadAffectedPaths(event.pathId, event.newPathId)
         case let .edgeBreak(event):
-            loadAffectedPaths(pathId, event.newPathId)
+            loadAffectedPaths(event.pathId, event.newPathId)
         }
     }
 

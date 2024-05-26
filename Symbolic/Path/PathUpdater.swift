@@ -119,8 +119,10 @@ extension PathUpdater {
         case let .create(action): collectEvents(to: &events, action)
         case let .move(action): collectEvents(to: &events, action)
         case let .delete(action): collectEvents(to: &events, action)
-        case let .merge(action): collectEvents(to: &events, action)
         case let .single(action): collectEvents(to: &events, action)
+        case let .merge(action): collectEvents(to: &events, action)
+        case let .breakAtNode(action): collectEvents(to: &events, action)
+        case let .breakAtEdge(action): collectEvents(to: &events, action)
         }
     }
 
@@ -138,9 +140,6 @@ extension PathUpdater {
         let pathId = action.pathId
         switch action.kind {
         case let .deleteNode(action): collectEvents(to: &events, pathId: pathId, action)
-        case let .breakAtNode(action): collectEvents(to: &events, pathId: pathId, action)
-        case let .breakAtEdge(action): collectEvents(to: &events, pathId: pathId, action)
-
         case let .addEndingNode(action): collectEvents(to: &events, pathId: pathId, action)
         case let .splitSegment(action): collectEvents(to: &events, pathId: pathId, action)
 
@@ -168,26 +167,11 @@ extension PathUpdater {
         }
     }
 
-    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Merge) {
-        let pathId = action.pathId, endingNodeId = action.endingNodeId, mergedPathId = action.mergedPathId, mergedEndingNodeId = action.mergedEndingNodeId
-        events.append(.update(.init(pathId: pathId, kind: .merge(.init(endingNodeId: endingNodeId, mergedPathId: mergedPathId, mergedEndingNodeId: mergedEndingNodeId)))))
-    }
-
     // MARK: single path actions
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.DeleteNode) {
         let nodeId = action.nodeId
         events.append(.init(in: pathId, .nodeDelete(.init(nodeId: nodeId))))
-    }
-
-    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.BreakAtNode) {
-        let nodeId = action.nodeId, newNodeId = action.newNodeId, newPathId = action.newPathId
-        events.append(.init(in: pathId, .nodeBreak(.init(nodeId: nodeId, newNodeId: newNodeId, newPathId: newPathId))))
-    }
-
-    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.BreakAtEdge) {
-        let fromNodeId = action.fromNodeId, newPathId = action.newPathId
-        events.append(.init(in: pathId, .edgeBreak(.init(fromNodeId: fromNodeId, newPathId: newPathId))))
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.AddEndingNode) {
@@ -279,5 +263,20 @@ extension PathUpdater {
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.SetEdge) {
         let fromNodeId = action.fromNodeId, edge = action.edge
         events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: fromNodeId, edge: edge))))
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Merge) {
+        let pathId = action.pathId, endingNodeId = action.endingNodeId, mergedPathId = action.mergedPathId, mergedEndingNodeId = action.mergedEndingNodeId
+        events.append(.compound(.merge(.init(pathId: pathId, endingNodeId: endingNodeId, mergedPathId: mergedPathId, mergedEndingNodeId: mergedEndingNodeId))))
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.BreakAtNode) {
+        let pathId = action.pathId, nodeId = action.nodeId, newNodeId = action.newNodeId, newPathId = action.newPathId
+        events.append(.compound(.nodeBreak(.init(pathId: pathId, nodeId: nodeId, newNodeId: newNodeId, newPathId: newPathId))))
+    }
+
+    private func collectEvents(to events: inout [PathEvent], _ action: PathAction.BreakAtEdge) {
+        let pathId = action.pathId, fromNodeId = action.fromNodeId, newPathId = action.newPathId
+        events.append(.compound(.edgeBreak(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: newPathId))))
     }
 }

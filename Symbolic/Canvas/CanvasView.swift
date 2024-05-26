@@ -41,7 +41,7 @@ struct CanvasView: View {
     // MARK: private
 
     @Selected private var toView = global.viewport.toView
-    @Selected private var paths = global.path.paths
+    @Selected private var paths = global.canvasItem.paths
     @Selected private var activePathId = global.activePath.activePathId
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }

@@ -53,7 +53,7 @@ struct ActivePathService {
 
     var activePathId: UUID? { store.activePathId }
 
-    var activePath: Path? { path.paths.first { $0.id == activePathId }}
+    var activePath: Path? { path.map.first { id, _ in id == activePathId }?.value }
 
     var focusedPart: PathFocusedPart? { store.focusedPart }
 

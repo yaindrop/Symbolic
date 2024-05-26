@@ -49,6 +49,7 @@ class PendingCanvasItemStore: Store, CanvasItemStoreProtocol {
 
 struct CanvasItemService: CanvasItemStoreProtocol {
     let pathService: PathService
+    let groupService: CanvasGroupService
     let store: CanvasItemStore
     let pendingStore: PendingCanvasItemStore
 
@@ -57,6 +58,17 @@ struct CanvasItemService: CanvasItemStoreProtocol {
     var items: [CanvasItem] { pendingStore.active ? pendingStore.items : store.items }
 
     func item(id: UUID) -> CanvasItem? { pendingStore.active ? pendingStore.item(id: id) : store.item(id: id) }
+
+    var paths: [Path] {
+        items
+            .flatMap {
+                switch $0.kind {
+                case let .path(path): [path.id]
+                case let .group(group): groupService.pathIds(in: group.id)
+                }
+            }
+            .compactMap { pathService.path(id: $0) }
+    }
 
     func loadDocument(_ document: Document) {
         let _r = subtracer.range("load document \(pendingStore.active)", type: .intent); defer { _r() }

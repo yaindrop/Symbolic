@@ -37,7 +37,7 @@ struct PendingSelectionService {
     var intersectedPaths: [Path] {
         rect.map {
             let rectInWorld = $0.applying(viewport.toWorld)
-            return pathStore.paths.filter { $0.boundingRect.intersects(rectInWorld) }
+            return pathStore.map.compactMap { _, p in p.boundingRect.intersects(rectInWorld) ? p : nil }
         } ?? []
     }
 

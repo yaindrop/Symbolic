@@ -7,8 +7,6 @@ typealias PathMap = [UUID: Path]
 fileprivate protocol PathStoreProtocol {
     var map: PathMap { get }
 
-    var paths: [Path] { get }
-
     func path(id: UUID) -> Path?
 }
 
@@ -16,8 +14,6 @@ fileprivate protocol PathStoreProtocol {
 
 class PathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
-
-    var paths: [Path] { Array(map.values) }
 
     func path(id: UUID) -> Path? { map.value(key: id) }
 
@@ -31,8 +27,6 @@ class PathStore: Store, PathStoreProtocol {
 class PendingPathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
     @Trackable fileprivate var active: Bool = false
-
-    var paths: [Path] { Array(map.values) }
 
     func path(id: UUID) -> Path? { map.value(key: id) }
 
@@ -53,12 +47,10 @@ struct PathService: PathStoreProtocol {
 
     var map: PathMap { pendingStore.active ? pendingStore.map : store.map }
 
-    var paths: [Path] { pendingStore.active ? pendingStore.paths : store.paths }
-
     func path(id: UUID) -> Path? { pendingStore.active ? pendingStore.path(id: id) : store.path(id: id) }
 
     func hitTest(worldPosition: Point2) -> Path? {
-        store.paths.first { p in p.hitPath.contains(worldPosition) }
+        map.first { _, p in p.hitPath.contains(worldPosition) }?.value
     }
 
     func loadDocument(_ document: Document) {

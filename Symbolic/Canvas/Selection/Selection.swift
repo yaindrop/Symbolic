@@ -13,7 +13,7 @@ class SelectionStore: Store {
 
 fileprivate var selectedPathsSelector: [Path] {
     let pathIds = global.selection.selectedPathIds
-    return global.path.paths.filter { pathIds.contains($0.id) }
+    return global.path.map.compactMap { id, p in pathIds.contains(id) ? p : nil }
 }
 
 struct SelectionView: View {

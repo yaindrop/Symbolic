@@ -30,7 +30,7 @@ struct ContextMenu: View {
 
     var body: some View {
         HStack {
-            Button(role: .destructive) { onGroup?() } label: { Image(systemName: "rectangle.3.group") }
+            Button { onGroup?() } label: { Image(systemName: "rectangle.3.group") }
             Divider()
             Button(role: .destructive) { onDelete?() } label: { Image(systemName: "trash") }
         }

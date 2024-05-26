@@ -1,23 +1,6 @@
 import Foundation
 import SwiftUI
 
-fileprivate extension DocumentEvent {
-    var name: String {
-        switch action {
-        case let .pathAction(pathAction):
-            switch pathAction {
-            case .load: "PathLoad"
-            case let .single(single):
-                switch single.kind {
-                case let .moveEdge(moveEdge): "\(single.pathId) MoveEdge \(moveEdge.fromNodeId) offset \(moveEdge.offset)"
-                default: "single pathAction"
-                }
-            default: "pathAction"
-            }
-        }
-    }
-}
-
 // MARK: - CanvasItemPanel
 
 struct CanvasItemPanel: View {
@@ -30,7 +13,7 @@ struct CanvasItemPanel: View {
 
     // MARK: private
 
-    @Selected private var items = global.canvasItem.items
+    @Selected private var allItems = global.canvasItem.rootItems
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
@@ -61,7 +44,7 @@ struct CanvasItemPanel: View {
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Items")
             VStack(spacing: 12) {
-                ForEach(items) { e in
+                ForEach(allItems) { e in
                     Text("\(e)")
                 }
             }

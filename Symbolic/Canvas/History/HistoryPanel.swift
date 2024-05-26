@@ -14,6 +14,8 @@ fileprivate extension DocumentEvent {
                 }
             default: "pathAction"
             }
+        case let .itemAction(action):
+            "itemAction"
         }
     }
 }

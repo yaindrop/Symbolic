@@ -108,7 +108,7 @@ class Store: CancellableHolder {
 
     fileprivate func onAccess(of propertyId: Int) {
         let subscriptionId = manager.tracking?.subscriptionId
-        let _r = storeTracer.range("on access of \(propertyId), \(subscriptionId.map { "with tracking \($0)" } else: { "without tracking" })"); defer { _r() }
+        let _r = storeTracer.range("on access of \(propertyId), \(subscriptionId.map { "with tracking \($0)" } ?? "without tracking")"); defer { _r() }
         guard let subscriptionId else { return }
         var ids = propertyIdToSubscriptionIds[propertyId] ?? []
         ids.insert(subscriptionId)
@@ -117,7 +117,7 @@ class Store: CancellableHolder {
 
     fileprivate func onChange(of propertyId: Int) {
         let subscriptionIds = propertyIdToSubscriptionIds.removeValue(forKey: propertyId)
-        let _r = storeTracer.range("on change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } else: { "without subscription" })"); defer { _r() }
+        let _r = storeTracer.range("on change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } ?? "without subscription")"); defer { _r() }
         guard let subscriptionIds else { return }
         for id in subscriptionIds {
             manager.notify(subscription: id)

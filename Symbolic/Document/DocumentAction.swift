@@ -60,6 +60,17 @@ enum PathAction {
     case breakAtEdge(BreakAtEdge)
 }
 
+enum ItemAction {
+    struct Group { let group: CanvasItemGroup, inGroupId: UUID? }
+    struct Ungroup { let groupIds: [UUID] }
+    struct Reorder { let members: [UUID], inGroupId: UUID? }
+
+    case group(Group)
+    case ungroup(Ungroup)
+    case reorder(Reorder)
+}
+
 enum DocumentAction {
     case pathAction(PathAction)
+    case itemAction(ItemAction)
 }

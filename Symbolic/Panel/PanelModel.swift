@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate let panelTracer = tracer.tagged("panel")
+fileprivate let subtracer = tracer.tagged("PanelModel")
 
 // MARK: - PanelModel
 
@@ -31,7 +31,7 @@ extension PanelModel {
 extension PanelModel {
     func onMoving(panelId: UUID, origin: Point2, _ v: DragGesture.Value) {
         let offset = v.offset
-        let _r = panelTracer.range("moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
+        let _r = subtracer.range("moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin + offset
         idToPanel[panelId] = panel
@@ -43,7 +43,7 @@ extension PanelModel {
 
     func onMoved(panelId: UUID, origin: Point2, _ v: DragGesture.Value) {
         let offset = v.offset, speed = v.speed
-        let _r = panelTracer.range("moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
+        let _r = subtracer.range("moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin + offset
         idToPanel[panelId] = panel
@@ -71,17 +71,17 @@ extension PanelModel {
 
         var newPanel = panel
         newPanel.origin += inertiaOffset
-        panelTracer.instant("inertiaOffset \(inertiaOffset)")
+        subtracer.instant("inertiaOffset \(inertiaOffset)")
 
         let clampingOffset = newPanel.rect.clampingOffset(by: rootRect)
         newPanel.origin += clampingOffset
-        panelTracer.instant("clampingOffset \(clampingOffset)")
+        subtracer.instant("clampingOffset \(clampingOffset)")
 
         newPanel.affinities = getAffinities(of: newPanel)
 
         let affinityOffset = affinityOffset(of: newPanel)
         newPanel.origin += affinityOffset
-        panelTracer.instant("affinityOffset \(affinityOffset)")
+        subtracer.instant("affinityOffset \(affinityOffset)")
 
         return newPanel
     }
@@ -104,7 +104,7 @@ extension PanelModel {
 
 extension PanelModel {
     func onResized(panelId: UUID, size: CGSize) {
-        let _r = panelTracer.range("resize \(panelId) to \(size)"); defer { _r() }
+        let _r = subtracer.range("resize \(panelId) to \(size)"); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.size = size
         panel.origin += affinityOffset(of: panel)
@@ -121,7 +121,7 @@ extension PanelModel {
     }
 
     func onRootResized(size: CGSize) {
-        let _r = panelTracer.range("resize root \(size)"); defer { _r() }
+        let _r = subtracer.range("resize root \(size)"); defer { _r() }
         rootSize = size
         withAnimation {
             for id in panelIds {

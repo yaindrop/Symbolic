@@ -10,7 +10,7 @@ struct GlobalStore {
     var document: DocumentService { .init(store: documentStore) }
 
     private let documentUpdaterStore = DocumentUpdaterStore()
-    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, pendingPathStore: pendingPathStore, activePath: activePath, viewport: viewport, grid: canvasGrid, store: documentUpdaterStore) }
+    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, canvasItemStore: canvasItemStore, activePathStore: activePathStore, viewport: viewport, grid: canvasGrid, store: documentUpdaterStore) }
 
     private let pathStore = PathStore()
     private let pendingPathStore = PendingPathStore()
@@ -33,13 +33,9 @@ struct GlobalStore {
 
     let canvasGrid = CanvasGridStore()
 
-    let canvasGroupStore = CanvasGroupStore()
-    let pendingCanvasGroupStore = PendingCanvasGroupStore()
-    var canvasGroup: CanvasGroupService { .init(store: canvasGroupStore, pendingStore: pendingCanvasGroupStore) }
-
     let canvasItemStore = CanvasItemStore()
     let pendingCanvasItemStore = PendingCanvasItemStore()
-    var canvasItem: CanvasItemService { .init(pathService: path, groupService: canvasGroup, store: canvasItemStore, pendingStore: pendingCanvasItemStore) }
+    var canvasItem: CanvasItemService { .init(pathService: path, store: canvasItemStore, pendingStore: pendingCanvasItemStore) }
 }
 
 let global = GlobalStore()

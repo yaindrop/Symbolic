@@ -1,27 +1,23 @@
 import Foundation
 
+struct CanvasItemGroup {
+    let id: UUID
+    let members: [UUID]
+}
+
 struct CanvasItem: TriviallyCloneable {
     enum Kind {
-        struct Path {
-            let id: UUID
-        }
-
-        struct Group {
-            let id: UUID
-        }
-
-        case path(Path)
-        case group(Group)
+        case path(UUID)
+        case group(CanvasItemGroup)
     }
 
     let kind: Kind
-    let zIndex: Double
 }
 
 extension CanvasItem: Identifiable {
     var id: UUID {
         switch kind {
-        case let .path(path): path.id
+        case let .path(id): id
         case let .group(group): group.id
         }
     }

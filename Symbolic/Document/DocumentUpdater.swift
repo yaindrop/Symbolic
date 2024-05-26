@@ -16,17 +16,17 @@ class DocumentUpdaterStore: Store {
 
 struct DocumentUpdater {
     let pathStore: PathStore
-    let pendingPathStore: PendingPathStore
-    let activePath: ActivePathService
+    let canvasItemStore: CanvasItemStore
+    let activePathStore: ActivePathStore
     let viewport: ViewportService
     let grid: CanvasGridStore
     let store: DocumentUpdaterStore
 
-    // MARK: updateActivePath
+    // MARK: update activePath
 
     func update(activePath kind: PathAction.Single.Kind, pending: Bool = false) {
-        guard let activePath = activePath.activePath else { return }
-        handle(.pathAction(.single(.init(pathId: activePath.id, kind: kind))), pending: pending)
+        guard let activePathId = activePathStore.activePathId else { return }
+        handle(.pathAction(.single(.init(pathId: activePathId, kind: kind))), pending: pending)
     }
 
     func updateInView(activePath kind: PathAction.Single.Kind, pending: Bool = false) {
@@ -53,10 +53,10 @@ struct DocumentUpdater {
         update(activePath: kindInWorld, pending: pending)
     }
 
-    // MARK: update
+    // MARK: update path
 
     func update(path action: PathAction, pending: Bool = false) {
-        handle(action, pending: pending)
+        handle(.pathAction(action), pending: pending)
     }
 
     func updateInView(path action: PathAction, pending: Bool = false) {
@@ -69,51 +69,145 @@ struct DocumentUpdater {
         }
         update(path: actionInWorld, pending: pending)
     }
+
+    // MARK: update item
+
+    func update(item action: ItemAction, pending: Bool = false) {
+        handle(.itemAction(action), pending: pending)
+    }
 }
 
-// MARK: action handler
+// MARK: handle action
 
 extension DocumentUpdater {
     private func handle(_ action: DocumentAction, pending: Bool) {
         let _r = subtracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
-        switch action {
-        case let .pathAction(pathAction):
-            handle(pathAction, pending: pending)
-        }
-    }
+        var eventKinds: [DocumentEvent.Kind] = []
 
-    private func handle(_ pathAction: PathAction, pending: Bool) {
-        var events: [PathEvent] = []
-        collectEvents(to: &events, pathAction)
-        guard !events.isEmpty else {
+        switch action {
+        case let .pathAction(action): collectEvents(to: &eventKinds, action)
+        case let .itemAction(action): collectEvents(to: &eventKinds, action)
+        }
+
+        guard let first = eventKinds.first else {
             if pending {
                 store.pendingEventSubject.send(nil)
             }
             return
         }
 
-        var kind: DocumentEvent.Kind
-        if events.count == 1 {
-            kind = .pathEvent(events.first!)
+        let event: DocumentEvent
+        if eventKinds.count == 1 {
+            event = .init(kind: first, action: action)
         } else {
-            kind = .compoundEvent(.init(events: events.map { .pathEvent($0) }))
+            let compoundKinds = eventKinds.flatMap { kind -> [CompoundEvent.Kind] in
+                switch kind {
+                case let .compoundEvent(event): event.events
+                case let .itemEvent(event): [.itemEvent(event)]
+                case let .pathEvent(event): [.pathEvent(event)]
+                }
+            }
+            event = .init(kind: .compoundEvent(.init(events: compoundKinds)), action: action)
         }
 
-        let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending {
             let _r = subtracer.range("send pending event"); defer { _r() }
             store.pendingEventSubject.send(event)
         } else {
-            let _r = subtracer.range("send event"); defer { _r() }
+            let _r = subtracer.range("send event \(event)"); defer { _r() }
             store.eventSubject.send(event)
         }
     }
 }
 
-// MARK: collect events for action
+// MARK: collect group events
 
 extension DocumentUpdater {
-    private func collectEvents(to events: inout [PathEvent], _ action: PathAction) {
+    private func collectEvents(to eventKinds: inout [DocumentEvent.Kind], _ action: ItemAction) {
+        var events: [ItemEvent] = []
+        switch action {
+        case let .group(action): collectEvents(to: &events, action)
+        case let .ungroup(action): collectEvents(to: &events, action)
+        case let .reorder(action): collectEvents(to: &events, action)
+        }
+        eventKinds += events.map { .itemEvent($0) }
+    }
+
+    private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Group) {
+        let group = action.group, inGroupId = action.inGroupId
+        guard canvasItemStore.item(id: group.id) == nil else { return }
+        events.append(.setMembers(.init(members: group.members, inGroupId: group.id)))
+
+        let rootIds = canvasItemStore.rootIds, allGroups = canvasItemStore.allGroups
+        let groupedRootIds = rootIds.intersection(group.members)
+        if !groupedRootIds.isEmpty || inGroupId == nil {
+            var newRootIds = rootIds.filter { !groupedRootIds.contains($0) }
+            if inGroupId == nil {
+                newRootIds.append(group.id)
+            }
+            events.append(.setMembers(.init(members: newRootIds, inGroupId: nil)))
+        }
+
+        for other in allGroups {
+            let groupedIds = other.members.intersection(group.members)
+            if !groupedIds.isEmpty || inGroupId == other.id {
+                var newMembers = other.members.filter { !groupedIds.contains($0) }
+                if inGroupId == other.id {
+                    newMembers.append(group.id)
+                }
+                events.append(.setMembers(.init(members: newMembers, inGroupId: other.id)))
+            }
+        }
+    }
+
+    private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Ungroup) {
+        let groupIds = Set(action.groupIds)
+        let rootIds = Set(canvasItemStore.rootIds), allGroups = canvasItemStore.allGroups
+
+        var idToParentId: [UUID: UUID] = [:]
+        for parent in allGroups {
+            for id in groupIds.intersection(parent.members) {
+                idToParentId[id] = parent.id
+            }
+        }
+
+        var rootNewMembers: [UUID] = []
+        var parentIdToNewMembers: [UUID: [UUID]] = [:]
+        for groupId in groupIds {
+            guard let group = canvasItemStore.group(id: groupId) else { continue }
+            if rootIds.contains(groupId) {
+                rootNewMembers += group.members
+                continue
+            }
+            guard let parentId = idToParentId[groupId] else { continue }
+            let members = parentIdToNewMembers.getOrSetDefault(key: parentId, [])
+            parentIdToNewMembers[parentId] = members + group.members
+        }
+
+        for groupId in groupIds {
+            events.append(.setMembers(.init(members: [], inGroupId: groupId)))
+        }
+        if !rootNewMembers.isEmpty {
+            events.append(.setMembers(.init(members: rootIds + rootNewMembers, inGroupId: nil)))
+        }
+        for (parentId, newMembers) in parentIdToNewMembers {
+            guard let parent = canvasItemStore.group(id: parentId) else { continue }
+            events.append(.setMembers(.init(members: parent.members + newMembers, inGroupId: parentId)))
+        }
+    }
+
+    private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Reorder) {
+        let members = action.members, inGroupId = action.inGroupId
+        // TODO: assert something
+        events.append(.setMembers(.init(members: members, inGroupId: inGroupId)))
+    }
+}
+
+// MARK: collect path events
+
+extension DocumentUpdater {
+    private func collectEvents(to eventKinds: inout [DocumentEvent.Kind], _ action: PathAction) {
+        var events: [PathEvent] = []
         switch action {
         case let .load(action): collectEvents(to: &events, action)
         case let .create(action): collectEvents(to: &events, action)
@@ -124,6 +218,7 @@ extension DocumentUpdater {
         case let .breakAtNode(action): collectEvents(to: &events, action)
         case let .breakAtEdge(action): collectEvents(to: &events, action)
         }
+        eventKinds += events.map { .pathEvent($0) }
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Load) {

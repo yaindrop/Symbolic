@@ -4,18 +4,24 @@ fileprivate let subtracer = tracer.tagged("PathService")
 
 typealias PathMap = [UUID: Path]
 
-fileprivate protocol PathStoreProtocol {
+protocol PathStoreProtocol {
     var map: PathMap { get }
+}
 
-    func path(id: UUID) -> Path?
+extension PathStoreProtocol {
+    func path(id: UUID) -> Path? {
+        map.value(key: id)
+    }
+
+    func hitTest(worldPosition: Point2) -> Path? {
+        map.first { _, p in p.hitPath.contains(worldPosition) }?.value
+    }
 }
 
 // MARK: - PathStore
 
 class PathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
-
-    func path(id: UUID) -> Path? { map.value(key: id) }
 
     fileprivate func update(map: PathMap) {
         update { $0(\._map, map) }
@@ -27,8 +33,6 @@ class PathStore: Store, PathStoreProtocol {
 class PendingPathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
     @Trackable fileprivate var active: Bool = false
-
-    func path(id: UUID) -> Path? { map.value(key: id) }
 
     fileprivate func update(map: PathMap) {
         update { $0(\._map, map) }
@@ -47,11 +51,7 @@ struct PathService: PathStoreProtocol {
 
     var map: PathMap { pendingStore.active ? pendingStore.map : store.map }
 
-    func path(id: UUID) -> Path? { pendingStore.active ? pendingStore.path(id: id) : store.path(id: id) }
-
-    func hitTest(worldPosition: Point2) -> Path? {
-        map.first { _, p in p.hitPath.contains(worldPosition) }?.value
-    }
+    // MARK: load document
 
     func loadDocument(_ document: Document) {
         let _r = subtracer.range("load document \(pendingStore.active)", type: .intent); defer { _r() }
@@ -128,7 +128,7 @@ extension PathService {
             loadEvent(event)
         case let .pathEvent(event):
             loadEvent(event)
-        case .groupEvent, .itemEvent:
+        case .itemEvent:
             break
         }
     }
@@ -138,7 +138,7 @@ extension PathService {
             switch $0 {
             case let .pathEvent(pathEvent):
                 loadEvent(pathEvent)
-            case .groupEvent, .itemEvent:
+            case .itemEvent:
                 break
             }
         }

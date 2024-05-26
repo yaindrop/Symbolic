@@ -50,6 +50,7 @@ struct SelectionView: View {
             ContextMenu(onDelete: {
                 global.documentUpdater.update(path: .delete(.init(pathIds: selectedPathIds)))
             }, onGroup: {
+                global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedPathIds), inGroupId: nil)))
             })
             .viewSizeReader { menuSize = $0 }
             .position(menuBox.center)

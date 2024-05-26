@@ -71,7 +71,6 @@ struct CanvasSetup {
             global.canvasAction.end(triggering: .addPath)
         }
         multipleTouchPress.onTap { info in
-            print("canvasItem.store.items", global.canvasItem.store.items)
             let worldLocation = info.location.applying(toWorld)
             let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
             withAnimation {

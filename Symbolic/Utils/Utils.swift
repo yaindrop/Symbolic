@@ -8,12 +8,11 @@ extension UUID: Identifiable {
 }
 
 extension Optional {
-    func map<U>(_ then: (Wrapped) throws -> U, else: () throws -> U) rethrows -> U {
+    func map<U>(_ then: (Wrapped) throws -> U?) rethrows -> U? {
         if case let .some(v) = self {
-            try then(v)
-        } else {
-            try `else`()
+            return try then(v)
         }
+        return nil
     }
 
     mutating func forSome(_ then: (inout Wrapped) throws -> Void, else: (() throws -> Void)? = nil) rethrows {
@@ -173,4 +172,24 @@ func build<Content: ToolbarContent>(@ToolbarContentBuilder _ builder: () -> Cont
 
 extension Dictionary {
     func value(key: Key) -> Value? { self[key] }
+
+    mutating func getOrSetDefault(key: Key, _ defaultValue: @autoclosure () -> Value) -> Value {
+        if let value = self[key] {
+            return value
+        }
+        let value = defaultValue()
+        self[key] = value
+        return value
+    }
+}
+
+extension Array where Element: Hashable {
+    func intersection(_ other: Self) -> Set<Element> {
+        Set(self).intersection(other)
+    }
+
+    func subtracting(_ other: Self) -> Self {
+        let intersection = self.intersection(other)
+        return filter { intersection.contains($0) }
+    }
 }

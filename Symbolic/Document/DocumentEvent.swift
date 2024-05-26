@@ -5,7 +5,6 @@ import Foundation
 struct CompoundEvent {
     enum Kind {
         case pathEvent(PathEvent)
-        case groupEvent(GroupEvent)
         case itemEvent(ItemEvent)
     }
 
@@ -55,16 +54,12 @@ extension PathEvent.Update {
     }
 }
 
-// MARK: - GroupEvent
-
-struct GroupEvent {
-    let group: CanvasGroup
-}
-
 // MARK: - ItemEvent
 
-struct ItemEvent {
-    let item: CanvasItem
+enum ItemEvent {
+    struct SetMembers { let members: [UUID], inGroupId: UUID? }
+
+    case setMembers(SetMembers)
 }
 
 // MARK: - DocumentEvent
@@ -73,7 +68,6 @@ struct DocumentEvent: Identifiable {
     enum Kind {
         case compoundEvent(CompoundEvent)
         case pathEvent(PathEvent)
-        case groupEvent(GroupEvent)
         case itemEvent(ItemEvent)
     }
 

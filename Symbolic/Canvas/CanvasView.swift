@@ -41,7 +41,7 @@ struct CanvasView: View {
     // MARK: private
 
     @Selected private var toView = global.viewport.toView
-    @Selected private var paths = global.canvasItem.paths
+    @Selected private var allPaths = global.canvasItem.allPaths
     @Selected private var activePathId = global.activePath.activePathId
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
@@ -71,7 +71,7 @@ struct CanvasView: View {
     } }
 
     @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
-        ForEach(paths.filter { $0.id != activePathId }) { p in
+        ForEach(allPaths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }

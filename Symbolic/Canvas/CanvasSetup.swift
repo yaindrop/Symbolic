@@ -3,13 +3,13 @@ import SwiftUI
 
 struct CanvasSetup {
     func pathUpdate() {
-        global.pathUpdater.store.pendingEventPublisher
+        global.documentUpdater.store.pendingEventPublisher
             .sink {
                 global.document.setPendingEvent($0)
             }
             .store(in: global.document.store)
 
-        global.pathUpdater.store.eventPublisher
+        global.documentUpdater.store.eventPublisher
             .sink { e in
                 if global.document.store.pendingEvent != nil {
                     global.document.sendEvent(e)
@@ -120,7 +120,7 @@ struct CanvasSetup {
             global.canvasAction.end(continuous: .pendingSelection)
 
             if let path = global.addingPath.addingPath {
-                global.pathUpdater.update(.create(.init(path: path)))
+                global.documentUpdater.update(path: .create(.init(path: path)))
                 global.activePath.activate(pathId: path.id)
                 global.canvasAction.on(instant: .addPath)
             }

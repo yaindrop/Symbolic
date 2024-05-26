@@ -115,13 +115,13 @@ extension ActivePathPanel {
             guard let segment else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let id = UUID()
-            global.pathUpdater.updateActivePath(.splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
+            global.documentUpdater.update(activePath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
             global.activePath.setFocus(node: id)
         }
 
         private func breakEdge() {
             if let activePathId = global.activePath.activePathId {
-                global.pathUpdater.update(.breakAtEdge(.init(pathId: activePathId, fromNodeId: fromNodeId, newPathId: UUID())))
+                global.documentUpdater.update(path: .breakAtEdge(.init(pathId: activePathId, fromNodeId: fromNodeId, newPathId: UUID())))
             }
         }
     }
@@ -157,10 +157,10 @@ fileprivate struct BezierPanel: View, EquatableBy {
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
-        { global.pathUpdater.updateActivePath(.setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control0: Vector2($0)))), pending: pending) }
+        { global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control0: Vector2($0)))), pending: pending) }
     }
 
     private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
-        { global.pathUpdater.updateActivePath(.setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control1: Vector2($0)))), pending: pending) }
+        { global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control1: Vector2($0)))), pending: pending) }
     }
 }

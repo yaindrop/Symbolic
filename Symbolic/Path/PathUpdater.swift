@@ -2,9 +2,9 @@ import Combine
 import Foundation
 import SwiftUI
 
-fileprivate let pathUpdaterTracer = tracer.tagged("active-path")
+fileprivate let subtracer = tracer.tagged("DocumentUpdater")
 
-class PathUpdateStore: Store {
+class DocumentUpdaterStore: Store {
     var eventPublisher: any Publisher<DocumentEvent, Never> { eventSubject }
     var pendingEventPublisher: any Publisher<DocumentEvent?, Never> { pendingEventSubject }
 
@@ -12,24 +12,24 @@ class PathUpdateStore: Store {
     fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
 }
 
-// MARK: - PathUpdater
+// MARK: - DocumentUpdater
 
-struct PathUpdater {
+struct DocumentUpdater {
     let pathStore: PathStore
     let pendingPathStore: PendingPathStore
     let activePath: ActivePathService
     let viewport: ViewportService
     let grid: CanvasGridStore
-    let store: PathUpdateStore
+    let store: DocumentUpdaterStore
 
     // MARK: updateActivePath
 
-    func updateActivePath(_ kind: PathAction.Single.Kind, pending: Bool = false) {
+    func update(activePath kind: PathAction.Single.Kind, pending: Bool = false) {
         guard let activePath = activePath.activePath else { return }
         handle(.pathAction(.single(.init(pathId: activePath.id, kind: kind))), pending: pending)
     }
 
-    func updateActivePathInView(_ kind: PathAction.Single.Kind, pending: Bool = false) {
+    func updateInView(activePath kind: PathAction.Single.Kind, pending: Bool = false) {
         let toWorld = viewport.toWorld
         var kindInWorld: PathAction.Single.Kind {
             switch kind {
@@ -50,16 +50,16 @@ struct PathUpdater {
             default: kind
             }
         }
-        updateActivePath(kindInWorld, pending: pending)
+        update(activePath: kindInWorld, pending: pending)
     }
 
     // MARK: update
 
-    func update(_ action: PathAction, pending: Bool = false) {
+    func update(path action: PathAction, pending: Bool = false) {
         handle(action, pending: pending)
     }
 
-    func updateInView(_ action: PathAction, pending: Bool = false) {
+    func updateInView(path action: PathAction, pending: Bool = false) {
         var actionInWorld: PathAction {
             switch action {
             case let .move(move):
@@ -67,15 +67,15 @@ struct PathUpdater {
             default: action
             }
         }
-        update(actionInWorld, pending: pending)
+        update(path: actionInWorld, pending: pending)
     }
 }
 
 // MARK: action handler
 
-extension PathUpdater {
+extension DocumentUpdater {
     private func handle(_ action: DocumentAction, pending: Bool) {
-        let _r = pathUpdaterTracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
+        let _r = subtracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
         switch action {
         case let .pathAction(pathAction):
             handle(pathAction, pending: pending)
@@ -101,10 +101,10 @@ extension PathUpdater {
 
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
         if pending {
-            let _r = pathUpdaterTracer.range("send pending event"); defer { _r() }
+            let _r = subtracer.range("send pending event"); defer { _r() }
             store.pendingEventSubject.send(event)
         } else {
-            let _r = pathUpdaterTracer.range("send event"); defer { _r() }
+            let _r = subtracer.range("send event"); defer { _r() }
             store.eventSubject.send(event)
         }
     }
@@ -112,7 +112,7 @@ extension PathUpdater {
 
 // MARK: collect events for action
 
-extension PathUpdater {
+extension DocumentUpdater {
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction) {
         switch action {
         case let .load(action): collectEvents(to: &events, action)

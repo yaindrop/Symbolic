@@ -9,15 +9,15 @@ struct GlobalStore {
     private let documentStore = DocumentStore()
     var document: DocumentService { .init(store: documentStore) }
 
+    private let documentUpdaterStore = DocumentUpdaterStore()
+    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, pendingPathStore: pendingPathStore, activePath: activePath, viewport: viewport, grid: canvasGrid, store: documentUpdaterStore) }
+
     private let pathStore = PathStore()
     private let pendingPathStore = PendingPathStore()
     var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
 
     private let activePathStore = ActivePathStore()
     var activePath: ActivePathService { .init(path: path, store: activePathStore) }
-
-    private let pathUpdateStore = PathUpdateStore()
-    var pathUpdater: PathUpdater { .init(pathStore: pathStore, pendingPathStore: pendingPathStore, activePath: activePath, viewport: viewport, grid: canvasGrid, store: pathUpdateStore) }
 
     let toolbar = ToolbarStore()
 

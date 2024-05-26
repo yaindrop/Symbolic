@@ -63,7 +63,7 @@ extension ActivePathPanel {
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { global.pathUpdater.updateActivePath(.setNodePosition(.init(nodeId: node.id, position: $0)), pending: pending) }
+            { global.documentUpdater.update(activePath: .setNodePosition(.init(nodeId: node.id, position: $0)), pending: pending) }
         }
 
         private func toggleFocus() {
@@ -72,18 +72,18 @@ extension ActivePathPanel {
 
         private func mergeNode() {
             if let mergableNode {
-                global.pathUpdater.update(.merge(.init(pathId: path.id, endingNodeId: node.id, mergedPathId: path.id, mergedEndingNodeId: mergableNode.id)))
+                global.documentUpdater.update(path: .merge(.init(pathId: path.id, endingNodeId: node.id, mergedPathId: path.id, mergedEndingNodeId: mergableNode.id)))
             }
         }
 
         private func breakNode() {
             if let activePathId = global.activePath.activePathId {
-                global.pathUpdater.update(.breakAtNode(.init(pathId: activePathId, nodeId: node.id, newNodeId: UUID(), newPathId: UUID())))
+                global.documentUpdater.update(path: .breakAtNode(.init(pathId: activePathId, nodeId: node.id, newNodeId: UUID(), newPathId: UUID())))
             }
         }
 
         private func deleteNode() {
-            global.pathUpdater.updateActivePath(.deleteNode(.init(nodeId: node.id)))
+            global.documentUpdater.update(activePath: .deleteNode(.init(nodeId: node.id)))
         }
     }
 }

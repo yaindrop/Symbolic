@@ -24,12 +24,13 @@ class ContextMenuStore: Store {
 
 struct ContextMenu: View {
     var onDelete: (() -> Void)?
+    var onGroup: (() -> Void)?
 
     @State var size: CGSize = .zero
 
     var body: some View {
         HStack {
-            Image(systemName: "rectangle.3.group")
+            Button(role: .destructive) { onGroup?() } label: { Image(systemName: "rectangle.3.group") }
             Divider()
             Button(role: .destructive) { onDelete?() } label: { Image(systemName: "trash") }
         }

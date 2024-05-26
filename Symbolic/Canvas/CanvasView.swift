@@ -40,17 +40,10 @@ struct CanvasView: View {
     // MARK: private
 
     @Selected private var toView = global.viewport.toView
-    @Selected private var toWorld = global.viewport.toWorld
-    @Selected private var activeDocument = global.document.activeDocument
     @Selected private var pendingPaths = global.path.pendingPaths
     @Selected private var activePathId = global.activePath.activePathId
-    @Selected private var pendingSelectionActive = global.pendingSelection.active
-    @Selected private var toolbarMode = global.toolbar.mode
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
-
-    private var isToolbarSelect: Bool { if case .select = toolbarMode { true } else { false } }
-    private var isToolbarAddPath: Bool { if case .addPath = toolbarMode { true } else { false } }
 
     @State private var longPressPosition: Point2?
 

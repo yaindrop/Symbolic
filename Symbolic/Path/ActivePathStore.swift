@@ -48,19 +48,12 @@ class ActivePathStore: Store {
 // MARK: - ActivePathService
 
 struct ActivePathService {
-    let pathStore: PathStore
-    let pendingPathStore: PendingPathStore
+    let path: PathService
     let store: ActivePathStore
 
     var activePathId: UUID? { store.activePathId }
 
-    var activePath: Path? {
-        pathStore.paths.first { $0.id == activePathId }
-    }
-
-    var pendingActivePath: Path? {
-        pendingPathStore.hasPendingEvent ? pendingPathStore.paths.first { $0.id == activePathId } : activePath
-    }
+    var activePath: Path? { path.paths.first { $0.id == activePathId }}
 
     var focusedPart: PathFocusedPart? { store.focusedPart }
 

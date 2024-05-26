@@ -100,11 +100,10 @@ extension PathUpdater {
         }
 
         let event = DocumentEvent(kind: kind, action: .pathAction(pathAction))
-        if pending || pendingPathStore.hasPendingEvent {
+        if pending {
             let _r = pathUpdaterTracer.range("send pending event"); defer { _r() }
             store.pendingEventSubject.send(event)
-        }
-        if !pending {
+        } else {
             let _r = pathUpdaterTracer.range("send event"); defer { _r() }
             store.eventSubject.send(event)
         }

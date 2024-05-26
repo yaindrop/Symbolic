@@ -29,6 +29,7 @@ struct CanvasView: View {
             .onAppear {
                 panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
                 panelModel.register(align: .bottomLeading) { HistoryPanel() }
+                panelModel.register(align: .bottomLeading) { CanvasItemPanel() }
                 panelModel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
                 panelModel.register(align: .topLeading) { CanvasActionPanel() }
             }

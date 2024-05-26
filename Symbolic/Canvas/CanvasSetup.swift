@@ -11,8 +11,12 @@ struct CanvasSetup {
 
         global.pathUpdater.store.eventPublisher
             .sink { e in
-                withAnimation {
+                if global.document.store.pendingEvent != nil {
                     global.document.sendEvent(e)
+                } else {
+                    withAnimation {
+                        global.document.sendEvent(e)
+                    }
                 }
             }
             .store(in: global.document.store)

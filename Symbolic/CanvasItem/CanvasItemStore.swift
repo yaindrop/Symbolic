@@ -30,7 +30,7 @@ class CanvasItemStore: Store, CanvasItemStoreProtocol {
 
 class PendingCanvasItemStore: Store, CanvasItemStoreProtocol {
     @Trackable var map = CanvasItemMap()
-    @Trackable var hasPendingEvent: Bool = false
+    @Trackable fileprivate var active: Bool = false
 
     var items: [CanvasItem] { map.values }
 
@@ -40,8 +40,8 @@ class PendingCanvasItemStore: Store, CanvasItemStoreProtocol {
         update { $0(\._map, map) }
     }
 
-    fileprivate func update(hasPendingEvent: Bool) {
-        update { $0(\._hasPendingEvent, hasPendingEvent) }
+    fileprivate func update(active: Bool) {
+        update { $0(\._active, active) }
     }
 }
 
@@ -52,14 +52,14 @@ struct CanvasItemService: CanvasItemStoreProtocol {
     let store: CanvasItemStore
     let pendingStore: PendingCanvasItemStore
 
-    var map: CanvasItemMap { pendingStore.hasPendingEvent ? pendingStore.map : store.map }
+    var map: CanvasItemMap { pendingStore.active ? pendingStore.map : store.map }
 
-    var items: [CanvasItem] { pendingStore.hasPendingEvent ? pendingStore.items : store.items }
+    var items: [CanvasItem] { pendingStore.active ? pendingStore.items : store.items }
 
-    func item(id: UUID) -> CanvasItem? { pendingStore.hasPendingEvent ? pendingStore.item(id: id) : store.item(id: id) }
+    func item(id: UUID) -> CanvasItem? { pendingStore.active ? pendingStore.item(id: id) : store.item(id: id) }
 
     func loadDocument(_ document: Document) {
-        let _r = subtracer.range("load document \(pendingStore.hasPendingEvent)", type: .intent); defer { _r() }
+        let _r = subtracer.range("load document \(pendingStore.active)", type: .intent); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
@@ -71,19 +71,19 @@ struct CanvasItemService: CanvasItemStoreProtocol {
     func loadPendingEvent(_ event: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
         guard let event else {
-            pendingStore.update(hasPendingEvent: false)
+            pendingStore.update(active: false)
             return
         }
 
         withStoreUpdating {
-            pendingStore.update(hasPendingEvent: true)
+            pendingStore.update(active: true)
             pendingStore.update(map: store.map.cloned)
             loadEvent(event)
         }
     }
 
     private func update(map: CanvasItemMap) {
-        if pendingStore.hasPendingEvent {
+        if pendingStore.active {
             pendingStore.update(map: map)
         } else {
             store.update(map: map)

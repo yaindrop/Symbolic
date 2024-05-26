@@ -91,6 +91,7 @@
 		57DD2A1D2C02DB5A0046931C /* CanvasGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1C2C02DB5A0046931C /* CanvasGrid.swift */; };
 		57DD2A1F2C02DB6F0046931C /* CanvasGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1E2C02DB6F0046931C /* CanvasGroup.swift */; };
 		57DD2A212C02DB850046931C /* CanvasItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A202C02DB850046931C /* CanvasItem.swift */; };
+		57DD2A282C0321110046931C /* CanvasItemPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* CanvasItemPanel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -198,6 +199,7 @@
 		57DD2A1C2C02DB5A0046931C /* CanvasGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasGrid.swift; sourceTree = "<group>"; };
 		57DD2A1E2C02DB6F0046931C /* CanvasGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasGroup.swift; sourceTree = "<group>"; };
 		57DD2A202C02DB850046931C /* CanvasItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasItem.swift; sourceTree = "<group>"; };
+		57DD2A272C0321110046931C /* CanvasItemPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasItemPanel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -513,6 +515,7 @@
 			isa = PBXGroup;
 			children = (
 				57DD2A202C02DB850046931C /* CanvasItem.swift */,
+				57DD2A272C0321110046931C /* CanvasItemPanel.swift */,
 				57DD2A152C0236E60046931C /* CanvasItemStore.swift */,
 			);
 			path = CanvasItem;
@@ -703,6 +706,7 @@
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
+				57DD2A282C0321110046931C /* CanvasItemPanel.swift in Sources */,
 				572552872BF0F563002147AE /* SimpleTracer.swift in Sources */,
 				575C3CFA2BD9F11E0035B758 /* ActivePathView.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,

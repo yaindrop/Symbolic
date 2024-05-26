@@ -1,6 +1,4 @@
-import Combine
 import Foundation
-import SwiftUI
 
 fileprivate let subtracer = tracer.tagged("PathService")
 
@@ -32,7 +30,7 @@ class PathStore: Store, PathStoreProtocol {
 
 class PendingPathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
-    @Trackable var hasPendingEvent: Bool = false
+    @Trackable fileprivate var active: Bool = false
 
     var paths: [Path] { Array(map.values) }
 
@@ -42,8 +40,8 @@ class PendingPathStore: Store, PathStoreProtocol {
         update { $0(\._map, map) }
     }
 
-    fileprivate func update(hasPendingEvent: Bool) {
-        update { $0(\._hasPendingEvent, hasPendingEvent) }
+    fileprivate func update(active: Bool) {
+        update { $0(\._active, active) }
     }
 }
 
@@ -53,18 +51,18 @@ struct PathService: PathStoreProtocol {
     let store: PathStore
     let pendingStore: PendingPathStore
 
-    var map: PathMap { pendingStore.hasPendingEvent ? pendingStore.map : store.map }
+    var map: PathMap { pendingStore.active ? pendingStore.map : store.map }
 
-    var paths: [Path] { pendingStore.hasPendingEvent ? pendingStore.paths : store.paths }
+    var paths: [Path] { pendingStore.active ? pendingStore.paths : store.paths }
 
-    func path(id: UUID) -> Path? { pendingStore.hasPendingEvent ? pendingStore.path(id: id) : store.path(id: id) }
+    func path(id: UUID) -> Path? { pendingStore.active ? pendingStore.path(id: id) : store.path(id: id) }
 
     func hitTest(worldPosition: Point2) -> Path? {
         store.paths.first { p in p.hitPath.contains(worldPosition) }
     }
 
     func loadDocument(_ document: Document) {
-        let _r = subtracer.range("load document \(pendingStore.hasPendingEvent)", type: .intent); defer { _r() }
+        let _r = subtracer.range("load document \(pendingStore.active)", type: .intent); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
@@ -76,19 +74,19 @@ struct PathService: PathStoreProtocol {
     func loadPendingEvent(_ event: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
         guard let event else {
-            pendingStore.update(hasPendingEvent: false)
+            pendingStore.update(active: false)
             return
         }
 
         withStoreUpdating {
-            pendingStore.update(hasPendingEvent: true)
+            pendingStore.update(active: true)
             pendingStore.update(map: store.map.cloned)
             loadEvent(event)
         }
     }
 
     private func update(map: PathMap) {
-        if pendingStore.hasPendingEvent {
+        if pendingStore.active {
             pendingStore.update(map: map)
         } else {
             store.update(map: map)

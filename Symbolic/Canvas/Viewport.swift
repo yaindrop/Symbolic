@@ -48,8 +48,6 @@ class ViewportUpdateStore: Store {
     @Trackable var blocked: Bool = false
     @Trackable var previousInfo: ViewportInfo = .init()
 
-    var subscriptions = Set<AnyCancellable>()
-
     fileprivate func update(blocked: Bool) {
         update { $0(\._blocked, blocked) }
     }

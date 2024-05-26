@@ -98,7 +98,9 @@ private var manager: StoreManager {
 
 // MARK: - Store
 
-class Store {
+class Store: CancellableHolder {
+    var cancellables = Set<AnyCancellable>()
+
     private var propertyIdGen = IncrementalIdGenerator()
     private var propertyIdToSubscriptionIds: [Int: Set<Int>] = [:]
 

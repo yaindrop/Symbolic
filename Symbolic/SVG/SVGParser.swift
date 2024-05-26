@@ -3,11 +3,13 @@ import Foundation
 
 // MARK: - SVGParserDelegate
 
-class SVGParserDelegate: NSObject, XMLParserDelegate {
+class SVGParserDelegate: NSObject, XMLParserDelegate, CancellableHolder {
+    var cancellables = Set<AnyCancellable>()
+
     func onPath(_ callback: @escaping (SVGPath) -> Void) {
         pathSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     // MARK: handler

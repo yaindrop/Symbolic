@@ -86,6 +86,7 @@
 		57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F14A2BD54AA5001E1B2E /* Document.swift */; };
 		57DD2A102C0232C80046931C /* CanvasGroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A0F2C0232C80046931C /* CanvasGroupStore.swift */; };
 		57DD2A162C0236E60046931C /* CanvasItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A152C0236E60046931C /* CanvasItemStore.swift */; };
+		57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A182C02D7540046931C /* CanvasSetup.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -188,6 +189,7 @@
 		57B5F14A2BD54AA5001E1B2E /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		57DD2A0F2C0232C80046931C /* CanvasGroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasGroupStore.swift; sourceTree = "<group>"; };
 		57DD2A152C0236E60046931C /* CanvasItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasItemStore.swift; sourceTree = "<group>"; };
+		57DD2A182C02D7540046931C /* CanvasSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasSetup.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -418,6 +420,7 @@
 				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
 				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
 				5774B15F2BFD864300C53CDD /* Background.swift */,
+				57DD2A182C02D7540046931C /* CanvasSetup.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */,
 				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
@@ -660,6 +663,7 @@
 				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */,
+				57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57DD2A162C0236E60046931C /* CanvasItemStore.swift in Sources */,
 				5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */,

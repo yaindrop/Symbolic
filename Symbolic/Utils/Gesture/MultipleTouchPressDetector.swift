@@ -8,7 +8,9 @@ struct TapInfo {
 
 // MARK: - MultipleTouchPressModel
 
-class MultipleTouchPressModel {
+class MultipleTouchPressModel: CancellableHolder {
+    var cancellables = Set<AnyCancellable>()
+
     // MARK: Configs
 
     struct Configs {
@@ -22,31 +24,31 @@ class MultipleTouchPressModel {
     func onPress(_ callback: @escaping () -> Void) {
         pressSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onPressEnd(_ callback: @escaping () -> Void) {
         pressEndSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onTap(_ callback: @escaping (TapInfo) -> Void) {
         tapSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onLongPress(_ callback: @escaping (PanInfo) -> Void) {
         longPressSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onLongPressEnd(_ callback: @escaping (PanInfo) -> Void) {
         longPressEndSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     init(configs: Configs) {
@@ -69,7 +71,6 @@ class MultipleTouchPressModel {
     fileprivate let configs: Configs
 
     fileprivate var context: Context?
-    fileprivate var subscriptions = Set<AnyCancellable>()
 
     fileprivate let pressSubject = PassthroughSubject<Void, Never>()
     fileprivate let pressEndSubject = PassthroughSubject<Void, Never>()
@@ -102,7 +103,7 @@ struct MultipleTouchPressDetector {
                 self.onPressStarted()
                 self.onPressChanged()
             }
-            .store(in: &model.subscriptions)
+            .store(in: model)
         multipleTouch.$panInfo
             .sink { info in
                 if let info {
@@ -110,7 +111,7 @@ struct MultipleTouchPressDetector {
                     self.onPressChanged()
                 }
             }
-            .store(in: &model.subscriptions)
+            .store(in: model)
         multipleTouch.$touchesCount
             .sink { count in
                 guard count != 1 else { return }
@@ -120,7 +121,7 @@ struct MultipleTouchPressDetector {
                     self.onPressCanceled()
                 }
             }
-            .store(in: &model.subscriptions)
+            .store(in: model)
     }
 
     // MARK: private

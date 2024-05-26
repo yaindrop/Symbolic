@@ -6,8 +6,6 @@ class AddingPathStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
 
-    var subscriptions = Set<AnyCancellable>()
-
     var active: Bool { from != nil }
 
     fileprivate func update(from: Point2?) {

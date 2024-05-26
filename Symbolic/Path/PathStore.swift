@@ -11,8 +11,6 @@ typealias PathMap = [UUID: Path]
 class PathStore: Store {
     @Trackable var pathMap = PathMap()
 
-    var subscriptions = Set<AnyCancellable>()
-
     var paths: [Path] { Array(pathMap.values) }
 
     fileprivate func update(pathMap: PathMap) {

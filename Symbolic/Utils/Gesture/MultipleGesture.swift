@@ -4,8 +4,10 @@ import SwiftUI
 
 // MARK: - MultipleGestureModel
 
-class MultipleGestureModel<Data> {
+class MultipleGestureModel<Data>: CancellableHolder {
     typealias Value = DragGesture.Value
+
+    var cancellables = Set<AnyCancellable>()
 
     // MARK: Configs
 
@@ -19,47 +21,47 @@ class MultipleGestureModel<Data> {
     func onTouchDown(_ callback: @escaping () -> Void) {
         touchDownSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onTouchUp(_ callback: @escaping () -> Void) {
         touchUpSubject
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onTap(_ callback: @escaping (Value, Data) -> Void) {
         tapSubject
             .compactMap(makeValue)
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onLongPress(_ callback: @escaping (Value, Data) -> Void) {
         longPressSubject
             .compactMap(makeValue)
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onLongPressEnd(_ callback: @escaping (Value, Data) -> Void) {
         longPressEndSubject
             .compactMap(makeValue)
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onDrag(_ callback: @escaping (Value, Data) -> Void) {
         dragSubject.compactMap(makeValue)
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     func onDragEnd(_ callback: @escaping (Value, Data) -> Void) {
         dragEndSubject
             .compactMap(makeValue)
             .sink(receiveValue: callback)
-            .store(in: &subscriptions)
+            .store(in: self)
     }
 
     init(configs: Configs = Configs()) {
@@ -92,7 +94,6 @@ class MultipleGestureModel<Data> {
     fileprivate let configs: Configs
 
     fileprivate var context: Context?
-    fileprivate var subscriptions = Set<AnyCancellable>()
 
     fileprivate let touchDownSubject = PassthroughSubject<Void, Never>()
     fileprivate let touchUpSubject = PassthroughSubject<Void, Never>()

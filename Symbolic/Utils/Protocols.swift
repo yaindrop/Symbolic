@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 protocol SelfTransformable {
@@ -59,5 +60,15 @@ extension ReflectedStringConvertible {
             return "\(label): \(value)"
         }.joined(separator: ", ")
         return "\(mirror.subjectType)(\(propertiesStr))"
+    }
+}
+
+protocol CancellableHolder: AnyObject {
+    var cancellables: Set<AnyCancellable> { get set }
+}
+
+extension AnyCancellable {
+    func store(in holder: CancellableHolder) {
+        store(in: &holder.cancellables)
     }
 }

@@ -5,7 +5,8 @@ import SwiftUI
 fileprivate let pathUpdaterTracer = tracer.tagged("active-path")
 
 class PathUpdateStore: Store {
-    fileprivate var subscriptions = Set<AnyCancellable>()
+    var eventPublisher: any Publisher<DocumentEvent, Never> { eventSubject }
+    var pendingEventPublisher: any Publisher<DocumentEvent?, Never> { pendingEventSubject }
 
     fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
     fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
@@ -20,18 +21,6 @@ struct PathUpdater {
     let viewport: ViewportService
     let grid: CanvasGridStore
     let store: PathUpdateStore
-
-    func onEvent(_ callback: @escaping (DocumentEvent) -> Void) {
-        store.eventSubject
-            .sink(receiveValue: callback)
-            .store(in: &store.subscriptions)
-    }
-
-    func onPendingEvent(_ callback: @escaping (DocumentEvent?) -> Void) {
-        store.pendingEventSubject
-            .sink(receiveValue: callback)
-            .store(in: &store.subscriptions)
-    }
 
     // MARK: updateActivePath
 

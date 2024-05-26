@@ -130,6 +130,4 @@ class CanvasActionStore: Store {
             self.update { $0(\._instant, self.instant.with { $0.remove(action) }) }
         }
     }
-
-    var subscriptions = Set<AnyCancellable>()
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct CanvasItem {
+struct CanvasItem: TriviallyCloneable {
     enum Kind {
         struct Path {
             let id: UUID
@@ -16,4 +16,13 @@ struct CanvasItem {
 
     let kind: Kind
     let zIndex: Double
+}
+
+extension CanvasItem: Identifiable {
+    var id: UUID {
+        switch kind {
+        case let .path(path): path.id
+        case let .group(group): group.id
+        }
+    }
 }

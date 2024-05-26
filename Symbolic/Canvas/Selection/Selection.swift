@@ -13,7 +13,7 @@ class SelectionStore: Store {
 
 fileprivate var selectedPathsSelector: [Path] {
     let pathIds = global.selection.selectedPathIds
-    return global.path.pendingPaths.filter { pathIds.contains($0.id) }
+    return global.path.paths.filter { pathIds.contains($0.id) }
 }
 
 struct SelectionView: View {

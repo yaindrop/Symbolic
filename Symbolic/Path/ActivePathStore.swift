@@ -25,7 +25,7 @@ enum PathFocusedPart: Equatable {
     }
 }
 
-// MARK: - ActivePathModel
+// MARK: - ActivePathStore
 
 class ActivePathStore: Store {
     @Trackable var activePathId: UUID?

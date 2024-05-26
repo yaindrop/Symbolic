@@ -52,8 +52,8 @@ struct CompoundEvent {
 
 struct DocumentEvent: Identifiable {
     enum Kind {
-        case pathEvent(PathEvent)
         case compoundEvent(CompoundEvent)
+        case pathEvent(PathEvent)
     }
 
     let id: UUID = UUID()

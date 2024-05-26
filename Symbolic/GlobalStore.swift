@@ -32,6 +32,10 @@ struct GlobalStore {
     let canvasAction = CanvasActionStore()
 
     let canvasGrid = CanvasGridStore()
+
+    let canvasItemStore = CanvasItemStore()
+    let pendingCanvasItemStore = PendingCanvasItemStore()
+    var canvasItem: CanvasItemService { .init(pathService: path, store: canvasItemStore, pendingStore: pendingCanvasItemStore) }
 }
 
 let global = GlobalStore()

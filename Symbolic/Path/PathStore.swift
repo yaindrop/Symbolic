@@ -6,28 +6,40 @@ fileprivate let subtracer = tracer.tagged("PathService")
 
 typealias PathMap = [UUID: Path]
 
-// MARK: - PathModel
+fileprivate protocol PathStoreProtocol {
+    var map: PathMap { get }
 
-class PathStore: Store {
-    @Trackable var pathMap = PathMap()
+    var paths: [Path] { get }
 
-    var paths: [Path] { Array(pathMap.values) }
+    func path(id: UUID) -> Path?
+}
 
-    fileprivate func update(pathMap: PathMap) {
-        update { $0(\._pathMap, pathMap) }
+// MARK: - PathStore
+
+class PathStore: Store, PathStoreProtocol {
+    @Trackable var map = PathMap()
+
+    var paths: [Path] { Array(map.values) }
+
+    func path(id: UUID) -> Path? { map.value(key: id) }
+
+    fileprivate func update(map: PathMap) {
+        update { $0(\._map, map) }
     }
 }
 
-// MARK: - PendingPathModel
+// MARK: - PendingPathStore
 
-class PendingPathStore: Store {
-    @Trackable var pathMap = PathMap()
+class PendingPathStore: Store, PathStoreProtocol {
+    @Trackable var map = PathMap()
     @Trackable var hasPendingEvent: Bool = false
 
-    var paths: [Path] { Array(pathMap.values) }
+    var paths: [Path] { Array(map.values) }
 
-    fileprivate func update(pathMap: PathMap) {
-        update { $0(\._pathMap, pathMap) }
+    func path(id: UUID) -> Path? { map.value(key: id) }
+
+    fileprivate func update(map: PathMap) {
+        update { $0(\._map, map) }
     }
 
     fileprivate func update(hasPendingEvent: Bool) {
@@ -37,11 +49,15 @@ class PendingPathStore: Store {
 
 // MARK: - PathService
 
-struct PathService {
+struct PathService: PathStoreProtocol {
     let store: PathStore
     let pendingStore: PendingPathStore
 
-    var pendingPaths: [Path] { pendingStore.hasPendingEvent ? pendingStore.paths : store.paths }
+    var map: PathMap { pendingStore.hasPendingEvent ? pendingStore.map : store.map }
+
+    var paths: [Path] { pendingStore.hasPendingEvent ? pendingStore.paths : store.paths }
+
+    func path(id: UUID) -> Path? { pendingStore.hasPendingEvent ? pendingStore.path(id: id) : store.path(id: id) }
 
     func hitTest(worldPosition: Point2) -> Path? {
         store.paths.first { p in p.hitPath.contains(worldPosition) }
@@ -66,8 +82,16 @@ struct PathService {
 
         withStoreUpdating {
             pendingStore.update(hasPendingEvent: true)
-            pendingStore.update(pathMap: store.pathMap.cloned)
+            pendingStore.update(map: store.map.cloned)
             loadEvent(event)
+        }
+    }
+
+    private func update(map: PathMap) {
+        if pendingStore.hasPendingEvent {
+            pendingStore.update(map: map)
+        } else {
+            store.update(map: map)
         }
     }
 }
@@ -75,24 +99,17 @@ struct PathService {
 // MARK: - modify path map
 
 extension PathService {
-    private var targetPathMap: PathMap {
-        get { pendingStore.hasPendingEvent ? pendingStore.pathMap : store.pathMap }
-        nonmutating set {
-            if pendingStore.hasPendingEvent { pendingStore.update(pathMap: newValue) } else { store.update(pathMap: newValue) }
-        }
-    }
-
     private func add(path: Path) {
         let _r = subtracer.range("add"); defer { _r() }
         guard path.count > 1 else { return }
-        guard targetPathMap[path.id] == nil else { return }
-        targetPathMap[path.id] = path.cloned
+        guard self.path(id: path.id) == nil else { return }
+        update(map: map.with { $0[path.id] = path.cloned })
     }
 
     private func remove(pathId: UUID) {
         let _r = subtracer.range("remove"); defer { _r() }
-        guard targetPathMap[pathId] != nil else { return }
-        targetPathMap.removeValue(forKey: pathId)
+        guard path(id: pathId) != nil else { return }
+        update(map: map.with { $0.removeValue(forKey: pathId) })
     }
 
     private func update(path: Path) {
@@ -101,13 +118,13 @@ extension PathService {
             remove(pathId: path.id)
             return
         }
-        guard targetPathMap[path.id] != nil else { return }
-        targetPathMap[path.id] = path.cloned
+        guard self.path(id: path.id) != nil else { return }
+        update(map: map.with { $0[path.id] = path.cloned })
     }
 
     private func clear() {
         let _r = subtracer.range("clear"); defer { _r() }
-        targetPathMap.removeAll()
+        update(map: .init())
     }
 }
 
@@ -124,6 +141,15 @@ extension PathService {
         }
     }
 
+    private func loadEvent(_ event: CompoundEvent) {
+        event.events.forEach {
+            switch $0 {
+            case let .pathEvent(pathEvent):
+                loadEvent(pathEvent)
+            }
+        }
+    }
+
     private func loadEvent(_ event: PathEvent) {
         let _r = subtracer.range("load event"); defer { _r() }
         switch event {
@@ -133,15 +159,6 @@ extension PathService {
             loadEvent(event)
         case let .update(event):
             loadEvent(event)
-        }
-    }
-
-    private func loadEvent(_ event: CompoundEvent) {
-        event.events.forEach {
-            switch $0 {
-            case let .pathEvent(pathEvent):
-                loadEvent(pathEvent)
-            }
         }
     }
 
@@ -178,15 +195,15 @@ extension PathService {
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.Move) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         path.update(move: event)
         update(path: path)
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.Merge) {
         let mergedPathId = event.mergedPathId
-        guard let path = targetPathMap[pathId],
-              let mergedPath = targetPathMap[mergedPathId] else { return }
+        guard let path = path(id: pathId),
+              let mergedPath = self.path(id: mergedPathId) else { return }
         if mergedPath != path {
             remove(pathId: mergedPathId)
         }
@@ -195,25 +212,25 @@ extension PathService {
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.NodeCreate) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         path.update(nodeCreate: event)
         update(path: path)
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.NodeDelete) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         path.update(nodeDelete: event)
         update(path: path)
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.NodeUpdate) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         path.update(nodeUpdate: event)
         update(path: path)
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.NodeBreak) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
         update(path: path)
         if let newPath {
@@ -222,13 +239,13 @@ extension PathService {
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.EdgeUpdate) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         path.update(edgeUpdate: event)
         update(path: path)
     }
 
     private func loadEvent(pathId: UUID, _ event: PathEvent.Update.EdgeBreak) {
-        guard let path = targetPathMap[pathId] else { return }
+        guard let path = path(id: pathId) else { return }
         let newPath = path.update(edgeBreak: event)
         update(path: path)
         if let newPath {

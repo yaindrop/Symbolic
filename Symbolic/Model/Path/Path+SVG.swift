@@ -3,7 +3,7 @@ import Foundation
 extension SVGPathCommand.ArcTo {
     func approximate(current: Point2) -> [SVGPathCommand] {
         var commands: [SVGPathCommand] = []
-        let params = ArcEndpointParams(from: current, to: position, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep).centerParams
+        let params = toEndpointParams(current: current).centerParams
         SUPath {
             $0.addRelativeArc(center: params.center, radius: 1, startAngle: params.startAngle, delta: params.deltaAngle, transform: params.transform)
         }
@@ -69,9 +69,9 @@ extension Path {
         }
 
         if svgPath.initial != svgPath.last {
-            let node = PathNode(id: UUID(),position: svgPath.last)
+            let node = PathNode(id: UUID(), position: svgPath.last)
             pairs.append((node.id, .init(node, .init())))
         }
-        self.init(id: UUID(),pairs: pairs, isClosed: svgPath.isClosed)
+        self.init(id: UUID(), pairs: pairs, isClosed: svgPath.isClosed)
     }
 }

@@ -6,6 +6,10 @@ import SwiftUI
 enum SVGPathCommand {
     struct ArcTo {
         let radius: CGSize, rotation: Angle, largeArc: Bool, sweep: Bool, position: Point2
+
+        func toEndpointParams(current: Point2) -> ArcEndpointParams {
+            .init(from: current, to: position, radius: radius, rotation: rotation, largeArc: largeArc, sweep: sweep)
+        }
     }
 
     struct BezierTo {

@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		5700C2C42BEB5AAF00481FA7 /* PanelTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */; };
 		5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */; };
-		5700C2C82BEBC4A800481FA7 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelView.swift */; };
+		5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */; };
 		5700C2CA2BED162000481FA7 /* PanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelModel.swift */; };
 		5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CC2BED169D00481FA7 /* PanelData.swift */; };
 		5700C2CF2BEDB6EB00481FA7 /* PendingSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */; };
@@ -80,7 +80,7 @@
 		57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */; };
 		57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */; };
 		57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */; };
-		57B5F1402BD4A3EF001E1B2E /* ActivePathStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* ActivePathStore.swift */; };
+		57B5F1402BD4A3EF001E1B2E /* ActiveItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */; };
 		57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* Utils.swift */; };
 		57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1482BD54279001E1B2E /* DocumentEvent.swift */; };
 		57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F14A2BD54AA5001E1B2E /* Document.swift */; };
@@ -112,7 +112,7 @@
 /* Begin PBXFileReference section */
 		5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTitle.swift; sourceTree = "<group>"; };
 		5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSectionTitle.swift; sourceTree = "<group>"; };
-		5700C2C72BEBC4A800481FA7 /* PanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
+		5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRoot.swift; sourceTree = "<group>"; };
 		5700C2C92BED162000481FA7 /* PanelModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelModel.swift; sourceTree = "<group>"; };
 		5700C2CC2BED169D00481FA7 /* PanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelData.swift; sourceTree = "<group>"; };
 		5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingSelection.swift; sourceTree = "<group>"; };
@@ -186,7 +186,7 @@
 		57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGParser.swift; sourceTree = "<group>"; };
 		57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+SVG.swift"; sourceTree = "<group>"; };
 		57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcParams.swift; sourceTree = "<group>"; };
-		57B5F13F2BD4A3EF001E1B2E /* ActivePathStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathStore.swift; sourceTree = "<group>"; };
+		57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveItemStore.swift; sourceTree = "<group>"; };
 		57B5F1432BD4A621001E1B2E /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		57B5F1482BD54279001E1B2E /* DocumentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEvent.swift; sourceTree = "<group>"; };
 		57B5F14A2BD54AA5001E1B2E /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
@@ -228,8 +228,12 @@
 			children = (
 				5700C2CC2BED169D00481FA7 /* PanelData.swift */,
 				5700C2C92BED162000481FA7 /* PanelModel.swift */,
-				5700C2C72BEBC4A800481FA7 /* PanelView.swift */,
+				5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */,
 				572487882BDF83D90096DDE4 /* DataInput */,
+				57DD2A2D2C0435190046931C /* DebugPanel */,
+				57DD2A242C02DC320046931C /* HistoryPanel */,
+				57DD2A2C2C0434AA0046931C /* ItemPanel */,
+				5724877A2BDF7F5F0096DDE4 /* PathPanel */,
 				5700C2CB2BED165000481FA7 /* Views */,
 			);
 			path = Panel;
@@ -267,20 +271,14 @@
 		5723BF782BC39844002209F2 /* Symbolic */ = {
 			isa = PBXGroup;
 			children = (
+				5723BF7B2BC39844002209F2 /* ContentView.swift */,
+				574CC7B92BF3B2950042FEE3 /* GlobalStore.swift */,
+				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
 				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
 				57B5F11D2BC68620001E1B2E /* Canvas */,
-				574CC7DE2BFA0DB00042FEE3 /* CanvasAction */,
-				5723BF7B2BC39844002209F2 /* ContentView.swift */,
-				57B5F1472BD54260001E1B2E /* Document */,
-				574CC7B92BF3B2950042FEE3 /* GlobalStore.swift */,
-				574CC7F02BFCCFBF0042FEE3 /* Grid */,
-				57DD2A242C02DC320046931C /* History */,
-				57DD2A142C0236B80046931C /* Item */,
+				57DD2A292C0432D50046931C /* Model */,
 				5700C2C22BEB5A6800481FA7 /* Panel */,
-				57B5F13C2BD4A2EC001E1B2E /* Path */,
 				5723BF812BC39846002209F2 /* Preview Content */,
-				57B5F13B2BD4A2E2001E1B2E /* SVG */,
-				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
 			);
 			path = Symbolic;
@@ -311,7 +309,7 @@
 			path = SymbolicUITests;
 			sourceTree = "<group>";
 		};
-		5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */ = {
+		5724877A2BDF7F5F0096DDE4 /* PathPanel */ = {
 			isa = PBXGroup;
 			children = (
 				575C3CF52BD60C200035B758 /* ActivePathPanel.swift */,
@@ -319,7 +317,7 @@
 				5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */,
 				5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */,
 			);
-			path = ActivePathPanel;
+			path = PathPanel;
 			sourceTree = "<group>";
 		};
 		572487812BDF82180096DDE4 /* PathView */ = {
@@ -374,8 +372,8 @@
 		574CC7CA2BF4FD210042FEE3 /* Math */ = {
 			isa = PBXGroup;
 			children = (
-				57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */,
 				574CC7CD2BF4FD7E0042FEE3 /* Geometry.swift */,
+				57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */,
 				574CC7CF2BF4FDAF0042FEE3 /* MathProtocols.swift */,
 			);
 			path = Math;
@@ -389,19 +387,6 @@
 				57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */,
 			);
 			path = CanvasAction;
-			sourceTree = "<group>";
-		};
-		574CC7E52BFA3E3A0042FEE3 /* Data */ = {
-			isa = PBXGroup;
-			children = (
-				57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */,
-				57416E392BE0BAB600C73434 /* Line.swift */,
-				57416E422BE12D7100C73434 /* LineSegment.swift */,
-				57B5F11E2BC777F0001E1B2E /* Path.swift */,
-				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
-				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
-			);
-			path = Data;
 			sourceTree = "<group>";
 		};
 		574CC7ED2BFAF2150042FEE3 /* Selection */ = {
@@ -425,13 +410,13 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
+				57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */,
 				57DD2A182C02D7540046931C /* CanvasSetup.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
-				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
 				574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */,
-				5724877A2BDF7F5F0096DDE4 /* ActivePathPanel */,
 				57DD2A262C02DC4D0046931C /* AddingPath */,
 				57DD2A232C02DC280046931C /* Background */,
+				574CC7DE2BFA0DB00042FEE3 /* CanvasAction */,
 				57DD2A252C02DC440046931C /* ContextMenu */,
 				572487812BDF82180096DDE4 /* PathView */,
 				574CC7ED2BFAF2150042FEE3 /* Selection */,
@@ -443,6 +428,7 @@
 		57B5F13B2BD4A2E2001E1B2E /* SVG */ = {
 			isa = PBXGroup;
 			children = (
+				57B5F12B2BCE0FC0001E1B2E /* ArcParams.swift */,
 				57B5F1272BCCC1FB001E1B2E /* SVGParser.swift */,
 				57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */,
 			);
@@ -452,9 +438,12 @@
 		57B5F13C2BD4A2EC001E1B2E /* Path */ = {
 			isa = PBXGroup;
 			children = (
-				57B5F13F2BD4A3EF001E1B2E /* ActivePathStore.swift */,
+				57416E392BE0BAB600C73434 /* Line.swift */,
+				57416E422BE12D7100C73434 /* LineSegment.swift */,
+				57B5F11E2BC777F0001E1B2E /* Path.swift */,
+				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
+				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
 				575C3CFB2BDA14590035B758 /* PathStore.swift */,
-				574CC7E52BFA3E3A0042FEE3 /* Data */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -481,6 +470,7 @@
 				574CC7C92BF4FD050042FEE3 /* Data */,
 				57B5F13D2BD4A314001E1B2E /* Gesture */,
 				574CC7CA2BF4FD210042FEE3 /* Math */,
+				57B5F13B2BD4A2E2001E1B2E /* SVG */,
 				574CC7C82BF4FCE60042FEE3 /* UI */,
 			);
 			path = Utils;
@@ -501,7 +491,6 @@
 			isa = PBXGroup;
 			children = (
 				57DD2A202C02DB850046931C /* Item.swift */,
-				57DD2A272C0321110046931C /* ItemPanel.swift */,
 				57DD2A152C0236E60046931C /* ItemStore.swift */,
 			);
 			path = Item;
@@ -523,12 +512,12 @@
 			path = Background;
 			sourceTree = "<group>";
 		};
-		57DD2A242C02DC320046931C /* History */ = {
+		57DD2A242C02DC320046931C /* HistoryPanel */ = {
 			isa = PBXGroup;
 			children = (
 				5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */,
 			);
-			path = History;
+			path = HistoryPanel;
 			sourceTree = "<group>";
 		};
 		57DD2A252C02DC440046931C /* ContextMenu */ = {
@@ -545,6 +534,33 @@
 				5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */,
 			);
 			path = AddingPath;
+			sourceTree = "<group>";
+		};
+		57DD2A292C0432D50046931C /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				57B5F1472BD54260001E1B2E /* Document */,
+				574CC7F02BFCCFBF0042FEE3 /* Grid */,
+				57DD2A142C0236B80046931C /* Item */,
+				57B5F13C2BD4A2EC001E1B2E /* Path */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		57DD2A2C2C0434AA0046931C /* ItemPanel */ = {
+			isa = PBXGroup;
+			children = (
+				57DD2A272C0321110046931C /* ItemPanel.swift */,
+			);
+			path = ItemPanel;
+			sourceTree = "<group>";
+		};
+		57DD2A2D2C0435190046931C /* DebugPanel */ = {
+			isa = PBXGroup;
+			children = (
+				575C3CF32BD5EC700035B758 /* DebugPanel.swift */,
+			);
+			path = DebugPanel;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -710,7 +726,7 @@
 				57DD2A162C0236E60046931C /* ItemStore.swift in Sources */,
 				5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */,
 				574CC7E82BFA3EAF0042FEE3 /* ContextMenu.swift in Sources */,
-				57B5F1402BD4A3EF001E1B2E /* ActivePathStore.swift in Sources */,
+				57B5F1402BD4A3EF001E1B2E /* ActiveItemStore.swift in Sources */,
 				57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */,
 				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
 				5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */,
@@ -750,7 +766,7 @@
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
 				574CC7BE2BF44C7B0042FEE3 /* Observed.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
-				5700C2C82BEBC4A800481FA7 /* PanelView.swift in Sources */,
+				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* PendingSelection.swift in Sources */,

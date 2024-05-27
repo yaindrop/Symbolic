@@ -88,7 +88,7 @@ struct CanvasSetup {
                 if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
                     global.activeItem.focus(itemId: pathId)
                 } else if !global.activeItem.store.activeItemIds.isEmpty {
-                    global.activeItem.focus(itemId: nil)
+                    global.activeItem.blur()
                 }
             }
         }

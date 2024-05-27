@@ -97,11 +97,14 @@ struct ActivePathService {
 
 class ActiveItemStore: Store {
     @Trackable var activeItemIds = Set<UUID>()
+    @Trackable var focusedItemId: UUID?
 
     fileprivate func update(activeItemIds: Set<UUID>) {
-        update {
-            $0(\._activeItemIds, activeItemIds)
-        }
+        update { $0(\._activeItemIds, activeItemIds) }
+    }
+
+    fileprivate func update(focusedItemId: UUID?) {
+        update { $0(\._focusedItemId, focusedItemId) }
     }
 }
 
@@ -110,33 +113,50 @@ struct ActiveItemService {
     let path: PathService
     let store: ActiveItemStore
 
-    func activate(itemId: UUID) {
-        let activeItemIds = store.activeItemIds.with { $0.insert(itemId) }
-        store.update(activeItemIds: activeItemIds)
-    }
-
-    func deactivate() {
-        let activeItemIds = store.activeItemIds.filter {
-            if let group = item.group(id: $0) {
-                return group.members.contains(where: { store.activeItemIds.contains($0) })
+    func focus(itemId: UUID) {
+        func update(itemId: UUID) {
+            let activeItemIds = store.activeItemIds.with { $0.insert(itemId) }
+            withStoreUpdating {
+                store.update(activeItemIds: activeItemIds)
+                store.update(focusedItemId: itemId)
             }
-            return false
         }
-        store.update(activeItemIds: activeItemIds)
-    }
 
-    func focus(itemId: UUID?) {
-        guard let itemId else {
-            deactivate()
+        let ancestors = item.idToAncestorIds[itemId]
+        guard let ancestors, !ancestors.isEmpty else {
+            update(itemId: itemId)
             return
         }
-        if let ancestors = item.idToAncestorIds[itemId] {
-            let firstInactive = ancestors.reversed().first { !store.activeItemIds.contains($0) }
-            if let firstInactive {
-                activate(itemId: firstInactive)
-                return
-            }
+
+        let focusedIndex = ancestors.firstIndex { store.focusedItemId == $0 }
+        if focusedIndex == 0 {
+            update(itemId: itemId)
+            return
         }
-        activate(itemId: itemId)
+        if let focusedIndex {
+            update(itemId: ancestors[focusedIndex - 1])
+            return
+        }
+
+        let firstActive = ancestors.first { store.activeItemIds.contains($0) }
+        if let firstActive {
+            update(itemId: firstActive)
+        } else {
+            update(itemId: ancestors[ancestors.count - 1])
+        }
+    }
+
+    func blur() {
+        guard let focusedItemId = store.focusedItemId else {
+            store.update(activeItemIds: .init())
+            return
+        }
+
+        let activeItemIds = store.activeItemIds.with { $0.remove(focusedItemId) }
+        let parentId = item.idToParentId[focusedItemId]
+        withStoreUpdating {
+            store.update(activeItemIds: activeItemIds)
+            store.update(focusedItemId: parentId)
+        }
     }
 }

@@ -31,11 +31,19 @@ extension ActiveView {
         let activePath: Path
         let toView: CGAffineTransform
 
+        @Selected var focused: Bool
+
+        init(activePath: Path, toView: CGAffineTransform) {
+            self.activePath = activePath
+            self.toView = toView
+            _focused = .init { global.activeItem.store.focusedItemId == activePath.id }
+        }
+
         var body: some View {
             let rect = activePath.boundingRect.applying(toView)
             RoundedRectangle(cornerRadius: 2)
-                .fill(.blue.opacity(0.2))
-                .stroke(.blue.opacity(0.5))
+                .fill(focused ? .orange.opacity(0.5) : .blue.opacity(0.2))
+                .stroke(focused ? .orange : .blue.opacity(0.5))
                 .frame(width: rect.width, height: rect.height)
                 .position(rect.center)
         }
@@ -44,12 +52,15 @@ extension ActiveView {
     struct GroupBounds: View {
         let activeGroup: ItemGroup
         let toView: CGAffineTransform
+
         @Selected var groupedPaths: [Path]
+        @Selected var focused: Bool
 
         init(activeGroup: ItemGroup, toView: CGAffineTransform) {
             self.activeGroup = activeGroup
             self.toView = toView
             _groupedPaths = .init { activeGroup.members.compactMap { global.path.path(id: $0) } }
+            _focused = .init { global.activeItem.store.focusedItemId == activeGroup.id }
         }
 
         var bounds: CGRect? {
@@ -63,7 +74,7 @@ extension ActiveView {
         var body: some View {
             if let bounds {
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2))
+                    .stroke(focused ? .orange : .blue.opacity(0.5), style: .init(lineWidth: 2))
                     .frame(width: bounds.width, height: bounds.height)
                     .position(bounds.center)
             }

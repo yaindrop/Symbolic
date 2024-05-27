@@ -25,7 +25,8 @@ struct SizePicker: View {
 
     init(size: CGSize,
          onChange: @escaping (CGSize) -> Void = { _ in },
-         onDone: @escaping (CGSize) -> Void = { _ in }) {
+         onDone: @escaping (CGSize) -> Void = { _ in })
+    {
         self.size = size
         self.onChange = onChange
         self.onDone = onDone

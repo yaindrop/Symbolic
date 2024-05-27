@@ -20,7 +20,8 @@ struct FlagInput: View {
     }
 
     init(flag: Bool,
-         onChange: @escaping (Bool) -> Void = { _ in }) {
+         onChange: @escaping (Bool) -> Void = { _ in })
+    {
         self.flag = flag
         self.onChange = onChange
     }

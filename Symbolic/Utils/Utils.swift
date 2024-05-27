@@ -55,7 +55,7 @@ func <- <Input, Output>(function: (Input) -> Output, tuple: Input) -> Output {
 
 extension ClosedRange {
     func clamp(_ value: Bound) -> Bound {
-        return lowerBound > value ? lowerBound : upperBound < value ? upperBound : value
+        lowerBound > value ? lowerBound : upperBound < value ? upperBound : value
     }
 
     init(start: Bound, end: Bound) { self = start < end ? start ... end : end ... start }
@@ -65,7 +65,7 @@ extension ClosedRange {
 
 extension View {
     @ViewBuilder func `if`<Value, T: View>(
-        _ value: @autoclosure () -> Optional<Value>,
+        _ value: @autoclosure () -> Value?,
         then content: (Self, Value) -> T
     ) -> some View {
         if let value = value() {

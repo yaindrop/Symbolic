@@ -40,7 +40,7 @@ extension Set: Cloneable {}
 extension UUID: TriviallyCloneable {}
 
 extension Dictionary: Cloneable where Key: Cloneable, Value: Cloneable {
-    init(_ map: Dictionary<Key, Value>) {
+    init(_ map: [Key: Value]) {
         self.init()
         for pair in map {
             self[pair.key.cloned] = pair.value.cloned
@@ -50,7 +50,7 @@ extension Dictionary: Cloneable where Key: Cloneable, Value: Cloneable {
 
 // MARK: - ReflectedStringConvertible
 
-protocol ReflectedStringConvertible: CustomStringConvertible { }
+protocol ReflectedStringConvertible: CustomStringConvertible {}
 
 extension ReflectedStringConvertible {
     public var description: String {

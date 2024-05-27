@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-fileprivate let subtracer = tracer.tagged("DocumentUpdater")
+private let subtracer = tracer.tagged("DocumentUpdater")
 
 class DocumentUpdaterStore: Store {
     var eventPublisher: any Publisher<DocumentEvent, Never> { eventSubject }

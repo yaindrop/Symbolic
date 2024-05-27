@@ -30,7 +30,7 @@ enum LineSegment {
 
 // MARK: Impl
 
-fileprivate protocol LineSegmentImpl: Equatable, Parametrizable, InverseParametrizable {
+private protocol LineSegmentImpl: Equatable, Parametrizable, InverseParametrizable {
     var line: Line { get }
     var start: Point2 { get }
     var end: Point2 { get }
@@ -205,7 +205,7 @@ extension Polyline: InverseParametrizable {
 
 extension Polyline {
     func approxPathParamT(segmentParam param: SegmentParam) -> Scalar {
-        var cumulated: Scalar = Scalar(param.i)
+        var cumulated = Scalar(param.i)
         let s = segments[param.i]
         let p = s.position(paramT: param.t)
         cumulated += p.distance(to: s.start) / s.length

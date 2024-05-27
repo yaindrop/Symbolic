@@ -25,7 +25,8 @@ struct PositionPicker: View {
 
     init(position: Point2,
          onChange: @escaping (Point2) -> Void = { _ in },
-         onDone: @escaping (Point2) -> Void = { _ in }) {
+         onDone: @escaping (Point2) -> Void = { _ in })
+    {
         self.position = position
         self.onChange = onChange
         self.onDone = onDone

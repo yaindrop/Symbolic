@@ -31,9 +31,9 @@ extension PathSegment: Parametrizable {
 
 // MARK: Tessellatable
 
-fileprivate let defaultTessellationCount: Int = 64
+private let defaultTessellationCount: Int = 64
 
-fileprivate protocol Tessellatable {
+private protocol Tessellatable {
     func tessellated(count: Int) -> Polyline
 }
 
@@ -63,7 +63,7 @@ extension PathSegment: SUPathAppendable {
 
 // MARK: ParamSplittable
 
-fileprivate protocol ParamSplittable {
+private protocol ParamSplittable {
     func split(paramT: Scalar) -> (Self, Self)
     func subsegment(fromT: Scalar, toT: Scalar) -> Self
 }

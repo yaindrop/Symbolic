@@ -71,8 +71,8 @@ struct DocumentEvent: Identifiable {
         case itemEvent(ItemEvent)
     }
 
-    let id: UUID = UUID()
-    let time: Date = Date()
+    let id: UUID = .init()
+    let time: Date = .init()
     let kind: Kind
     let action: DocumentAction
 }

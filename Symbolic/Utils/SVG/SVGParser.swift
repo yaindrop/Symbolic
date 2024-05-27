@@ -14,28 +14,27 @@ class SVGParserDelegate: NSObject, XMLParserDelegate, CancellableHolder {
 
     // MARK: handler
 
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String: String] = [:]) {
+    func parser(_: XMLParser, didStartElement elementName: String, namespaceURI _: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
         switch elementName {
         case "path":
             onPathElement(with: attributeDict)
         default:
             logInfo("Found element name \(elementName)")
-            break
         }
     }
 
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
+    func parser(_: XMLParser, foundCharacters string: String) {
         let trimmedString = string.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedString.isEmpty {
             logInfo("Found characters: \(trimmedString)")
         }
     }
 
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
+    func parser(_: XMLParser, didEndElement elementName: String, namespaceURI _: String?, qualifiedName _: String?) {
         logInfo("Ended element: \(elementName)")
     }
 
-    func parserDidEndDocument(_ parser: XMLParser) {
+    func parserDidEndDocument(_: XMLParser) {
         logInfo("Finished parsing document.")
     }
 

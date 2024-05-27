@@ -11,7 +11,7 @@ class SelectionStore: Store {
     }
 }
 
-fileprivate var selectedPathsSelector: [Path] {
+private var selectedPathsSelector: [Path] {
     let pathIds = global.selection.selectedPathIds
     return global.path.map.compactMap { id, p in pathIds.contains(id) ? p : nil }
 }

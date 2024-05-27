@@ -1,6 +1,6 @@
 import SwiftUI
 
-fileprivate enum GridLineType: CaseIterable {
+private enum GridLineType: CaseIterable {
     case normal
     case principal
     case axis

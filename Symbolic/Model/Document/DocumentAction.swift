@@ -1,6 +1,6 @@
 import Foundation
 
-fileprivate protocol PathActionSingleKind: SelfTransformable {}
+private protocol PathActionSingleKind: SelfTransformable {}
 
 extension PathAction.Single {
     struct DeleteNode: PathActionSingleKind { let nodeId: UUID }

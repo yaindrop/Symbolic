@@ -43,12 +43,12 @@ enum PanelAffinity {
 
 // MARK: Impl
 
-fileprivate protocol PanelAffinityImpl: Equatable {
+private protocol PanelAffinityImpl: Equatable {
     func related(to peerId: UUID) -> Bool
 }
 
 extension PanelAffinity.Root: PanelAffinityImpl {
-    func related(to peerId: UUID) -> Bool { false }
+    func related(to _: UUID) -> Bool { false }
 }
 
 extension PanelAffinity.Peer: PanelAffinityImpl {
@@ -90,7 +90,7 @@ extension PanelAffinity: CustomStringConvertible {
 // MARK: - PanelData
 
 struct PanelData: Identifiable {
-    let id: UUID = UUID()
+    let id: UUID = .init()
 
     let view: AnyView
 

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate let subtracer = tracer.tagged("PathView")
+private let subtracer = tracer.tagged("PathView")
 
 extension PathView {
     // MARK: - NodeHandle

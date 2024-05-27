@@ -2,9 +2,9 @@ import Combine
 import Foundation
 import SwiftUI
 
-fileprivate let storeTracer = tracer.tagged("store")
-fileprivate let managerTracer = storeTracer.tagged("manager")
-fileprivate let trackableTracer = storeTracer.tagged("trackable")
+private let storeTracer = tracer.tagged("store")
+private let managerTracer = storeTracer.tagged("manager")
+private let trackableTracer = storeTracer.tagged("trackable")
 
 private struct StoreSubscription {
     let id: Int
@@ -147,7 +147,7 @@ struct _Trackable<Instance: _StoreProtocol, Value> {
         storage storageKeyPath: ReferenceWritableKeyPath<Instance, Self>
     ) -> Value {
         get { instance.access(keypath: storageKeyPath) }
-        @available(*, unavailable) set { }
+        @available(*, unavailable) set {}
     }
 
     init(wrappedValue: Value) {
@@ -155,12 +155,12 @@ struct _Trackable<Instance: _StoreProtocol, Value> {
     }
 }
 
-extension _Trackable {
-    fileprivate func needUpdate(newValue: Value) -> Bool { true }
+private extension _Trackable {
+    func needUpdate(newValue _: Value) -> Bool { true }
 }
 
-extension _Trackable where Value: Equatable {
-    fileprivate func needUpdate(newValue: Value) -> Bool { value != newValue }
+private extension _Trackable where Value: Equatable {
+    func needUpdate(newValue: Value) -> Bool { value != newValue }
 }
 
 // MARK: - StoreProtocol
@@ -262,10 +262,10 @@ struct Selected<Value>: DynamicProperty {
     }
 }
 
-extension Selected.Storage {
-    fileprivate func needUpdate(newValue: Value) -> Bool { true }
+private extension Selected.Storage {
+    func needUpdate(newValue _: Value) -> Bool { true }
 }
 
-extension Selected.Storage where Value: Equatable {
-    fileprivate func needUpdate(newValue: Value) -> Bool { value != newValue }
+private extension Selected.Storage where Value: Equatable {
+    func needUpdate(newValue: Value) -> Bool { value != newValue }
 }

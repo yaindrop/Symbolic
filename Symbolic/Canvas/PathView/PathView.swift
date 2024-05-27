@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate let subtracer = tracer.tagged("PathView")
+private let subtracer = tracer.tagged("PathView")
 
 // MARK: - PathViewModel
 
@@ -12,17 +12,17 @@ class PathViewModel: ObservableObject {
         var longPressAddedNodeId: UUID?
     }
 
-    func nodeGesture(nodeId: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext)? { nil }
+    func nodeGesture(nodeId _: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext)? { nil }
 
     class EdgeGestureContext {
         var longPressParamT: Scalar?
         var longPressSplitNodeId: UUID?
     }
 
-    func edgeGesture(fromId: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext)? { nil }
-    func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2>? { nil }
+    func edgeGesture(fromId _: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext)? { nil }
+    func focusedEdgeGesture(fromId _: UUID) -> MultipleGestureModel<Point2>? { nil }
 
-    func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGestureModel<Void>? { nil }
+    func bezierGesture(fromId _: UUID, isControl0 _: Bool) -> MultipleGestureModel<Void>? { nil }
 }
 
 // MARK: - PathView

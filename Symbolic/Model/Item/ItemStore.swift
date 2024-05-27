@@ -1,6 +1,6 @@
 import Foundation
 
-fileprivate let subtracer = tracer.tagged("ItemService")
+private let subtracer = tracer.tagged("ItemService")
 
 typealias ItemMap = [UUID: Item]
 
@@ -182,8 +182,8 @@ extension ItemService {
     }
 
     private func loadEvent(_ event: CompoundEvent) {
-        event.events.forEach {
-            switch $0 {
+        for item in event.events {
+            switch item {
             case let .pathEvent(event): loadEvent(event)
             case let .itemEvent(event): loadEvent(event)
             }

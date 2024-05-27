@@ -2,11 +2,9 @@ import Foundation
 import SwiftUI
 
 enum ToolbarMode {
-    struct Select {
-    }
+    struct Select {}
 
-    struct AddPath {
-    }
+    struct AddPath {}
 
     case select(Select)
     case addPath(AddPath)

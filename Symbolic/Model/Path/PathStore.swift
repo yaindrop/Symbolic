@@ -1,6 +1,6 @@
 import Foundation
 
-fileprivate let subtracer = tracer.tagged("PathService")
+private let subtracer = tracer.tagged("PathService")
 
 typealias PathMap = [UUID: Path]
 
@@ -134,8 +134,8 @@ extension PathService {
     }
 
     private func loadEvent(_ event: CompoundEvent) {
-        event.events.forEach {
-            switch $0 {
+        for event in event.events {
+            switch event {
             case let .pathEvent(pathEvent):
                 loadEvent(pathEvent)
             case .itemEvent:

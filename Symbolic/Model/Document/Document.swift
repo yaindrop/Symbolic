@@ -33,7 +33,7 @@ struct Document: Equatable {
 }
 
 class DocumentStore: Store {
-    @Trackable var activeDocument: Document = Document()
+    @Trackable var activeDocument: Document = .init()
     @Trackable var pendingEvent: DocumentEvent?
 
     fileprivate func update(activeDocument: Document) {

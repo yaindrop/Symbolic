@@ -45,7 +45,7 @@ enum SVGPathCommand {
 
 // MARK: Impl
 
-fileprivate protocol SVGPathCommandImpl: CustomStringConvertible {
+private protocol SVGPathCommandImpl: CustomStringConvertible {
     var position: Point2 { get }
 }
 
@@ -75,19 +75,19 @@ extension SVGPathCommand: SVGPathCommandImpl {
 // MARK: CustomStringConvertible
 
 extension SVGPathCommand.ArcTo: CustomStringConvertible {
-    public var description: String { return "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
+    public var description: String { "A \(radius.width) \(radius.height) \(rotation) \(largeArc ? 1 : 0) \(sweep ? 1 : 0) \(position.x) \(position.y)" }
 }
 
 extension SVGPathCommand.BezierTo: CustomStringConvertible {
-    public var description: String { return "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
+    public var description: String { "C \(control0.x) \(control0.y) \(control1.x) \(control1.y) \(position.x) \(position.y)" }
 }
 
 extension SVGPathCommand.LineTo: CustomStringConvertible {
-    public var description: String { return "L \(position.x) \(position.y)" }
+    public var description: String { "L \(position.x) \(position.y)" }
 }
 
 extension SVGPathCommand.QuadraticBezierTo: CustomStringConvertible {
-    public var description: String { return "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
+    public var description: String { "Q \(control.x) \(control.y) \(position.x) \(position.y)" }
 }
 
 extension SVGPathCommand: CustomStringConvertible {
@@ -97,7 +97,7 @@ extension SVGPathCommand: CustomStringConvertible {
 // MARK: - SVGPath
 
 struct SVGPath {
-    var initial: Point2 = Point2.zero
+    var initial: Point2 = .zero
     var commands: [SVGPathCommand] = []
     var isClosed: Bool = false
 
@@ -141,7 +141,7 @@ class SVGPathParser {
     private let scanner: Scanner
 
     // parsing path
-    private var path: SVGPath = SVGPath()
+    private var path: SVGPath = .init()
 
     // parsing command context
     private var command: Character = "M"

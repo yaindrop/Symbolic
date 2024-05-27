@@ -25,7 +25,8 @@ struct AnglePicker: View {
 
     init(angle: Angle,
          onChange: @escaping (Angle) -> Void = { _ in },
-         onDone: @escaping (Angle) -> Void = { _ in }) {
+         onDone: @escaping (Angle) -> Void = { _ in })
+    {
         self.angle = angle
         self.onChange = onChange
         self.onDone = onDone

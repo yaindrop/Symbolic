@@ -33,7 +33,8 @@ struct DecimalInput: View {
     init(title: String,
          inputNumber: Binding<Double>,
          formatStyle: FloatingPointFormatStyle<Double> = decimalFormatStyle(),
-         sanitizer: @escaping (String) -> String = sanitized(decimalStr:)) {
+         sanitizer: @escaping (String) -> String = sanitized(decimalStr:))
+    {
         self.title = title
         _inputNumber = inputNumber
         inputText = inputNumber.wrappedValue.formatted(formatStyle)

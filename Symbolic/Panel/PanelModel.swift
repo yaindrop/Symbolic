@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate let subtracer = tracer.tagged("PanelModel")
+private let subtracer = tracer.tagged("PanelModel")
 
 // MARK: - PanelModel
 
@@ -49,7 +49,7 @@ extension PanelModel {
         idToPanel[panelId] = panel
 
         let newPanel = moveEndOffset(panel: panel, v)
-        if panel.origin == newPanel.origin && panel.affinities == newPanel.affinities {
+        if panel.origin == newPanel.origin, panel.affinities == newPanel.affinities {
             return
         }
 
@@ -135,7 +135,7 @@ extension PanelModel {
 
 // MARK: - get affinities
 
-fileprivate func getKeyPath(axis: Axis, align: AxisInnerAlign) -> KeyPath<CGRect, Scalar> {
+private func getKeyPath(axis: Axis, align: AxisInnerAlign) -> KeyPath<CGRect, Scalar> {
     switch axis {
     case .horizontal:
         switch align {

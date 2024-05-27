@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-fileprivate let subtracer = tracer.tagged("viewport")
+private let subtracer = tracer.tagged("viewport")
 
 // MARK: - ViewportInfo
 
@@ -26,7 +26,7 @@ struct ViewportInfo: Equatable {
 }
 
 extension ViewportInfo: CustomStringConvertible {
-    public var description: String { return "(\(origin.shortDescription), \(scale.shortDescription))" }
+    public var description: String { "(\(origin.shortDescription), \(scale.shortDescription))" }
 }
 
 // MARK: - stores

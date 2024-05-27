@@ -1,8 +1,8 @@
 import Foundation
 import SwiftUI
 
-extension Gesture {
-    @inlinable public func updating(flag: GestureState<Bool>) -> GestureStateGesture<Self, Bool> {
+public extension Gesture {
+    @inlinable func updating(flag: GestureState<Bool>) -> GestureStateGesture<Self, Bool> {
         updating(flag) { _, state, _ in state = true }
     }
 }

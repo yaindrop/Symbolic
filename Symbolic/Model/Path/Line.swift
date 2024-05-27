@@ -33,7 +33,7 @@ enum Line {
 
 // MARK: Impl
 
-fileprivate protocol LineImpl: Equatable {
+private protocol LineImpl: Equatable {
     func projected(from point: Point2) -> Point2
 }
 

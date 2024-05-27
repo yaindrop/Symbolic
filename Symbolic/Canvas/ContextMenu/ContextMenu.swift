@@ -19,8 +19,7 @@ enum ContextMenuData {
     }
 }
 
-class ContextMenuStore: Store {
-}
+class ContextMenuStore: Store {}
 
 struct ContextMenu: View {
     var onDelete: (() -> Void)?

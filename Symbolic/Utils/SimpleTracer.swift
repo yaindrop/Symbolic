@@ -152,7 +152,7 @@ class Tracer {
     // MARK: private
 
     @discardableResult
-    fileprivate func onEnd(_ endRange: EndRange) -> Node.Range? {
+    private func onEnd(_: EndRange) -> Node.Range? {
         guard enabled else { return nil }
         guard let pending = rangeStack.popLast() else { return nil }
         let range = Node.Range(type: pending.type, start: pending.start, end: .now, nodes: pending.nodes, message: pending.message)

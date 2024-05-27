@@ -129,7 +129,7 @@ extension ActivePathPanel {
 
 // MARK: - BezierPanel
 
-fileprivate struct BezierPanel: View, EquatableBy {
+private struct BezierPanel: View, EquatableBy {
     let fromNodeId: UUID
     let edge: PathEdge
 

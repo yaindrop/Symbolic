@@ -45,7 +45,7 @@ class ActivePathViewModel: PathViewModel {
                 }
             }
         }
-        func updateLongPress(position: Point2, pending: Bool = false) {
+        func updateLongPress(position _: Point2, pending: Bool = false) {
             guard let newNodeId = context.longPressAddedNodeId else { return }
             moveAddedNode(newNodeId: newNodeId, offset: .zero, pending: pending)
         }
@@ -109,7 +109,7 @@ class ActivePathViewModel: PathViewModel {
                 }
             }
         }
-        func updateLongPress(segment: PathSegment, pending: Bool = false) {
+        func updateLongPress(segment _: PathSegment, pending: Bool = false) {
             guard let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId else { return }
             moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: .zero, pending: pending)
         }

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate extension DocumentEvent {
+private extension DocumentEvent {
     var name: String {
         switch action {
         case let .pathAction(pathAction):

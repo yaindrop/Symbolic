@@ -45,7 +45,7 @@ class TouchDebugView: UIView {
         }
 
         override var bounds: CGRect {
-            get { return super.bounds }
+            get { super.bounds }
             set(newBounds) {
                 super.bounds = newBounds
                 layer.cornerRadius = newBounds.size.width / 2.0

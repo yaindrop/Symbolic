@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-fileprivate let subtracer = tracer.tagged("ActivePathService")
+private let subtracer = tracer.tagged("ActivePathService")
 
 // MARK: - PathFocusedPart
 

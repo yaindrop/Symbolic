@@ -146,7 +146,8 @@ class MultipleTouchView: TouchDebugView {
         self.init(model: model, frame: CGRect.zero)
     }
 
-    required init(coder aDecoder: NSCoder) {
+    @available(*, unavailable)
+    required init(coder _: NSCoder) {
         fatalError("This class does not support NSCoding")
     }
 
@@ -201,8 +202,8 @@ struct MultipleTouchModifier: ViewModifier {
     private struct Representable: UIViewRepresentable {
         @Binding var model: MultipleTouchModel
 
-        func makeUIView(context: Context) -> UIView { MultipleTouchView(model: model) }
+        func makeUIView(context _: Context) -> UIView { MultipleTouchView(model: model) }
 
-        func updateUIView(_ uiView: UIView, context: Context) {}
+        func updateUIView(_: UIView, context _: Context) {}
     }
 }

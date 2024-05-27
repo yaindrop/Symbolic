@@ -12,7 +12,7 @@ class ManagedScrollViewModel: ObservableObject {
 
 // MARK: - ScrollOffsetKey
 
-fileprivate struct ScrollOffsetKey: PreferenceKey {
+private struct ScrollOffsetKey: PreferenceKey {
     typealias Value = Scalar
     static var defaultValue: Scalar = .zero
     static func reduce(value: inout Value, nextValue: () -> Value) { value += nextValue() }
@@ -20,7 +20,7 @@ fileprivate struct ScrollOffsetKey: PreferenceKey {
 
 // MARK: - ScrollOffsetReaderModifier
 
-fileprivate struct ScrollOffsetReaderModifier: ViewModifier {
+private struct ScrollOffsetReaderModifier: ViewModifier {
     @ObservedObject var model: ManagedScrollViewModel
 
     func body(content: Content) -> some View {
@@ -35,7 +35,7 @@ fileprivate struct ScrollOffsetReaderModifier: ViewModifier {
 
 // MARK: - ScrollOffsetSetterModifier
 
-fileprivate struct ScrollOffsetSetterModifier: ViewModifier {
+private struct ScrollOffsetSetterModifier: ViewModifier {
     @ObservedObject var model: ManagedScrollViewModel
 
     func body(content: Content) -> some View {
@@ -44,7 +44,7 @@ fileprivate struct ScrollOffsetSetterModifier: ViewModifier {
     }
 }
 
-fileprivate extension View {
+private extension View {
     func scrollOffsetReader(model: ManagedScrollViewModel) -> some View {
         modifier(ScrollOffsetReaderModifier(model: model))
     }

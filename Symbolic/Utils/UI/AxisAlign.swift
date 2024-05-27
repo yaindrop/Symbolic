@@ -136,7 +136,7 @@ extension PlaneOuterAlign {
 extension CGRect {
     func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: Scalar) -> CGRect {
         func point(from align: PlaneInnerAlign, _ gapOffset: Vector2, _ sizeOffset: Vector2) -> Point2 {
-            self.alignedPoint(at: align).offset(by: gapOffset).offset(by: sizeOffset)
+            alignedPoint(at: align).offset(by: gapOffset).offset(by: sizeOffset)
         }
         return {
             switch align {

@@ -1,9 +1,9 @@
 import Foundation
 import SwiftUI
 
-// MARK: - CanvasItemPanel
+// MARK: - ItemPanel
 
-struct CanvasItemPanel: View {
+struct ItemPanel: View {
     @Environment(\.panelId) private var panelId
     @EnvironmentObject private var panelModel: PanelModel
 
@@ -13,7 +13,7 @@ struct CanvasItemPanel: View {
 
     // MARK: private
 
-    @Selected private var allItems = global.canvasItem.rootItems
+    @Selected private var allItems = global.item.rootItems
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 

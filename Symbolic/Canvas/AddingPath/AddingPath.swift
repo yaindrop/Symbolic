@@ -25,7 +25,7 @@ class AddingPathStore: Store {
 struct AddingPathService {
     let toolbar: ToolbarStore
     let viewport: ViewportService
-    let grid: CanvasGridStore
+    let grid: GridStore
     let store: AddingPathStore
 
     var from: Point2? { store.from }

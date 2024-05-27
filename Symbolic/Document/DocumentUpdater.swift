@@ -16,10 +16,10 @@ class DocumentUpdaterStore: Store {
 
 struct DocumentUpdater {
     let pathStore: PathStore
-    let canvasItemStore: CanvasItemStore
+    let itemStore: ItemStore
     let activePathStore: ActivePathStore
     let viewport: ViewportService
-    let grid: CanvasGridStore
+    let grid: GridStore
     let store: DocumentUpdaterStore
 
     // MARK: update activePath
@@ -135,10 +135,10 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Group) {
         let group = action.group, inGroupId = action.inGroupId
-        guard canvasItemStore.item(id: group.id) == nil else { return }
+        guard itemStore.item(id: group.id) == nil else { return }
         events.append(.setMembers(.init(members: group.members, inGroupId: group.id)))
 
-        let rootIds = canvasItemStore.rootIds, allGroups = canvasItemStore.allGroups
+        let rootIds = itemStore.rootIds, allGroups = itemStore.allGroups
         let groupedRootIds = rootIds.intersection(group.members)
         if !groupedRootIds.isEmpty || inGroupId == nil {
             var newRootIds = rootIds.filter { !groupedRootIds.contains($0) }
@@ -162,7 +162,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Ungroup) {
         let groupIds = Set(action.groupIds)
-        let rootIds = Set(canvasItemStore.rootIds), allGroups = canvasItemStore.allGroups
+        let rootIds = Set(itemStore.rootIds), allGroups = itemStore.allGroups
 
         var idToParentId: [UUID: UUID] = [:]
         for parent in allGroups {
@@ -174,7 +174,7 @@ extension DocumentUpdater {
         var rootNewMembers: [UUID] = []
         var parentIdToNewMembers: [UUID: [UUID]] = [:]
         for groupId in groupIds {
-            guard let group = canvasItemStore.group(id: groupId) else { continue }
+            guard let group = itemStore.group(id: groupId) else { continue }
             if rootIds.contains(groupId) {
                 rootNewMembers += group.members
                 continue
@@ -191,7 +191,7 @@ extension DocumentUpdater {
             events.append(.setMembers(.init(members: rootIds + rootNewMembers, inGroupId: nil)))
         }
         for (parentId, newMembers) in parentIdToNewMembers {
-            guard let parent = canvasItemStore.group(id: parentId) else { continue }
+            guard let parent = itemStore.group(id: parentId) else { continue }
             events.append(.setMembers(.init(members: parent.members + newMembers, inGroupId: parentId)))
         }
     }

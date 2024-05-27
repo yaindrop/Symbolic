@@ -10,11 +10,15 @@ struct GlobalStore {
     var document: DocumentService { .init(store: documentStore) }
 
     private let documentUpdaterStore = DocumentUpdaterStore()
-    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, canvasItemStore: canvasItemStore, activePathStore: activePathStore, viewport: viewport, grid: canvasGrid, store: documentUpdaterStore) }
+    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, itemStore: itemStore, activePathStore: activePathStore, viewport: viewport, grid: grid, store: documentUpdaterStore) }
 
     private let pathStore = PathStore()
     private let pendingPathStore = PendingPathStore()
     var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
+
+    private let itemStore = ItemStore()
+    private let pendingItemStore = PendingItemStore()
+    var item: ItemService { .init(pathService: path, store: itemStore, pendingStore: pendingItemStore) }
 
     private let activePathStore = ActivePathStore()
     var activePath: ActivePathService { .init(path: path, store: activePathStore) }
@@ -27,15 +31,11 @@ struct GlobalStore {
     var pendingSelection: PendingSelectionService { .init(pathStore: pathStore, viewport: viewport, store: pendingSelectionStore) }
 
     private let addingPathStore = AddingPathStore()
-    var addingPath: AddingPathService { .init(toolbar: toolbar, viewport: viewport, grid: canvasGrid, store: addingPathStore) }
+    var addingPath: AddingPathService { .init(toolbar: toolbar, viewport: viewport, grid: grid, store: addingPathStore) }
 
     let canvasAction = CanvasActionStore()
 
-    let canvasGrid = CanvasGridStore()
-
-    let canvasItemStore = CanvasItemStore()
-    let pendingCanvasItemStore = PendingCanvasItemStore()
-    var canvasItem: CanvasItemService { .init(pathService: path, store: canvasItemStore, pendingStore: pendingCanvasItemStore) }
+    let grid = GridStore()
 }
 
 let global = GlobalStore()

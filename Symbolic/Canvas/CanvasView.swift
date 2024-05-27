@@ -29,7 +29,7 @@ struct CanvasView: View {
             .onAppear {
                 panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
                 panelModel.register(align: .bottomLeading) { HistoryPanel() }
-                panelModel.register(align: .bottomLeading) { CanvasItemPanel() }
+                panelModel.register(align: .bottomLeading) { ItemPanel() }
                 panelModel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
                 panelModel.register(align: .topLeading) { CanvasActionPanel() }
             }
@@ -41,7 +41,7 @@ struct CanvasView: View {
     // MARK: private
 
     @Selected private var toView = global.viewport.toView
-    @Selected private var allPaths = global.canvasItem.allPaths
+    @Selected private var allPaths = global.item.allPaths
     @Selected private var activePathId = global.activePath.activePathId
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }

@@ -1,30 +1,30 @@
 import Foundation
 
-fileprivate let subtracer = tracer.tagged("CanvasItemService")
+fileprivate let subtracer = tracer.tagged("ItemService")
 
-typealias CanvasItemMap = [UUID: CanvasItem]
+typealias ItemMap = [UUID: Item]
 
-protocol CanvasItemStoreProtocol {
-    var map: CanvasItemMap { get }
+protocol ItemStoreProtocol {
+    var map: ItemMap { get }
     var rootIds: [UUID] { get }
 }
 
-extension CanvasItemStoreProtocol {
+extension ItemStoreProtocol {
     // MARK: queries
 
-    func item(id: UUID) -> CanvasItem? {
+    func item(id: UUID) -> Item? {
         map.value(key: id)
     }
 
-    func group(id: UUID) -> CanvasItemGroup? {
+    func group(id: UUID) -> ItemGroup? {
         item(id: id).map { if case let .group(group) = $0.kind { group } else { nil } }
     }
 
-    var rootItems: [CanvasItem] {
+    var rootItems: [Item] {
         rootIds.compactMap { item(id: $0) }
     }
 
-    func expanded(itemId: UUID) -> [CanvasItem] {
+    func expanded(itemId: UUID) -> [Item] {
         guard let item = item(id: itemId) else { return [] }
         switch item.kind {
         case .path: return [item]
@@ -32,11 +32,11 @@ extension CanvasItemStoreProtocol {
         }
     }
 
-    var allExpandedItems: [CanvasItem] {
+    var allExpandedItems: [Item] {
         rootIds.flatMap { expanded(itemId: $0) }
     }
 
-    var allGroups: [CanvasItemGroup] {
+    var allGroups: [ItemGroup] {
         allExpandedItems.compactMap { if case let .group(group) = $0.kind { group } else { nil }}
     }
 
@@ -45,13 +45,13 @@ extension CanvasItemStoreProtocol {
     }
 }
 
-// MARK: - CanvasItemStore
+// MARK: - ItemStore
 
-class CanvasItemStore: Store, CanvasItemStoreProtocol {
-    @Trackable var map = CanvasItemMap()
+class ItemStore: Store, ItemStoreProtocol {
+    @Trackable var map = ItemMap()
     @Trackable var rootIds: [UUID] = []
 
-    fileprivate func update(map: CanvasItemMap) {
+    fileprivate func update(map: ItemMap) {
         update { $0(\._map, map) }
     }
 
@@ -60,14 +60,14 @@ class CanvasItemStore: Store, CanvasItemStoreProtocol {
     }
 }
 
-// MARK: - PendingCanvasItemStore
+// MARK: - PendingItemStore
 
-class PendingCanvasItemStore: Store, CanvasItemStoreProtocol {
-    @Trackable var map = CanvasItemMap()
+class PendingItemStore: Store, ItemStoreProtocol {
+    @Trackable var map = ItemMap()
     @Trackable var rootIds: [UUID] = []
     @Trackable fileprivate var active: Bool = false
 
-    fileprivate func update(map: CanvasItemMap) {
+    fileprivate func update(map: ItemMap) {
         update { $0(\._map, map) }
     }
 
@@ -80,14 +80,14 @@ class PendingCanvasItemStore: Store, CanvasItemStoreProtocol {
     }
 }
 
-// MARK: - CanvasItemService
+// MARK: - ItemService
 
-struct CanvasItemService: CanvasItemStoreProtocol {
+struct ItemService: ItemStoreProtocol {
     let pathService: PathService
-    let store: CanvasItemStore
-    let pendingStore: PendingCanvasItemStore
+    let store: ItemStore
+    let pendingStore: PendingItemStore
 
-    var map: CanvasItemMap { pendingStore.active ? pendingStore.map : store.map }
+    var map: ItemMap { pendingStore.active ? pendingStore.map : store.map }
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
 
     var allPaths: [Path] { allPathIds.compactMap { pathService.path(id: $0) } }
@@ -122,8 +122,8 @@ struct CanvasItemService: CanvasItemStoreProtocol {
 
 // MARK: - modify item map
 
-extension CanvasItemService {
-    private func update(map: CanvasItemMap) {
+extension ItemService {
+    private func update(map: ItemMap) {
         if pendingStore.active {
             pendingStore.update(map: map)
         } else {
@@ -139,7 +139,7 @@ extension CanvasItemService {
         }
     }
 
-    private func add(item: CanvasItem) {
+    private func add(item: Item) {
         let _r = subtracer.range("add"); defer { _r() }
         if case let .path(path) = item.kind {
             guard pathService.path(id: path.id) != nil else { return }
@@ -153,7 +153,7 @@ extension CanvasItemService {
         update(map: map.with { $0.removeValue(forKey: itemId) })
     }
 
-    private func update(item: CanvasItem) {
+    private func update(item: Item) {
         let _r = subtracer.range("update"); defer { _r() }
         if case let .path(path) = item.kind {
             guard pathService.path(id: path.id) != nil else { remove(itemId: item.id); return }
@@ -171,7 +171,7 @@ extension CanvasItemService {
 
 // MARK: - event loaders
 
-extension CanvasItemService {
+extension ItemService {
     private func loadEvent(_ event: DocumentEvent) {
         let _r = subtracer.range("load document event \(event.id)", type: .intent); defer { _r() }
         switch event.kind {

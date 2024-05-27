@@ -26,16 +26,16 @@ struct CanvasSetup {
         global.document.store.$activeDocument
             .sink {
                 global.path.loadDocument($0)
-                global.canvasItem.loadDocument($0)
+                global.item.loadDocument($0)
             }
-            .store(in: global.canvasItem.store)
+            .store(in: global.item.store)
 
         global.document.store.$pendingEvent
             .sink {
                 global.path.loadPendingEvent($0)
-                global.canvasItem.loadPendingEvent($0)
+                global.item.loadPendingEvent($0)
             }
-            .store(in: global.canvasItem.store)
+            .store(in: global.item.store)
     }
 
     func multipleTouch(multipleTouch: MultipleTouchModel) {

@@ -16,7 +16,7 @@ struct Background: View {
     @Selected private var viewportInfo = global.viewport.info
     @Selected private var viewSize = global.viewport.store.viewSize
     @Selected private var worldRect = global.viewport.worldRect
-    @Selected private var cellSize = global.canvasGrid.grid.cellSize
+    @Selected private var cellSize = global.grid.grid.cellSize
 
     private static let targetCellSize: Scalar = 24
     private static let gridLineColor: Color = .red

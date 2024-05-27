@@ -61,7 +61,7 @@ enum PathAction {
 }
 
 enum ItemAction {
-    struct Group { let group: CanvasItemGroup, inGroupId: UUID? }
+    struct Group { let group: ItemGroup, inGroupId: UUID? }
     struct Ungroup { let groupIds: [UUID] }
     struct Reorder { let members: [UUID], inGroupId: UUID? }
 

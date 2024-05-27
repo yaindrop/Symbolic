@@ -135,64 +135,64 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Group) {
         let group = action.group, inGroupId = action.inGroupId
-        guard itemStore.item(id: group.id) == nil else { return }
-        events.append(.setMembers(.init(members: group.members, inGroupId: group.id)))
+        guard itemStore.item(id: group.id) == nil else { return } // grouping with existing id
 
-        let rootIds = itemStore.rootIds, allGroups = itemStore.allGroups
-        let groupedRootIds = rootIds.intersection(group.members)
-        if !groupedRootIds.isEmpty || inGroupId == nil {
-            var newRootIds = rootIds.filter { !groupedRootIds.contains($0) }
-            if inGroupId == nil {
-                newRootIds.append(group.id)
-            }
-            events.append(.setMembers(.init(members: newRootIds, inGroupId: nil)))
+        if let inGroupId, let ancestors = itemStore.idToAncestorIds[inGroupId] {
+            guard !ancestors.contains(inGroupId) else { return } // cyclic grouping
         }
 
-        for other in allGroups {
-            let groupedIds = other.members.intersection(group.members)
-            if !groupedIds.isEmpty || inGroupId == other.id {
-                var newMembers = other.members.filter { !groupedIds.contains($0) }
-                if inGroupId == other.id {
-                    newMembers.append(group.id)
-                }
-                events.append(.setMembers(.init(members: newMembers, inGroupId: other.id)))
+        let rootIds = itemStore.rootIds, allGroups = itemStore.allGroups, groupedMembers = Set(group.members)
+
+        func moveOut(from other: ItemGroup?) {
+            let id = other?.id
+            let members = other?.members ?? rootIds
+            guard inGroupId == id || members.contains(where: { groupedMembers.contains($0) }) else { return }
+
+            var newMembers = members.filter { !groupedMembers.contains($0) }
+            if inGroupId == id {
+                newMembers.append(group.id)
             }
+            if members != newMembers {
+                events.append(.setMembers(.init(members: newMembers, inGroupId: id)))
+            }
+        }
+
+        events.append(.setMembers(.init(members: group.members, inGroupId: group.id)))
+
+        moveOut(from: nil)
+        for other in allGroups {
+            moveOut(from: other)
         }
     }
 
     private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Ungroup) {
-        let groupIds = Set(action.groupIds)
-        let rootIds = Set(itemStore.rootIds), allGroups = itemStore.allGroups
+        let groupIds = action.groupIds
+        let rootIds = itemStore.rootIds, allGroups = itemStore.allGroups, ungroupedGroups = Set(groupIds)
 
-        var idToParentId: [UUID: UUID] = [:]
-        for parent in allGroups {
-            for id in groupIds.intersection(parent.members) {
-                idToParentId[id] = parent.id
-            }
-        }
+        func moveIn(to other: ItemGroup?) {
+            let id = other?.id
+            let members = other?.members ?? rootIds
+            let ungroupedMembers = members.filter { !ungroupedGroups.contains($0) }
+            guard !ungroupedMembers.isEmpty else { return }
 
-        var rootNewMembers: [UUID] = []
-        var parentIdToNewMembers: [UUID: [UUID]] = [:]
-        for groupId in groupIds {
-            guard let group = itemStore.group(id: groupId) else { continue }
-            if rootIds.contains(groupId) {
-                rootNewMembers += group.members
-                continue
+            var newMembers = members.filter { !ungroupedGroups.contains($0) }
+            for groupId in ungroupedMembers {
+                guard let ungrouped = itemStore.group(id: groupId) else { continue }
+                newMembers += ungrouped.members
             }
-            guard let parentId = idToParentId[groupId] else { continue }
-            let members = parentIdToNewMembers.getOrSetDefault(key: parentId, [])
-            parentIdToNewMembers[parentId] = members + group.members
+
+            if members != newMembers {
+                events.append(.setMembers(.init(members: newMembers, inGroupId: id)))
+            }
         }
 
         for groupId in groupIds {
             events.append(.setMembers(.init(members: [], inGroupId: groupId)))
         }
-        if !rootNewMembers.isEmpty {
-            events.append(.setMembers(.init(members: rootIds + rootNewMembers, inGroupId: nil)))
-        }
-        for (parentId, newMembers) in parentIdToNewMembers {
-            guard let parent = itemStore.group(id: parentId) else { continue }
-            events.append(.setMembers(.init(members: parent.members + newMembers, inGroupId: parentId)))
+
+        moveIn(to: nil)
+        for other in allGroups {
+            moveIn(to: other)
         }
     }
 

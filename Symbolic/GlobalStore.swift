@@ -23,6 +23,9 @@ struct GlobalStore {
     private let activePathStore = ActivePathStore()
     var activePath: ActivePathService { .init(path: path, store: activePathStore) }
 
+    private let activeItemStore = ActiveItemStore()
+    var activeItem: ActiveItemService { .init(item: item, path: path, store: activeItemStore) }
+
     let toolbar = ToolbarStore()
 
     let selection = SelectionStore()

@@ -10,38 +10,61 @@ protocol ItemStoreProtocol {
 }
 
 extension ItemStoreProtocol {
-    // MARK: queries
-
     func item(id: UUID) -> Item? {
         map.value(key: id)
     }
 
     func group(id: UUID) -> ItemGroup? {
-        item(id: id).map { if case let .group(group) = $0.kind { group } else { nil } }
+        item(id: id).map { $0.group }
     }
 
     var rootItems: [Item] {
         rootIds.compactMap { item(id: $0) }
     }
 
-    func expanded(itemId: UUID) -> [Item] {
+    func expandedItems(itemId: UUID) -> [Item] {
         guard let item = item(id: itemId) else { return [] }
-        switch item.kind {
-        case .path: return [item]
-        case let .group(group): return [item] + group.members.flatMap { expanded(itemId: $0) }
+        if let group = item.group {
+            return [item] + group.members.flatMap { expandedItems(itemId: $0) }
         }
+        return [item]
     }
 
     var allExpandedItems: [Item] {
-        rootIds.flatMap { expanded(itemId: $0) }
+        rootIds.flatMap { expandedItems(itemId: $0) }
     }
 
     var allGroups: [ItemGroup] {
-        allExpandedItems.compactMap { if case let .group(group) = $0.kind { group } else { nil }}
+        allExpandedItems.compactMap { $0.group }
     }
 
     var allPathIds: [UUID] {
-        allExpandedItems.compactMap { if case let .path(id) = $0.kind { id } else { nil }}
+        allExpandedItems.compactMap { $0.pathId }
+    }
+
+    var idToParentId: [UUID: UUID] {
+        var result: [UUID: UUID] = [:]
+        for group in allGroups {
+            for member in group.members {
+                result[member] = group.id
+            }
+        }
+        return result
+    }
+
+    var idToAncestorIds: [UUID: [UUID]] {
+        var result: [UUID: [UUID]] = [:]
+        let idToParentId = idToParentId
+        for (id, parentId) in idToParentId {
+            var ancestors: [UUID] = []
+            var currentId: UUID? = parentId
+            while let ancestorId = currentId {
+                ancestors.append(ancestorId)
+                currentId = idToParentId[ancestorId]
+            }
+            result[id] = ancestors
+        }
+        return result
     }
 }
 

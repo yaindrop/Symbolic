@@ -92,3 +92,51 @@ struct ActivePathService {
         }
     }
 }
+
+// MARK: - ActivePathStore
+
+class ActiveItemStore: Store {
+    @Trackable var activeItemIds = Set<UUID>()
+
+    fileprivate func update(activeItemIds: Set<UUID>) {
+        update {
+            $0(\._activeItemIds, activeItemIds)
+        }
+    }
+}
+
+struct ActiveItemService {
+    let item: ItemService
+    let path: PathService
+    let store: ActiveItemStore
+
+    func activate(itemId: UUID) {
+        let activeItemIds = store.activeItemIds.with { $0.insert(itemId) }
+        store.update(activeItemIds: activeItemIds)
+    }
+
+    func deactivate() {
+        let activeItemIds = store.activeItemIds.filter {
+            if let group = item.group(id: $0) {
+                return group.members.contains(where: { store.activeItemIds.contains($0) })
+            }
+            return false
+        }
+        store.update(activeItemIds: activeItemIds)
+    }
+
+    func focus(itemId: UUID?) {
+        guard let itemId else {
+            deactivate()
+            return
+        }
+        if let ancestors = item.idToAncestorIds[itemId] {
+            let firstInactive = ancestors.reversed().first { !store.activeItemIds.contains($0) }
+            if let firstInactive {
+                activate(itemId: firstInactive)
+                return
+            }
+        }
+        activate(itemId: itemId)
+    }
+}

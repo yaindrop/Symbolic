@@ -85,6 +85,11 @@ struct CanvasSetup {
                     global.canvasAction.on(instant: .deactivatePath)
                     global.activePath.deactivate()
                 }
+                if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
+                    global.activeItem.focus(itemId: pathId)
+                } else if !global.activeItem.store.activeItemIds.isEmpty {
+                    global.activeItem.focus(itemId: nil)
+                }
             }
         }
         multipleTouchPress.onLongPress { info in

@@ -1,6 +1,6 @@
 import Foundation
 
-struct ItemGroup {
+struct ItemGroup: Identifiable {
     let id: UUID
     let members: [UUID]
 }
@@ -12,6 +12,14 @@ struct Item: TriviallyCloneable {
     }
 
     let kind: Kind
+
+    var group: ItemGroup? {
+        if case let .group(group) = kind { group } else { nil }
+    }
+
+    var pathId: UUID? {
+        if case let .path(id) = kind { id } else { nil }
+    }
 }
 
 extension Item: Identifiable {

@@ -13,9 +13,9 @@ struct CanvasView: View {
 
     var body: some View { tracer.range("CanvasView body") {
         navigationView
-            .onChange(of: global.activePath.activePath) {
-                let _r = tracer.range("Active path change \(global.activePath.activePath?.id.uuidString ?? "nil")"); defer { _r() }
-                global.activePath.onActivePathChanged()
+            .onChange(of: global.activeItem.activePath) {
+                let _r = tracer.range("Active path change \(global.activeItem.activePath?.id.uuidString ?? "nil")"); defer { _r() }
+                global.activeItem.onActivePathChanged()
             }
             .onAppear {
                 let setup = CanvasSetup()
@@ -42,7 +42,7 @@ struct CanvasView: View {
 
     @Selected private var toView = global.viewport.toView
     @Selected private var allPaths = global.item.allPaths
-    @Selected private var activePathId = global.activePath.activePathId
+    @Selected private var activePathId = global.activeItem.focusedItemId
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
@@ -95,10 +95,10 @@ struct CanvasView: View {
 
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
         ZStack {
-//            ActivePathView()
+            ActiveView()
+            ActivePathView()
             PendingSelection()
             SelectionView()
-            ActiveView()
             AddingPath()
             PanelRoot()
                 .environmentObject(panelModel)

@@ -17,7 +17,7 @@ class DocumentUpdaterStore: Store {
 struct DocumentUpdater {
     let pathStore: PathStore
     let itemStore: ItemStore
-    let activePathStore: ActivePathStore
+    let activeItem: ActiveItemService
     let viewport: ViewportService
     let grid: GridStore
     let store: DocumentUpdaterStore
@@ -25,7 +25,7 @@ struct DocumentUpdater {
     // MARK: update activePath
 
     func update(activePath kind: PathAction.Single.Kind, pending: Bool = false) {
-        guard let activePathId = activePathStore.activePathId else { return }
+        guard let activePathId = activeItem.activePath?.id else { return }
         handle(.pathAction(.single(.init(pathId: activePathId, kind: kind))), pending: pending)
     }
 

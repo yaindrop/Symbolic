@@ -29,8 +29,8 @@ extension ActivePathPanel {
         init(fromNodeId: UUID, edge: PathEdge) {
             self.fromNodeId = fromNodeId
             self.edge = edge
-            _segment = .init { global.activePath.activePath?.segment(from: fromNodeId) }
-            _focused = .init { global.activePath.focusedPart?.edgeId == fromNodeId }
+            _segment = .init { global.activeItem.activePath?.segment(from: fromNodeId) }
+            _focused = .init { global.activeItem.pathFocusedPart?.edgeId == fromNodeId }
         }
 
         @Selected private var segment: PathSegment?
@@ -108,7 +108,7 @@ extension ActivePathPanel {
         } }
 
         private func toggleFocus() {
-            focused ? global.activePath.clearFocus() : global.activePath.setFocus(edge: fromNodeId)
+            focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(edge: fromNodeId)
         }
 
         private func splitEdge() {
@@ -116,11 +116,11 @@ extension ActivePathPanel {
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let id = UUID()
             global.documentUpdater.update(activePath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
-            global.activePath.setFocus(node: id)
+            global.activeItem.setFocus(node: id)
         }
 
         private func breakEdge() {
-            if let activePathId = global.activePath.activePathId {
+            if let activePathId = global.activeItem.focusedItemId {
                 global.documentUpdater.update(path: .breakAtEdge(.init(pathId: activePathId, fromNodeId: fromNodeId, newPathId: UUID())))
             }
         }

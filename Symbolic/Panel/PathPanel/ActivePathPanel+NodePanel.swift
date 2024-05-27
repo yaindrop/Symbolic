@@ -26,7 +26,7 @@ extension ActivePathPanel {
             self.path = path
             self.index = index
             self.node = node
-            _focused = .init { global.activePath.focusedPart?.nodeId == node.id }
+            _focused = .init { global.activeItem.pathFocusedPart?.nodeId == node.id }
         }
 
         @Selected private var focused: Bool
@@ -67,7 +67,7 @@ extension ActivePathPanel {
         }
 
         private func toggleFocus() {
-            focused ? global.activePath.clearFocus() : global.activePath.setFocus(node: node.id)
+            focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(node: node.id)
         }
 
         private func mergeNode() {
@@ -77,7 +77,7 @@ extension ActivePathPanel {
         }
 
         private func breakNode() {
-            if let activePathId = global.activePath.activePathId {
+            if let activePathId = global.activeItem.focusedItemId {
                 global.documentUpdater.update(path: .breakAtNode(.init(pathId: activePathId, nodeId: node.id, newNodeId: UUID(), newPathId: UUID())))
             }
         }

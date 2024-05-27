@@ -9,7 +9,7 @@ class ActivePathViewModel: PathViewModel {
         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
             { v, _ in global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending) }
         }
-        model.onTap { _, _ in global.activePath.clearFocus() }
+        model.onTap { _, _ in global.activeItem.clearFocus() }
         model.onDrag(update(pending: true))
         model.onDragEnd(update())
         model.onTouchDown { global.canvasAction.start(continuous: .movePath) }
@@ -21,14 +21,14 @@ class ActivePathViewModel: PathViewModel {
         let context = NodeGestureContext()
         let model = MultipleGestureModel<Point2>(configs: .init(durationThreshold: 0.2))
         var canAddEndingNode: Bool {
-            guard let activePath = global.activePath.activePath else { return false }
+            guard let activePath = global.activeItem.activePath else { return false }
             return activePath.isEndingNode(id: nodeId)
         }
         func addEndingNode() {
             guard canAddEndingNode else { return }
             let id = UUID()
             context.longPressAddedNodeId = id
-            global.activePath.setFocus(node: id)
+            global.activeItem.setFocus(node: id)
         }
         func moveAddedNode(newNodeId: UUID, offset: Vector2, pending: Bool = false) {
             global.documentUpdater.updateInView(activePath: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: newNodeId, offset: offset)), pending: pending)
@@ -91,7 +91,7 @@ class ActivePathViewModel: PathViewModel {
             context.longPressParamT = paramT
             let id = UUID()
             context.longPressSplitNodeId = id
-            global.activePath.setFocus(node: id)
+            global.activeItem.setFocus(node: id)
         }
         func moveSplitNode(paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
             global.documentUpdater.updateInView(activePath: .splitSegment(.init(fromNodeId: fromId, paramT: paramT, newNodeId: newNodeId, offset: offset)), pending: pending)
@@ -167,13 +167,13 @@ class ActivePathViewModel: PathViewModel {
     }
 
     private func toggleFocus(nodeId: UUID) {
-        let focused = global.activePath.focusedPart?.nodeId == nodeId
-        focused ? global.activePath.clearFocus() : global.activePath.setFocus(node: nodeId)
+        let focused = global.activeItem.pathFocusedPart?.nodeId == nodeId
+        focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(node: nodeId)
     }
 
     private func toggleFocus(edgeFromId: UUID) {
-        let focused = global.activePath.focusedPart?.edgeId == edgeFromId
-        focused ? global.activePath.clearFocus() : global.activePath.setFocus(edge: edgeFromId)
+        let focused = global.activeItem.pathFocusedPart?.edgeId == edgeFromId
+        focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(edge: edgeFromId)
     }
 }
 
@@ -187,7 +187,7 @@ struct ActivePathView: View {
         }
     }
 
-    @Selected private var activePath = global.activePath.activePath
-    @Selected private var focusedPart = global.activePath.focusedPart
+    @Selected private var activePath = global.activeItem.activePath
+    @Selected private var focusedPart = global.activeItem.pathFocusedPart
     private var viewModel: PathViewModel = ActivePathViewModel()
 }

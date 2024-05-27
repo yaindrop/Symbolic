@@ -409,22 +409,22 @@
 			path = Grid;
 			sourceTree = "<group>";
 		};
-		576BE2632C048F5400353912 /* Active */ = {
+		576BE2632C048F5400353912 /* ActiveItem */ = {
 			isa = PBXGroup;
 			children = (
 				57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */,
 				576BE2642C048F6900353912 /* ActiveView.swift */,
 			);
-			path = Active;
+			path = ActiveItem;
 			sourceTree = "<group>";
 		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				576BE2632C048F5400353912 /* Active */,
 				57DD2A182C02D7540046931C /* CanvasSetup.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */,
+				576BE2632C048F5400353912 /* ActiveItem */,
 				57DD2A262C02DC4D0046931C /* AddingPath */,
 				57DD2A232C02DC280046931C /* Background */,
 				574CC7DE2BFA0DB00042FEE3 /* CanvasAction */,

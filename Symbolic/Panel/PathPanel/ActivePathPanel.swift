@@ -13,8 +13,8 @@ struct ActivePathPanel: View {
 
     // MARK: private
 
-    @Selected private var activePath = global.activePath.activePath
-    @Selected private var focusedPart = global.activePath.focusedPart
+    @Selected private var activePath = global.activeItem.activePath
+    @Selected private var focusedPart = global.activeItem.store.pathFocusedPart
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 

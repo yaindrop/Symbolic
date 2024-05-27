@@ -80,14 +80,9 @@ struct CanvasSetup {
                 }
                 if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
                     global.canvasAction.on(instant: .activatePath)
-                    global.activePath.activate(pathId: pathId)
-                } else if global.activePath.activePathId != nil {
-                    global.canvasAction.on(instant: .deactivatePath)
-                    global.activePath.deactivate()
-                }
-                if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
                     global.activeItem.focus(itemId: pathId)
                 } else if !global.activeItem.store.activeItemIds.isEmpty {
+                    global.canvasAction.on(instant: .deactivatePath)
                     global.activeItem.blur()
                 }
             }
@@ -125,7 +120,7 @@ struct CanvasSetup {
 
             if let path = global.addingPath.addingPath {
                 global.documentUpdater.update(path: .create(.init(path: path)))
-                global.activePath.activate(pathId: path.id)
+                global.activeItem.focus(itemId: path.id)
                 global.canvasAction.on(instant: .addPath)
             }
             global.addingPath.onEnd()

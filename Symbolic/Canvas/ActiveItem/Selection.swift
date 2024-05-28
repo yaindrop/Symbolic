@@ -1,56 +1,42 @@
 import Foundation
 import SwiftUI
 
-class SelectionStore: Store {
-    @Trackable var selectedPathIds: Set<UUID> = []
-
-    func update(pathIds: Set<UUID>) {
-        update {
-            $0(\._selectedPathIds, pathIds)
-        }
-    }
+private var selectedItemsSelector: [Item] {
+    global.activeItem.selectedItemIds.compactMap { global.item.item(id: $0) }
 }
 
-private var selectedPathsSelector: [Path] {
-    let pathIds = global.selection.selectedPathIds
-    return global.path.map.compactMap { id, p in pathIds.contains(id) ? p : nil }
+private var boundsSelector: CGRect? {
+    CGRect(union: selectedItemsSelector.compactMap { global.item.boundingRect(item: $0) })?.outset(by: 8)
 }
 
 struct SelectionView: View {
-    @Selected var selectedPaths = selectedPathsSelector
+    @Selected var selectedItems = selectedItemsSelector
+    @Selected var bounds = boundsSelector
     @Selected var toView = global.viewport.toView
     @Selected var viewSize = global.viewport.store.viewSize
 
     @State private var dashPhase: CGFloat = 0
     @State private var menuSize: CGSize = .zero
 
-    var selectedPathIds: [UUID] { selectedPaths.map { $0.id }}
-
-    var bounds: CGRect? {
-        guard let first = selectedPaths.first else { return nil }
-        var bounds = selectedPaths.dropFirst().reduce(into: first.boundingRect) { rect, path in rect = rect.union(path.boundingRect) }
-        bounds = bounds.applying(toView)
-        bounds = bounds.insetBy(dx: -4, dy: -4)
-        return bounds
-    }
+    var boundsInView: CGRect? { bounds?.applying(toView) }
 
     var body: some View {
-        ForEach(selectedPaths) {
-            PathBounds(selectedPath: $0, toView: toView, selectedPathIds: selectedPathIds)
-        }
-        if let bounds {
+//        ForEach(selectedPaths) {
+//            PathBounds(selectedPath: $0, toView: toView, selectedPathIds: selectedPathIds)
+//        }
+        if let boundsInView {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
-                .frame(width: bounds.width, height: bounds.height)
-                .position(bounds.center)
+                .frame(width: boundsInView.width, height: boundsInView.height)
+                .position(boundsInView.center)
                 .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
 
-            let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-            let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
+            let menuAlign: PlaneOuterAlign = boundsInView.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
+            let menuBox = boundsInView.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
             ContextMenu(onDelete: {
-                global.documentUpdater.update(path: .delete(.init(pathIds: selectedPathIds)))
+//                global.documentUpdater.update(path: .delete(.init(pathIds: selectedPathIds)))
             }, onGroup: {
-                global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedPathIds), inGroupId: nil)))
+                global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedItems.map { $0.id }), inGroupId: nil)))
             })
             .viewSizeReader { menuSize = $0 }
             .position(menuBox.center)

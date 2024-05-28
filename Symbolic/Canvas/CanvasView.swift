@@ -70,7 +70,7 @@ struct CanvasView: View {
         Background()
     } }
 
-    @ViewBuilder var inactivePaths: some View { tracer.range("CanvasView inactivePaths") {
+    @ViewBuilder var items: some View { tracer.range("CanvasView inactivePaths") {
         ForEach(allPaths.filter { $0.id != activePathId }) { p in
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
@@ -87,7 +87,7 @@ struct CanvasView: View {
     @ViewBuilder private var canvas: some View { tracer.range("CanvasView canvas") {
         ZStack {
             background
-            inactivePaths
+            items
             foreground
         }
         .viewSizeReader { global.viewport.setViewSize($0) }

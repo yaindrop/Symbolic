@@ -391,15 +391,6 @@
 			path = CanvasAction;
 			sourceTree = "<group>";
 		};
-		574CC7ED2BFAF2150042FEE3 /* Selection */ = {
-			isa = PBXGroup;
-			children = (
-				5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */,
-				574CC7DF2BFA2BD40042FEE3 /* Selection.swift */,
-			);
-			path = Selection;
-			sourceTree = "<group>";
-		};
 		574CC7F02BFCCFBF0042FEE3 /* Grid */ = {
 			isa = PBXGroup;
 			children = (
@@ -412,6 +403,8 @@
 		576BE2632C048F5400353912 /* ActiveItem */ = {
 			isa = PBXGroup;
 			children = (
+				5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */,
+				574CC7DF2BFA2BD40042FEE3 /* Selection.swift */,
 				57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */,
 				576BE2642C048F6900353912 /* ActiveView.swift */,
 			);
@@ -430,7 +423,6 @@
 				574CC7DE2BFA0DB00042FEE3 /* CanvasAction */,
 				57DD2A252C02DC440046931C /* ContextMenu */,
 				572487812BDF82180096DDE4 /* PathView */,
-				574CC7ED2BFAF2150042FEE3 /* Selection */,
 				57DD2A222C02DC1E0046931C /* Viewport */,
 			);
 			path = Canvas;

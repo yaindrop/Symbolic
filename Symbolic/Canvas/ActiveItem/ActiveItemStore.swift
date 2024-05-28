@@ -54,6 +54,10 @@ struct ActiveItemService {
     let store: ActiveItemStore
 
     var focusedItemId: UUID? { store.focusedItemId }
+    var selectedItemIds: Set<UUID> {
+        guard store.focusedItemId == nil else { return [] }
+        return store.activeItemIds
+    }
 
     var activePath: Path? {
         if let focusedItemId {
@@ -63,11 +67,12 @@ struct ActiveItemService {
     }
 
     func focus(itemId: UUID) {
+        let _r = subtracer.range("focus \(itemId)", type: .intent); defer { _r() }
         let ancestors = item.idToAncestorIds[itemId]
         if let ancestors, !ancestors.isEmpty {
             let lastInactive = ancestors.last { !store.activeItemIds.contains($0) }
             let toFocus = lastInactive ?? itemId
-            let activeItemIds = store.activeItemIds.with { $0.insert(toFocus) }
+            let activeItemIds = Set(ancestors).with { $0.insert(toFocus) }
             withStoreUpdating {
                 store.update(activeItemIds: activeItemIds)
                 store.update(focusedItemId: toFocus)
@@ -81,6 +86,7 @@ struct ActiveItemService {
     }
 
     func blur() {
+        let _r = subtracer.range("blur", type: .intent); defer { _r() }
         guard let focusedItemId = store.focusedItemId else {
             store.update(activeItemIds: .init())
             return
@@ -91,6 +97,14 @@ struct ActiveItemService {
         withStoreUpdating {
             store.update(activeItemIds: activeItemIds)
             store.update(focusedItemId: parentId)
+        }
+    }
+
+    func select(itemIds: [UUID]) {
+        let _r = subtracer.range("select \(itemIds)", type: .intent); defer { _r() }
+        withStoreUpdating {
+            store.update(activeItemIds: .init(itemIds))
+            store.update(focusedItemId: nil)
         }
     }
 

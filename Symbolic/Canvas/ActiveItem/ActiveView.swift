@@ -18,66 +18,89 @@ struct ActiveView: View {
 
     var body: some View {
         ForEach(activeGroups) {
-            GroupBounds(activeGroup: $0, toView: toView)
+            GroupBounds(group: $0, toView: toView)
         }
         ForEach(activePaths) {
-            PathBounds(activePath: $0, toView: toView)
+            PathBounds(path: $0, toView: toView, groupedPaths: [])
         }
     }
 }
 
 extension ActiveView {
-    struct PathBounds: View {
-        let activePath: Path
-        let toView: CGAffineTransform
-
-        @Selected var focused: Bool
-
-        init(activePath: Path, toView: CGAffineTransform) {
-            self.activePath = activePath
-            self.toView = toView
-            _focused = .init { global.activeItem.store.focusedItemId == activePath.id }
-        }
-
-        var body: some View {
-            let rect = activePath.boundingRect.applying(toView)
-            RoundedRectangle(cornerRadius: 2)
-                .fill(focused ? .orange.opacity(0.5) : .blue.opacity(0.2))
-                .stroke(focused ? .orange : .blue.opacity(0.5))
-                .frame(width: rect.width, height: rect.height)
-                .position(rect.center)
-        }
-    }
-
     struct GroupBounds: View {
-        let activeGroup: ItemGroup
+        let group: ItemGroup
         let toView: CGAffineTransform
 
         @Selected var groupedPaths: [Path]
         @Selected var focused: Bool
 
-        init(activeGroup: ItemGroup, toView: CGAffineTransform) {
-            self.activeGroup = activeGroup
+        init(group: ItemGroup, toView: CGAffineTransform) {
+            self.group = group
             self.toView = toView
-            _groupedPaths = .init { activeGroup.members.compactMap { global.path.path(id: $0) } }
-            _focused = .init { global.activeItem.store.focusedItemId == activeGroup.id }
+            _groupedPaths = .init { global.item.leafItems(rootItemId: group.id).compactMap { $0.pathId }.compactMap { global.path.path(id: $0) } }
+            _focused = .init { global.activeItem.store.focusedItemId == group.id }
         }
 
         var bounds: CGRect? {
-            guard let first = groupedPaths.first else { return nil }
-            var bounds = groupedPaths.dropFirst().reduce(into: first.boundingRect) { rect, path in rect = rect.union(path.boundingRect) }
-            bounds = bounds.applying(toView)
-            bounds = bounds.insetBy(dx: -4, dy: -4)
-            return bounds
+            .init(union: groupedPaths.map { $0.boundingRect })?
+                .applying(toView)
+                .insetBy(dx: -4, dy: -4)
         }
 
         var body: some View {
             if let bounds {
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(focused ? .orange : .blue.opacity(0.5), style: .init(lineWidth: 2))
+                    .stroke(.blue.opacity(focused ? 0.8 : 0.3), style: .init(lineWidth: 2))
                     .frame(width: bounds.width, height: bounds.height)
                     .position(bounds.center)
             }
+            ForEach(groupedPaths) { path in
+                PathBounds(path: path, toView: toView, groupedPaths: groupedPaths)
+//                let pathBounds = path.boundingRect.applying(toView)
+//                Rectangle()
+//                    .fill(.blue.opacity(0.2))
+//                    .frame(width: pathBounds.width, height: pathBounds.height)
+//                    .position(pathBounds.center)
+            }
+        }
+    }
+
+    struct PathBounds: View {
+        let path: Path
+        let toView: CGAffineTransform
+        let groupedPaths: [Path]
+
+        @State private var gesture = MultipleGestureModel<Void>()
+
+        init(path: Path, toView: CGAffineTransform, groupedPaths: [Path]) {
+            self.path = path
+            self.toView = toView
+            self.groupedPaths = groupedPaths
+        }
+
+        var body: some View {
+            let rect = path.boundingRect.applying(toView)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(.blue.opacity(0.2))
+                .stroke(.blue.opacity(0.5))
+                .frame(width: rect.width, height: rect.height)
+                .position(rect.center)
+                .multipleGesture(gesture, ()) {
+                    func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
+                        { v, _ in global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPaths.map { $0.id }, offset: v.offset)), pending: pending) }
+                    }
+                    $0.onTap { _, _ in
+                        global.activeItem.focus(itemId: path.id)
+                    }
+                    $0.onDrag(update(pending: true))
+                    $0.onDragEnd(update())
+                    $0.onTouchDown {
+                        global.canvasAction.start(continuous: .moveSelection)
+                    }
+                    $0.onTouchUp {
+                        global.canvasAction.end(continuous: .moveSelection)
+                    }
+                }
         }
     }
 }

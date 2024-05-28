@@ -74,10 +74,6 @@ struct CanvasSetup {
             let worldLocation = info.location.applying(toWorld)
             let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
             withAnimation {
-                if !global.selection.selectedPathIds.isEmpty {
-                    global.selection.update(pathIds: [])
-                    global.canvasAction.on(instant: .cancelSelection)
-                }
                 if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
                     global.canvasAction.on(instant: .activatePath)
                     global.activeItem.focus(itemId: pathId)
@@ -110,11 +106,10 @@ struct CanvasSetup {
             global.viewportUpdater.setBlocked(false)
             //                    longPressPosition = nil
 
-            let selectedPaths = global.pendingSelection.intersectedPaths
-            if !selectedPaths.isEmpty {
-                global.selection.update(pathIds: Set(selectedPaths.map { $0.id }))
-                global.canvasAction.on(instant: .selectPaths)
-            }
+//            if !selectedPaths.isEmpty {
+//                global.selection.update(pathIds: Set(selectedPaths.map { $0.id }))
+//                global.canvasAction.on(instant: .selectPaths)
+//            }
             global.pendingSelection.onEnd()
             global.canvasAction.end(continuous: .pendingSelection)
 
@@ -126,5 +121,11 @@ struct CanvasSetup {
             global.addingPath.onEnd()
             global.canvasAction.end(continuous: .addingPath)
         }
+
+        global.pendingSelection.store.$intersectedItems
+            .sink {
+                global.activeItem.select(itemIds: $0.map { $0.id })
+            }
+            .store(in: global.pendingSelection.store)
     }
 }

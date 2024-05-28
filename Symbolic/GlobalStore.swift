@@ -25,8 +25,6 @@ struct GlobalStore {
 
     let toolbar = ToolbarStore()
 
-    let selection = SelectionStore()
-
     private let pendingSelectionStore = PendingSelectionStore()
     var pendingSelection: PendingSelectionService { .init(pathStore: pathStore, viewport: viewport, store: pendingSelectionStore) }
 

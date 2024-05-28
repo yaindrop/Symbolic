@@ -31,6 +31,10 @@ extension CGRect {
 
     func clamped(by rect: CGRect) -> Self { self + clampingOffset(by: rect) }
 
+    func inset(by size: Scalar) -> Self { insetBy(dx: size, dy: size) }
+
+    func outset(by size: Scalar) -> Self { insetBy(dx: -size, dy: -size) }
+
     // MARK: operator
 
     public static func + (lhs: Self, rhs: Vector2) -> Self { .init(origin: lhs.origin + rhs, size: lhs.size) }
@@ -49,5 +53,10 @@ extension CGRect {
         let x = Swift.min(from.x, to.x), y = Swift.min(from.y, to.y)
         let w = abs(from.x - to.x), h = abs(from.y - to.y)
         self.init(x: x, y: y, width: w, height: h)
+    }
+
+    init?(union rects: [Self]) {
+        guard let first = rects.first else { return nil }
+        self = rects.dropFirst().reduce(into: first) { bounds, rect in bounds = bounds.union(rect) }
     }
 }

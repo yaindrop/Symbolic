@@ -22,24 +22,34 @@ extension ItemStoreProtocol {
         rootIds.compactMap { item(id: $0) }
     }
 
-    func expandedItems(itemId: UUID) -> [Item] {
-        guard let item = item(id: itemId) else { return [] }
-        if let group = item.group {
-            return [item] + group.members.flatMap { expandedItems(itemId: $0) }
-        }
-        return [item]
+    func expandedItems(rootItemId: UUID) -> [Item] {
+        guard let item = item(id: rootItemId) else { return [] }
+        guard let group = item.group else { return [item] }
+        return [item] + group.members.flatMap { expandedItems(rootItemId: $0) }
+    }
+
+    func groupItems(rootItemId: UUID) -> [Item] {
+        guard let item = item(id: rootItemId) else { return [] }
+        guard let group = item.group else { return [] }
+        return [item] + group.members.flatMap { groupItems(rootItemId: $0) }
+    }
+
+    func leafItems(rootItemId: UUID) -> [Item] {
+        guard let item = item(id: rootItemId) else { return [] }
+        guard let group = item.group else { return [item] }
+        return group.members.flatMap { leafItems(rootItemId: $0) }
     }
 
     var allExpandedItems: [Item] {
-        rootIds.flatMap { expandedItems(itemId: $0) }
+        rootIds.flatMap { expandedItems(rootItemId: $0) }
     }
 
     var allGroups: [ItemGroup] {
-        allExpandedItems.compactMap { $0.group }
+        rootIds.flatMap { groupItems(rootItemId: $0) }.compactMap { $0.group }
     }
 
     var allPathIds: [UUID] {
-        allExpandedItems.compactMap { $0.pathId }
+        rootIds.flatMap { leafItems(rootItemId: $0) }.compactMap { $0.pathId }
     }
 
     var idToParentId: [UUID: UUID] {
@@ -114,6 +124,19 @@ struct ItemService: ItemStoreProtocol {
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
 
     var allPaths: [Path] { allPathIds.compactMap { pathService.path(id: $0) } }
+
+    func boundingRect(item: Item) -> CGRect? {
+        if let pathId = item.pathId {
+            return pathService.path(id: pathId)?.boundingRect
+        }
+        if let group = item.group {
+            let rects = group.members
+                .compactMap { self.item(id: $0) }
+                .compactMap { self.boundingRect(item: $0) }
+            return .init(union: rects)
+        }
+        return nil
+    }
 
     // MARK: load document
 

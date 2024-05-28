@@ -5,6 +5,7 @@ import SwiftUI
 class PendingSelectionStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
+    @Trackable var intersectedItems: [Item] = []
 
     var active: Bool { from != nil }
 
@@ -16,9 +17,11 @@ class PendingSelectionStore: Store {
     }
 
     fileprivate func update(to: Point2) {
-        update {
-            $0(\._to, to)
-        }
+        update { $0(\._to, to) }
+    }
+
+    fileprivate func update(intersectedItems: [Item]) {
+        update { $0(\._intersectedItems, intersectedItems) }
     }
 }
 
@@ -34,11 +37,20 @@ struct PendingSelectionService {
         return .init(from: from, to: store.to)
     }
 
-    var intersectedPaths: [Path] {
-        rect.map {
-            let rectInWorld = $0.applying(viewport.toWorld)
-            return pathStore.map.compactMap { _, p in p.boundingRect.intersects(rectInWorld) ? p : nil }
-        } ?? []
+    var rectInWorld: CGRect? { rect?.applying(viewport.toWorld) }
+
+    func intersects(item: Item) -> Bool {
+        guard let rectInWorld else { return false }
+        guard let pathId = item.pathId else { return false }
+        guard let path = global.path.path(id: pathId) else { return false }
+        return path.boundingRect.intersects(rectInWorld)
+    }
+
+    var intersectedRootItems: [Item] {
+        global.item.rootItems.filter {
+            global.item.leafItems(rootItemId: $0.id)
+                .contains { intersects(item: $0) }
+        }
     }
 
     func onStart(from: Point2) {
@@ -51,13 +63,15 @@ struct PendingSelectionService {
 
     func onPan(_ info: PanInfo?) {
         guard active, let info else { return }
-        store.update(to: info.current)
+        withStoreUpdating {
+            store.update(to: info.current)
+            store.update(intersectedItems: intersectedRootItems)
+        }
     }
 }
 
 struct PendingSelection: View {
     @Selected var pendingSelectionRect = global.pendingSelection.rect
-    @Selected var intersectedPaths = global.pendingSelection.intersectedPaths
     @Selected var toView = global.viewport.toView
 
     var body: some View {
@@ -67,16 +81,6 @@ struct PendingSelection: View {
                 .stroke(.gray.opacity(0.5))
                 .frame(width: rect.width, height: rect.height)
                 .position(rect.center)
-        }
-        if !intersectedPaths.isEmpty {
-            ForEach(intersectedPaths) {
-                let rect = $0.boundingRect.applying(toView)
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(.blue.opacity(0.2))
-                    .stroke(.blue.opacity(0.5))
-                    .frame(width: rect.width, height: rect.height)
-                    .position(rect.center)
-            }
         }
     }
 }

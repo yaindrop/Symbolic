@@ -403,10 +403,10 @@
 		576BE2632C048F5400353912 /* ActiveItem */ = {
 			isa = PBXGroup;
 			children = (
-				5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */,
-				574CC7DF2BFA2BD40042FEE3 /* Selection.swift */,
 				57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */,
 				576BE2642C048F6900353912 /* ActiveView.swift */,
+				5700C2CE2BEDB6EB00481FA7 /* PendingSelection.swift */,
+				574CC7DF2BFA2BD40042FEE3 /* Selection.swift */,
 			);
 			path = ActiveItem;
 			sourceTree = "<group>";

@@ -43,8 +43,10 @@ private class StoreManager {
 
     // MARK: updating
 
-    struct UpdatingContext {
+    class UpdatingContext: CancellableHolder {
+        var cancellables = Set<AnyCancellable>()
         var subscriptions: [StoreSubscription] = []
+        var willUpdateSubject = PassthroughSubject<Void, Never>()
     }
 
     private var updating: UpdatingContext?
@@ -65,6 +67,14 @@ private class StoreManager {
         notifyAllUpdating()
     }
 
+    func willUpdate(_ callback: @escaping () -> Void) {
+        updating.forSome {
+            $0.willUpdateSubject
+                .sink(receiveValue: callback)
+                .store(in: $0)
+        }
+    }
+
     func notify(subscription id: Int) {
         guard let subscription = idToSubscription.removeValue(forKey: id) else {
             managerTracer.instant("notifying expired \(id)")
@@ -83,6 +93,7 @@ private class StoreManager {
     private func notifyAllUpdating() {
         guard let updating else { return }
         let _r = managerTracer.range("notifying all \(updating.subscriptions.map { $0.id })"); defer { _r() }
+        updating.willUpdateSubject.send()
         for subscription in updating.subscriptions {
             subscription.callback()
         }
@@ -132,6 +143,7 @@ struct _Trackable<Instance: _StoreProtocol, Value> {
     fileprivate var id: Int?
     fileprivate var value: Value
     fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
+    fileprivate let willUpdateSubject = PassthroughSubject<Value, Never>()
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
     var wrappedValue: Value {
@@ -139,7 +151,12 @@ struct _Trackable<Instance: _StoreProtocol, Value> {
         set { fatalError() }
     }
 
-    var projectedValue: PassthroughSubject<Value, Never> { didSetSubject }
+    struct Projected {
+        let didSet: PassthroughSubject<Value, Never>
+        let willUpdate: PassthroughSubject<Value, Never>
+    }
+
+    var projectedValue: Projected { .init(didSet: didSetSubject, willUpdate: willUpdateSubject) }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -212,6 +229,9 @@ extension _StoreProtocol {
         onChange(of: id)
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
+        manager.willUpdate {
+            wrapper.willUpdateSubject.send(wrapper.value)
+        }
     }
 
     func update(_ callback: (Updater<Self>) -> Void) {

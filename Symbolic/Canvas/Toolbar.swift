@@ -2,7 +2,10 @@ import Foundation
 import SwiftUI
 
 enum ToolbarMode {
-    struct Select {}
+    struct Select {
+        var tapSelect = false
+        var dragSelectLeaf = false
+    }
 
     struct AddPath {}
 

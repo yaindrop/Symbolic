@@ -137,7 +137,8 @@ extension DocumentUpdater {
         let group = action.group, inGroupId = action.inGroupId
         guard itemStore.item(id: group.id) == nil else { return } // grouping with existing id
 
-        if let inGroupId, let ancestors = itemStore.idToAncestorIds[inGroupId] {
+        if let inGroupId {
+            let ancestors = itemStore.ancestorIds(of: inGroupId)
             guard !ancestors.contains(inGroupId) else { return } // cyclic grouping
         }
 

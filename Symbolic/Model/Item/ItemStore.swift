@@ -3,15 +3,25 @@ import Foundation
 private let subtracer = tracer.tagged("ItemService")
 
 typealias ItemMap = [UUID: Item]
+typealias AncestorMap = [UUID: [UUID]]
 
 protocol ItemStoreProtocol {
     var map: ItemMap { get }
     var rootIds: [UUID] { get }
+    var ancestorMap: AncestorMap { get }
 }
 
 extension ItemStoreProtocol {
     func item(id: UUID) -> Item? {
         map.value(key: id)
+    }
+
+    func ancestorIds(of itemId: UUID) -> [UUID] {
+        ancestorMap[itemId] ?? []
+    }
+
+    func parentId(of itemId: UUID) -> UUID? {
+        ancestorMap[itemId]?.first
     }
 
     func group(id: UUID) -> ItemGroup? {
@@ -52,29 +62,30 @@ extension ItemStoreProtocol {
         rootIds.flatMap { leafItems(rootItemId: $0) }.compactMap { $0.pathId }
     }
 
-    var idToParentId: [UUID: UUID] {
-        var result: [UUID: UUID] = [:]
-        for group in allGroups {
+    private var idToParentId: [UUID: UUID] {
+        allGroups.reduce(into: .init()) { dict, group in
             for member in group.members {
-                result[member] = group.id
+                dict[member] = group.id
             }
         }
-        return result
     }
 
-    var idToAncestorIds: [UUID: [UUID]] {
-        var result: [UUID: [UUID]] = [:]
-        let idToParentId = idToParentId
-        for (id, parentId) in idToParentId {
+    fileprivate var idToAncestorIds: AncestorMap {
+        idToParentId.reduce(into: [UUID: [UUID]]()) { dict, pair in
+            let (id, parentId) = pair
             var ancestors: [UUID] = []
-            var currentId: UUID? = parentId
-            while let ancestorId = currentId {
-                ancestors.append(ancestorId)
-                currentId = idToParentId[ancestorId]
+            var current: UUID? = parentId
+            while let currentId = current {
+                if let cached = dict[currentId] {
+                    ancestors += [currentId] + cached
+                    break
+                } else {
+                    ancestors.append(currentId)
+                    current = idToParentId[currentId]
+                }
             }
-            result[id] = ancestors
+            dict[id] = ancestors
         }
-        return result
     }
 }
 
@@ -83,6 +94,15 @@ extension ItemStoreProtocol {
 class ItemStore: Store, ItemStoreProtocol {
     @Trackable var map = ItemMap()
     @Trackable var rootIds: [UUID] = []
+
+    @Trackable var ancestorMap = AncestorMap()
+
+    override init() {
+        super.init()
+        $map.willUpdate
+            .sink { _ in self.update { $0(\._ancestorMap, self.idToAncestorIds) } }
+            .store(in: self)
+    }
 
     fileprivate func update(map: ItemMap) {
         update { $0(\._map, map) }
@@ -99,6 +119,15 @@ class PendingItemStore: Store, ItemStoreProtocol {
     @Trackable var map = ItemMap()
     @Trackable var rootIds: [UUID] = []
     @Trackable fileprivate var active: Bool = false
+
+    @Trackable var ancestorMap = AncestorMap()
+
+    override init() {
+        super.init()
+        $map.willUpdate
+            .sink { _ in self.update { $0(\._ancestorMap, self.idToAncestorIds) } }
+            .store(in: self)
+    }
 
     fileprivate func update(map: ItemMap) {
         update { $0(\._map, map) }
@@ -122,6 +151,7 @@ struct ItemService: ItemStoreProtocol {
 
     var map: ItemMap { pendingStore.active ? pendingStore.map : store.map }
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
+    var ancestorMap: AncestorMap { pendingStore.active ? pendingStore.ancestorMap : store.ancestorMap }
 
     var allPaths: [Path] { allPathIds.compactMap { pathService.path(id: $0) } }
 

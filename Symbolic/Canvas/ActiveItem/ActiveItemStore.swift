@@ -68,8 +68,8 @@ struct ActiveItemService {
 
     func focus(itemId: UUID) {
         let _r = subtracer.range("focus \(itemId)", type: .intent); defer { _r() }
-        let ancestors = item.idToAncestorIds[itemId]
-        if let ancestors, !ancestors.isEmpty {
+        let ancestors = item.ancestorIds(of: itemId)
+        if !ancestors.isEmpty {
             let lastInactive = ancestors.last { !store.activeItemIds.contains($0) }
             let toFocus = lastInactive ?? itemId
             let activeItemIds = Set(ancestors).with { $0.insert(toFocus) }
@@ -93,7 +93,7 @@ struct ActiveItemService {
         }
 
         let activeItemIds = store.activeItemIds.with { $0.remove(focusedItemId) }
-        let parentId = item.idToParentId[focusedItemId]
+        let parentId = item.parentId(of: focusedItemId)
         withStoreUpdating {
             store.update(activeItemIds: activeItemIds)
             store.update(focusedItemId: parentId)

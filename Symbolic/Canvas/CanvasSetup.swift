@@ -23,14 +23,14 @@ struct CanvasSetup {
     }
 
     func documentLoad() {
-        global.document.store.$activeDocument
+        global.document.store.$activeDocument.didSet
             .sink {
                 global.path.loadDocument($0)
                 global.item.loadDocument($0)
             }
             .store(in: global.item.store)
 
-        global.document.store.$pendingEvent
+        global.document.store.$pendingEvent.didSet
             .sink {
                 global.path.loadPendingEvent($0)
                 global.item.loadPendingEvent($0)
@@ -122,7 +122,7 @@ struct CanvasSetup {
             global.canvasAction.end(continuous: .addingPath)
         }
 
-        global.pendingSelection.store.$intersectedItems
+        global.pendingSelection.store.$intersectedItems.didSet
             .sink {
                 global.activeItem.select(itemIds: $0.map { $0.id })
             }

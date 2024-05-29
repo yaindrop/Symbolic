@@ -145,7 +145,7 @@ class PendingItemStore: Store, ItemStoreProtocol {
 // MARK: - ItemService
 
 struct ItemService: ItemStoreProtocol {
-    let pathService: PathService
+    let path: PathService
     let store: ItemStore
     let pendingStore: PendingItemStore
 
@@ -153,11 +153,11 @@ struct ItemService: ItemStoreProtocol {
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
     var ancestorMap: AncestorMap { pendingStore.active ? pendingStore.ancestorMap : store.ancestorMap }
 
-    var allPaths: [Path] { allPathIds.compactMap { pathService.path(id: $0) } }
+    var allPaths: [Path] { allPathIds.compactMap { path.path(id: $0) } }
 
     func boundingRect(item: Item) -> CGRect? {
         if let pathId = item.pathId {
-            return pathService.path(id: pathId)?.boundingRect
+            return path.path(id: pathId)?.boundingRect
         }
         if let group = item.group {
             let rects = group.members
@@ -171,7 +171,7 @@ struct ItemService: ItemStoreProtocol {
     // MARK: load document
 
     func loadDocument(_ document: Document) {
-        let _r = subtracer.range("load document \(pendingStore.active)", type: .intent); defer { _r() }
+        let _r = subtracer.range("load document, pending: \(pendingStore.active)", type: .intent); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
@@ -218,7 +218,7 @@ extension ItemService {
     private func add(item: Item) {
         let _r = subtracer.range("add"); defer { _r() }
         if case let .path(path) = item.kind {
-            guard pathService.path(id: path.id) != nil else { return }
+            guard self.path.path(id: path.id) != nil else { return }
         }
         update(map: map.with { $0[item.id] = item })
     }
@@ -232,7 +232,7 @@ extension ItemService {
     private func update(item: Item) {
         let _r = subtracer.range("update"); defer { _r() }
         if case let .path(path) = item.kind {
-            guard pathService.path(id: path.id) != nil else { remove(itemId: item.id); return }
+            guard self.path.path(id: path.id) != nil else { remove(itemId: item.id); return }
         }
         guard self.item(id: item.id) != nil else { return }
         update(map: map.with { $0[item.id] = item })
@@ -295,7 +295,7 @@ extension ItemService {
 
     private func loadAffectedPaths(_ pathIds: UUID...) {
         for pathId in pathIds {
-            if pathService.path(id: pathId) == nil {
+            if path.path(id: pathId) == nil {
                 remove(itemId: pathId)
                 update(rootIds: rootIds.filter { $0 != pathId })
             } else if item(id: pathId) == nil {

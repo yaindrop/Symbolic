@@ -12,10 +12,6 @@ extension PathStoreProtocol {
     func path(id: UUID) -> Path? {
         map.value(key: id)
     }
-
-    func hitTest(worldPosition: Point2) -> Path? {
-        map.first { _, p in p.hitPath.contains(worldPosition) }?.value
-    }
 }
 
 // MARK: - PathStore
@@ -46,15 +42,26 @@ class PendingPathStore: Store, PathStoreProtocol {
 // MARK: - PathService
 
 struct PathService: PathStoreProtocol {
+    let viewport: ViewportService
     let store: PathStore
     let pendingStore: PendingPathStore
 
     var map: PathMap { pendingStore.active ? pendingStore.map : store.map }
 
+    func hitTest(path: Path, position: Point2, threshold: Scalar = 24) -> Bool {
+        let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
+        return path.hitPath(width: width).contains(position)
+    }
+
+    func hitTest(position: Point2, threshold: Scalar = 24) -> Path? {
+        let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
+        return map.values.first { $0.hitPath(width: width).contains(position) }
+    }
+
     // MARK: load document
 
     func loadDocument(_ document: Document) {
-        let _r = subtracer.range("load document \(pendingStore.active)", type: .intent); defer { _r() }
+        let _r = subtracer.range("load document, pending: \(pendingStore.active)", type: .intent); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {

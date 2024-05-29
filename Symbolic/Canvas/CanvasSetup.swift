@@ -11,13 +11,7 @@ struct CanvasSetup {
 
         global.documentUpdater.store.eventPublisher
             .sink { e in
-                if global.document.store.pendingEvent != nil {
-                    global.document.sendEvent(e)
-                } else {
-                    withAnimation {
-                        global.document.sendEvent(e)
-                    }
-                }
+                global.document.sendEvent(e)
             }
             .store(in: global.document.store)
     }
@@ -73,14 +67,21 @@ struct CanvasSetup {
         multipleTouchPress.onTap { info in
             let worldLocation = info.location.applying(toWorld)
             let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
-            withAnimation {
-                if let pathId = global.path.hitTest(worldPosition: worldLocation)?.id {
-                    global.canvasAction.on(instant: .activatePath)
-                    global.activeItem.focus(itemId: pathId)
-                } else if !global.activeItem.store.activeItemIds.isEmpty {
-                    global.canvasAction.on(instant: .deactivatePath)
+            let pathId = global.path.hitTest(position: worldLocation)?.id
+            if global.toolbar.multiSelect {
+                if let pathId {
+                    global.activeItem.selectAdd(itemId: pathId)
+                } else {
                     global.activeItem.blur()
                 }
+                return
+            }
+            if let pathId {
+                global.canvasAction.on(instant: .activatePath)
+                global.activeItem.focus(itemId: pathId)
+            } else if !global.activeItem.store.activeItemIds.isEmpty {
+                global.canvasAction.on(instant: .deactivatePath)
+                global.activeItem.blur()
             }
         }
         multipleTouchPress.onLongPress { info in

@@ -14,11 +14,11 @@ struct GlobalStore {
 
     private let pathStore = PathStore()
     private let pendingPathStore = PendingPathStore()
-    var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
+    var path: PathService { .init(viewport: viewport, store: pathStore, pendingStore: pendingPathStore) }
 
     private let itemStore = ItemStore()
     private let pendingItemStore = PendingItemStore()
-    var item: ItemService { .init(pathService: path, store: itemStore, pendingStore: pendingItemStore) }
+    var item: ItemService { .init(path: path, store: itemStore, pendingStore: pendingItemStore) }
 
     private let activeItemStore = ActiveItemStore()
     var activeItem: ActiveItemService { .init(item: item, path: path, store: activeItemStore) }

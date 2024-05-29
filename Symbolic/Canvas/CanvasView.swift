@@ -95,7 +95,7 @@ struct CanvasView: View {
 
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
         ZStack {
-            ActiveView()
+            ActiveItemView()
             ActivePathView()
             PendingSelection()
             SelectionView()

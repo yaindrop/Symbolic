@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import SwiftUI
 
 struct Document: Equatable {
     let events: [DocumentEvent]
@@ -60,9 +61,15 @@ struct DocumentService {
 
     func sendEvent(_ event: DocumentEvent) {
         let _r = tracer.range("Document send event"); defer { _r() }
-        withStoreUpdating {
-            store.update(pendingEvent: nil)
-            store.update(activeDocument: .init(events: activeDocument.events + [event]))
+        if store.pendingEvent == nil {
+            withAnimation {
+                store.update(activeDocument: .init(events: activeDocument.events + [event]))
+            }
+        } else {
+            withStoreUpdating {
+                store.update(pendingEvent: nil)
+                store.update(activeDocument: .init(events: activeDocument.events + [event]))
+            }
         }
     }
 

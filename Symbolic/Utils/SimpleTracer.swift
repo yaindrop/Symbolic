@@ -7,6 +7,7 @@ extension Tracer {
     enum NodeType {
         case intent
         case normal
+        case verbose
     }
 
     enum Node {
@@ -54,6 +55,8 @@ extension Tracer {
                 tracer?.onEnd(self)
             }
         }
+
+        fileprivate init() {}
 
         fileprivate init(tracer: Tracer) {
             self.tracer = tracer
@@ -113,47 +116,40 @@ extension Tracer.Node.Range {
 // MARK: - Tracer
 
 class Tracer {
-    var enabled = true
-
     func start() {
         nodes.removeAll()
         rangeStack.removeAll()
     }
 
     func end() -> [Node] {
-        guard enabled else { return [] }
         let recorded = nodes
         nodes.removeAll()
         rangeStack.removeAll()
         return recorded
     }
 
-    func instant(_ message: String) {
-        guard enabled else { return }
-        onNode(.instant(.init(type: .normal, time: .now, message: message)))
+    func instant(_ message: String, type: NodeType = .normal) {
+        onNode(.instant(.init(type: type, time: .now, message: message)))
     }
 
     func range(_ message: String, type: NodeType = .normal) -> EndRange {
-        guard enabled else { return .init(tracer: self) }
         rangeStack.append(.init(type: type, start: .now, message: message))
         return .init(tracer: self)
     }
 
     func range<Result>(_ message: String, type: Tracer.NodeType = .normal, _ work: () -> Result) -> Result {
-        guard enabled else { return work() }
         let _r = range(message, type: type); defer { _r() }
         return work()
     }
 
-    func tagged(_ tag: String, enabled: Bool = true) -> SubTracer {
-        .init(tags: [tag], tracer: self, enabled: enabled)
+    func tagged(_ tag: String, enabled: Bool = true, verbose: Bool = false) -> SubTracer {
+        .init(tags: [tag], tracer: self, enabled: enabled, verbose: verbose)
     }
 
     // MARK: private
 
     @discardableResult
     private func onEnd(_: EndRange) -> Node.Range? {
-        guard enabled else { return nil }
         guard let pending = rangeStack.popLast() else { return nil }
         let range = Node.Range(type: pending.type, start: pending.start, end: .now, nodes: pending.nodes, message: pending.message)
         onNode(.range(range))
@@ -184,23 +180,27 @@ struct SubTracer {
     let tags: [String]
     let tracer: Tracer
     var enabled = true
+    var verbose = false
 
     var prefix: String { tags.map { "[\($0)]" }.joined(separator: " ") }
 
-    func instant(_ message: String) {
-        tracer.instant("\(prefix) \(message)")
+    func instant(_ message: String, type: Tracer.NodeType = .normal) {
+        guard enabled, verbose || type != .verbose else { return }
+        tracer.instant("\(prefix) \(message)", type: type)
     }
 
     func range(_ message: String, type: Tracer.NodeType = .normal) -> Tracer.EndRange {
-        tracer.range("\(prefix) \(message)", type: type)
+        guard enabled, verbose || type != .verbose else { return .init() }
+        return tracer.range("\(prefix) \(message)", type: type)
     }
 
     func range<Result>(_ message: String, type: Tracer.NodeType = .normal, _ work: () -> Result) -> Result {
-        tracer.range("\(prefix) \(message)", type: type, work)
+        guard enabled, verbose || type != .verbose else { return work() }
+        return tracer.range("\(prefix) \(message)", type: type, work)
     }
 
-    func tagged(_ tag: String, enabled: Bool = true) -> SubTracer {
-        .init(tags: tags + [tag], tracer: tracer, enabled: enabled)
+    func tagged(_ tag: String, enabled: Bool = true, verbose: Bool = false) -> SubTracer {
+        .init(tags: tags + [tag], tracer: tracer, enabled: enabled, verbose: verbose)
     }
 }
 

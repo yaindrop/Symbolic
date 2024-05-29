@@ -148,8 +148,8 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
 
     var boundingRect: CGRect { path.boundingRect }
 
-    var hitPath: SUPath {
-        path.strokedPath(StrokeStyle(lineWidth: 12, lineCap: .round))
+    func hitPath(width: Scalar) -> SUPath {
+        path.strokedPath(StrokeStyle(lineWidth: width, lineCap: .round))
     }
 
     static func == (lhs: Path, rhs: Path) -> Bool { ObjectIdentifier(lhs) == ObjectIdentifier(rhs) }

@@ -10,7 +10,7 @@ private var activeGroupsSelector: [ItemGroup] {
         .compactMap { global.item.group(id: $0) }
 }
 
-struct ActiveView: View {
+struct ActiveItemView: View {
     @Selected var viewport = global.viewport.info
     @Selected var viewSize = global.activeItem.store.activeItemIds
     @Selected var activePaths = activePathsSelector
@@ -18,7 +18,7 @@ struct ActiveView: View {
 
     var body: some View {
         ForEach(activeGroups) {
-            GroupBounds(group: $0, viewport: viewport)
+            Group(group: $0, viewport: viewport)
         }
         ForEach(activePaths) {
             PathBounds(path: $0, viewport: viewport, groupedPaths: [])
@@ -26,25 +26,40 @@ struct ActiveView: View {
     }
 }
 
-extension ActiveView {
-    struct GroupBounds: View {
+extension ActiveItemView {
+    struct Group: View {
         let group: ItemGroup
         let viewport: ViewportInfo
 
-        var toWorld: CGAffineTransform { viewport.viewToWorld }
         var toView: CGAffineTransform { viewport.worldToView }
 
-        @Selected var groupedPaths: [Path]
-        @Selected var focused: Bool
+        var body: some View {
+            boundsRect
+        }
 
         init(group: ItemGroup, viewport: ViewportInfo) {
             self.group = group
             self.viewport = viewport
-            _groupedPaths = .init { global.item.leafItems(rootItemId: group.id).compactMap { $0.pathId }.compactMap { global.path.path(id: $0) } }
-            _focused = .init { global.activeItem.store.focusedItemId == group.id }
+            _groupedPaths = .init {
+                global.item.leafItems(rootItemId: group.id)
+                    .compactMap { $0.pathId.map { global.path.path(id: $0) } }
+            }
+            _focused = .init {
+                global.activeItem.store.focusedItemId == group.id
+            }
+            _activeDescendants = .init {
+                global.item.expandedItems(rootItemId: group.id)
+                    .filter { $0.id != group.id && global.activeItem.store.activeItemIds.contains($0.id) }
+            }
         }
 
-        var bounds: CGRect? {
+        @Selected private var groupedPaths: [Path]
+        @Selected private var focused: Bool
+        @Selected private var activeDescendants: [Item]
+
+        private var selected: Bool { activeDescendants.isEmpty }
+
+        private var bounds: CGRect? {
             .init(union: groupedPaths.map { $0.boundingRect })?
                 .applying(toView)
                 .insetBy(dx: -4, dy: -4)
@@ -52,11 +67,11 @@ extension ActiveView {
 
         @State private var gesture = MultipleGestureModel<Void>()
 
-        var body: some View {
+        @ViewBuilder private var boundsRect: some View {
             if let bounds {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(.white.opacity(0.3))
-                    .stroke(.blue.opacity(focused ? 0.8 : 0.3), style: .init(lineWidth: 2))
+                    .fill(.blue.opacity(selected ? 0.2 : 0.1))
+                    .stroke(.blue.opacity(focused ? 0.8 : selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
                     .frame(width: bounds.width, height: bounds.height)
                     .position(bounds.center)
                     .multipleGesture(gesture, ()) {
@@ -64,10 +79,27 @@ extension ActiveView {
                             { v, _ in global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPaths.map { $0.id }, offset: v.offset)), pending: pending) }
                         }
                         $0.onTap { v, _ in
-                            let worldPosition = v.location.applying(toWorld)
-                            let path = groupedPaths.first { $0.hitPath.contains(worldPosition) }
-                            guard let path else { return }
-                            global.activeItem.focus(itemId: path.id)
+                            let worldPosition = v.location.applying(global.viewport.toWorld)
+                            let path = groupedPaths.first {
+                                global.path.hitTest(path: $0, position: worldPosition, threshold: 32)
+                            }
+                            if let path {
+                                if global.toolbar.multiSelect {
+                                    global.activeItem.selectAdd(itemId: path.id)
+                                } else {
+                                    global.activeItem.focus(itemId: path.id)
+                                }
+                            } else {
+                                if global.toolbar.multiSelect {
+                                    if selected {
+                                        global.activeItem.selectRemove(itemIds: [group.id])
+                                    } else {
+                                        global.activeItem.selectRemove(itemIds: activeDescendants.map { $0.id })
+                                    }
+                                } else {
+                                    global.activeItem.focus(itemId: group.id)
+                                }
+                            }
                         }
                         $0.onDrag(update(pending: true))
                         $0.onDragEnd(update())
@@ -79,14 +111,6 @@ extension ActiveView {
                         }
                     }
             }
-//            ForEach(groupedPaths) { path in
-//                PathBounds(path: path, toView: toView, groupedPaths: groupedPaths)
-//                let pathBounds = path.boundingRect.applying(toView)
-//                Rectangle()
-//                    .fill(.blue.opacity(0.2))
-//                    .frame(width: pathBounds.width, height: pathBounds.height)
-//                    .position(pathBounds.center)
-//            }
         }
     }
 
@@ -117,7 +141,11 @@ extension ActiveView {
                         { v, _ in global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPaths.map { $0.id }, offset: v.offset)), pending: pending) }
                     }
                     $0.onTap { _, _ in
-                        global.activeItem.focus(itemId: path.id)
+                        if global.toolbar.multiSelect {
+                            global.activeItem.selectRemove(itemIds: [path.id])
+                        } else {
+                            global.activeItem.focus(itemId: path.id)
+                        }
                     }
                     $0.onDrag(update(pending: true))
                     $0.onDragEnd(update())

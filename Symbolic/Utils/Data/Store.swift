@@ -5,6 +5,7 @@ import SwiftUI
 private let storeTracer = tracer.tagged("store")
 private let managerTracer = storeTracer.tagged("manager")
 private let trackableTracer = storeTracer.tagged("trackable")
+private let selectedTracer = storeTracer.tagged("selected")
 
 private struct StoreSubscription {
     let id: Int
@@ -250,9 +251,11 @@ func withStoreUpdating(_ apply: () -> Void) {
 @propertyWrapper
 struct Selected<Value>: DynamicProperty {
     fileprivate class Storage: ObservableObject {
+        var name: String?
         @Published var value: Value?
 
-        init(selector: @escaping () -> Value) {
+        init(name: String? = nil, selector: @escaping () -> Value) {
+            self.name = name
             self.selector = selector
             select()
         }
@@ -260,8 +263,10 @@ struct Selected<Value>: DynamicProperty {
         private let selector: () -> Value
 
         private func select() {
+            let _r = selectedTracer.range("select \(name ?? "")"); defer { _r() }
             let newValue = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
             if needUpdate(newValue: newValue) {
+                selectedTracer.instant("updated")
                 value = newValue
             }
         }
@@ -273,12 +278,12 @@ struct Selected<Value>: DynamicProperty {
 
     var projectedValue: Selected<Value> { self }
 
-    init(_ selector: @escaping () -> Value) {
-        _storage = StateObject(wrappedValue: Storage(selector: selector))
+    init(_ selector: @escaping () -> Value, name: String? = nil) {
+        _storage = StateObject(wrappedValue: Storage(name: name, selector: selector))
     }
 
-    init(wrappedValue: @autoclosure @escaping () -> Value) {
-        self.init(wrappedValue)
+    init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
+        self.init(wrappedValue, name: name)
     }
 }
 

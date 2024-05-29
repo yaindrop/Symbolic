@@ -3,7 +3,7 @@ import SwiftUI
 
 enum ToolbarMode {
     struct Select {
-        var tapSelect = false
+        var multiSelect = false
         var dragSelectLeaf = false
     }
 
@@ -11,10 +11,15 @@ enum ToolbarMode {
 
     case select(Select)
     case addPath(AddPath)
+
+    var select: Select? { if case let .select(select) = self { select } else { nil }}
+    var addPath: AddPath? { if case let .addPath(addPath) = self { addPath } else { nil }}
 }
 
 class ToolbarStore: Store {
     @Trackable var mode: ToolbarMode = .select(.init())
+
+    var multiSelect: Bool { mode.select?.multiSelect == true }
 
     func setMode(_ mode: ToolbarMode) {
         update { $0(\._mode, mode) }
@@ -28,11 +33,6 @@ struct ToolbarModifier: ViewModifier {
 
     @Selected private var toolbarMode = global.toolbar.mode
     @Selected private var undoable = global.document.undoable
-
-    private var isToolbarSelect: Bool { if case .select = toolbarMode { true } else { false } }
-    private var isToolbarAddPath: Bool { if case .addPath = toolbarMode { true } else { false } }
-
-//    @State private var lastEdgeCase: PathEdge.Case = .line
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
         ToolbarItem(placement: .topBarLeading) { leading }
@@ -63,35 +63,31 @@ struct ToolbarModifier: ViewModifier {
             Button {
                 global.toolbar.setMode(.select(.init()))
             } label: {
-                Image(systemName: isToolbarSelect ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
+                Image(systemName: toolbarMode.select != nil ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
+            }
+            .overlay {
+                if let select = toolbarMode.select {
+                    Menu {
+                        Button(select.multiSelect ? "Disable multi-select" : "Tap to multi-select") {
+                            var select = select
+                            select.multiSelect.toggle()
+                            global.toolbar.setMode(.select(select))
+                        }
+                        Button(select.dragSelectLeaf ? "Drag to select root" : "Drag to select leaf") {
+                            var select = select
+                            select.dragSelectLeaf.toggle()
+                            global.toolbar.setMode(.select(select))
+                        }
+                    } label: {
+                        Color.clear
+                    }
+                }
             }
             Button {
                 global.toolbar.setMode(.addPath(.init()))
             } label: {
-                Image(systemName: isToolbarAddPath ? "plus.circle.fill" : "plus.circle")
+                Image(systemName: toolbarMode.addPath != nil ? "plus.circle.fill" : "plus.circle")
             }
-//            .overlay {
-//                Menu {
-//                    Button("Arc", systemImage: "circle") {
-//                        lastEdgeCase = .arc
-//                        global.toolbar.setMode(.addPath(.init(edgeCase: .arc)))
-//                    }
-//                    .disabled(lastEdgeCase == .arc)
-//                    Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") {
-//                        lastEdgeCase = .bezier
-//                        global.toolbar.setMode(.addPath(.init(edgeCase: .bezier)))
-//                    }
-//                    .disabled(lastEdgeCase == .bezier)
-//                    Button("Line", systemImage: "chart.xyaxis.line") {
-//                        lastEdgeCase = .line
-//                        global.toolbar.setMode(.addPath(.init(edgeCase: .line)))
-//                    }
-//                    .disabled(lastEdgeCase == .line)
-//                } label: {
-//                    Color.clear
-//                }
-//                .disabled(!isToolbarAddPath)
-//            }
         }
     }
 

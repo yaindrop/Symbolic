@@ -33,10 +33,10 @@ private class StoreManager {
         let id = subscriptionIdGen.generate()
         let _r = managerTracer.range("tracking \(id)"); defer { _r() }
 
-        tracking = TrackingContext(subscriptionId: id)
-        defer { self.tracking = nil }
-
+        let tracking = TrackingContext(subscriptionId: id)
+        self.tracking = tracking
         let result = apply()
+        self.tracking = nil
 
         idToSubscription[id] = .init(id: id, callback: onUpdate)
         return result
@@ -60,12 +60,12 @@ private class StoreManager {
         }
         let _r = managerTracer.range("updating"); defer { _r() }
 
-        updating = UpdatingContext()
-        defer { self.updating = nil }
-
+        let updating = UpdatingContext()
+        self.updating = updating
         apply()
+        self.updating = nil
 
-        notifyAllUpdating()
+        notifyAll(updating)
     }
 
     func willUpdate(_ callback: @escaping () -> Void) {
@@ -76,26 +76,30 @@ private class StoreManager {
         }
     }
 
-    func notify(subscription id: Int) {
-        guard let subscription = idToSubscription.removeValue(forKey: id) else {
-            managerTracer.instant("notifying expired \(id)")
-            return
+    func notify(subscriptionIds: Set<Int>) {
+        let _r = managerTracer.range("notify \(subscriptionIds)"); defer { _r() }
+        var activeSubscriptions: [StoreSubscription] = []
+        for id in subscriptionIds {
+            if let subscription = idToSubscription.removeValue(forKey: id) {
+                activeSubscriptions.append(subscription)
+            }
         }
 
         updating.forSome {
-            managerTracer.instant("append notifying of \(id)")
-            $0.subscriptions.append(subscription)
+            managerTracer.instant("append \(activeSubscriptions.map { $0.id })")
+            $0.subscriptions += activeSubscriptions
         } else: {
-            let _r = managerTracer.range("notifying \(id)"); defer { _r() }
-            subscription.callback()
+            for subscription in activeSubscriptions {
+                let _r = managerTracer.range("callback \(subscription.id)"); defer { _r() }
+                subscription.callback()
+            }
         }
     }
 
-    private func notifyAllUpdating() {
-        guard let updating else { return }
-        let _r = managerTracer.range("notifying all \(updating.subscriptions.map { $0.id })"); defer { _r() }
-        updating.willUpdateSubject.send()
-        for subscription in updating.subscriptions {
+    private func notifyAll(_ context: UpdatingContext) {
+        let _r = managerTracer.range("notifying all \(context.subscriptions.map { $0.id })"); defer { _r() }
+        context.willUpdateSubject.send()
+        for subscription in context.subscriptions {
             subscription.callback()
         }
     }
@@ -131,9 +135,7 @@ class Store: CancellableHolder {
         let subscriptionIds = propertyIdToSubscriptionIds.removeValue(forKey: propertyId)
         let _r = storeTracer.range("on change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } ?? "without subscription")"); defer { _r() }
         guard let subscriptionIds else { return }
-        for id in subscriptionIds {
-            manager.notify(subscription: id)
-        }
+        manager.notify(subscriptionIds: subscriptionIds)
     }
 }
 

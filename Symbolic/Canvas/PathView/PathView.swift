@@ -33,7 +33,7 @@ struct PathView: View {
 
     var body: some View { subtracer.range("body") { build {
         ZStack {
-            BoundsHandle(path: path, toView: toView)
+//            BoundsHandle(path: path, toView: toView)
             Stroke(path: path, toView: toView)
             handles(path: path)
         }

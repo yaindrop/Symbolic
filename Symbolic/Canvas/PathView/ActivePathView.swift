@@ -180,12 +180,14 @@ class ActivePathViewModel: PathViewModel {
 // MARK: - ActivePathView
 
 struct ActivePathView: View {
-    var body: some View {
+    var body: some View { tracer.range("ActivePathView body") { build {
         if let activePath {
             PathView(path: activePath, focusedPart: focusedPart)
                 .environmentObject(viewModel)
+                .onAppear { print("ActivePathView appear") }
+                .onDisappear { print("ActivePathView disappear") }
         }
-    }
+    } } }
 
     @Selected private var activePath = global.activeItem.activePath
     @Selected private var focusedPart = global.activeItem.pathFocusedPart

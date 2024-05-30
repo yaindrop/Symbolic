@@ -86,16 +86,16 @@ extension PanelModel {
         return newPanel
     }
 
-    var moveGesture: MultipleGesture<PanelData?> {
+    func moveGesture(_ panel: PanelData?) -> MultipleGesture {
         .init(
             configs: .init(coordinateSpace: .global),
-            onDrag: { v, panel in
+            onDrag: {
                 guard let panel else { return }
-                self.onMoving(panelId: panel.id, origin: panel.origin, v)
+                self.onMoving(panelId: panel.id, origin: panel.origin, $0)
             },
-            onDragEnd: { v, panel in
+            onDragEnd: {
                 guard let panel else { return }
-                self.onMoved(panelId: panel.id, origin: panel.origin, v)
+                self.onMoved(panelId: panel.id, origin: panel.origin, $0)
             }
         )
     }

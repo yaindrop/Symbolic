@@ -82,8 +82,8 @@ extension ActiveItemView {
                         onTouchUp: {
                             global.canvasAction.end(continuous: .moveSelection)
                         },
-                        onTap: { v, _ in
-                            let worldPosition = v.location.applying(global.viewport.toWorld)
+                        onTap: {
+                            let worldPosition = $0.location.applying(global.viewport.toWorld)
                             let path = groupedPaths.first {
                                 global.path.hitTest(path: $0, position: worldPosition, threshold: 32)
                             }
@@ -107,8 +107,8 @@ extension ActiveItemView {
                                 }
                             }
                         },
-                        onDrag: { v, _ in updateDrag(v, pending: true) },
-                        onDragEnd: { v, _ in updateDrag(v) }
+                        onDrag: { updateDrag($0, pending: true) },
+                        onDragEnd: { updateDrag($0) }
                     ))
             }
         }
@@ -161,15 +161,15 @@ extension ActiveItemView {
                     onTouchUp: {
                         global.canvasAction.end(continuous: .moveSelection)
                     },
-                    onTap: { _, _ in
+                    onTap: { _ in
                         if global.toolbar.multiSelect {
                             global.activeItem.selectRemove(itemIds: [path.id])
                         } else {
                             global.activeItem.focus(itemId: path.id)
                         }
                     },
-                    onDrag: { v, _ in updateDrag(v, pending: true) },
-                    onDragEnd: { v, _ in updateDrag(v) }
+                    onDrag: { updateDrag($0, pending: true) },
+                    onDragEnd: { updateDrag($0) }
                 ))
         }
     }

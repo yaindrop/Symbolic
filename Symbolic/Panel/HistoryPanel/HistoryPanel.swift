@@ -41,7 +41,7 @@ struct HistoryPanel: View {
             PanelTitle(name: "History")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.idToPanel[panelId], panelModel.moveGesture)
+                .multipleGesture(panelModel.moveGesture(panelModel.idToPanel[panelId]))
             scrollView
         }
         .background(.regularMaterial)

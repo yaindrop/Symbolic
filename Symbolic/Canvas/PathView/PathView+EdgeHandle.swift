@@ -30,7 +30,7 @@ extension PathView {
             SUPath { p in segment.append(to: &p) }
                 .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
                 .fill(Color.invisibleSolid)
-                .multipleGesture(segment, viewModel.edgeGesture(fromId: fromId, context: edgeGestureContext))
+                .multipleGesture(viewModel.edgeGesture(fromId: fromId, segment: segment, context: edgeGestureContext))
         }
 
         private static let circleSize: Scalar = 16
@@ -99,7 +99,7 @@ extension PathView {
                     .fill(color)
                     .allowsHitTesting(false)
                 }}
-                .multipleGesture(point, viewModel.focusedEdgeGesture(fromId: fromId))
+                .multipleGesture(viewModel.focusedEdgeGesture(fromId: fromId))
         }
     }
 }

@@ -24,7 +24,7 @@ struct ItemPanel: View {
             PanelTitle(name: "Items")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.idToPanel[panelId], panelModel.moveGesture)
+                .multipleGesture(panelModel.moveGesture(panelModel.idToPanel[panelId]))
             scrollView
         }
         .background(.regularMaterial)

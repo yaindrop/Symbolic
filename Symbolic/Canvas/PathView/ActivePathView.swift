@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - ActivePathViewModel
 
 class ActivePathViewModel: PathViewModel {
-    override func nodeGesture(nodeId: UUID, context: NodeGestureContext) -> MultipleGesture<Point2> {
+    override func nodeGesture(nodeId: UUID, context: NodeGestureContext) -> MultipleGesture {
         var canAddEndingNode: Bool {
             guard let activePath = global.activeItem.activePath else { return false }
             return activePath.isEndingNode(id: nodeId)
@@ -21,14 +21,14 @@ class ActivePathViewModel: PathViewModel {
                 context.longPressAddedNodeId = nil
             }
         }
-        func updateDrag(_ v: DragGesture.Value, _ p: Point2, pending: Bool = false) {
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             if let newNodeId = context.longPressAddedNodeId {
                 moveAddedNode(newNodeId: newNodeId, offset: v.offset, pending: pending)
             } else {
-                global.documentUpdater.updateInView(activePath: .moveNode(.init(nodeId: nodeId, offset: p.offset(to: v.location))), pending: pending)
+                global.documentUpdater.updateInView(activePath: .moveNode(.init(nodeId: nodeId, offset: v.offset)), pending: pending)
             }
         }
-        func updateLongPress(position _: Point2, pending: Bool = false) {
+        func updateLongPress(pending: Bool = false) {
             guard let newNodeId = context.longPressAddedNodeId else { return }
             moveAddedNode(newNodeId: newNodeId, offset: .zero, pending: pending)
         }
@@ -47,28 +47,28 @@ class ActivePathViewModel: PathViewModel {
                 global.canvasAction.end(continuous: .movePathNode)
             },
 
-            onTap: { _, _ in self.toggleFocus(nodeId: nodeId) },
+            onTap: { _ in self.toggleFocus(nodeId: nodeId) },
 
-            onLongPress: { _, p in
+            onLongPress: { _ in
                 addEndingNode()
-                updateLongPress(position: p, pending: true)
+                updateLongPress(pending: true)
                 if canAddEndingNode {
                     global.canvasAction.end(continuous: .movePathNode)
                     global.canvasAction.end(triggering: .addEndingNode)
                     global.canvasAction.start(continuous: .addAndMoveEndingNode)
                 }
             },
-            onLongPressEnd: { _, p in updateLongPress(position: p) },
+            onLongPressEnd: { _ in updateLongPress() },
 
             onDrag: {
-                updateDrag($0, $1, pending: true)
+                updateDrag($0, pending: true)
                 global.canvasAction.end(triggering: .addEndingNode)
             },
-            onDragEnd: { updateDrag($0, $1) }
+            onDragEnd: { updateDrag($0) }
         )
     }
 
-    override func edgeGesture(fromId: UUID, context: EdgeGestureContext) -> MultipleGesture<PathSegment> {
+    override func edgeGesture(fromId: UUID, segment: PathSegment, context: EdgeGestureContext) -> MultipleGesture {
         func split(at paramT: Scalar) {
             context.longPressParamT = paramT
             let id = UUID()
@@ -105,44 +105,44 @@ class ActivePathViewModel: PathViewModel {
                 global.canvasAction.end(continuous: .splitAndMovePathNode)
                 global.canvasAction.end(continuous: .movePath)
             },
-            onTap: { _, _ in self.toggleFocus(edgeFromId: fromId) },
-            onLongPress: { v, s in
-                split(at: s.paramT(closestTo: v.location).t)
-                updateLongPress(segment: s, pending: true)
+            onTap: { _ in self.toggleFocus(edgeFromId: fromId) },
+            onLongPress: {
+                split(at: segment.paramT(closestTo: $0.location).t)
+                updateLongPress(segment: segment, pending: true)
                 global.canvasAction.end(continuous: .movePath)
                 global.canvasAction.end(triggering: .splitPathEdge)
                 global.canvasAction.start(continuous: .splitAndMovePathNode)
             },
-            onLongPressEnd: { _, s in updateLongPress(segment: s) },
-            onDrag: { v, _ in
-                updateDrag(v, pending: true)
+            onLongPressEnd: { _ in updateLongPress(segment: segment) },
+            onDrag: {
+                updateDrag($0, pending: true)
                 global.canvasAction.end(triggering: .splitPathEdge)
             },
-            onDragEnd: { v, _ in updateDrag(v) }
+            onDragEnd: { updateDrag($0) }
         )
     }
 
-    override func focusedEdgeGesture(fromId: UUID) -> MultipleGesture<Point2> {
-        func updateDrag(_ v: DragGesture.Value, _: Point2, pending: Bool = false) {
+    override func focusedEdgeGesture(fromId: UUID) -> MultipleGesture {
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             global.documentUpdater.updateInView(activePath: .moveEdge(.init(fromNodeId: fromId, offset: v.offset)), pending: pending)
         }
         return .init(
             onTouchDown: { global.canvasAction.start(continuous: .movePathEdge) },
             onTouchUp: { global.canvasAction.end(continuous: .movePathEdge) },
-            onDrag: { updateDrag($0, $1, pending: true) },
-            onDragEnd: { updateDrag($0, $1) }
+            onDrag: { updateDrag($0, pending: true) },
+            onDragEnd: { updateDrag($0) }
         )
     }
 
-    override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGesture<Void> {
+    override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             global.documentUpdater.updateInView(activePath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending)
         }
         return .init(
             onTouchDown: { global.canvasAction.start(continuous: .movePathBezierControl) },
             onTouchUp: { global.canvasAction.end(continuous: .movePathBezierControl) },
-            onDrag: { v, _ in updateDrag(v, pending: true) },
-            onDragEnd: { v, _ in updateDrag(v) }
+            onDrag: { updateDrag($0, pending: true) },
+            onDragEnd: { updateDrag($0) }
         )
     }
 

@@ -28,7 +28,7 @@ struct DebugPanel: View {
         VStack {
             title
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.idToPanel[panelId], panelModel.moveGesture)
+                .multipleGesture(panelModel.moveGesture(panelModel.idToPanel[panelId]))
             Row(name: "Pan", value: multipleTouch.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")

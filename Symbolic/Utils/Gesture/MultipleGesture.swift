@@ -1,64 +1,36 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Configs
-
-struct MultipleGestureConfigs {
-    var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
-    var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
-    var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
-    var coordinateSpace: CoordinateSpace = .local
-}
-
 // MARK: - MultipleGesture
 
-struct MultipleGesture<Data> {
+struct MultipleGesture {
     typealias Value = DragGesture.Value
 
-    var configs: MultipleGestureConfigs = .init()
+    struct Configs {
+        var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
+        var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
+        var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
+        var coordinateSpace: CoordinateSpace = .local
+    }
+
+    var configs: Configs = .init()
 
     var onTouchDown: (() -> Void)?
     var onTouchUp: (() -> Void)?
 
-    var onTap: ((Value, Data) -> Void)?
-    var onLongPress: ((Value, Data) -> Void)?
-    var onLongPressEnd: ((Value, Data) -> Void)?
-    var onDrag: ((Value, Data) -> Void)?
-    var onDragEnd: ((Value, Data) -> Void)?
-}
-
-// MARK: - Context
-
-private struct MultipleGestureContext<Data> {
-    typealias Value = DragGesture.Value
-
-    let data: Data
-    let startTime: Date = .now
-
-    private(set) var lastValue: Value
-    private(set) var maxDistance: Scalar = 0
-
-    var longPressTimeout: DispatchWorkItem?
-    var longPressStarted = false
-
-    mutating func onValue(_ value: Value) {
-        lastValue = value
-        maxDistance = max(maxDistance, value.offset.length)
-    }
-
-    init(data: Data, value: Value) {
-        self.data = data
-        lastValue = value
-    }
+    var onTap: ((Value) -> Void)?
+    var onLongPress: ((Value) -> Void)?
+    var onLongPressEnd: ((Value) -> Void)?
+    var onDrag: ((Value) -> Void)?
+    var onDragEnd: ((Value) -> Void)?
 }
 
 // MARK: - MultipleGestureModifier
 
-struct MultipleGestureModifier<Data>: ViewModifier {
+struct MultipleGestureModifier: ViewModifier {
     typealias Value = DragGesture.Value
 
-    let getData: () -> Data
-    let gesture: MultipleGesture<Data>
+    let gesture: MultipleGesture
 
     func body(content: Content) -> some View {
         content
@@ -72,10 +44,30 @@ struct MultipleGestureModifier<Data>: ViewModifier {
 
     // MARK: private
 
-    @State private var context: MultipleGestureContext<Data>?
-    private var configs: MultipleGestureConfigs { gesture.configs }
+    private struct Context {
+        let startTime: Date = .now
+
+        private(set) var lastValue: Value
+        private(set) var maxDistance: Scalar = 0
+
+        var longPressTimeout: DispatchWorkItem?
+        var longPressStarted = false
+
+        mutating func onValue(_ value: Value) {
+            lastValue = value
+            maxDistance = max(maxDistance, value.offset.length)
+        }
+
+        init(value: Value) {
+            lastValue = value
+        }
+    }
+
+    @State private var context: Context?
 
     @GestureState private var active: Bool = false
+
+    private var configs: MultipleGesture.Configs { gesture.configs }
 
     private var isPress: Bool {
         guard let context else { return false }
@@ -103,7 +95,7 @@ struct MultipleGestureModifier<Data>: ViewModifier {
     // MARK: stages
 
     private func onPressStarted(_ v: DragGesture.Value) {
-        context = .init(data: getData(), value: v)
+        context = .init(value: v)
         setupLongPress()
         gesture.onTouchDown?()
     }
@@ -114,7 +106,7 @@ struct MultipleGestureModifier<Data>: ViewModifier {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
                 resetLongPress()
             }
-            gesture.onDrag?(context.lastValue, context.data)
+            gesture.onDrag?(context.lastValue)
         }
     }
 
@@ -123,10 +115,10 @@ struct MultipleGestureModifier<Data>: ViewModifier {
         if isPress {
             resetLongPress()
             if !context.longPressStarted {
-                gesture.onTap?(context.lastValue, context.data)
+                gesture.onTap?(context.lastValue)
             }
         } else {
-            gesture.onDragEnd?(context.lastValue, context.data)
+            gesture.onDragEnd?(context.lastValue)
             if configs.holdLongPressOnDrag {
                 resetLongPress()
             }
@@ -146,7 +138,7 @@ struct MultipleGestureModifier<Data>: ViewModifier {
     private func setupLongPress() {
         guard let context else { return }
         let longPressTimeout = DispatchWorkItem {
-            gesture.onLongPress?(context.lastValue, context.data)
+            gesture.onLongPress?(context.lastValue)
             self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
@@ -161,31 +153,13 @@ struct MultipleGestureModifier<Data>: ViewModifier {
         }
         if context.longPressStarted {
             self.context?.longPressStarted = false
-            gesture.onLongPressEnd?(context.lastValue, context.data)
+            gesture.onLongPressEnd?(context.lastValue)
         }
     }
 }
 
-// MARK: - extension
-
-extension MultipleGestureModifier {
-    init(_ getData: @autoclosure @escaping () -> Data, _ gesture: MultipleGesture<Data> = .init()) {
-        self.init(getData: getData, gesture: gesture)
-    }
-}
-
-extension MultipleGestureModifier where Data == Void {
-    init(_ gesture: MultipleGesture<Data> = .init()) {
-        self.init(getData: {}, gesture: gesture)
-    }
-}
-
 extension View {
-    func multipleGesture<Data>(_ getData: @autoclosure @escaping () -> Data, _ gesture: MultipleGesture<Data>) -> some View {
-        modifier(MultipleGestureModifier<Data>(getData: getData, gesture: gesture))
-    }
-
-    func multipleGesture(_ gesture: MultipleGesture<Void>) -> some View {
-        modifier(MultipleGestureModifier<Void>(getData: {}, gesture: gesture))
+    func multipleGesture(_ gesture: MultipleGesture) -> some View {
+        modifier(MultipleGestureModifier(gesture: gesture))
     }
 }

@@ -10,17 +10,17 @@ class PathViewModel: ObservableObject {
         var longPressAddedNodeId: UUID?
     }
 
-    func nodeGesture(nodeId _: UUID, context _: NodeGestureContext) -> MultipleGesture<Point2> { .init() }
+    func nodeGesture(nodeId _: UUID, context _: NodeGestureContext) -> MultipleGesture { .init() }
 
     class EdgeGestureContext {
         var longPressParamT: Scalar?
         var longPressSplitNodeId: UUID?
     }
 
-    func edgeGesture(fromId _: UUID, context _: EdgeGestureContext) -> MultipleGesture<PathSegment> { .init() }
-    func focusedEdgeGesture(fromId _: UUID) -> MultipleGesture<Point2> { .init() }
+    func edgeGesture(fromId _: UUID, segment _: PathSegment, context _: EdgeGestureContext) -> MultipleGesture { .init() }
+    func focusedEdgeGesture(fromId _: UUID) -> MultipleGesture { .init() }
 
-    func bezierGesture(fromId _: UUID, isControl0 _: Bool) -> MultipleGesture<Void> { .init() }
+    func bezierGesture(fromId _: UUID, isControl0 _: Bool) -> MultipleGesture { .init() }
 }
 
 // MARK: - PathView

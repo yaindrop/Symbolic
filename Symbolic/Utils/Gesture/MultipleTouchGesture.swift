@@ -7,6 +7,8 @@ struct TapInfo {
     let count: Int
 }
 
+// MARK: - MultipleTouchGesture
+
 struct MultipleTouchGesture {
     struct Configs {
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
@@ -232,6 +234,8 @@ struct MultipleTouchPressDetector {
         }
     }
 }
+
+// MARK: - MultipleTouchGestureModifier
 
 struct MultipleTouchGestureModifier: ViewModifier {
     var gesture: MultipleTouchGesture

@@ -73,7 +73,7 @@
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
-		57B5F11A2BC62FA3001E1B2E /* MultipleTouchPressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* MultipleTouchPressDetector.swift */; };
+		57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1192BC62FA3001E1B2E /* MultipleTouchGesture.swift */; };
 		57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11B2BC639B2001E1B2E /* Viewport.swift */; };
 		57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F11E2BC777F0001E1B2E /* Path.swift */; };
 		57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */; };
@@ -179,7 +179,7 @@
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
-		57B5F1192BC62FA3001E1B2E /* MultipleTouchPressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouchPressDetector.swift; sourceTree = "<group>"; };
+		57B5F1192BC62FA3001E1B2E /* MultipleTouchGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouchGesture.swift; sourceTree = "<group>"; };
 		57B5F11B2BC639B2001E1B2E /* Viewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viewport.swift; sourceTree = "<group>"; };
 		57B5F11E2BC777F0001E1B2E /* Path.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Path.swift; sourceTree = "<group>"; };
 		57B5F1252BCCB3C2001E1B2E /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
@@ -462,7 +462,7 @@
 				574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */,
 				57416E462BE2851D00C73434 /* MultipleGesture.swift */,
 				57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */,
-				57B5F1192BC62FA3001E1B2E /* MultipleTouchPressDetector.swift */,
+				57B5F1192BC62FA3001E1B2E /* MultipleTouchGesture.swift */,
 				57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */,
 			);
 			path = Gesture;
@@ -739,7 +739,7 @@
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
-				57B5F11A2BC62FA3001E1B2E /* MultipleTouchPressDetector.swift in Sources */,
+				57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */,
 				574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */,
 				574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,

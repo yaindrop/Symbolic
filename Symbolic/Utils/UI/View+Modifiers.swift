@@ -4,12 +4,13 @@ import SwiftUI
 // MARK: - viewSizeReader
 
 extension View {
-    func viewSizeReader(onSize: @escaping (CGSize) -> Void) -> some View {
+    func geometryReader(onSize: ((CGSize) -> Void)? = nil, onGeometry: ((GeometryProxy) -> Void)? = nil) -> some View {
         background {
             GeometryReader { geometry in
                 Color.clear
-                    .onChange(of: geometry.size, initial: true) {
-                        onSize(geometry.size)
+                    .onChange(of: geometry.frame(in: .global), initial: true) {
+                        onSize?(geometry.size)
+                        onGeometry?(geometry)
                     }
             }
         }

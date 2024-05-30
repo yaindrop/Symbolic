@@ -65,6 +65,12 @@ extension PinchInfo: CustomStringConvertible {
 // MARK: - MultipleTouchModel
 
 class MultipleTouchModel {
+    struct Configs {
+        var inGlobalCoordinate = false
+    }
+
+    let configs: Configs
+
     @Published private(set) var startTime: Date?
     @Published private(set) var touchesCount: Int = 0
 
@@ -72,6 +78,10 @@ class MultipleTouchModel {
     @Published fileprivate(set) var pinchInfo: PinchInfo?
 
     var active: Bool { startTime != nil }
+
+    init(configs: Configs = .init()) {
+        self.configs = configs
+    }
 
     fileprivate func onFirstTouchBegan() {
         startTime = .now
@@ -165,7 +175,7 @@ class MultipleTouchView: TouchDebugView {
         return (touches[0], touches[1])
     }
 
-    private func location(of touch: UITouch) -> Point2 { touch.location(in: self) }
+    private func location(of touch: UITouch) -> Point2 { touch.location(in: model.configs.inGlobalCoordinate ? nil : self) }
 
     private func onActiveTouchesChanged() {
         model.onTouchesChanged(count: activeTouches.count)

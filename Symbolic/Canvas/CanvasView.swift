@@ -90,7 +90,7 @@ struct CanvasView: View {
             items
             foreground
         }
-        .viewSizeReader { global.viewport.setViewSize($0) }
+        .geometryReader { global.viewport.setViewSize($0) }
     }}
 
     @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {

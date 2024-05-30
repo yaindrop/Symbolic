@@ -36,7 +36,7 @@ struct ContextMenu: View {
         .padding(12)
         .background(.thickMaterial)
         .fixedSize()
-        .viewSizeReader { size = $0 }
+        .geometryReader { size = $0 }
         .cornerRadius(size.height / 2)
     }
 }

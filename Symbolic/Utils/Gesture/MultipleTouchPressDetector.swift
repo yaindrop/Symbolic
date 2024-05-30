@@ -1,18 +1,13 @@
 import Combine
 import Foundation
+import SwiftUI
 
 struct TapInfo {
     let location: Point2
     let count: Int
 }
 
-// MARK: - MultipleTouchPressModel
-
-class MultipleTouchPressModel: CancellableHolder {
-    var cancellables = Set<AnyCancellable>()
-
-    // MARK: Configs
-
+struct MultipleTouchGesture {
     struct Configs {
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
         var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
@@ -20,6 +15,26 @@ class MultipleTouchPressModel: CancellableHolder {
         var repeatedTapDistanceThreshold: Scalar = 20 // repeated tap when smaller, separated tap when greater
         var holdLongPressOnDrag: Bool = true // whether to continue long press after drag start
     }
+
+    var configs: Configs = .init()
+
+    var onPress: (() -> Void)?
+    var onPressEnd: (() -> Void)?
+
+    var onTap: ((TapInfo) -> Void)?
+    var onLongPress: ((PanInfo) -> Void)?
+    var onLongPressEnd: ((PanInfo) -> Void)?
+
+    var onPan: ((PanInfo) -> Void)?
+    var onPanEnd: ((PanInfo) -> Void)?
+    var onPinch: ((PinchInfo) -> Void)?
+    var onPinchEnd: ((PinchInfo) -> Void)?
+}
+
+// MARK: - MultipleTouchPressModel
+
+class MultipleTouchPressModel: CancellableHolder {
+    var cancellables = Set<AnyCancellable>()
 
     func onPress(_ callback: @escaping () -> Void) {
         pressSubject
@@ -51,7 +66,7 @@ class MultipleTouchPressModel: CancellableHolder {
             .store(in: self)
     }
 
-    init(configs: Configs) {
+    init(configs: MultipleTouchGesture.Configs) {
         self.configs = configs
     }
 
@@ -68,7 +83,7 @@ class MultipleTouchPressModel: CancellableHolder {
         }
     }
 
-    fileprivate let configs: Configs
+    fileprivate let configs: MultipleTouchGesture.Configs
 
     fileprivate var context: Context?
 
@@ -126,7 +141,7 @@ struct MultipleTouchPressDetector {
 
     // MARK: private
 
-    private var configs: MultipleTouchPressModel.Configs { model.configs }
+    private var configs: MultipleTouchGesture.Configs { model.configs }
 
     private var context: MultipleTouchPressModel.Context? {
         get { model.context }
@@ -215,5 +230,57 @@ struct MultipleTouchPressDetector {
             guard let panInfo else { return }
             model.longPressEndSubject.send(panInfo)
         }
+    }
+}
+
+struct MultipleTouchGestureModifier: ViewModifier {
+    var gesture: MultipleTouchGesture
+
+    func body(content: Content) -> some View {
+        content
+            .modifier(MultipleTouchModifier(model: multipleTouch))
+            .onReceive(multipleTouch.$panInfo) { info in
+                if let info {
+                    gesture.onPan?(info)
+                } else if let info = multipleTouch.panInfo {
+                    gesture.onPanEnd?(info)
+                }
+            }
+            .onReceive(multipleTouch.$pinchInfo) { info in
+                if let info {
+                    gesture.onPinch?(info)
+                } else if let info = multipleTouch.pinchInfo {
+                    gesture.onPinchEnd?(info)
+                }
+            }
+            .onReceive(multipleTouchPress.pressSubject) {
+                gesture.onPress?()
+            }
+            .onReceive(multipleTouchPress.pressEndSubject) {
+                gesture.onPressEnd?()
+            }
+            .onReceive(multipleTouchPress.tapSubject) {
+                gesture.onTap?($0)
+            }
+            .onReceive(multipleTouchPress.longPressSubject) {
+                gesture.onLongPress?($0)
+            }
+            .onReceive(multipleTouchPress.longPressEndSubject) {
+                gesture.onLongPressEnd?($0)
+            }
+            .onAppear {
+                pressDetector.subscribe()
+            }
+    }
+
+    @State private var multipleTouch = MultipleTouchModel(configs: .init(inGlobalCoordinate: true))
+    @State private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+
+    private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
+}
+
+extension View {
+    func multipleTouchGesture(_ gesture: MultipleTouchGesture) -> some View {
+        modifier(MultipleTouchGestureModifier(gesture: gesture))
     }
 }

@@ -144,7 +144,7 @@ extension ActiveItemView {
             path.boundingRect.applying(toView)
         }
 
-        private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+        private func updateDrag(_ v: PanInfo, pending: Bool = false) {
             let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
             global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
         }
@@ -153,12 +153,11 @@ extension ActiveItemView {
             RoundedRectangle(cornerRadius: 2)
                 .fill(.blue.opacity(focused ? 0.2 : 0.1))
                 .stroke(.blue.opacity(focused ? 0.8 : 0.5))
-                .framePosition(rect: bounds)
-                .multipleGesture(.init(
-                    onTouchDown: {
+                .multipleTouchGesture(.init(
+                    onPress: {
                         global.canvasAction.start(continuous: .moveSelection)
                     },
-                    onTouchUp: {
+                    onPressEnd: {
                         global.canvasAction.end(continuous: .moveSelection)
                     },
                     onTap: { _ in
@@ -168,9 +167,10 @@ extension ActiveItemView {
                             global.activeItem.focus(itemId: path.id)
                         }
                     },
-                    onDrag: { updateDrag($0, pending: true) },
-                    onDragEnd: { updateDrag($0) }
+                    onPan: { updateDrag($0, pending: true) },
+                    onPanEnd: { updateDrag($0) }
                 ))
+                .framePosition(rect: bounds)
         }
     }
 }
@@ -215,7 +215,7 @@ extension ActiveItemView {
                 }, onGroup: {
                     global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedItems.map { $0.id }), inGroupId: nil)))
                 })
-                .viewSizeReader { menuSize = $0 }
+                .geometryReader { menuSize = $0 }
                 .position(menuBox.center)
             }
         }

@@ -86,19 +86,18 @@ extension PanelModel {
         return newPanel
     }
 
-    static func moveGestureModel() -> MultipleGestureModel<PanelData?> { .init(configs: .init(coordinateSpace: .global)) }
-
-    var moveGestureSetup: (MultipleGestureModel<PanelData?>) -> Void {
-        {
-            $0.onDrag { v, panel in
+    var moveGesture: MultipleGesture<PanelData?> {
+        .init(
+            configs: .init(coordinateSpace: .global),
+            onDrag: { v, panel in
                 guard let panel else { return }
                 self.onMoving(panelId: panel.id, origin: panel.origin, v)
-            }
-            $0.onDragEnd { v, panel in
+            },
+            onDragEnd: { v, panel in
                 guard let panel else { return }
                 self.onMoved(panelId: panel.id, origin: panel.origin, v)
             }
-        }
+        )
     }
 }
 

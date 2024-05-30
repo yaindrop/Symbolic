@@ -6,23 +6,21 @@ private let subtracer = tracer.tagged("PathView")
 // MARK: - PathViewModel
 
 class PathViewModel: ObservableObject {
-    func boundsGesture() -> MultipleGestureModel<Void>? { nil }
-
     class NodeGestureContext {
         var longPressAddedNodeId: UUID?
     }
 
-    func nodeGesture(nodeId _: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext)? { nil }
+    func nodeGesture(nodeId _: UUID) -> MultipleGesture<Point2> { .init() }
 
     class EdgeGestureContext {
         var longPressParamT: Scalar?
         var longPressSplitNodeId: UUID?
     }
 
-    func edgeGesture(fromId _: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext)? { nil }
-    func focusedEdgeGesture(fromId _: UUID) -> MultipleGestureModel<Point2>? { nil }
+    func edgeGesture(fromId _: UUID) -> MultipleGesture<PathSegment> { .init() }
+    func focusedEdgeGesture(fromId _: UUID) -> MultipleGesture<Point2> { .init() }
 
-    func bezierGesture(fromId _: UUID, isControl0 _: Bool) -> MultipleGestureModel<Void>? { nil }
+    func bezierGesture(fromId _: UUID, isControl0 _: Bool) -> MultipleGesture<Void> { .init() }
 }
 
 // MARK: - PathView
@@ -33,7 +31,6 @@ struct PathView: View {
 
     var body: some View { subtracer.range("body") { build {
         ZStack {
-//            BoundsHandle(path: path, toView: toView)
             Stroke(path: path, toView: toView)
             handles(path: path)
         }
@@ -75,42 +72,5 @@ extension PathView {
                 .id(path.id)
                 .transformEffect(toView)
         }}
-    }
-
-    // MARK: - BoundsHandle
-
-    struct BoundsHandle: View {
-        @EnvironmentObject var viewModel: PathViewModel
-
-        let path: Path
-        let toView: CGAffineTransform
-
-        var body: some View { subtracer.range("BoundsHandle") {
-            rect
-        }}
-
-        // MARK: private
-
-        private var boundingRectInView: CGRect { path.boundingRect.applying(toView) }
-
-        private static let lineWidth: Scalar = 1
-        private static let circleSize: Scalar = 16
-        private static let touchablePadding: Scalar = 16
-
-        @State private var gesture: MultipleGestureModel<Void>?
-
-        @ViewBuilder private var rect: some View {
-            Rectangle()
-                .stroke(.blue, style: StrokeStyle(lineWidth: Self.lineWidth))
-                .fill(.blue.opacity(0.2))
-                .frame(width: boundingRectInView.width, height: boundingRectInView.height)
-                .position(boundingRectInView.center)
-                .if(gesture) {
-                    $0.multipleGesture($1, ())
-                }
-                .onAppear {
-                    gesture = viewModel.boundsGesture()
-                }
-        }
     }
 }

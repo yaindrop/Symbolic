@@ -64,7 +64,13 @@ extension ActiveItemView {
                 .insetBy(dx: -4, dy: -4)
         }
 
-        @State private var gesture = MultipleGestureModel<Void>()
+        private func onDrag(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
+            { v, _ in
+                print("dbg 2 viewport", viewport)
+                let targetIds = (selected ? global.activeItem.selectedPaths : groupedPaths).map { $0.id }
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
+            }
+        }
 
         @ViewBuilder private var boundsRect: some View {
             if let bounds {
@@ -72,14 +78,14 @@ extension ActiveItemView {
                     .fill(.blue.opacity(selected ? 0.1 : 0.03))
                     .stroke(.blue.opacity(focused ? 0.8 : selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
                     .framePosition(rect: bounds)
-                    .multipleGesture(gesture, ()) {
-                        func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in
-                                let targetIds = (selected ? global.activeItem.selectedPaths : groupedPaths).map { $0.id }
-                                global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
-                            }
-                        }
-                        $0.onTap { v, _ in
+                    .multipleGesture(.init(
+                        onTouchDown: {
+                            global.canvasAction.start(continuous: .moveSelection)
+                        },
+                        onTouchUp: {
+                            global.canvasAction.end(continuous: .moveSelection)
+                        },
+                        onTap: { v, _ in
                             let worldPosition = v.location.applying(global.viewport.toWorld)
                             let path = groupedPaths.first {
                                 global.path.hitTest(path: $0, position: worldPosition, threshold: 32)
@@ -103,16 +109,10 @@ extension ActiveItemView {
                                     global.activeItem.focus(itemId: group.id)
                                 }
                             }
-                        }
-                        $0.onDrag(update(pending: true))
-                        $0.onDragEnd(update())
-                        $0.onTouchDown {
-                            global.canvasAction.start(continuous: .moveSelection)
-                        }
-                        $0.onTouchUp {
-                            global.canvasAction.end(continuous: .moveSelection)
-                        }
-                    }
+                        },
+                        onDrag: onDrag(pending: true),
+                        onDragEnd: onDrag()
+                    ))
             }
         }
     }
@@ -143,10 +143,15 @@ extension ActiveItemView {
 
         private var toView: CGAffineTransform { viewport.worldToView }
 
-        @State private var gesture = MultipleGestureModel<Void>()
-
         private var bounds: CGRect {
             path.boundingRect.applying(toView)
+        }
+
+        private func onDrag(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
+            { v, _ in
+                let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
+            }
         }
 
         @ViewBuilder private var boundsRect: some View {
@@ -154,29 +159,23 @@ extension ActiveItemView {
                 .fill(.blue.opacity(focused ? 0.2 : 0.1))
                 .stroke(.blue.opacity(focused ? 0.8 : 0.5))
                 .framePosition(rect: bounds)
-                .multipleGesture(gesture, ()) {
-                    func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in
-                            let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
-                            global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
-                        }
-                    }
-                    $0.onTap { _, _ in
+                .multipleGesture(.init(
+                    onTouchDown: {
+                        global.canvasAction.start(continuous: .moveSelection)
+                    },
+                    onTouchUp: {
+                        global.canvasAction.end(continuous: .moveSelection)
+                    },
+                    onTap: { _, _ in
                         if global.toolbar.multiSelect {
                             global.activeItem.selectRemove(itemIds: [path.id])
                         } else {
                             global.activeItem.focus(itemId: path.id)
                         }
-                    }
-                    $0.onDrag(update(pending: true))
-                    $0.onDragEnd(update())
-                    $0.onTouchDown {
-                        global.canvasAction.start(continuous: .moveSelection)
-                    }
-                    $0.onTouchUp {
-                        global.canvasAction.end(continuous: .moveSelection)
-                    }
-                }
+                    },
+                    onDrag: onDrag(pending: true),
+                    onDragEnd: onDrag()
+                ))
         }
     }
 }

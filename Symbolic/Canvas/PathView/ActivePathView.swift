@@ -4,22 +4,8 @@ import SwiftUI
 // MARK: - ActivePathViewModel
 
 class ActivePathViewModel: PathViewModel {
-    override func boundsGesture() -> MultipleGestureModel<Void> {
-        let model = MultipleGestureModel<Void>()
-        func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending) }
-        }
-        model.onTap { _, _ in global.activeItem.clearFocus() }
-        model.onDrag(update(pending: true))
-        model.onDragEnd(update())
-        model.onTouchDown { global.canvasAction.start(continuous: .movePath) }
-        model.onTouchUp { global.canvasAction.end(continuous: .movePath) }
-        return model
-    }
-
-    override func nodeGesture(nodeId: UUID) -> (MultipleGestureModel<Point2>, NodeGestureContext) {
+    override func nodeGesture(nodeId: UUID) -> MultipleGesture<Point2> {
         let context = NodeGestureContext()
-        let model = MultipleGestureModel<Point2>(configs: .init(durationThreshold: 0.2))
         var canAddEndingNode: Bool {
             guard let activePath = global.activeItem.activePath else { return false }
             return activePath.isEndingNode(id: nodeId)
@@ -36,57 +22,55 @@ class ActivePathViewModel: PathViewModel {
                 context.longPressAddedNodeId = nil
             }
         }
-        func updateDrag(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            {
-                if let newNodeId = context.longPressAddedNodeId {
-                    moveAddedNode(newNodeId: newNodeId, offset: $0.offset, pending: pending)
-                } else {
-                    global.documentUpdater.updateInView(activePath: .moveNode(.init(nodeId: nodeId, offset: $1.offset(to: $0.location))), pending: pending)
-                }
+        func updateDrag(_ v: DragGesture.Value, _ p: Point2, pending: Bool = false) {
+            if let newNodeId = context.longPressAddedNodeId {
+                moveAddedNode(newNodeId: newNodeId, offset: v.offset, pending: pending)
+            } else {
+                global.documentUpdater.updateInView(activePath: .moveNode(.init(nodeId: nodeId, offset: p.offset(to: v.location))), pending: pending)
             }
         }
         func updateLongPress(position _: Point2, pending: Bool = false) {
             guard let newNodeId = context.longPressAddedNodeId else { return }
             moveAddedNode(newNodeId: newNodeId, offset: .zero, pending: pending)
         }
-        model.onTap { _, _ in self.toggleFocus(nodeId: nodeId) }
-        model.onLongPress { _, p in
-            addEndingNode()
-            updateLongPress(position: p, pending: true)
-        }
-        model.onLongPressEnd { _, p in updateLongPress(position: p) }
-        model.onDrag(updateDrag(pending: true))
-        model.onDragEnd(updateDrag())
-        model.onTouchDown { global.canvasAction.start(continuous: .movePathNode) }
-        model.onTouchUp { global.canvasAction.end(continuous: .movePathNode) }
 
-        model.onTouchDown {
-            global.canvasAction.start(continuous: .movePathNode)
-            if canAddEndingNode {
-                global.canvasAction.start(triggering: .addEndingNode)
-            }
-        }
-        model.onDrag { _, _ in
-            global.canvasAction.end(triggering: .addEndingNode)
-        }
-        model.onLongPress { _, _ in
-            if canAddEndingNode {
-                global.canvasAction.end(continuous: .movePathNode)
+        return .init(
+            configs: .init(durationThreshold: 0.2),
+            onTouchDown: {
+                global.canvasAction.start(continuous: .movePathNode)
+                if canAddEndingNode {
+                    global.canvasAction.start(triggering: .addEndingNode)
+                }
+            },
+            onTouchUp: {
                 global.canvasAction.end(triggering: .addEndingNode)
-                global.canvasAction.start(continuous: .addAndMoveEndingNode)
-            }
-        }
-        model.onTouchUp {
-            global.canvasAction.end(triggering: .addEndingNode)
-            global.canvasAction.end(continuous: .addAndMoveEndingNode)
-            global.canvasAction.end(continuous: .movePathNode)
-        }
-        return (model, context)
+                global.canvasAction.end(continuous: .addAndMoveEndingNode)
+                global.canvasAction.end(continuous: .movePathNode)
+            },
+
+            onTap: { _, _ in self.toggleFocus(nodeId: nodeId) },
+
+            onLongPress: { _, p in
+                addEndingNode()
+                updateLongPress(position: p, pending: true)
+                if canAddEndingNode {
+                    global.canvasAction.end(continuous: .movePathNode)
+                    global.canvasAction.end(triggering: .addEndingNode)
+                    global.canvasAction.start(continuous: .addAndMoveEndingNode)
+                }
+            },
+            onLongPressEnd: { _, p in updateLongPress(position: p) },
+
+            onDrag: {
+                updateDrag($0, $1, pending: true)
+                global.canvasAction.end(triggering: .addEndingNode)
+            },
+            onDragEnd: { updateDrag($0, $1) }
+        )
     }
 
-    override func edgeGesture(fromId: UUID) -> (MultipleGestureModel<PathSegment>, EdgeGestureContext) {
+    override func edgeGesture(fromId: UUID) -> MultipleGesture<PathSegment> {
         let context = EdgeGestureContext()
-        let model = MultipleGestureModel<PathSegment>(configs: .init(durationThreshold: 0.2))
         func split(at paramT: Scalar) {
             context.longPressParamT = paramT
             let id = UUID()
@@ -100,70 +84,68 @@ class ActivePathViewModel: PathViewModel {
                 context.longPressParamT = nil
             }
         }
-        func updateDrag(pending: Bool = false) -> (DragGesture.Value, Any) -> Void {
-            { v, _ in
-                if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
-                    moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
-                } else {
-                    global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending)
-                }
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
+                moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
+            } else {
+                global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending)
             }
         }
         func updateLongPress(segment _: PathSegment, pending: Bool = false) {
             guard let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId else { return }
             moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: .zero, pending: pending)
         }
-        model.onTap { _, _ in self.toggleFocus(edgeFromId: fromId) }
-        model.onLongPress { v, s in
-            split(at: s.paramT(closestTo: v.location).t)
-            updateLongPress(segment: s, pending: true)
-        }
-        model.onLongPressEnd { _, s in updateLongPress(segment: s) }
-        model.onDrag(updateDrag(pending: true))
-        model.onDragEnd(updateDrag())
 
-        model.onTouchDown {
-            global.canvasAction.start(continuous: .movePath)
-            global.canvasAction.start(triggering: .splitPathEdge)
-        }
-        model.onDrag { _, _ in
-            global.canvasAction.end(triggering: .splitPathEdge)
-        }
-        model.onLongPress { _, _ in
-            global.canvasAction.end(continuous: .movePath)
-            global.canvasAction.end(triggering: .splitPathEdge)
-            global.canvasAction.start(continuous: .splitAndMovePathNode)
-        }
-        model.onTouchUp {
-            global.canvasAction.end(triggering: .splitPathEdge)
-            global.canvasAction.end(continuous: .splitAndMovePathNode)
-            global.canvasAction.end(continuous: .movePath)
-        }
-        return (model, context)
+        return .init(
+            configs: .init(durationThreshold: 0.2),
+            onTouchDown: {
+                global.canvasAction.start(continuous: .movePath)
+                global.canvasAction.start(triggering: .splitPathEdge)
+            },
+            onTouchUp: {
+                global.canvasAction.end(triggering: .splitPathEdge)
+                global.canvasAction.end(continuous: .splitAndMovePathNode)
+                global.canvasAction.end(continuous: .movePath)
+            },
+            onTap: { _, _ in self.toggleFocus(edgeFromId: fromId) },
+            onLongPress: { v, s in
+                split(at: s.paramT(closestTo: v.location).t)
+                updateLongPress(segment: s, pending: true)
+                global.canvasAction.end(continuous: .movePath)
+                global.canvasAction.end(triggering: .splitPathEdge)
+                global.canvasAction.start(continuous: .splitAndMovePathNode)
+            },
+            onLongPressEnd: { _, s in updateLongPress(segment: s) },
+            onDrag: { v, _ in
+                updateDrag(v, pending: true)
+                global.canvasAction.end(triggering: .splitPathEdge)
+            },
+            onDragEnd: { v, _ in updateDrag(v) }
+        )
     }
 
-    override func focusedEdgeGesture(fromId: UUID) -> MultipleGestureModel<Point2> {
-        let model = MultipleGestureModel<Point2>()
-        func update(pending: Bool = false) -> (DragGesture.Value, Point2) -> Void {
-            { global.documentUpdater.updateInView(activePath: .moveEdge(.init(fromNodeId: fromId, offset: $1.offset(to: $0.location))), pending: pending) }
+    override func focusedEdgeGesture(fromId: UUID) -> MultipleGesture<Point2> {
+        func updateDrag(_ v: DragGesture.Value, _ p: Point2, pending: Bool = false) {
+            global.documentUpdater.updateInView(activePath: .moveEdge(.init(fromNodeId: fromId, offset: p.offset(to: v.location))), pending: pending)
         }
-        model.onDrag(update(pending: true))
-        model.onDragEnd(update())
-        model.onTouchDown { global.canvasAction.start(continuous: .movePathEdge) }
-        model.onTouchUp { global.canvasAction.end(continuous: .movePathEdge) }
-        return model
+        return .init(
+            onTouchDown: { global.canvasAction.start(continuous: .movePathEdge) },
+            onTouchUp: { global.canvasAction.end(continuous: .movePathEdge) },
+            onDrag: { updateDrag($0, $1, pending: true) },
+            onDragEnd: { updateDrag($0, $1) }
+        )
     }
 
-    override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGestureModel<Void>? {
-        let model = MultipleGestureModel<Void>()
-        func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in global.documentUpdater.updateInView(activePath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending) }
+    override func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGesture<Void> {
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            global.documentUpdater.updateInView(activePath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending)
         }
-        model.onDrag(update(pending: true))
-        model.onDragEnd(update())
-        model.onTouchDown { global.canvasAction.start(continuous: .movePathBezierControl) }
-        model.onTouchUp { global.canvasAction.end(continuous: .movePathBezierControl) }
-        return model
+        return .init(
+            onTouchDown: { global.canvasAction.start(continuous: .movePathBezierControl) },
+            onTouchUp: { global.canvasAction.end(continuous: .movePathBezierControl) },
+            onDrag: { v, _ in updateDrag(v, pending: true) },
+            onDragEnd: { v, _ in updateDrag(v) }
+        )
     }
 
     private func toggleFocus(nodeId: UUID) {

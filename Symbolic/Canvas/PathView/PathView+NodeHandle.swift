@@ -27,8 +27,6 @@ extension PathView {
         private static let circleSize: Scalar = 16
         private static let touchablePadding: Scalar = 16
 
-        @State private var gesture: MultipleGestureModel<Point2>?
-        @State private var gestureContext: PathViewModel.NodeGestureContext?
         @State private var menuSize: CGSize = .zero
         @State private var viewSize = global.viewport.store.viewSize
 
@@ -46,14 +44,7 @@ extension PathView {
                 .padding(Self.touchablePadding)
                 .invisibleSoildOverlay()
                 .position(point)
-                .if(gesture) {
-                    $0.multipleGesture($1, position)
-                }
-                .onAppear {
-                    let pair = viewModel.nodeGesture(nodeId: nodeId)
-                    gesture = pair?.0
-                    gestureContext = pair?.1
-                }
+                .multipleGesture(position, viewModel.nodeGesture(nodeId: nodeId))
             if focused {
                 let menuBox = CGRect(x: point.x, y: point.y, width: 0, height: 0).alignedBox(at: .topCenter, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
                 ContextMenu(onDelete: {

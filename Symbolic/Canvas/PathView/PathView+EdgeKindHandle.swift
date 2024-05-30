@@ -38,22 +38,12 @@ extension PathView {
                 if edgeFocused || nodeFocused {
                     line(from: segment.from, to: segment.control0, color: .green)
                     circle(at: segment.control0, color: .green)
-                        .if(gesture0) {
-                            $0.multipleGesture($1, ())
-                        }
-                        .onAppear {
-                            gesture0 = viewModel.bezierGesture(fromId: fromId, isControl0: true)
-                        }
+                        .multipleGesture(viewModel.bezierGesture(fromId: fromId, isControl0: true))
                 }
                 if edgeFocused || nextFocused {
                     line(from: segment.to, to: segment.control1, color: .orange)
                     circle(at: segment.control1, color: .orange)
-                        .if(gesture1) {
-                            $0.multipleGesture($1, ())
-                        }
-                        .onAppear {
-                            gesture1 = viewModel.bezierGesture(fromId: fromId, isControl0: false)
-                        }
+                        .multipleGesture(viewModel.bezierGesture(fromId: fromId, isControl0: false))
                 }
             }
         }
@@ -63,9 +53,6 @@ extension PathView {
         private static let lineWidth: Scalar = 1
         private static let circleSize: Scalar = 12
         private static let touchablePadding: Scalar = 12
-
-        @State private var gesture0: MultipleGestureModel<Void>?
-        @State private var gesture1: MultipleGestureModel<Void>?
 
         private func subtractingCircle(at point: Point2) -> SUPath {
             SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }

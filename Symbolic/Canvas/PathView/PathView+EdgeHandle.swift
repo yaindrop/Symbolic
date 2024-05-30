@@ -24,21 +24,11 @@ extension PathView {
             //        }
         }}
 
-        @State private var gesture: MultipleGestureModel<PathSegment>?
-        @State private var gestureContext: PathViewModel.EdgeGestureContext?
-
         @ViewBuilder private var outline: some View {
             SUPath { p in segment.append(to: &p) }
                 .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
                 .fill(Color.invisibleSolid)
-                .if(gesture) {
-                    $0.multipleGesture($1, segment)
-                }
-                .onAppear {
-                    let pair = viewModel.edgeGesture(fromId: fromId)
-                    gesture = pair?.0
-                    gestureContext = pair?.1
-                }
+                .multipleGesture(segment, viewModel.edgeGesture(fromId: fromId))
         }
 
         private static let circleSize: Scalar = 16
@@ -87,8 +77,6 @@ extension PathView {
             SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
         }
 
-        @State private var gesture: MultipleGestureModel<Point2>?
-
         @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
             Circle()
                 .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
@@ -109,12 +97,7 @@ extension PathView {
                     .fill(color)
                     .allowsHitTesting(false)
                 }}
-                .if(gesture) {
-                    $0.multipleGesture($1, point)
-                }
-                .onAppear {
-                    gesture = viewModel.focusedEdgeGesture(fromId: fromId)
-                }
+                .multipleGesture(point, viewModel.focusedEdgeGesture(fromId: fromId))
         }
     }
 }

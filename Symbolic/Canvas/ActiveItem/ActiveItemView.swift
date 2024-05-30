@@ -64,12 +64,9 @@ extension ActiveItemView {
                 .insetBy(dx: -4, dy: -4)
         }
 
-        private func onDrag(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in
-                print("dbg 2 viewport", viewport)
-                let targetIds = (selected ? global.activeItem.selectedPaths : groupedPaths).map { $0.id }
-                global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
-            }
+        private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            let targetIds = (selected ? global.activeItem.selectedPaths : groupedPaths).map { $0.id }
+            global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
         }
 
         @ViewBuilder private var boundsRect: some View {
@@ -110,8 +107,8 @@ extension ActiveItemView {
                                 }
                             }
                         },
-                        onDrag: onDrag(pending: true),
-                        onDragEnd: onDrag()
+                        onDrag: { v, _ in updateDrag(v, pending: true) },
+                        onDragEnd: { v, _ in updateDrag(v) }
                     ))
             }
         }
@@ -147,11 +144,9 @@ extension ActiveItemView {
             path.boundingRect.applying(toView)
         }
 
-        private func onDrag(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-            { v, _ in
-                let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
-                global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
-            }
+        private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
+            global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
         }
 
         @ViewBuilder private var boundsRect: some View {
@@ -173,8 +168,8 @@ extension ActiveItemView {
                             global.activeItem.focus(itemId: path.id)
                         }
                     },
-                    onDrag: onDrag(pending: true),
-                    onDragEnd: onDrag()
+                    onDrag: { v, _ in updateDrag(v, pending: true) },
+                    onDragEnd: { v, _ in updateDrag(v) }
                 ))
         }
     }

@@ -169,9 +169,8 @@ struct MultipleTouchPressDetector {
     private func onPressEnded() {
         guard let context, let panInfo else { return }
         if isPress {
-            if context.longPressStarted {
-                model.longPressEndSubject.send(panInfo)
-            } else {
+            resetLongPress()
+            if !context.longPressStarted {
                 let count = tapCount
                 model.tapSubject.send(.init(location: panInfo.current, count: count))
                 model.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: panInfo.current)

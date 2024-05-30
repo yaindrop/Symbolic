@@ -121,9 +121,8 @@ struct MultipleGestureModifier<Data>: ViewModifier {
     private func onPressEnded() {
         guard let context else { return }
         if isPress {
-            if context.longPressStarted {
-                gesture.onLongPressEnd?(context.lastValue, context.data)
-            } else {
+            resetLongPress()
+            if !context.longPressStarted {
                 gesture.onTap?(context.lastValue, context.data)
             }
         } else {

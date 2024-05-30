@@ -24,11 +24,13 @@ extension PathView {
             //        }
         }}
 
+        @State private var edgeGestureContext = PathViewModel.EdgeGestureContext()
+
         @ViewBuilder private var outline: some View {
             SUPath { p in segment.append(to: &p) }
                 .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
                 .fill(Color.invisibleSolid)
-                .multipleGesture(segment, viewModel.edgeGesture(fromId: fromId))
+                .multipleGesture(segment, viewModel.edgeGesture(fromId: fromId, context: edgeGestureContext))
         }
 
         private static let circleSize: Scalar = 16

@@ -4,8 +4,7 @@ import SwiftUI
 // MARK: - ActivePathViewModel
 
 class ActivePathViewModel: PathViewModel {
-    override func nodeGesture(nodeId: UUID) -> MultipleGesture<Point2> {
-        let context = NodeGestureContext()
+    override func nodeGesture(nodeId: UUID, context: NodeGestureContext) -> MultipleGesture<Point2> {
         var canAddEndingNode: Bool {
             guard let activePath = global.activeItem.activePath else { return false }
             return activePath.isEndingNode(id: nodeId)
@@ -69,8 +68,7 @@ class ActivePathViewModel: PathViewModel {
         )
     }
 
-    override func edgeGesture(fromId: UUID) -> MultipleGesture<PathSegment> {
-        let context = EdgeGestureContext()
+    override func edgeGesture(fromId: UUID, context: EdgeGestureContext) -> MultipleGesture<PathSegment> {
         func split(at paramT: Scalar) {
             context.longPressParamT = paramT
             let id = UUID()
@@ -125,8 +123,8 @@ class ActivePathViewModel: PathViewModel {
     }
 
     override func focusedEdgeGesture(fromId: UUID) -> MultipleGesture<Point2> {
-        func updateDrag(_ v: DragGesture.Value, _ p: Point2, pending: Bool = false) {
-            global.documentUpdater.updateInView(activePath: .moveEdge(.init(fromNodeId: fromId, offset: p.offset(to: v.location))), pending: pending)
+        func updateDrag(_ v: DragGesture.Value, _: Point2, pending: Bool = false) {
+            global.documentUpdater.updateInView(activePath: .moveEdge(.init(fromNodeId: fromId, offset: v.offset)), pending: pending)
         }
         return .init(
             onTouchDown: { global.canvasAction.start(continuous: .movePathEdge) },

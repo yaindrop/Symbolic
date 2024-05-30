@@ -81,7 +81,7 @@ struct CanvasView: View {
 
     @ViewBuilder private var foreground: some View { tracer.range("CanvasView foreground") {
         Color.white.opacity(0.1)
-            .modifier(MultipleTouchModifier(model: $multipleTouch))
+            .modifier(MultipleTouchModifier(model: multipleTouch))
     } }
 
     @ViewBuilder private var canvas: some View { tracer.range("CanvasView canvas") {

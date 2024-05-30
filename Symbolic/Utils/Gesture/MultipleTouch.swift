@@ -191,16 +191,16 @@ class MultipleTouchView: TouchDebugView {
 // MARK: - MultipleTouchModifier
 
 struct MultipleTouchModifier: ViewModifier {
-    @Binding var model: MultipleTouchModel
+    let model: MultipleTouchModel
 
     func body(content: Content) -> some View {
-        content.overlay { Representable(model: $model) }
+        content.overlay { Representable(model: model) }
     }
 
     // MARK: private
 
     private struct Representable: UIViewRepresentable {
-        @Binding var model: MultipleTouchModel
+        let model: MultipleTouchModel
 
         func makeUIView(context _: Context) -> UIView { MultipleTouchView(model: model) }
 

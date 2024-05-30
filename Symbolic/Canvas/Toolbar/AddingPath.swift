@@ -65,33 +65,13 @@ struct AddingPathService {
     }
 }
 
-struct AddingPath: View {
+struct AddingPathView: View {
     @Selected var addingPath = global.addingPath.addingPath
 
     var body: some View {
         if let addingPath {
             PathView(path: addingPath, focusedPart: nil)
                 .environmentObject(PathViewModel())
-//            SUPath { addingPathSegment.append(to: &$0) }
-//                .stroke(.blue, style: .init(lineWidth: 4))
-//            HStack {
-//                Color.clear
-//                    .popover(isPresented: .constant(true)) {
-//                        VStack {
-//                            ControlGroup {
-//                                Button("Arc", systemImage: "circle") { }
-//                                Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { }
-//                                Button("Line", systemImage: "chart.xyaxis.line") { }
-//                            } label: {
-//                                Text("Type")
-//                            }.controlGroupStyle(.navigation)
-//                        }
-//                        .padding()
-//                    }
-//            }
-//            .border(.red)
-//            .frame(width: 1, height: 1)
-//            .position(position)
         }
     }
 }

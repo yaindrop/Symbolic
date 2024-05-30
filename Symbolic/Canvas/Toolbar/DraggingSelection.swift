@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-class PendingSelectionStore: Store {
+class DraggingSelectionStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
     @Trackable var intersectedItems: [Item] = []
@@ -25,10 +25,10 @@ class PendingSelectionStore: Store {
     }
 }
 
-struct PendingSelectionService {
+struct DraggingSelectionService {
     let pathStore: PathStore
     let viewport: ViewportService
-    let store: PendingSelectionStore
+    let store: DraggingSelectionStore
 
     var active: Bool { store.active }
 
@@ -70,12 +70,12 @@ struct PendingSelectionService {
     }
 }
 
-struct PendingSelection: View {
-    @Selected var pendingSelectionRect = global.pendingSelection.rect
-    @Selected var toView = global.viewport.toView
+struct DraggingSelectionView: View {
+    @Selected private var rect = global.draggingSelection.rect
+    @Selected private var toView = global.viewport.toView
 
     var body: some View {
-        if let rect = pendingSelectionRect {
+        if let rect {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.gray.opacity(0.2))
                 .stroke(.gray.opacity(0.5))

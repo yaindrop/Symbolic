@@ -13,7 +13,7 @@ enum CanvasAction {
         case panViewport
         case pinchViewport
 
-        case pendingSelection
+        case draggingSelection
         case addingPath
 
         case movePath
@@ -66,7 +66,7 @@ extension CanvasAction.Continuous {
         case .pinchViewport: "Move and scale"
 
         case .addingPath: "Drag to add path"
-        case .pendingSelection: "Drag to select"
+        case .draggingSelection: "Drag to select"
 
         case .movePath: "Drag to move path"
         case .moveSelection: "Drag to move selection"

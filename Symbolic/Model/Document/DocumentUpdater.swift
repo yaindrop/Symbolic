@@ -111,7 +111,7 @@ extension DocumentUpdater {
         }
 
         if pending {
-            let _r = subtracer.range("send pending event"); defer { _r() }
+            let _r = subtracer.range("send pending event \(event)"); defer { _r() }
             store.pendingEventSubject.send(event)
         } else {
             let _r = subtracer.range("send event \(event)"); defer { _r() }

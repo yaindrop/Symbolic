@@ -10,28 +10,30 @@ private var activeGroupsSelector: [ItemGroup] {
         .compactMap { global.item.group(id: $0) }
 }
 
-struct ActiveItemView: View {
-    @Selected var viewport = global.viewport.info
-    @Selected var viewSize = global.activeItem.store.activeItemIds
-    @Selected var activePaths = activePathsSelector
-    @Selected var activeGroups = activeGroupsSelector
+// MARK: - ActiveItemView
 
+struct ActiveItemView: View {
     var body: some View {
         ForEach(activeGroups) {
-            Group(group: $0, viewport: viewport)
+            GroupBounds(group: $0, viewport: viewport)
         }
         ForEach(activePaths) {
-            PathBounds(path: $0, viewport: viewport, groupedPaths: [])
+            PathBounds(path: $0, viewport: viewport)
         }
+        SelectionBounds()
     }
+
+    @Selected private var viewport = global.viewport.info
+    @Selected private var activePaths = activePathsSelector
+    @Selected private var activeGroups = activeGroupsSelector
 }
 
+// MARK: - GroupBounds
+
 extension ActiveItemView {
-    struct Group: View {
+    struct GroupBounds: View {
         let group: ItemGroup
         let viewport: ViewportInfo
-
-        var toView: CGAffineTransform { viewport.worldToView }
 
         var body: some View {
             boundsRect
@@ -44,20 +46,17 @@ extension ActiveItemView {
                 global.item.leafItems(rootItemId: group.id)
                     .compactMap { $0.pathId.map { global.path.path(id: $0) } }
             }
-            _focused = .init {
-                global.activeItem.store.focusedItemId == group.id
-            }
-            _activeDescendants = .init {
-                global.item.expandedItems(rootItemId: group.id)
-                    .filter { $0.id != group.id && global.activeItem.store.activeItemIds.contains($0.id) }
-            }
+            _focused = .init { global.activeItem.focusedItemId == group.id }
+            _selected = .init { global.activeItem.selectedItemIds.contains(group.id) }
         }
+
+        // MARK: private
 
         @Selected private var groupedPaths: [Path]
         @Selected private var focused: Bool
-        @Selected private var activeDescendants: [Item]
+        @Selected private var selected: Bool
 
-        private var selected: Bool { activeDescendants.isEmpty }
+        private var toView: CGAffineTransform { viewport.worldToView }
 
         private var bounds: CGRect? {
             .init(union: groupedPaths.map { $0.boundingRect })?
@@ -70,13 +69,15 @@ extension ActiveItemView {
         @ViewBuilder private var boundsRect: some View {
             if let bounds {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(.blue.opacity(selected ? 0.2 : 0.1))
+                    .fill(.blue.opacity(selected ? 0.1 : 0.03))
                     .stroke(.blue.opacity(focused ? 0.8 : selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
-                    .frame(width: bounds.width, height: bounds.height)
-                    .position(bounds.center)
+                    .framePosition(rect: bounds)
                     .multipleGesture(gesture, ()) {
                         func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                            { v, _ in global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPaths.map { $0.id }, offset: v.offset)), pending: pending) }
+                            { v, _ in
+                                let targetIds = (selected ? global.activeItem.selectedPaths : groupedPaths).map { $0.id }
+                                global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
+                            }
                         }
                         $0.onTap { v, _ in
                             let worldPosition = v.location.applying(global.viewport.toWorld)
@@ -94,6 +95,8 @@ extension ActiveItemView {
                                     if selected {
                                         global.activeItem.selectRemove(itemIds: [group.id])
                                     } else {
+                                        let activeDescendants = global.item.expandedItems(rootItemId: group.id)
+                                            .filter { $0.id != group.id && global.activeItem.store.activeItemIds.contains($0.id) }
                                         global.activeItem.selectRemove(itemIds: activeDescendants.map { $0.id })
                                     }
                                 } else {
@@ -113,32 +116,50 @@ extension ActiveItemView {
             }
         }
     }
+}
 
+// MARK: - PathBounds
+
+extension ActiveItemView {
     struct PathBounds: View {
         let path: Path
         let viewport: ViewportInfo
-        let groupedPaths: [Path]
 
-        var toView: CGAffineTransform { viewport.worldToView }
+        var body: some View {
+            boundsRect
+        }
+
+        init(path: Path, viewport: ViewportInfo) {
+            self.path = path
+            self.viewport = viewport
+            _focused = .init { global.activeItem.focusedItemId == path.id }
+            _selected = .init { global.activeItem.selectedItemIds.contains(path.id) }
+        }
+
+        // MARK: private
+
+        @Selected private var focused: Bool
+        @Selected private var selected: Bool
+
+        private var toView: CGAffineTransform { viewport.worldToView }
 
         @State private var gesture = MultipleGestureModel<Void>()
 
-        init(path: Path, viewport: ViewportInfo, groupedPaths: [Path]) {
-            self.path = path
-            self.viewport = viewport
-            self.groupedPaths = groupedPaths
+        private var bounds: CGRect {
+            path.boundingRect.applying(toView)
         }
 
-        var body: some View {
-            let rect = path.boundingRect.applying(toView)
+        @ViewBuilder private var boundsRect: some View {
             RoundedRectangle(cornerRadius: 2)
-                .fill(.blue.opacity(0.2))
-                .stroke(.blue.opacity(0.5))
-                .frame(width: rect.width, height: rect.height)
-                .position(rect.center)
+                .fill(.blue.opacity(focused ? 0.2 : 0.1))
+                .stroke(.blue.opacity(focused ? 0.8 : 0.5))
+                .framePosition(rect: bounds)
                 .multipleGesture(gesture, ()) {
                     func update(pending: Bool = false) -> (DragGesture.Value, Void) -> Void {
-                        { v, _ in global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPaths.map { $0.id }, offset: v.offset)), pending: pending) }
+                        { v, _ in
+                            let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
+                            global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
+                        }
                     }
                     $0.onTap { _, _ in
                         if global.toolbar.multiSelect {
@@ -156,6 +177,53 @@ extension ActiveItemView {
                         global.canvasAction.end(continuous: .moveSelection)
                     }
                 }
+        }
+    }
+}
+
+private var selectedItemsSelector: [Item] {
+    global.activeItem.selectedItemIds.compactMap { global.item.item(id: $0) }
+}
+
+private var selectionBoundsSelector: CGRect? {
+    CGRect(union: selectedItemsSelector.compactMap { global.item.boundingRect(item: $0) })?.outset(by: 8)
+}
+
+// MARK: - SelectionBounds
+
+extension ActiveItemView {
+    struct SelectionBounds: View {
+        var body: some View {
+            boundsRect
+        }
+
+        @Selected private var selectedItems = selectedItemsSelector
+        @Selected private var selectionBounds = selectionBoundsSelector
+        @Selected private var toView = global.viewport.toView
+        @Selected private var viewSize = global.viewport.store.viewSize
+
+        @State private var dashPhase: CGFloat = 0
+        @State private var menuSize: CGSize = .zero
+
+        private var bounds: CGRect? { selectionBounds?.applying(toView) }
+
+        @ViewBuilder private var boundsRect: some View {
+            if let bounds {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
+                    .framePosition(rect: bounds)
+                    .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
+
+                let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
+                let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
+                ContextMenu(onDelete: {
+                    //                global.documentUpdater.update(path: .delete(.init(pathIds: selectedPathIds)))
+                }, onGroup: {
+                    global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedItems.map { $0.id }), inGroupId: nil)))
+                })
+                .viewSizeReader { menuSize = $0 }
+                .position(menuBox.center)
+            }
         }
     }
 }

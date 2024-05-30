@@ -295,10 +295,13 @@ extension ItemService {
 
     private func loadAffectedPaths(_ pathIds: UUID...) {
         for pathId in pathIds {
-            if path.path(id: pathId) == nil {
+            let item = item(id: pathId)
+            let path = path.path(id: pathId)
+            if path == nil {
+                guard item?.pathId != nil else { continue }
                 remove(itemId: pathId)
                 update(rootIds: rootIds.filter { $0 != pathId })
-            } else if item(id: pathId) == nil {
+            } else if item == nil {
                 add(item: .init(kind: .path(pathId)))
                 update(rootIds: rootIds + [pathId])
             }

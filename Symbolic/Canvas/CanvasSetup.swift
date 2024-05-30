@@ -41,7 +41,7 @@ struct CanvasSetup {
             .store(in: global.viewportUpdater.store)
 
         multipleTouch.$panInfo
-            .sink { global.pendingSelection.onPan($0) }
+            .sink { global.draggingSelection.onPan($0) }
             .store(in: global.addingPath.store)
 
         multipleTouch.$panInfo
@@ -52,7 +52,7 @@ struct CanvasSetup {
     func multipleTouchPress(multipleTouchPress: MultipleTouchPressModel) {
         var toolbarMode: ToolbarMode { global.toolbar.mode }
         var toWorld: CGAffineTransform { global.viewport.toWorld }
-        var pendingSelectionActive: Bool { global.pendingSelection.active }
+        var draggingSelectionActive: Bool { global.draggingSelection.active }
         multipleTouchPress.onPress {
             if case .select = toolbarMode {
                 global.canvasAction.start(triggering: .select)
@@ -94,9 +94,9 @@ struct CanvasSetup {
             global.canvasAction.end(triggering: .select)
             global.canvasAction.end(triggering: .addPath)
 
-            if case .select = toolbarMode, !pendingSelectionActive {
-                global.canvasAction.start(continuous: .pendingSelection)
-                global.pendingSelection.onStart(from: info.current)
+            if case .select = toolbarMode, !draggingSelectionActive {
+                global.canvasAction.start(continuous: .draggingSelection)
+                global.draggingSelection.onStart(from: info.current)
             } else if case let .addPath(addPath) = toolbarMode {
                 global.canvasAction.start(continuous: .addingPath)
                 global.addingPath.onStart(from: info.current)
@@ -111,8 +111,8 @@ struct CanvasSetup {
 //                global.selection.update(pathIds: Set(selectedPaths.map { $0.id }))
 //                global.canvasAction.on(instant: .selectPaths)
 //            }
-            global.pendingSelection.onEnd()
-            global.canvasAction.end(continuous: .pendingSelection)
+            global.draggingSelection.onEnd()
+            global.canvasAction.end(continuous: .draggingSelection)
 
             if let path = global.addingPath.addingPath {
                 global.documentUpdater.update(path: .create(.init(path: path)))
@@ -123,10 +123,10 @@ struct CanvasSetup {
             global.canvasAction.end(continuous: .addingPath)
         }
 
-        global.pendingSelection.store.$intersectedItems.didSet
+        global.draggingSelection.store.$intersectedItems.didSet
             .sink {
                 global.activeItem.select(itemIds: $0.map { $0.id })
             }
-            .store(in: global.pendingSelection.store)
+            .store(in: global.draggingSelection.store)
     }
 }

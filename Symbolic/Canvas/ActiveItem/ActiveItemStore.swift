@@ -64,10 +64,23 @@ struct ActiveItemService {
     let path: PathService
     let store: ActiveItemStore
 
+    var activeItemIds: Set<UUID> { store.activeItemIds }
     var focusedItemId: UUID? { store.focusedItemId }
+    var pathFocusedPart: PathFocusedPart? { store.pathFocusedPart }
+
     var selectedItemIds: Set<UUID> {
         guard store.focusedItemId == nil else { return [] }
-        return store.activeItemIds
+        var result = Set(store.activeItemIds)
+        for id in store.activeItemIds {
+            result.subtract(item.ancestorIds(of: id))
+        }
+        return result
+    }
+
+    var selectedPaths: [Path] {
+        selectedItemIds
+            .flatMap { item.leafItems(rootItemId: $0) }
+            .compactMap { path.path(id: $0.id) }
     }
 
     var activePath: Path? {
@@ -76,6 +89,8 @@ struct ActiveItemService {
         }
         return nil
     }
+
+    // MARK: focus actions
 
     func focus(itemId: UUID) {
         let _r = subtracer.range("focus \(itemId)", type: .intent); defer { _r() }
@@ -104,6 +119,8 @@ struct ActiveItemService {
         store.update(active: activeItemIds, focused: parentId)
     }
 
+    // MARK: select actions
+
     func select(itemIds: [UUID]) {
         let _r = subtracer.range("select \(itemIds)", type: .intent); defer { _r() }
         store.update(active: .init(itemIds))
@@ -131,7 +148,7 @@ struct ActiveItemService {
         store.update(deselect: itemIds)
     }
 
-    var pathFocusedPart: PathFocusedPart? { store.pathFocusedPart }
+    // MARK: path part focus actions
 
     func setFocus(node id: UUID) {
         let _r = subtracer.range("set focus", type: .intent); defer { _r() }

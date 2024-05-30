@@ -25,8 +25,8 @@ struct GlobalStore {
 
     let toolbar = ToolbarStore()
 
-    private let pendingSelectionStore = PendingSelectionStore()
-    var pendingSelection: PendingSelectionService { .init(pathStore: pathStore, viewport: viewport, store: pendingSelectionStore) }
+    private let draggingSelectionStore = DraggingSelectionStore()
+    var draggingSelection: DraggingSelectionService { .init(pathStore: pathStore, viewport: viewport, store: draggingSelectionStore) }
 
     private let addingPathStore = AddingPathStore()
     var addingPath: AddingPathService { .init(toolbar: toolbar, viewport: viewport, grid: grid, store: addingPathStore) }

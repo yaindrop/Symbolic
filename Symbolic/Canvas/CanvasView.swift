@@ -97,9 +97,10 @@ struct CanvasView: View {
         ZStack {
             ActiveItemView()
             ActivePathView()
-            PendingSelection()
-            SelectionView()
-            AddingPath()
+
+            DraggingSelectionView()
+            AddingPathView()
+
             PanelRoot()
                 .environmentObject(panelModel)
         }

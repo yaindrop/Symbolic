@@ -98,15 +98,13 @@ extension ItemPanel {
 
         private var title: some View {
             HStack {
-                HStack {
-                    expandButton
-                    Text("#\(group.id.uuidString.prefix(4))")
-                }
-                .padding(12)
+                expandButton
+                Text("#\(group.id.uuidString.prefix(4))")
+                    .font(.subheadline)
+                    .padding(.vertical, 12)
                 Spacer()
                 menu
             }
-            .font(.subheadline)
         }
 
         private var expandButton: some View {
@@ -114,8 +112,10 @@ extension ItemPanel {
                 withAnimation { expanded.toggle() }
             } label: {
                 Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                    .padding(4)
+                    .padding(.horizontal, 12)
+                    .frame(maxHeight: .infinity)
             }
+            .tint(.label)
         }
 
         private var menu: some View {
@@ -126,6 +126,7 @@ extension ItemPanel {
                     .padding(.horizontal, 12)
                     .frame(maxHeight: .infinity)
             }
+            .tint(.label)
         }
 
         private var members: some View {
@@ -161,11 +162,11 @@ extension ItemPanel {
                             .padding(4)
                         Text("#\(path.id.uuidString.prefix(4))")
                     }
+                    .font(.subheadline)
                     .padding(12)
                     Spacer()
                     menu
                 }
-                .font(.subheadline)
             }
         }
 
@@ -177,6 +178,7 @@ extension ItemPanel {
                     .padding(.horizontal, 12)
                     .frame(maxHeight: .infinity)
             }
+            .tint(.label)
         }
     }
 }

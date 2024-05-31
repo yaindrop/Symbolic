@@ -75,6 +75,10 @@ struct DocumentUpdater {
     func update(item action: ItemAction, pending: Bool = false) {
         handle(.itemAction(action), pending: pending)
     }
+
+    func cancel() {
+        store.pendingEventSubject.send(nil)
+    }
 }
 
 // MARK: handle action
@@ -91,7 +95,7 @@ extension DocumentUpdater {
 
         guard let first = eventKinds.first else {
             if pending {
-                store.pendingEventSubject.send(nil)
+                cancel()
             }
             return
         }

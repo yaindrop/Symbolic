@@ -35,16 +35,18 @@ class ActivePathViewModel: PathViewModel {
 
         return .init(
             configs: .init(durationThreshold: 0.2),
-            onTouchDown: {
+            onPress: {
                 global.canvasAction.start(continuous: .movePathNode)
                 if canAddEndingNode {
                     global.canvasAction.start(triggering: .addEndingNode)
                 }
             },
-            onTouchUp: {
+            onPressEnd: { cancelled in
                 global.canvasAction.end(triggering: .addEndingNode)
                 global.canvasAction.end(continuous: .addAndMoveEndingNode)
                 global.canvasAction.end(continuous: .movePathNode)
+                if cancelled { global.documentUpdater.cancel() }
+
             },
 
             onTap: { _ in self.toggleFocus(nodeId: nodeId) },
@@ -96,14 +98,16 @@ class ActivePathViewModel: PathViewModel {
 
         return .init(
             configs: .init(durationThreshold: 0.2),
-            onTouchDown: {
+            onPress: {
                 global.canvasAction.start(continuous: .movePath)
                 global.canvasAction.start(triggering: .splitPathEdge)
             },
-            onTouchUp: {
+            onPressEnd: { cancelled in
                 global.canvasAction.end(triggering: .splitPathEdge)
                 global.canvasAction.end(continuous: .splitAndMovePathNode)
                 global.canvasAction.end(continuous: .movePath)
+                if cancelled { global.documentUpdater.cancel() }
+
             },
             onTap: { _ in self.toggleFocus(edgeFromId: fromId) },
             onLongPress: {
@@ -127,8 +131,12 @@ class ActivePathViewModel: PathViewModel {
             global.documentUpdater.updateInView(activePath: .moveEdge(.init(fromNodeId: fromId, offset: v.offset)), pending: pending)
         }
         return .init(
-            onTouchDown: { global.canvasAction.start(continuous: .movePathEdge) },
-            onTouchUp: { global.canvasAction.end(continuous: .movePathEdge) },
+            onPress: { global.canvasAction.start(continuous: .movePathEdge) },
+            onPressEnd: { cancelled in
+                global.canvasAction.end(continuous: .movePathEdge)
+                if cancelled { global.documentUpdater.cancel() }
+            },
+
             onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )
@@ -139,8 +147,11 @@ class ActivePathViewModel: PathViewModel {
             global.documentUpdater.updateInView(activePath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending)
         }
         return .init(
-            onTouchDown: { global.canvasAction.start(continuous: .movePathBezierControl) },
-            onTouchUp: { global.canvasAction.end(continuous: .movePathBezierControl) },
+            onPress: { global.canvasAction.start(continuous: .movePathBezierControl) },
+            onPressEnd: { cancelled in
+                global.canvasAction.end(continuous: .movePathBezierControl)
+                if cancelled { global.documentUpdater.cancel() }
+            },
             onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )

@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+private let subtracer = tracer.tagged("MultipleGesture")
+
 // MARK: - MultipleGesture
 
 struct MultipleGesture {
@@ -15,8 +17,8 @@ struct MultipleGesture {
 
     var configs: Configs = .init()
 
-    var onTouchDown: (() -> Void)?
-    var onTouchUp: (() -> Void)?
+    var onPress: (() -> Void)?
+    var onPressEnd: ((_ cancelled: Bool) -> Void)?
 
     var onTap: ((Value) -> Void)?
     var onLongPress: ((Value) -> Void)?
@@ -37,8 +39,11 @@ struct MultipleGestureModifier: ViewModifier {
             .gesture(dragGesture)
             .onChange(of: active) {
                 if !active {
-                    onPressCancelled()
+                    onPressCancel()
                 }
+            }
+            .onDisappear {
+                onPressCancel()
             }
     }
 
@@ -79,29 +84,31 @@ struct MultipleGestureModifier: ViewModifier {
             .updating(flag: $active)
             .onChanged { v in
                 if context == nil {
-                    onPressStarted(v)
-                    onPressChanged()
+                    onPressStart(v)
+                    onPressChange()
                 } else {
                     context?.onValue(v)
-                    onPressChanged()
+                    onPressChange()
                 }
             }
             .onEnded { v in
                 context?.onValue(v)
-                onPressEnded()
+                onPressEnd()
             }
     }
 
     // MARK: stages
 
-    private func onPressStarted(_ v: DragGesture.Value) {
+    private func onPressStart(_ v: DragGesture.Value) {
+        let _r = subtracer.range("press starte", type: .intent); defer { _r() }
         context = .init(value: v)
         setupLongPress()
-        gesture.onTouchDown?()
+        gesture.onPress?()
     }
 
-    private func onPressChanged() {
+    private func onPressChange() {
         guard let context else { return }
+        let _r = subtracer.range("press change", type: .intent); defer { _r() }
         if !isPress {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
                 resetLongPress()
@@ -110,8 +117,9 @@ struct MultipleGestureModifier: ViewModifier {
         }
     }
 
-    private func onPressEnded() {
+    private func onPressEnd() {
         guard let context else { return }
+        let _r = subtracer.range("press end", type: .intent); defer { _r() }
         if isPress {
             resetLongPress()
             if !context.longPressStarted {
@@ -123,13 +131,15 @@ struct MultipleGestureModifier: ViewModifier {
                 resetLongPress()
             }
         }
-        gesture.onTouchUp?()
+        gesture.onPressEnd?(false)
         self.context = nil
     }
 
-    private func onPressCancelled() {
-        resetLongPress()
-        gesture.onTouchUp?()
+    private func onPressCancel() {
+        guard context != nil else { return }
+        let _r = subtracer.range("press cancel", type: .intent); defer { _r() }
+        resetLongPress(cancel: true)
+        gesture.onPressEnd?(true)
         context = nil
     }
 
@@ -137,6 +147,7 @@ struct MultipleGestureModifier: ViewModifier {
 
     private func setupLongPress() {
         guard let context else { return }
+        let _r = subtracer.range("setup long press"); defer { _r() }
         let longPressTimeout = DispatchWorkItem {
             gesture.onLongPress?(context.lastValue)
             self.context?.longPressStarted = true
@@ -145,15 +156,19 @@ struct MultipleGestureModifier: ViewModifier {
         self.context?.longPressTimeout = longPressTimeout
     }
 
-    private func resetLongPress() {
+    private func resetLongPress(cancel: Bool = false) {
         guard let context else { return }
         if let timeout = context.longPressTimeout {
+            let _r = subtracer.range("reset long press timeout"); defer { _r() }
             self.context?.longPressTimeout = nil
             timeout.cancel()
         }
         if context.longPressStarted {
+            let _r = subtracer.range("\(cancel ? "cancel" : "end") long press"); defer { _r() }
             self.context?.longPressStarted = false
-            gesture.onLongPressEnd?(context.lastValue)
+            if !cancel {
+                gesture.onLongPressEnd?(context.lastValue)
+            }
         }
     }
 }

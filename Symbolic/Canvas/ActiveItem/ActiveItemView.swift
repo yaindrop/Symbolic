@@ -76,12 +76,16 @@ extension ActiveItemView {
                     .stroke(.blue.opacity(focused ? 0.8 : selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
                     .framePosition(rect: bounds)
                     .multipleGesture(.init(
-                        onTouchDown: {
+                        onPress: {
                             global.canvasAction.start(continuous: .moveSelection)
                         },
-                        onTouchUp: {
+                        onPressEnd: { cancelled in
                             global.canvasAction.end(continuous: .moveSelection)
+                            if cancelled {
+                                global.documentUpdater.cancel()
+                            }
                         },
+
                         onTap: {
                             let worldPosition = $0.location.applying(global.viewport.toWorld)
                             let path = groupedPaths.first {

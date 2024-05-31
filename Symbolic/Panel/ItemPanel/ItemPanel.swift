@@ -17,14 +17,12 @@ struct ItemPanel: View {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
-    @State private var moveContext = PanelMoveContext()
-
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "Items")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.moveGesture(panel: panelModel.idToPanel[panelId], context: moveContext))
+                .multipleGesture(panelModel.moveGesture(panelId: panelId))
             scrollView
         }
         .background(.regularMaterial)

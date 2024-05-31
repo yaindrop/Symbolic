@@ -8,8 +8,10 @@ extension View {
         background {
             GeometryReader { geometry in
                 Color.clear
-                    .onChange(of: geometry.frame(in: .global), initial: true) {
+                    .onChange(of: geometry.size, initial: true) {
                         onSize?(geometry.size)
+                    }
+                    .onChange(of: geometry.frame(in: .global), initial: true) {
                         onGeometry?(geometry)
                     }
             }

@@ -12,6 +12,8 @@ class PanelModel: ObservableObject {
 
     var panels: [PanelData] { panelIds.compactMap { idToPanel[$0] } }
     var rootRect: CGRect { .init(rootSize) }
+
+    fileprivate var movingPanel: [UUID: PanelData] = [:]
 }
 
 extension PanelModel {
@@ -29,7 +31,8 @@ extension PanelModel {
 }
 
 extension PanelModel {
-    func onMoving(panelId: UUID, origin: Point2, _ v: DragGesture.Value) {
+    func onMoving(panelId: UUID, _ v: DragGesture.Value) {
+        guard let origin = movingPanel[panelId]?.origin else { return }
         let offset = v.offset
         let _r = subtracer.range("moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
@@ -42,7 +45,8 @@ extension PanelModel {
         }
     }
 
-    func onMoved(panelId: UUID, origin: Point2, _ v: DragGesture.Value) {
+    func onMoved(panelId: UUID, _ v: DragGesture.Value) {
+        guard let origin = movingPanel[panelId]?.origin else { return }
         let offset = v.offset, speed = v.speed
         let _r = subtracer.range("moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
@@ -87,18 +91,21 @@ extension PanelModel {
         return newPanel
     }
 
-    func moveGesture(panel: PanelData?, context: PanelMoveContext) -> MultipleGesture {
+    func moveGesture(panelId: UUID) -> MultipleGesture {
         .init(
             configs: .init(coordinateSpace: .global),
-            onPress: { context.origin = panel },
-            onPressEnd: { _ in context.origin = nil },
+            onPress: {
+                guard let panel = self.idToPanel[panelId] else { return }
+                self.movingPanel[panelId] = panel
+            },
+            onPressEnd: { _ in
+                self.movingPanel[panelId] = nil
+            },
             onDrag: {
-                guard let panel = context.origin else { return }
-                self.onMoving(panelId: panel.id, origin: panel.origin, $0)
+                self.onMoving(panelId: panelId, $0)
             },
             onDragEnd: {
-                guard let panel else { return }
-                self.onMoved(panelId: panel.id, origin: panel.origin, $0)
+                self.onMoved(panelId: panelId, $0)
             }
         )
     }

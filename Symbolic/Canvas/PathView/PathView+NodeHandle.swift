@@ -51,7 +51,7 @@ extension PathView {
                 ContextMenu(onDelete: {
                     //                global.pathUpdater.delete(pathIds: selectedPathIds)
                 })
-                .geometryReader { menuSize = $0 }
+                .sizeReader { menuSize = $0 }
                 .position(menuBox.center)
             }
         }

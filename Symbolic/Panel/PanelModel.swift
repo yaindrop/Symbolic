@@ -117,9 +117,9 @@ extension PanelModel {
         guard var panel = idToPanel[panelId] else { return }
         panel.size = size
         panel.origin += affinityOffset(of: panel)
-//        withAnimation {
-        idToPanel[panel.id] = panel
-//        }
+        withAnimation {
+            idToPanel[panel.id] = panel
+        }
 
         for (id, panel) in idToPanel {
             if panel.affinities.contains(where: { $0.related(to: panelId) }) {

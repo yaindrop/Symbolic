@@ -220,7 +220,7 @@ extension ActiveItemView {
                 }, onGroup: {
                     global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedItems.map { $0.id }), inGroupId: nil)))
                 })
-                .geometryReader { menuSize = $0 }
+                .sizeReader { menuSize = $0 }
                 .position(menuBox.center)
             }
         }

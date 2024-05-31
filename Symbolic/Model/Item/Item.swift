@@ -1,12 +1,12 @@
 import Foundation
 
-struct ItemGroup: Identifiable {
+struct ItemGroup: Identifiable, Equatable {
     let id: UUID
     let members: [UUID]
 }
 
-struct Item: TriviallyCloneable {
-    enum Kind {
+struct Item: TriviallyCloneable, Equatable {
+    enum Kind: Equatable {
         case path(UUID)
         case group(ItemGroup)
     }

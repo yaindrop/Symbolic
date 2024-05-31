@@ -119,7 +119,7 @@ struct CanvasSetup {
             global.addingPath.onDrag($0)
         }
 
-        global.draggingSelection.store.$intersectedItems.didSet
+        global.draggingSelection.store.$intersectedItems.willUpdate
             .sink {
                 global.activeItem.select(itemIds: $0.map { $0.id })
             }

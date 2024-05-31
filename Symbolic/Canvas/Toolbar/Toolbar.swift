@@ -1,13 +1,13 @@
 import Foundation
 import SwiftUI
 
-enum ToolbarMode {
-    struct Select {
+enum ToolbarMode: Equatable {
+    struct Select: Equatable {
         var multiSelect = false
         var dragSelectLeaf = false
     }
 
-    struct AddPath {}
+    struct AddPath: Equatable {}
 
     case select(Select)
     case addPath(AddPath)

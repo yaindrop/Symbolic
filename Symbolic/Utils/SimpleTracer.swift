@@ -160,18 +160,19 @@ class Tracer {
     private var rangeStack: [PendingRange] = []
 
     private func onNode(_ node: Node) {
-        if rangeStack.isEmpty {
-            nodes.append(node)
-            if case let .range(r) = node {
-                if r.type == .intent {
-                    logInfo("[intent] \(r.tree)")
-                } else {
-                    let tree = r.buildTreeLines().enumerated().map { $0 == 0 ? " ... \($1)" : "     \($1)" }.joined(separator: "\n")
-                    logInfo(tree)
-                }
+        if var last = rangeStack.popLast() {
+            last.nodes.append(node)
+            rangeStack.append(last)
+            return
+        }
+        nodes.append(node)
+        if case let .range(r) = node {
+            if r.type == .intent {
+                logInfo("[intent] \(r.tree)")
+            } else {
+                let tree = r.buildTreeLines().enumerated().map { $0 == 0 ? " ... \($1)" : "     \($1)" }.joined(separator: "\n")
+                logInfo(tree)
             }
-        } else {
-            rangeStack[rangeStack.count - 1].nodes.append(node)
         }
     }
 }

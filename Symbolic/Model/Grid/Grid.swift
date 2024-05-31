@@ -10,7 +10,7 @@ extension Snappable {
     }
 }
 
-struct CartesianGrid {
+struct CartesianGrid: Equatable {
     let cellSize: CGFloat
 
     func snap(_ point: CGPoint) -> CGPoint {

@@ -142,7 +142,7 @@ class Store: CancellableHolder {
 // MARK: - Trackable
 
 @propertyWrapper
-struct _Trackable<Instance: _StoreProtocol, Value> {
+struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var id: Int?
     fileprivate var value: Value
     fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
@@ -175,25 +175,17 @@ struct _Trackable<Instance: _StoreProtocol, Value> {
     }
 }
 
-private extension _Trackable {
-    func needUpdate(newValue _: Value) -> Bool { true }
-}
-
-private extension _Trackable where Value: Equatable {
-    func needUpdate(newValue: Value) -> Bool { value != newValue }
-}
-
 // MARK: - StoreProtocol
 
 protocol _StoreProtocol: Store {
-    typealias Trackable<T> = _Trackable<Self, T>
+    typealias Trackable<T: Equatable> = _Trackable<Self, T>
 }
 
 extension Store: _StoreProtocol {
     struct Updater<S: _StoreProtocol> {
         let store: S
 
-        func callAsFunction<T>(_ keypath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
+        func callAsFunction<T: Equatable>(_ keypath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
             store.update(keypath, value)
         }
 
@@ -228,7 +220,7 @@ extension _StoreProtocol {
             id = generatePropertyId()
             wrapper.id = id
         }
-        guard wrapper.needUpdate(newValue: newValue) else { return }
+        guard wrapper.value != newValue else { return }
         onChange(of: id)
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
@@ -251,7 +243,7 @@ func withStoreUpdating(_ apply: () -> Void) {
 // MARK: - Selected
 
 @propertyWrapper
-struct Selected<Value>: DynamicProperty {
+struct Selected<Value: Equatable>: DynamicProperty {
     fileprivate class Storage: ObservableObject {
         var name: String?
         @Published var value: Value?
@@ -265,9 +257,9 @@ struct Selected<Value>: DynamicProperty {
         private let selector: () -> Value
 
         private func select() {
-            let _r = selectedTracer.range("select \(name ?? "")"); defer { _r() }
+            let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
             let newValue = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
-            if needUpdate(newValue: newValue) {
+            if value != newValue {
                 selectedTracer.instant("updated")
                 value = newValue
             }
@@ -287,12 +279,4 @@ struct Selected<Value>: DynamicProperty {
     init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
         self.init(wrappedValue, name: name)
     }
-}
-
-private extension Selected.Storage {
-    func needUpdate(newValue _: Value) -> Bool { true }
-}
-
-private extension Selected.Storage where Value: Equatable {
-    func needUpdate(newValue: Value) -> Bool { value != newValue }
 }

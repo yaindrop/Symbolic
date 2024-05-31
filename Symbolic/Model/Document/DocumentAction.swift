@@ -1,22 +1,20 @@
 import Foundation
 
-private protocol PathActionSingleKind: SelfTransformable {}
-
 extension PathAction.Single {
-    struct DeleteNode: PathActionSingleKind { let nodeId: UUID }
+    struct DeleteNode: Equatable { let nodeId: UUID }
 
-    struct SetNodePosition: PathActionSingleKind { let nodeId: UUID, position: Point2 }
-    struct SetEdge: PathActionSingleKind { let fromNodeId: UUID, edge: PathEdge }
+    struct SetNodePosition: Equatable { let nodeId: UUID, position: Point2 }
+    struct SetEdge: Equatable { let fromNodeId: UUID, edge: PathEdge }
 
-    struct AddEndingNode: PathActionSingleKind { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
-    struct SplitSegment: PathActionSingleKind { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
+    struct AddEndingNode: Equatable { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct SplitSegment: Equatable { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
-    struct Move: PathActionSingleKind { let offset: Vector2 }
-    struct MoveNode: PathActionSingleKind { let nodeId: UUID, offset: Vector2 }
-    struct MoveEdge: PathActionSingleKind { let fromNodeId: UUID, offset: Vector2 }
-    struct MoveEdgeControl: PathActionSingleKind { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
+    struct Move: Equatable { let offset: Vector2 }
+    struct MoveNode: Equatable { let nodeId: UUID, offset: Vector2 }
+    struct MoveEdge: Equatable { let fromNodeId: UUID, offset: Vector2 }
+    struct MoveEdgeControl: Equatable { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
 
-    enum Kind {
+    enum Kind: Equatable {
         case deleteNode(DeleteNode)
 
         case setNodePosition(SetNodePosition)
@@ -33,19 +31,19 @@ extension PathAction.Single {
     }
 }
 
-enum PathAction {
-    struct Load { let path: Path }
+enum PathAction: Equatable {
+    struct Load: Equatable { let path: Path }
 
-    struct Create { let path: Path }
+    struct Create: Equatable { let path: Path }
 
-    struct Move { let pathIds: [UUID], offset: Vector2 }
-    struct Delete { let pathIds: [UUID] }
+    struct Move: Equatable { let pathIds: [UUID], offset: Vector2 }
+    struct Delete: Equatable { let pathIds: [UUID] }
 
-    struct Single { let pathId: UUID, kind: Kind }
+    struct Single: Equatable { let pathId: UUID, kind: Kind }
 
-    struct Merge { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct BreakAtNode { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
-    struct BreakAtEdge { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
+    struct Merge: Equatable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct BreakAtNode: Equatable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
+    struct BreakAtEdge: Equatable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
 
     case load(Load)
     case create(Create)
@@ -60,17 +58,17 @@ enum PathAction {
     case breakAtEdge(BreakAtEdge)
 }
 
-enum ItemAction {
-    struct Group { let group: ItemGroup, inGroupId: UUID? }
-    struct Ungroup { let groupIds: [UUID] }
-    struct Reorder { let members: [UUID], inGroupId: UUID? }
+enum ItemAction: Equatable {
+    struct Group: Equatable { let group: ItemGroup, inGroupId: UUID? }
+    struct Ungroup: Equatable { let groupIds: [UUID] }
+    struct Reorder: Equatable { let members: [UUID], inGroupId: UUID? }
 
     case group(Group)
     case ungroup(Ungroup)
     case reorder(Reorder)
 }
 
-enum DocumentAction {
+enum DocumentAction: Equatable {
     case pathAction(PathAction)
     case itemAction(ItemAction)
 }

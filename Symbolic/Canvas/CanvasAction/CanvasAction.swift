@@ -1,15 +1,15 @@
 import Combine
 import Foundation
 
-enum CanvasAction {
-    enum Triggering {
+enum CanvasAction: Equatable {
+    enum Triggering: Equatable {
         case select
         case addPath
         case addEndingNode
         case splitPathEdge
     }
 
-    enum Continuous {
+    enum Continuous: Equatable {
         case panViewport
         case pinchViewport
 
@@ -27,7 +27,7 @@ enum CanvasAction {
         case splitAndMovePathNode
     }
 
-    enum Instant {
+    enum Instant: Equatable {
         case activatePath
         case deactivatePath
         case focusPathNode

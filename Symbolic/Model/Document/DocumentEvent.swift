@@ -2,8 +2,8 @@ import Foundation
 
 // MARK: - CompoundEvent
 
-struct CompoundEvent {
-    enum Kind {
+struct CompoundEvent: Equatable {
+    enum Kind: Equatable {
         case pathEvent(PathEvent)
         case itemEvent(ItemEvent)
     }
@@ -13,15 +13,15 @@ struct CompoundEvent {
 
 // MARK: - PathEvent
 
-enum PathEvent {
-    struct Create { let path: Path }
-    struct Delete { let pathId: UUID }
-    struct Update { let pathId: UUID, kind: Kind }
-    enum Compound {
-        struct Merge { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+enum PathEvent: Equatable {
+    struct Create: Equatable { let path: Path }
+    struct Delete: Equatable { let pathId: UUID }
+    struct Update: Equatable { let pathId: UUID, kind: Kind }
+    enum Compound: Equatable {
+        struct Merge: Equatable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
 
-        struct NodeBreak { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
-        struct EdgeBreak { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
+        struct NodeBreak: Equatable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
+        struct EdgeBreak: Equatable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
 
         case merge(Merge)
         case nodeBreak(NodeBreak)
@@ -37,15 +37,15 @@ enum PathEvent {
 // MARK: Update
 
 extension PathEvent.Update {
-    struct Move { let offset: Vector2 }
+    struct Move: Equatable { let offset: Vector2 }
 
-    struct NodeCreate { let prevNodeId: UUID?, node: PathNode }
-    struct NodeUpdate { let node: PathNode }
-    struct NodeDelete { let nodeId: UUID }
+    struct NodeCreate: Equatable { let prevNodeId: UUID?, node: PathNode }
+    struct NodeUpdate: Equatable { let node: PathNode }
+    struct NodeDelete: Equatable { let nodeId: UUID }
 
-    struct EdgeUpdate { let fromNodeId: UUID, edge: PathEdge }
+    struct EdgeUpdate: Equatable { let fromNodeId: UUID, edge: PathEdge }
 
-    enum Kind {
+    enum Kind: Equatable {
         case move(Move)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
@@ -56,16 +56,16 @@ extension PathEvent.Update {
 
 // MARK: - ItemEvent
 
-enum ItemEvent {
-    struct SetMembers { let members: [UUID], inGroupId: UUID? }
+enum ItemEvent: Equatable {
+    struct SetMembers: Equatable { let members: [UUID], inGroupId: UUID? }
 
     case setMembers(SetMembers)
 }
 
 // MARK: - DocumentEvent
 
-struct DocumentEvent: Identifiable {
-    enum Kind {
+struct DocumentEvent: Identifiable, Equatable {
+    enum Kind: Equatable {
         case compoundEvent(CompoundEvent)
         case pathEvent(PathEvent)
         case itemEvent(ItemEvent)

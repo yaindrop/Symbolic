@@ -161,8 +161,9 @@ extension ActiveItemView {
                     onPress: {
                         global.canvasAction.start(continuous: .moveSelection)
                     },
-                    onPressEnd: {
+                    onPressEnd: { cancelled in
                         global.canvasAction.end(continuous: .moveSelection)
+                        if cancelled { global.documentUpdater.cancel() }
                     },
                     onTap: { _ in
                         if global.toolbar.multiSelect {
@@ -171,8 +172,8 @@ extension ActiveItemView {
                             global.activeItem.focus(itemId: path.id)
                         }
                     },
-                    onPan: { updateDrag($0, pending: true) },
-                    onPanEnd: { updateDrag($0) }
+                    onDrag: { updateDrag($0, pending: true) },
+                    onDragEnd: { updateDrag($0) }
                 ))
                 .framePosition(rect: bounds)
         }

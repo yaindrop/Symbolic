@@ -39,14 +39,6 @@ struct CanvasSetup {
         multipleTouch.$pinchInfo
             .sink { global.viewportUpdater.onPinchInfo($0) }
             .store(in: global.viewportUpdater.store)
-
-        multipleTouch.$panInfo
-            .sink { global.draggingSelection.onPan($0) }
-            .store(in: global.addingPath.store)
-
-        multipleTouch.$panInfo
-            .sink { global.addingPath.onPan($0) }
-            .store(in: global.addingPath.store)
     }
 
     func multipleTouchPress(multipleTouchPress: MultipleTouchPressModel) {
@@ -60,9 +52,13 @@ struct CanvasSetup {
                 global.canvasAction.start(triggering: .addPath)
             }
         }
-        multipleTouchPress.onPressEnd {
+        multipleTouchPress.onPressEnd { cancelled in
             global.canvasAction.end(triggering: .select)
             global.canvasAction.end(triggering: .addPath)
+            if cancelled {
+                global.draggingSelection.cancel()
+                global.addingPath.cancel()
+            }
         }
         multipleTouchPress.onTap { info in
             let worldLocation = info.location.applying(toWorld)
@@ -74,14 +70,14 @@ struct CanvasSetup {
                 } else {
                     global.activeItem.blur()
                 }
-                return
-            }
-            if let pathId {
-                global.canvasAction.on(instant: .activatePath)
-                global.activeItem.focus(itemId: pathId)
-            } else if !global.activeItem.store.activeItemIds.isEmpty {
-                global.canvasAction.on(instant: .deactivatePath)
-                global.activeItem.blur()
+            } else {
+                if let pathId {
+                    global.canvasAction.on(instant: .activatePath)
+                    global.activeItem.focus(itemId: pathId)
+                } else if !global.activeItem.store.activeItemIds.isEmpty {
+                    global.canvasAction.on(instant: .deactivatePath)
+                    global.activeItem.blur()
+                }
             }
         }
         multipleTouchPress.onLongPress { info in
@@ -105,12 +101,7 @@ struct CanvasSetup {
         multipleTouchPress.onLongPressEnd { _ in
             let _r = tracer.range("On long press end", type: .intent); defer { _r() }
             global.viewportUpdater.setBlocked(false)
-            //                    longPressPosition = nil
 
-//            if !selectedPaths.isEmpty {
-//                global.selection.update(pathIds: Set(selectedPaths.map { $0.id }))
-//                global.canvasAction.on(instant: .selectPaths)
-//            }
             global.draggingSelection.onEnd()
             global.canvasAction.end(continuous: .draggingSelection)
 
@@ -121,6 +112,11 @@ struct CanvasSetup {
             }
             global.addingPath.onEnd()
             global.canvasAction.end(continuous: .addingPath)
+        }
+
+        multipleTouchPress.onDrag {
+            global.draggingSelection.onDrag($0)
+            global.addingPath.onDrag($0)
         }
 
         global.draggingSelection.store.$intersectedItems.didSet

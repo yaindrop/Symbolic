@@ -59,9 +59,13 @@ struct AddingPathService {
         store.update(from: nil)
     }
 
-    func onPan(_ info: PanInfo?) {
+    func onDrag(_ info: PanInfo?) {
         guard active, let info else { return }
         store.update(to: grid.snap(info.current))
+    }
+
+    func cancel() {
+        store.update(from: nil)
     }
 }
 

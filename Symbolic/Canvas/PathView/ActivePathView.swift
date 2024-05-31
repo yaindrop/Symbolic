@@ -175,8 +175,6 @@ struct ActivePathView: View {
         if let activePath {
             PathView(path: activePath, focusedPart: focusedPart)
                 .environmentObject(viewModel)
-                .onAppear { print("ActivePathView appear") }
-                .onDisappear { print("ActivePathView disappear") }
         }
     } } }
 

@@ -34,6 +34,7 @@ extension PanelModel {
         let _r = subtracer.range("moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
         guard var panel = idToPanel[panelId] else { return }
         panel.origin = origin + offset
+        subtracer.instant("panel.origin \(panel.origin)")
         idToPanel[panelId] = panel
         if panelIds.last != panelId {
             panelIds.removeAll { $0.id == panelId }
@@ -86,11 +87,13 @@ extension PanelModel {
         return newPanel
     }
 
-    func moveGesture(_ panel: PanelData?) -> MultipleGesture {
+    func moveGesture(panel: PanelData?, context: PanelMoveContext) -> MultipleGesture {
         .init(
             configs: .init(coordinateSpace: .global),
+            onPress: { context.origin = panel },
+            onPressEnd: { _ in context.origin = nil },
             onDrag: {
-                guard let panel else { return }
+                guard let panel = context.origin else { return }
                 self.onMoving(panelId: panel.id, origin: panel.origin, $0)
             },
             onDragEnd: {
@@ -107,9 +110,9 @@ extension PanelModel {
         guard var panel = idToPanel[panelId] else { return }
         panel.size = size
         panel.origin += affinityOffset(of: panel)
-        withAnimation {
-            idToPanel[panel.id] = panel
-        }
+//        withAnimation {
+        idToPanel[panel.id] = panel
+//        }
 
         for (id, panel) in idToPanel {
             if panel.affinities.contains(where: { $0.related(to: panelId) }) {
@@ -122,13 +125,13 @@ extension PanelModel {
     func onRootResized(size: CGSize) {
         let _r = subtracer.range("resize root \(size)"); defer { _r() }
         rootSize = size
-        withAnimation {
-            for id in panelIds {
-                guard var panel = idToPanel[id] else { return }
-                panel.origin += affinityOffset(of: panel)
-                idToPanel[panel.id] = panel
-            }
+//        withAnimation {
+        for id in panelIds {
+            guard var panel = idToPanel[id] else { return }
+            panel.origin += affinityOffset(of: panel)
+            idToPanel[panel.id] = panel
         }
+//        }
     }
 }
 

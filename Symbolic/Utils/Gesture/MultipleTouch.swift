@@ -204,7 +204,11 @@ struct MultipleTouchModifier: ViewModifier {
     let model: MultipleTouchModel
 
     func body(content: Content) -> some View {
-        content.overlay { Representable(model: model) }
+        content
+            .overlay { Representable(model: model) }
+            .onDisappear {
+                model.onAllTouchesEnded()
+            }
     }
 
     // MARK: private

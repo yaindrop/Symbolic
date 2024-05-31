@@ -18,12 +18,14 @@ struct ActivePathPanel: View {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
+    @State private var moveContext = PanelMoveContext()
+
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "Active Path")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.moveGesture(panelModel.idToPanel[panelId]))
+                .multipleGesture(panelModel.moveGesture(panel: panelModel.idToPanel[panelId], context: moveContext))
             scrollView
         }
         .background(.regularMaterial)

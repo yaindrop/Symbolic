@@ -2,6 +2,8 @@ import Combine
 import Foundation
 import SwiftUI
 
+private let subtracer = tracer.tagged("MultipleTouchGesture")
+
 struct TapInfo {
     let location: Point2
     let count: Int
@@ -21,14 +23,14 @@ struct MultipleTouchGesture {
     var configs: Configs = .init()
 
     var onPress: (() -> Void)?
-    var onPressEnd: (() -> Void)?
+    var onPressEnd: ((_ cancelled: Bool) -> Void)?
 
     var onTap: ((TapInfo) -> Void)?
     var onLongPress: ((PanInfo) -> Void)?
     var onLongPressEnd: ((PanInfo) -> Void)?
+    var onDrag: ((PanInfo) -> Void)?
+    var onDragEnd: ((PanInfo) -> Void)?
 
-    var onPan: ((PanInfo) -> Void)?
-    var onPanEnd: ((PanInfo) -> Void)?
     var onPinch: ((PinchInfo) -> Void)?
     var onPinchEnd: ((PinchInfo) -> Void)?
 }
@@ -44,7 +46,7 @@ class MultipleTouchPressModel: CancellableHolder {
             .store(in: self)
     }
 
-    func onPressEnd(_ callback: @escaping () -> Void) {
+    func onPressEnd(_ callback: @escaping (_ cancelled: Bool) -> Void) {
         pressEndSubject
             .sink(receiveValue: callback)
             .store(in: self)
@@ -68,6 +70,18 @@ class MultipleTouchPressModel: CancellableHolder {
             .store(in: self)
     }
 
+    func onDrag(_ callback: @escaping (PanInfo) -> Void) {
+        dragSubject
+            .sink(receiveValue: callback)
+            .store(in: self)
+    }
+
+    func onDragEnd(_ callback: @escaping (PanInfo) -> Void) {
+        dragEndSubject
+            .sink(receiveValue: callback)
+            .store(in: self)
+    }
+
     init(configs: MultipleTouchGesture.Configs) {
         self.configs = configs
     }
@@ -75,13 +89,15 @@ class MultipleTouchPressModel: CancellableHolder {
     // MARK: fileprivate
 
     fileprivate struct Context {
-        var maxDistance: Scalar = 0
+        private(set) var lastValue: PanInfo?
+        private(set) var maxDistance: Scalar = 0
 
         var longPressTimeout: DispatchWorkItem?
         var longPressStarted = false
 
-        mutating func onValue(_ panInfo: PanInfo) {
-            maxDistance = max(maxDistance, panInfo.offset.length)
+        mutating func onValue(_ value: PanInfo) {
+            lastValue = value
+            maxDistance = max(maxDistance, value.offset.length)
         }
     }
 
@@ -90,11 +106,14 @@ class MultipleTouchPressModel: CancellableHolder {
     fileprivate var context: Context?
 
     fileprivate let pressSubject = PassthroughSubject<Void, Never>()
-    fileprivate let pressEndSubject = PassthroughSubject<Void, Never>()
+    fileprivate let pressEndSubject = PassthroughSubject<Bool, Never>()
 
     fileprivate let tapSubject = PassthroughSubject<TapInfo, Never>()
     fileprivate let longPressSubject = PassthroughSubject<PanInfo, Never>()
     fileprivate let longPressEndSubject = PassthroughSubject<PanInfo, Never>()
+
+    fileprivate let dragSubject = PassthroughSubject<PanInfo, Never>()
+    fileprivate let dragEndSubject = PassthroughSubject<PanInfo, Never>()
 
     fileprivate struct RepeatedTapInfo {
         let count: Int
@@ -117,15 +136,15 @@ struct MultipleTouchPressDetector {
         multipleTouch.$startTime
             .sink { time in
                 guard time != nil else { return }
-                self.onPressStarted()
-                self.onPressChanged()
+                self.onPressStart()
+                self.onPressChange()
             }
             .store(in: model)
         multipleTouch.$panInfo
             .sink { info in
                 if let info {
                     self.context?.onValue(info)
-                    self.onPressChanged()
+                    self.onPressChange()
                 }
             }
             .store(in: model)
@@ -133,9 +152,9 @@ struct MultipleTouchPressDetector {
             .sink { count in
                 guard count != 1 else { return }
                 if count == 0 {
-                    self.onPressEnded()
+                    self.onPressEnd()
                 } else if count > 1 {
-                    self.onPressCanceled()
+                    self.onPressCancel()
                 }
             }
             .store(in: model)
@@ -150,9 +169,7 @@ struct MultipleTouchPressDetector {
         nonmutating set { model.context = newValue }
     }
 
-    private var panInfo: PanInfo? { multipleTouch.panInfo }
-
-    private var location: Point2? { panInfo?.current }
+    private var location: Point2? { context?.lastValue?.current }
 
     private var isPress: Bool {
         guard let context else { return false }
@@ -168,43 +185,50 @@ struct MultipleTouchPressDetector {
 
     // MARK: stages
 
-    private func onPressStarted() {
+    private func onPressStart() {
+        let _r = subtracer.range("press start", type: .intent); defer { _r() }
         context = .init()
         setupLongPress()
         model.pressSubject.send()
     }
 
-    private func onPressChanged() {
-        guard let context else { return }
+    private func onPressChange() {
+        guard let context, let value = context.lastValue else { return }
+        let _r = subtracer.range("press change", type: .intent); defer { _r() }
         if !isPress {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
-                onPressCanceled()
+                resetLongPress()
             }
+            model.dragSubject.send(value)
         }
     }
 
-    private func onPressEnded() {
-        guard let context, let panInfo else { return }
+    private func onPressEnd() {
+        guard let context, let value = context.lastValue else { return }
+        let _r = subtracer.range("press end", type: .intent); defer { _r() }
         if isPress {
             resetLongPress()
             if !context.longPressStarted {
                 let count = tapCount
-                model.tapSubject.send(.init(location: panInfo.current, count: count))
-                model.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: panInfo.current)
+                model.tapSubject.send(.init(location: value.current, count: count))
+                model.pendingRepeatedTapInfo = .init(count: count, time: Date(), location: value.current)
             }
         } else {
             model.pendingRepeatedTapInfo = nil
+            model.dragEndSubject.send(value)
             if configs.holdLongPressOnDrag {
                 resetLongPress()
             }
         }
-        model.pressEndSubject.send()
+        model.pressEndSubject.send(false)
         self.context = nil
     }
 
-    private func onPressCanceled() {
-        resetLongPress()
-        model.pressEndSubject.send()
+    private func onPressCancel() {
+        guard context != nil else { return }
+        let _r = subtracer.range("press cancel", type: .intent); defer { _r() }
+        resetLongPress(cancel: true)
+        model.pressEndSubject.send(true)
         context = nil
     }
 
@@ -212,25 +236,30 @@ struct MultipleTouchPressDetector {
 
     private func setupLongPress() {
         guard context != nil else { return }
+        let _r = subtracer.range("setup long press"); defer { _r() }
         let longPressTimeout = DispatchWorkItem {
-            guard let panInfo else { return }
-            self.model.longPressSubject.send(panInfo)
+            guard let value = context?.lastValue else { return }
+            self.model.longPressSubject.send(value)
             self.context?.longPressStarted = true
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + configs.durationThreshold, execute: longPressTimeout)
         context?.longPressTimeout = longPressTimeout
     }
 
-    private func resetLongPress() {
+    private func resetLongPress(cancel: Bool = false) {
         guard let context else { return }
         if let timeout = context.longPressTimeout {
+            let _r = subtracer.range("reset long press timeout"); defer { _r() }
             self.context?.longPressTimeout = nil
             timeout.cancel()
         }
         if context.longPressStarted {
+            let _r = subtracer.range("\(cancel ? "cancel" : "end") long press"); defer { _r() }
             self.context?.longPressStarted = false
-            guard let panInfo else { return }
-            model.longPressEndSubject.send(panInfo)
+            if !cancel {
+                guard let value = context.lastValue else { return }
+                model.longPressEndSubject.send(value)
+            }
         }
     }
 }
@@ -243,13 +272,6 @@ struct MultipleTouchGestureModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .modifier(MultipleTouchModifier(model: multipleTouch))
-            .onReceive(multipleTouch.$panInfo) { info in
-                if let info {
-                    gesture.onPan?(info)
-                } else if let info = multipleTouch.panInfo {
-                    gesture.onPanEnd?(info)
-                }
-            }
             .onReceive(multipleTouch.$pinchInfo) { info in
                 if let info {
                     gesture.onPinch?(info)
@@ -261,7 +283,7 @@ struct MultipleTouchGestureModifier: ViewModifier {
                 gesture.onPress?()
             }
             .onReceive(multipleTouchPress.pressEndSubject) {
-                gesture.onPressEnd?()
+                gesture.onPressEnd?($0)
             }
             .onReceive(multipleTouchPress.tapSubject) {
                 gesture.onTap?($0)
@@ -272,8 +294,17 @@ struct MultipleTouchGestureModifier: ViewModifier {
             .onReceive(multipleTouchPress.longPressEndSubject) {
                 gesture.onLongPressEnd?($0)
             }
+            .onReceive(multipleTouchPress.dragSubject) {
+                gesture.onDrag?($0)
+            }
+            .onReceive(multipleTouchPress.dragEndSubject) {
+                gesture.onDragEnd?($0)
+            }
             .onAppear {
                 pressDetector.subscribe()
+            }
+            .onDisappear {
+                gesture.onPressEnd?(true)
             }
     }
 

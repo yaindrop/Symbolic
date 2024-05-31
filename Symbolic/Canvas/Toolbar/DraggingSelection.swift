@@ -61,12 +61,16 @@ struct DraggingSelectionService {
         store.update(from: nil)
     }
 
-    func onPan(_ info: PanInfo?) {
+    func onDrag(_ info: PanInfo?) {
         guard active, let info else { return }
         withStoreUpdating {
             store.update(to: info.current)
             store.update(intersectedItems: intersectedRootItems)
         }
+    }
+
+    func cancel() {
+        store.update(from: nil)
     }
 }
 

@@ -100,7 +100,7 @@ struct MultipleGestureModifier: ViewModifier {
     // MARK: stages
 
     private func onPressStart(_ v: DragGesture.Value) {
-        let _r = subtracer.range("press starte", type: .intent); defer { _r() }
+        let _r = subtracer.range("press start", type: .intent); defer { _r() }
         context = .init(value: v)
         setupLongPress()
         gesture.onPress?()

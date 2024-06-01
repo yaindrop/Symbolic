@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-struct Document: Equatable {
+struct Document: Equatable, Encodable {
     let events: [DocumentEvent]
 
     static func == (lhs: Document, rhs: Document) -> Bool {

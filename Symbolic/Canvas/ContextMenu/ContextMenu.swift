@@ -160,7 +160,10 @@ extension ContextMenu {
         }
 
         private func onUngroup() {
-            global.documentUpdater.update(item: .ungroup(.init(groupIds: [data.groupId])))
+            if let group {
+                global.documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
+                global.activeItem.select(itemIds: group.members)
+            }
         }
 
         private func onDelete() {}

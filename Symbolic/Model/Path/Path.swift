@@ -9,7 +9,7 @@ protocol SUPathAppendable {
 
 // MARK: - PathEdge
 
-struct PathEdge: Equatable {
+struct PathEdge: Equatable, Encodable {
     let control0: Vector2
     let control1: Vector2
 
@@ -27,7 +27,9 @@ struct PathEdge: Equatable {
 // MARK: CustomStringConvertible
 
 extension PathEdge: CustomStringConvertible {
-    var description: String { "PathEdge(c0: \(control0.shortDescription), c1: \(control1.shortDescription))" }
+    var description: String {
+        "Edge(c0: \(control0.shortDescription), c1: \(control1.shortDescription))"
+    }
 }
 
 // MARK: Transformable
@@ -38,7 +40,7 @@ extension PathEdge: Transformable {
 
 // MARK: - PathNode
 
-struct PathNode: Identifiable, Equatable {
+struct PathNode: Identifiable, Equatable, Encodable {
     let id: UUID
     let position: Point2
 
@@ -48,10 +50,18 @@ struct PathNode: Identifiable, Equatable {
 
 extension PathNode: TriviallyCloneable {}
 
+// MARK: CustomStringConvertible
+
+extension PathNode: CustomStringConvertible {
+    var description: String {
+        "Node(id: \(id), position: \(position))"
+    }
+}
+
 // MARK: - Path
 
-class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, EnableCachedLazy {
-    struct NodeEdgePair: TriviallyCloneable {
+class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable {
+    struct NodeEdgePair: TriviallyCloneable, Encodable {
         var node: PathNode, edge: PathEdge
 
         var id: UUID { node.id }
@@ -167,10 +177,35 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable, Enab
     }
 }
 
+extension Path.NodeEdgePair: CustomStringConvertible {
+    var description: String {
+        "(\(node), \(edge))"
+    }
+}
+
 extension Path: SUPathAppendable {
     func append(to path: inout SUPath) {
         let _r = tracer.range("Path append to"); defer { _r() }
         path.addPath(self.path)
+    }
+}
+
+extension Path: CustomStringConvertible {
+    var description: String {
+        "Path(id: \(id), pairs: \(pairs.values), isClosed: \(isClosed))"
+    }
+}
+
+extension Path: Encodable {
+    private enum CodingKeys: String, CodingKey {
+        case id, pairs, isClosed
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(pairs.values, forKey: .pairs)
+        try container.encode(isClosed, forKey: .isClosed)
     }
 }
 

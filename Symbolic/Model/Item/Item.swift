@@ -1,12 +1,18 @@
 import Foundation
 
-struct ItemGroup: Identifiable, Equatable {
+struct ItemGroup: Identifiable, Equatable, Encodable {
     let id: UUID
     let members: [UUID]
 }
 
-struct Item: TriviallyCloneable, Equatable {
-    enum Kind: Equatable {
+extension ItemGroup: CustomStringConvertible {
+    var description: String {
+        "Group(id: \(id), members: \(members))"
+    }
+}
+
+struct Item: TriviallyCloneable, Equatable, Encodable {
+    enum Kind: Equatable, Encodable {
         case path(UUID)
         case group(ItemGroup)
     }
@@ -27,6 +33,15 @@ extension Item: Identifiable {
         switch kind {
         case let .path(id): id
         case let .group(group): group.id
+        }
+    }
+}
+
+extension Item: CustomStringConvertible {
+    var description: String {
+        switch kind {
+        case let .path(id): "Item(pathId: \(id))"
+        case let .group(group): "Item(group: \(group))"
         }
     }
 }

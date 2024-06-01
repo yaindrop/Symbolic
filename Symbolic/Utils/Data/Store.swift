@@ -26,7 +26,7 @@ private class StoreManager {
 
     private(set) var tracking: TrackingContext?
 
-    func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> T {
+    func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> (value: T, id: Int) {
         guard tracking == nil else {
             fatalError("Nested tracking of store properties is not supported.")
         }
@@ -39,7 +39,11 @@ private class StoreManager {
         self.tracking = nil
 
         idToSubscription[id] = .init(id: id, callback: onUpdate)
-        return result
+        return (result, id)
+    }
+
+    func expire(subscriptionId: Int) {
+        idToSubscription.removeValue(forKey: subscriptionId)
     }
 
     // MARK: updating
@@ -77,7 +81,7 @@ private class StoreManager {
     }
 
     func notify(subscriptionIds: Set<Int>) {
-        let _r = managerTracer.range("notify \(subscriptionIds)"); defer { _r() }
+        let _r = managerTracer.range("notify"); defer { _r() }
         var activeSubscriptions: [StoreSubscription] = []
         for id in subscriptionIds {
             if let subscription = idToSubscription.removeValue(forKey: id) {
@@ -100,6 +104,7 @@ private class StoreManager {
         let _r = managerTracer.range("notifying all \(context.subscriptions.map { $0.id })"); defer { _r() }
         context.willUpdateSubject.send()
         for subscription in context.subscriptions {
+            let _r = managerTracer.range("notifying \(subscription.id)"); defer { _r() }
             subscription.callback()
         }
     }
@@ -133,7 +138,7 @@ class Store: CancellableHolder {
 
     fileprivate func onChange(of propertyId: Int) {
         let subscriptionIds = propertyIdToSubscriptionIds.removeValue(forKey: propertyId)
-        let _r = storeTracer.range("on change of \(propertyId), \(subscriptionIds.map { "with subscriptions \($0)" } ?? "without subscription")"); defer { _r() }
+        let _r = storeTracer.range("on change of \(propertyId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")"); defer { _r() }
         guard let subscriptionIds else { return }
         manager.notify(subscriptionIds: subscriptionIds)
     }
@@ -247,6 +252,7 @@ struct Selected<Value: Equatable>: DynamicProperty {
     fileprivate class Storage: ObservableObject {
         var name: String?
         @Published var value: Value?
+        var subscriptionId: Int?
 
         init(name: String? = nil, selector: @escaping () -> Value) {
             self.name = name
@@ -258,7 +264,11 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
         private func select() {
             let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
-            let newValue = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
+            if let subscriptionId {
+                manager.expire(subscriptionId: subscriptionId)
+            }
+            let (newValue, id) = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
+            subscriptionId = id
             if value != newValue {
                 selectedTracer.instant("updated")
                 value = newValue

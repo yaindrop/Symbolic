@@ -75,6 +75,18 @@ extension View {
         }
     }
 
+    @ViewBuilder func `if`<Value, Content: View, NilContent: View>(
+        _ value: @autoclosure () -> Value?,
+        then content: (Self, Value) -> Content,
+        else nilContent: (Self) -> NilContent
+    ) -> some View {
+        if let value = value() {
+            content(self, value)
+        } else {
+            nilContent(self)
+        }
+    }
+
     @ViewBuilder func `if`<T: View>(
         _ condition: @autoclosure () -> Bool,
         then content: (Self) -> T

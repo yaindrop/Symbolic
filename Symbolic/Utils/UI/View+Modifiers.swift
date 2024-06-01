@@ -37,6 +37,16 @@ extension View {
 }
 
 extension View {
+    @ViewBuilder func clipRounded<S: ShapeStyle>(radius: Scalar, border: S, stroke: StrokeStyle? = nil) -> some View {
+        let shape = RoundedRectangle(cornerSize: .init(radius, radius))
+        clipShape(shape)
+            .if(stroke) {
+                $0.overlay(shape.stroke(border, style: $1))
+            } else: {
+                $0.overlay(shape.stroke(border))
+            }
+    }
+
     func clipRounded(radius: Scalar) -> some View {
         clipShape(RoundedRectangle(cornerSize: .init(radius, radius)))
     }

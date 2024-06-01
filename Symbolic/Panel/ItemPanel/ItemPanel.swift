@@ -25,7 +25,7 @@ struct ItemPanel: View {
                 .multipleGesture(panelModel.moveGesture(panelId: panelId))
             scrollView
         }
-        .background(.regularMaterial)
+        .background(.ultraThinMaterial)
         .cornerRadius(12)
     }
 
@@ -64,7 +64,15 @@ extension ItemPanel {
                     GroupRow(group: group)
                 }
             }
-            .clipRounded(leading: 12, trailing: isRoot ? 12 : 0)
+            .if(isRoot) {
+                $0.if(item?.group != nil) {
+                    $0.clipRounded(radius: 12, border: .ultraThinMaterial, stroke: .init(lineWidth: 4))
+                } else: {
+                    $0.clipRounded(radius: 12)
+                }
+            } else: {
+                $0.clipRounded(leading: 12, trailing: 0)
+            }
         }
 
         init(itemId: UUID) {
@@ -87,7 +95,7 @@ extension ItemPanel {
                     members
                 }
             }
-            .background(.ultraThinMaterial)
+            .background(.regularMaterial)
         }
 
         init(group: ItemGroup) {
@@ -144,7 +152,7 @@ extension ItemPanel {
 
         var body: some View {
             title
-                .background(.regularMaterial)
+                .background(.ultraThinMaterial)
         }
 
         init(pathId: UUID) {

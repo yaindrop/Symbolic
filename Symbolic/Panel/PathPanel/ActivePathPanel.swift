@@ -26,7 +26,7 @@ struct ActivePathPanel: View {
                 .multipleGesture(panelModel.moveGesture(panelId: panelId))
             scrollView
         }
-        .background(.regularMaterial)
+        .background(.ultraThinMaterial)
         .cornerRadius(12)
     }
 

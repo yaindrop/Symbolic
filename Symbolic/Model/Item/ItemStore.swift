@@ -24,6 +24,20 @@ extension ItemStoreProtocol {
         ancestorMap[itemId]?.first
     }
 
+    func commonAncestorId(itemIds: [UUID]) -> UUID? {
+        let ancestorLists = itemIds.map { ancestorIds(of: $0) }
+        let highest = ancestorLists.min { $0.count < $1.count }
+        guard let highest, !highest.isEmpty else { return nil }
+
+        let ancestorSets = itemIds.map { Set(ancestorIds(of: $0)) }
+        for ancestor in highest {
+            if ancestorSets.allSatisfy({ $0.contains(ancestor) }) {
+                return ancestor
+            }
+        }
+        return nil
+    }
+
     func group(id: UUID) -> ItemGroup? {
         item(id: id).map { $0.group }
     }

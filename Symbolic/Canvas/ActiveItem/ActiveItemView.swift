@@ -216,9 +216,14 @@ extension ActiveItemView {
                 let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
                 let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
                 ContextMenu(onDelete: {
-                    //                global.documentUpdater.update(path: .delete(.init(pathIds: selectedPathIds)))
+                    let pathIds = selectedItems.map { $0.id }
+                    global.documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
                 }, onGroup: {
-                    global.documentUpdater.update(item: .group(.init(group: .init(id: UUID(), members: selectedItems.map { $0.id }), inGroupId: nil)))
+                    let groupId = UUID()
+                    let members = selectedItems.map { $0.id }
+                    let inGroupId = global.item.commonAncestorId(itemIds: members)
+                    global.documentUpdater.update(item: .group(.init(group: .init(id: groupId, members: members), inGroupId: inGroupId)))
+                    global.activeItem.focus(itemId: groupId)
                 })
                 .sizeReader { menuSize = $0 }
                 .position(menuBox.center)

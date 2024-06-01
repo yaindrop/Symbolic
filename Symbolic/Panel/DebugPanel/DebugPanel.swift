@@ -36,7 +36,7 @@ struct DebugPanel: View {
             Row(name: "Viewport", value: viewportInfo.description)
         }
         .padding(12)
-        .background(.regularMaterial)
+        .background(.ultraThinMaterial)
         .cornerRadius(12)
     }
 

@@ -5,7 +5,7 @@ import SwiftUI
 
 private struct PanelIdKey: EnvironmentKey {
     typealias Value = UUID
-    static let defaultValue = UUID()
+    static let defaultValue: Value = UUID()
 }
 
 extension EnvironmentValues {

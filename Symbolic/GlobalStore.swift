@@ -34,6 +34,7 @@ struct GlobalStore {
     let canvasAction = CanvasActionStore()
 
     let grid = GridStore()
+    let contextMenu = ContextMenuStore()
 }
 
 let global = GlobalStore()

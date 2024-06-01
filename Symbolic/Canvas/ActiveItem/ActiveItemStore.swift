@@ -67,7 +67,11 @@ struct ActiveItemService {
     let item: ItemService
     let path: PathService
     let store: ActiveItemStore
+}
 
+// MARK: selectors
+
+extension ActiveItemService {
     var activeItemIds: Set<UUID> { store.activeItemIds }
     var focusedItemId: UUID? { store.focusedItemId }
     var pathFocusedPart: PathFocusedPart? { store.pathFocusedPart }
@@ -79,6 +83,24 @@ struct ActiveItemService {
             result.subtract(item.ancestorIds(of: id))
         }
         return result
+    }
+
+    var activePaths: [Path] {
+        item.allPaths.filter { activeItemIds.contains($0.id) }
+    }
+
+    var activeGroups: [ItemGroup] {
+        item.allGroups.filter { activeItemIds.contains($0.id) }
+    }
+
+    var selectedItems: [Item] {
+        selectedItemIds.compactMap { item.item(id: $0) }
+    }
+
+    var selectionBounds: CGRect? {
+        .init(union: selectedItems.compactMap { item.boundingRect(item: $0) })?
+            .applying(global.viewport.toView)
+            .outset(by: 12)
     }
 
     var selectedPaths: [Path] {
@@ -93,9 +115,11 @@ struct ActiveItemService {
         }
         return nil
     }
+}
 
-    // MARK: focus actions
+// MARK: focus actions
 
+extension ActiveItemService {
     func focus(itemId: UUID) {
         let _r = subtracer.range("focus \(itemId)", type: .intent); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
@@ -122,9 +146,11 @@ struct ActiveItemService {
         let parentId = item.parentId(of: focusedItemId)
         store.update(active: activeItemIds, focused: parentId)
     }
+}
 
-    // MARK: select actions
+// MARK: select actions
 
+extension ActiveItemService {
     func select(itemIds: [UUID]) {
         let _r = subtracer.range("select \(itemIds)", type: .intent); defer { _r() }
         store.update(active: .init(itemIds))
@@ -151,9 +177,11 @@ struct ActiveItemService {
         let _r = subtracer.range("deselect \(itemIds)", type: .intent); defer { _r() }
         store.update(deselect: itemIds)
     }
+}
 
-    // MARK: path part focus actions
+// MARK: path part focus actions
 
+extension ActiveItemService {
     func setFocus(node id: UUID) {
         let _r = subtracer.range("set focus", type: .intent); defer { _r() }
         store.update(pathFocusedPart: .node(id))

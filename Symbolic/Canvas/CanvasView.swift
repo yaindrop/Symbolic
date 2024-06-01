@@ -101,6 +101,8 @@ struct CanvasView: View {
             DraggingSelectionView()
             AddingPathView()
 
+            ContextMenuRoot()
+
             PanelRoot()
                 .environmentObject(panelModel)
         }

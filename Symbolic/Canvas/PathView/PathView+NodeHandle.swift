@@ -48,7 +48,7 @@ extension PathView {
                 .multipleGesture(viewModel.nodeGesture(nodeId: nodeId, context: nodeGestureContext))
             if focused {
                 let menuBox = CGRect(x: point.x, y: point.y, width: 0, height: 0).alignedBox(at: .topCenter, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).inset(by: 12))
-                ContextMenu(onDelete: {
+                ContextMenuView(onDelete: {
                     //                global.pathUpdater.delete(pathIds: selectedPathIds)
                 })
                 .sizeReader { menuSize = $0 }

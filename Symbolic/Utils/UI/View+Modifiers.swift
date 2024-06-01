@@ -41,9 +41,9 @@ extension View {
         let shape = RoundedRectangle(cornerSize: .init(radius, radius))
         clipShape(shape)
             .if(stroke) {
-                $0.overlay(shape.stroke(border, style: $1))
+                $0.overlay(shape.stroke(border, style: $1).allowsHitTesting(false))
             } else: {
-                $0.overlay(shape.stroke(border))
+                $0.overlay(shape.stroke(border).allowsHitTesting(false))
             }
     }
 

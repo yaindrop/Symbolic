@@ -14,7 +14,7 @@ class ManagedScrollViewModel: ObservableObject {
 
 private struct ScrollOffsetKey: PreferenceKey {
     typealias Value = Scalar
-    static var defaultValue: Scalar = .zero
+    static var defaultValue: Value = .zero
     static func reduce(value: inout Value, nextValue: () -> Value) { value += nextValue() }
 }
 

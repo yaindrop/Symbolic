@@ -72,3 +72,9 @@ extension AnyCancellable {
         store(in: &holder.cancellables)
     }
 }
+
+protocol HashIdentifiable: Hashable, Identifiable {}
+
+extension HashIdentifiable {
+    var id: Int { hashValue }
+}

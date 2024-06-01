@@ -70,6 +70,22 @@ struct DocumentUpdater {
         update(path: actionInWorld, pending: pending)
     }
 
+    // MARK: update selection
+
+    func groupSelection() {
+        let groupId = UUID()
+        let members = activeItem.selectedItems.map { $0.id }
+        let inGroupId = global.item.commonAncestorId(itemIds: members)
+        update(item: .group(.init(group: .init(id: groupId, members: members), inGroupId: inGroupId)))
+        activeItem.focus(itemId: groupId)
+    }
+
+    func deleteSelection() {
+        let pathIds = activeItem.selectedItems.map { $0.id }
+        // TODO: fixme
+        global.documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
+    }
+
     // MARK: update item
 
     func update(item action: ItemAction, pending: Bool = false) {

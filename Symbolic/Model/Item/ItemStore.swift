@@ -159,32 +159,44 @@ class PendingItemStore: Store, ItemStoreProtocol {
 
 // MARK: - ItemService
 
-struct ItemService: ItemStoreProtocol {
+struct ItemService {
     let path: PathService
     let store: ItemStore
     let pendingStore: PendingItemStore
+}
 
+// MARK: selectors
+
+extension ItemService: ItemStoreProtocol {
     var map: ItemMap { pendingStore.active ? pendingStore.map : store.map }
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
     var ancestorMap: AncestorMap { pendingStore.active ? pendingStore.ancestorMap : store.ancestorMap }
 
     var allPaths: [Path] { allPathIds.compactMap { path.path(id: $0) } }
 
-    func boundingRect(item: Item) -> CGRect? {
+    func groupedPaths(groupId: UUID) -> [Path] {
+        leafItems(rootItemId: groupId)
+            .compactMap { $0.pathId.map { path.path(id: $0) } }
+    }
+
+    func boundingRect(itemId: UUID) -> CGRect? {
+        guard let item = item(id: itemId) else { return nil }
         if let pathId = item.pathId {
             return path.path(id: pathId)?.boundingRect
         }
         if let group = item.group {
             let rects = group.members
                 .compactMap { self.item(id: $0) }
-                .compactMap { self.boundingRect(item: $0) }
+                .compactMap { self.boundingRect(itemId: $0.id) }
             return .init(union: rects)
         }
         return nil
     }
+}
 
-    // MARK: load document
+// MARK: load document
 
+extension ItemService {
     func loadDocument(_ document: Document) {
         let _r = subtracer.range("load document, pending: \(pendingStore.active)", type: .intent); defer { _r() }
         withStoreUpdating {

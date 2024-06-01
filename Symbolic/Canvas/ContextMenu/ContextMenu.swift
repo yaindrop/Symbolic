@@ -83,7 +83,7 @@ struct ContextMenu: View {
             switch data {
             case let .pathNode(data): EmptyView()
             case let .path(data): EmptyView()
-            case let .group(data): EmptyView()
+            case let .group(data): GroupMenu(data: data)
             case let .selection(data): SelectionMenu(data: data)
             }
         }
@@ -105,7 +105,7 @@ extension ContextMenu {
         @Selected private var bounds = global.activeItem.selectionBounds
         @Selected private var viewSize = global.viewport.store.viewSize
 
-        @Environment(\.menuSize) var menuSize: CGSize
+        @Environment(\.menuSize) private var menuSize: CGSize
 
         var body: some View {
             if let bounds {
@@ -120,32 +120,49 @@ extension ContextMenu {
             }
         }
 
-        func onGroup() {
+        private func onGroup() {
             global.documentUpdater.groupSelection()
         }
 
-        func onDelete() {
+        private func onDelete() {
             global.documentUpdater.deleteSelection()
         }
     }
 }
 
-struct ContextMenuView: View {
-    var onDelete: (() -> Void)?
-    var onGroup: (() -> Void)?
+extension ContextMenu {
+    struct GroupMenu: View {
+        let data: ContextMenuData.Group
 
-    @State var size: CGSize = .zero
-
-    var body: some View {
-        HStack {
-            Button { onGroup?() } label: { Image(systemName: "rectangle.3.group") }
-            Divider()
-            Button(role: .destructive) { onDelete?() } label: { Image(systemName: "trash") }
+        init(data: ContextMenuData.Group) {
+            self.data = data
+            _group = .init { global.item.group(id: data.groupId) }
+            _bounds = .init { global.activeItem.boundingRect(itemId: data.groupId) }
         }
-        .padding(12)
-        .background(.thickMaterial)
-        .fixedSize()
-        .sizeReader { size = $0 }
-        .cornerRadius(size.height / 2)
+
+        @Selected private var group: ItemGroup?
+        @Selected private var bounds: CGRect?
+        @Selected private var viewSize = global.viewport.store.viewSize
+
+        @Environment(\.menuSize) private var menuSize: CGSize
+
+        var body: some View {
+            if let bounds {
+                let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
+                let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 12).clamped(by: CGRect(viewSize).inset(by: 12))
+                HStack {
+                    Button { onUngroup() } label: { Image(systemName: "rectangle.slash") }
+                    Divider()
+                    Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+                }
+                .preference(key: MenuPositionKey.self, value: menuBox.center)
+            }
+        }
+
+        private func onUngroup() {
+            global.documentUpdater.update(item: .ungroup(.init(groupIds: [data.groupId])))
+        }
+
+        private func onDelete() {}
     }
 }

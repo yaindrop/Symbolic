@@ -32,43 +32,18 @@ extension ActiveItemView {
         init(group: ItemGroup, viewport: ViewportInfo) {
             self.group = group
             self.viewport = viewport
-            _groupedPaths = .init {
-                global.item.leafItems(rootItemId: group.id)
-                    .compactMap { $0.pathId.map { global.path.path(id: $0) } }
-            }
             _focused = .init { global.activeItem.focusedItemId == group.id }
             _selected = .init { global.activeItem.selectedItemIds.contains(group.id) }
-            _activeDescendants = .init {
-                global.item.expandedItems(rootItemId: group.id)
-                    .filter { $0.id != group.id && global.activeItem.store.activeItemIds.contains($0.id) }
-            }
+            _bounds = .init { global.activeItem.boundingRect(itemId: group.id) }
         }
 
         // MARK: private
 
-        @Selected private var groupedPaths: [Path]
         @Selected private var focused: Bool
         @Selected private var selected: Bool
-        @Selected private var activeDescendants: [Item]
+        @Selected private var bounds: CGRect?
 
         private var toView: CGAffineTransform { viewport.worldToView }
-
-        private var bounds: CGRect? {
-            var outsetLevel = 1
-            let minHeight = activeDescendants.map { global.item.height(itemId: $0.id) }.filter { $0 > 0 }.min()
-            if let minHeight {
-                let height = global.item.height(itemId: group.id)
-                outsetLevel += height - minHeight
-            }
-            return .init(union: groupedPaths.map { $0.boundingRect })?
-                .applying(toView)
-                .outset(by: 6 * Scalar(outsetLevel))
-        }
-
-        private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            let targetIds = (selected ? global.activeItem.selectedPaths : groupedPaths).map { $0.id }
-            global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
-        }
 
         @ViewBuilder private var boundsRect: some View {
             if let bounds {
@@ -88,33 +63,24 @@ extension ActiveItemView {
                         },
 
                         onTap: {
-                            let worldPosition = $0.location.applying(global.viewport.toWorld)
-                            let path = groupedPaths.first {
-                                global.path.hitTest(path: $0, position: worldPosition, threshold: 32)
-                            }
-                            if let path {
-                                if global.toolbar.multiSelect {
-                                    global.activeItem.selectAdd(itemId: path.id)
-                                } else {
-                                    global.activeItem.focus(itemId: path.id)
-                                }
-                            } else {
-                                if global.toolbar.multiSelect {
-                                    if selected {
-                                        global.activeItem.selectRemove(itemIds: [group.id])
-                                    } else {
-                                        let activeDescendants = global.item.expandedItems(rootItemId: group.id)
-                                            .filter { $0.id != group.id && global.activeItem.store.activeItemIds.contains($0.id) }
-                                        global.activeItem.selectRemove(itemIds: activeDescendants.map { $0.id })
-                                    }
-                                } else {
-                                    global.activeItem.focus(itemId: group.id)
-                                }
-                            }
+                            global.activeItem.onTap(group: group, position: $0.location)
                         },
                         onDrag: { updateDrag($0, pending: true) },
                         onDragEnd: { updateDrag($0) }
                     ))
+                if focused {
+                    global.contextMenu.representative(.group(.init(groupId: group.id)))
+                }
+            }
+        }
+
+        private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            if selected {
+                let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+            } else {
+                let groupedPathIds = global.item.groupedPaths(groupId: group.id).map { $0.id }
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPathIds, offset: v.offset)), pending: pending)
             }
         }
     }
@@ -149,11 +115,6 @@ extension ActiveItemView {
             path.boundingRect.applying(toView)
         }
 
-        private func updateDrag(_ v: PanInfo, pending: Bool = false) {
-            let targetIds = selected ? global.activeItem.selectedPaths.map { $0.id } : [path.id]
-            global.documentUpdater.updateInView(path: .move(.init(pathIds: targetIds, offset: v.offset)), pending: pending)
-        }
-
         @ViewBuilder private var boundsRect: some View {
             RoundedRectangle(cornerRadius: 2)
                 .fill(.blue.opacity(focused ? 0.2 : 0.1))
@@ -166,17 +127,20 @@ extension ActiveItemView {
                         global.canvasAction.end(continuous: .moveSelection)
                         if cancelled { global.documentUpdater.cancel() }
                     },
-                    onTap: { _ in
-                        if global.toolbar.multiSelect {
-                            global.activeItem.selectRemove(itemIds: [path.id])
-                        } else {
-                            global.activeItem.focus(itemId: path.id)
-                        }
-                    },
+                    onTap: { _ in global.activeItem.onTap(pathId: path.id) },
                     onDrag: { updateDrag($0, pending: true) },
                     onDragEnd: { updateDrag($0) }
                 ))
                 .framePosition(rect: bounds)
+        }
+
+        private func updateDrag(_ v: PanInfo, pending: Bool = false) {
+            if selected {
+                let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+            } else {
+                global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending)
+            }
         }
     }
 }
@@ -189,12 +153,9 @@ extension ActiveItemView {
             boundsRect
         }
 
-        @Selected private var selectedItems = global.activeItem.selectedItems
         @Selected private var bounds = global.activeItem.selectionBounds
-        @Selected private var viewSize = global.viewport.store.viewSize
 
         @State private var dashPhase: CGFloat = 0
-        @State private var menuSize: CGSize = .zero
 
         @ViewBuilder private var boundsRect: some View {
             if let bounds {

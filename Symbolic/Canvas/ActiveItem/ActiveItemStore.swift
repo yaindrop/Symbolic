@@ -64,6 +64,8 @@ class ActiveItemStore: Store {
 // MARK: - ActiveItemService
 
 struct ActiveItemService {
+    let viewport: ViewportService
+    let toolbar: ToolbarStore
     let item: ItemService
     let path: PathService
     let store: ActiveItemStore
@@ -98,8 +100,8 @@ extension ActiveItemService {
     }
 
     var selectionBounds: CGRect? {
-        .init(union: selectedItems.compactMap { item.boundingRect(item: $0) })?
-            .applying(global.viewport.toView)
+        .init(union: selectedItemIds.compactMap { item.boundingRect(itemId: $0.id) })?
+            .applying(viewport.toView)
             .outset(by: 12)
     }
 
@@ -109,11 +111,38 @@ extension ActiveItemService {
             .compactMap { path.path(id: $0.id) }
     }
 
+    func selected(itemId: UUID) -> Bool {
+        selectedItemIds.contains(itemId)
+    }
+
     var activePath: Path? {
         if let focusedItemId {
             return path.map[focusedItemId]
         }
         return nil
+    }
+
+    func activeDescendants(groupId: UUID) -> [Item] {
+        item.expandedItems(rootItemId: groupId)
+            .filter { $0.id != groupId && store.activeItemIds.contains($0.id) }
+    }
+
+    func boundingRect(itemId: UUID) -> CGRect? {
+        guard let item = item.item(id: itemId) else { return nil }
+        if let pathId = item.pathId {
+            guard let path = path.path(id: pathId) else { return nil }
+            return path.boundingRect
+        }
+        guard let group = item.group else { return nil }
+        var outsetLevel = 1
+        let minHeight = activeDescendants(groupId: group.id).map { self.item.height(itemId: $0.id) }.filter { $0 > 0 }.min()
+        if let minHeight {
+            let height = self.item.height(itemId: group.id)
+            outsetLevel += height - minHeight
+        }
+        return self.item.boundingRect(itemId: group.id)?
+            .applying(viewport.toView)
+            .outset(by: 6 * Scalar(outsetLevel))
     }
 }
 
@@ -206,6 +235,45 @@ extension ActiveItemService {
             } else {
                 clearFocus()
             }
+        }
+    }
+}
+
+// MARK: active item view gesture
+
+extension ActiveItemService {
+    func onTap(group: ItemGroup, position: Point2) {
+        let worldPosition = position.applying(viewport.toWorld)
+        let groupedPaths = item.groupedPaths(groupId: group.id)
+        let path = groupedPaths.first {
+            self.path.hitTest(path: $0, position: worldPosition, threshold: 32)
+        }
+        if let path {
+            if toolbar.multiSelect {
+                selectAdd(itemId: path.id)
+            } else {
+                focus(itemId: path.id)
+            }
+        } else {
+            if toolbar.multiSelect {
+                if selected(itemId: group.id) {
+                    selectRemove(itemIds: [group.id])
+                } else {
+                    let activeDescendants = item.expandedItems(rootItemId: group.id)
+                        .filter { $0.id != group.id && activeItemIds.contains($0.id) }
+                    selectRemove(itemIds: activeDescendants.map { $0.id })
+                }
+            } else {
+                focus(itemId: group.id)
+            }
+        }
+    }
+
+    func onTap(pathId: UUID) {
+        if toolbar.multiSelect {
+            selectRemove(itemIds: [pathId])
+        } else {
+            focus(itemId: pathId)
         }
     }
 }

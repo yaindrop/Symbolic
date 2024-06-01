@@ -193,7 +193,7 @@ extension DocumentUpdater {
         func moveIn(to other: ItemGroup?) {
             let id = other?.id
             let members = other?.members ?? rootIds
-            let ungroupedMembers = members.filter { !ungroupedGroups.contains($0) }
+            let ungroupedMembers = members.filter { ungroupedGroups.contains($0) }
             guard !ungroupedMembers.isEmpty else { return }
 
             var newMembers = members.filter { !ungroupedGroups.contains($0) }

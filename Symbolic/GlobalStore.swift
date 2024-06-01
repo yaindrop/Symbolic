@@ -21,7 +21,7 @@ struct GlobalStore {
     var item: ItemService { .init(path: path, store: itemStore, pendingStore: pendingItemStore) }
 
     private let activeItemStore = ActiveItemStore()
-    var activeItem: ActiveItemService { .init(item: item, path: path, store: activeItemStore) }
+    var activeItem: ActiveItemService { .init(viewport: viewport, toolbar: toolbar, item: item, path: path, store: activeItemStore) }
 
     let toolbar = ToolbarStore()
 

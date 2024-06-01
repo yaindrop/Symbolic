@@ -1,13 +1,13 @@
 import SwiftUI
 
 private var activePathsSelector: [Path] {
-    global.activeItem.store.activeItemIds
-        .compactMap { global.path.path(id: $0) }
+    global.item.allPaths
+        .filter { global.activeItem.activeItemIds.contains($0.id) }
 }
 
 private var activeGroupsSelector: [ItemGroup] {
-    global.activeItem.store.activeItemIds
-        .compactMap { global.item.group(id: $0) }
+    global.item.allGroups
+        .filter { global.activeItem.activeItemIds.contains($0.id) }
 }
 
 // MARK: - ActiveItemView
@@ -48,6 +48,10 @@ extension ActiveItemView {
             }
             _focused = .init { global.activeItem.focusedItemId == group.id }
             _selected = .init { global.activeItem.selectedItemIds.contains(group.id) }
+            _activeDescendants = .init {
+                global.item.expandedItems(rootItemId: group.id)
+                    .filter { $0.id != group.id && global.activeItem.store.activeItemIds.contains($0.id) }
+            }
         }
 
         // MARK: private
@@ -55,13 +59,20 @@ extension ActiveItemView {
         @Selected private var groupedPaths: [Path]
         @Selected private var focused: Bool
         @Selected private var selected: Bool
+        @Selected private var activeDescendants: [Item]
 
         private var toView: CGAffineTransform { viewport.worldToView }
 
         private var bounds: CGRect? {
-            .init(union: groupedPaths.map { $0.boundingRect })?
+            var outsetLevel = 1
+            let minHeight = activeDescendants.map { global.item.height(itemId: $0.id) }.filter { $0 > 0 }.min()
+            if let minHeight {
+                let height = global.item.height(itemId: group.id)
+                outsetLevel += height - minHeight
+            }
+            return .init(union: groupedPaths.map { $0.boundingRect })?
                 .applying(toView)
-                .insetBy(dx: -4, dy: -4)
+                .outset(by: 4 * Scalar(outsetLevel))
         }
 
         private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
@@ -185,7 +196,7 @@ private var selectedItemsSelector: [Item] {
 }
 
 private var selectionBoundsSelector: CGRect? {
-    CGRect(union: selectedItemsSelector.compactMap { global.item.boundingRect(item: $0) })?.outset(by: 8)
+    .init(union: selectedItemsSelector.compactMap { global.item.boundingRect(item: $0) })?.outset(by: 8)
 }
 
 // MARK: - SelectionBounds
@@ -214,7 +225,7 @@ extension ActiveItemView {
                     .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
 
                 let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-                let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).insetBy(dx: 12, dy: 12))
+                let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 8).clamped(by: CGRect(viewSize).inset(by: 12))
                 ContextMenu(onDelete: {
                     let pathIds = selectedItems.map { $0.id }
                     global.documentUpdater.update(path: .delete(.init(pathIds: pathIds)))

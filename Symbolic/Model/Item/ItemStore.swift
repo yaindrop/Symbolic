@@ -30,12 +30,7 @@ extension ItemStoreProtocol {
         guard let highest, !highest.isEmpty else { return nil }
 
         let ancestorSets = itemIds.map { Set(ancestorIds(of: $0)) }
-        for ancestor in highest {
-            if ancestorSets.allSatisfy({ $0.contains(ancestor) }) {
-                return ancestor
-            }
-        }
-        return nil
+        return highest.first { id in ancestorSets.allSatisfy { $0.contains(id) } }
     }
 
     func group(id: UUID) -> ItemGroup? {
@@ -44,6 +39,12 @@ extension ItemStoreProtocol {
 
     var rootItems: [Item] {
         rootIds.compactMap { item(id: $0) }
+    }
+
+    func height(itemId: UUID) -> Int {
+        guard let item = item(id: itemId) else { return 0 }
+        guard let group = item.group else { return 0 }
+        return 1 + group.members.map { height(itemId: $0) }.max()!
     }
 
     func expandedItems(rootItemId: UUID) -> [Item] {

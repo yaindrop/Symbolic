@@ -60,7 +60,7 @@ extension PathNode: CustomStringConvertible {
 
 // MARK: - Path
 
-class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable {
+class Path: Identifiable, ReflectedStringConvertible, Cloneable {
     struct NodeEdgePair: TriviallyCloneable, Encodable {
         var node: PathNode, edge: PathEdge
 
@@ -162,8 +162,6 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable {
         path.strokedPath(StrokeStyle(lineWidth: width, lineCap: .round))
     }
 
-    static func == (lhs: Path, rhs: Path) -> Bool { ObjectIdentifier(lhs) == ObjectIdentifier(rhs) }
-
     required init(_ path: Path) {
         id = path.id
         pairs = path.pairs
@@ -175,6 +173,10 @@ class Path: Identifiable, ReflectedStringConvertible, Equatable, Cloneable {
         self.pairs = pairs
         self.isClosed = isClosed
     }
+}
+
+extension Path: EquatableBy {
+    var equatableBy: some Equatable { ObjectIdentifier(self) }
 }
 
 extension Path.NodeEdgePair: CustomStringConvertible {

@@ -1,20 +1,6 @@
 import Foundation
 import SwiftUI
 
-// MARK: - PanelIdKey
-
-private struct PanelIdKey: EnvironmentKey {
-    typealias Value = UUID
-    static let defaultValue: Value = UUID()
-}
-
-extension EnvironmentValues {
-    var panelId: UUID {
-        get { self[PanelIdKey.self] }
-        set { self[PanelIdKey.self] = newValue }
-    }
-}
-
 // MARK: - PanelAffinity
 
 enum PanelAffinity {
@@ -89,10 +75,10 @@ extension PanelAffinity: CustomStringConvertible {
 
 // MARK: - PanelData
 
-struct PanelData: Identifiable {
+struct PanelData: Identifiable, UniqueEquatable {
     let id: UUID = .init()
 
-    let view: AnyView
+    let view: (_ panelId: UUID) -> AnyView
 
     var origin: Point2 = .zero
     var size: CGSize = .zero

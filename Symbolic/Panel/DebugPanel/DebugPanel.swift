@@ -1,11 +1,10 @@
 import SwiftUI
 
 struct DebugPanel: View {
+    let panelId: UUID
+
     var multipleTouch: MultipleTouchModel
     var multipleTouchPress: MultipleTouchPressModel
-
-    @Environment(\.panelId) private var panelId
-    @EnvironmentObject private var panelModel: PanelModel
 
     var body: some View {
         panel.frame(width: 320)
@@ -28,7 +27,7 @@ struct DebugPanel: View {
         VStack {
             title
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(global.panel.moveGesture(panelId: panelId))
             Row(name: "Pan", value: multipleTouch.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")

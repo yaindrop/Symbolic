@@ -1,57 +1,74 @@
 import Foundation
 import SwiftUI
 
-private let subtracer = tracer.tagged("PanelModel")
+private let subtracer = tracer.tagged("PanelStore")
 
-// MARK: - PanelModel
+typealias PanelMap = OrderedMap<UUID, PanelData>
 
-class PanelModel: ObservableObject {
-    @Published var idToPanel: [UUID: PanelData] = [:]
-    @Published var panelIds: [UUID] = []
-    @Published var rootSize: CGSize = .zero
+// MARK: - PanelStore
 
-    var panels: [PanelData] { panelIds.compactMap { idToPanel[$0] } }
+class PanelStore: Store {
+    @Trackable var panelMap = PanelMap()
+    @Trackable var rootSize: CGSize = .zero
+
+    var panels: [PanelData] { panelMap.values }
     var rootRect: CGRect { .init(rootSize) }
 
+    func panel(id: UUID) -> PanelData? { panelMap.value(key: id) }
+
     fileprivate var movingPanel: [UUID: PanelData] = [:]
+
+    fileprivate func update(panelMap: PanelMap) {
+        update { $0(\._panelMap, panelMap) }
+    }
+
+    fileprivate func update(rootSize: CGSize) {
+        update { $0(\._rootSize, rootSize) }
+    }
 }
 
-extension PanelModel {
-    func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
-        var panelData = PanelData(view: AnyView(panel()))
+extension PanelStore {
+    func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping (_ panelId: UUID) -> any View) {
+        var panelData = PanelData(view: { AnyView(panel($0)) })
         panelData.affinities += Axis.allCases.map { axis in .root(.init(axis: axis, align: align.getAxisInnerAlign(in: axis))) }
-        idToPanel[panelData.id] = panelData
-        panelIds.append(panelData.id)
+
+        var updated = panelMap
+        updated[panelData.id] = panelData
+        update(panelMap: updated)
     }
 
     func deregister(panelId: UUID) {
-        idToPanel.removeValue(forKey: panelId)
-        panelIds.removeAll { $0 == panelId }
+        var updated = panelMap
+        updated.removeValue(forKey: panelId)
+        update(panelMap: updated)
     }
 }
 
-extension PanelModel {
+extension PanelStore {
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
         guard let origin = movingPanel[panelId]?.origin else { return }
         let offset = v.offset
         let _r = subtracer.range("moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
-        guard var panel = idToPanel[panelId] else { return }
+        guard var panel = panel(id: panelId) else { return }
         panel.origin = origin + offset
         subtracer.instant("panel.origin \(panel.origin)")
-        idToPanel[panelId] = panel
-        if panelIds.last != panelId {
-            panelIds.removeAll { $0.id == panelId }
-            panelIds.append(panelId)
-        }
+
+        var updated = panelMap
+        updated.removeValue(forKey: panelId)
+        updated[panelId] = panel
+        update(panelMap: updated)
     }
 
     func onMoved(panelId: UUID, _ v: DragGesture.Value) {
         guard let origin = movingPanel[panelId]?.origin else { return }
         let offset = v.offset, speed = v.speed
         let _r = subtracer.range("moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
-        guard var panel = idToPanel[panelId] else { return }
+        guard var panel = panel(id: panelId) else { return }
         panel.origin = origin + offset
-        idToPanel[panelId] = panel
+
+        var updated = panelMap
+        updated[panelId] = panel
+        update(panelMap: updated)
 
         let newPanel = moveEndOffset(panel: panel, v)
         if panel.origin == newPanel.origin, panel.affinities == newPanel.affinities {
@@ -59,7 +76,9 @@ extension PanelModel {
         }
 
         withAnimation(.easeOut(duration: 0.1)) {
-            idToPanel[panelId] = newPanel
+            var updated = panelMap
+            updated[panelId] = newPanel
+            update(panelMap: updated)
         }
     }
 
@@ -95,7 +114,7 @@ extension PanelModel {
         .init(
             configs: .init(coordinateSpace: .global),
             onPress: {
-                guard let panel = self.idToPanel[panelId] else { return }
+                guard let panel = self.panel(id: panelId) else { return }
                 self.movingPanel[panelId] = panel
             },
             onPressEnd: { _ in
@@ -111,34 +130,48 @@ extension PanelModel {
     }
 }
 
-extension PanelModel {
+extension PanelStore {
     func onResized(panelId: UUID, size: CGSize) {
         let _r = subtracer.range("resize \(panelId) to \(size)"); defer { _r() }
-        guard var panel = idToPanel[panelId] else { return }
+        guard var panel = panel(id: panelId) else { return }
         panel.size = size
         panel.origin += affinityOffset(of: panel)
-        withAnimation {
-            idToPanel[panel.id] = panel
+        subtracer.instant("panel.origin \(panel.origin)")
+
+        var updated = panelMap
+        updated[panel.id] = panel
+
+        for panel in panels {
+            if panel.affinities.contains(where: { $0.related(to: panelId) }) {
+                var panel = panel
+                panel.affinities = getAffinities(of: panel)
+                panel.origin += affinityOffset(of: panel)
+                updated[panel.id] = panel
+                subtracer.instant("panel \(panel.id) origin \(panel.origin)")
+            }
         }
 
-        for (id, panel) in idToPanel {
-            if panel.affinities.contains(where: { $0.related(to: panelId) }) {
-                idToPanel[id]?.affinities = getAffinities(of: panel)
-                idToPanel[id]?.origin += affinityOffset(of: panel)
-            }
+        withAnimation {
+            update(panelMap: updated)
         }
     }
 
     func onRootResized(size: CGSize) {
         let _r = subtracer.range("resize root \(size)"); defer { _r() }
-        rootSize = size
-//        withAnimation {
-        for id in panelIds {
-            guard var panel = idToPanel[id] else { return }
-            panel.origin += affinityOffset(of: panel)
-            idToPanel[panel.id] = panel
+
+        withAnimation {
+            withStoreUpdating {
+                update(rootSize: size)
+
+                var updated = panelMap
+                for var panel in panels {
+                    panel.origin += affinityOffset(of: panel)
+                    updated[panel.id] = panel
+                }
+
+                update(panelMap: updated)
+            }
         }
-//        }
     }
 }
 
@@ -161,7 +194,7 @@ private func getKeyPath(axis: Axis, align: AxisInnerAlign) -> KeyPath<CGRect, Sc
     }
 }
 
-extension PanelModel {
+extension PanelStore {
     static let rootAffinityThreshold = 32.0
     static let peerAffinityThreshold = 16.0
     static let rootAffinityGap = 12.0
@@ -232,7 +265,7 @@ extension PanelModel {
 
 // MARK: - offset by affinity
 
-extension PanelModel {
+extension PanelStore {
     private func offset(of panel: PanelData, by affinity: PanelAffinity.Root) -> Vector2 {
         let axis = affinity.axis, align = affinity.align, keyPath = getKeyPath(axis: axis, align: align)
 
@@ -243,7 +276,7 @@ extension PanelModel {
     }
 
     private func offset(of panel: PanelData, by affinity: PanelAffinity.Peer) -> Vector2 {
-        guard let peerPanel = idToPanel[affinity.peerId] else { return .zero }
+        guard let peerPanel = self.panel(id: affinity.peerId) else { return .zero }
         let axis = affinity.axis, selfAlign = affinity.selfAlign, peerAlign = affinity.peerAlign
         let panelKeyPath = getKeyPath(axis: axis, align: selfAlign), peerKeyPath = getKeyPath(axis: axis, align: peerAlign)
 
@@ -260,7 +293,7 @@ extension PanelModel {
         }
     }
 
-    func affinityOffset(of panel: PanelData) -> Vector2 {
+    private func affinityOffset(of panel: PanelData) -> Vector2 {
         var sum = Vector2.zero
         sum += panel.affinities.first { $0.axis == .horizontal }.map { offset(of: panel, by: $0) } ?? .zero
         sum += panel.affinities.first { $0.axis == .vertical }.map { offset(of: panel, by: $0) } ?? .zero

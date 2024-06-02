@@ -4,8 +4,7 @@ import SwiftUI
 // MARK: - ItemPanel
 
 struct ItemPanel: View {
-    @Environment(\.panelId) private var panelId
-    @EnvironmentObject private var panelModel: PanelModel
+    let panelId: UUID
 
     var body: some View {
         panel.frame(width: 320)
@@ -22,7 +21,7 @@ struct ItemPanel: View {
             PanelTitle(name: "Items")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(global.panel.moveGesture(panelId: panelId))
             scrollView
         }
         .background(.ultraThinMaterial)

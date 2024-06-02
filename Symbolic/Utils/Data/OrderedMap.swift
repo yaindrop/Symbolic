@@ -176,6 +176,10 @@ extension OrderedMap: Cloneable where Key: Cloneable, Value: Cloneable {
     }
 }
 
+extension OrderedMap: Equatable, EquatableBy where Value: Equatable {
+    var equatableBy: some Equatable { keys; values }
+}
+
 // MARK: - Sequence
 
 extension OrderedMap: Sequence {

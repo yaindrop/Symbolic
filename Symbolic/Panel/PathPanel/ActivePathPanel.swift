@@ -4,8 +4,7 @@ import SwiftUI
 // MARK: - ActivePathPanel
 
 struct ActivePathPanel: View {
-    @Environment(\.panelId) private var panelId
-    @EnvironmentObject private var panelModel: PanelModel
+    let panelId: UUID
 
     var body: some View { tracer.range("ActivePathPanel body") {
         panel.frame(width: 320)
@@ -23,7 +22,7 @@ struct ActivePathPanel: View {
             PanelTitle(name: "Active Path")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(global.panel.moveGesture(panelId: panelId))
             scrollView
         }
         .background(.ultraThinMaterial)

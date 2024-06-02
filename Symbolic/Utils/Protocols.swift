@@ -78,3 +78,9 @@ protocol HashIdentifiable: Hashable, Identifiable {}
 extension HashIdentifiable {
     var id: Int { hashValue }
 }
+
+protocol UniqueEquatable: Equatable {}
+
+extension UniqueEquatable {
+    static func == (_: Self, _: Self) -> Bool { false }
+}

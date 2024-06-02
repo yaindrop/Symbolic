@@ -23,8 +23,7 @@ private extension DocumentEvent {
 // MARK: - HistoryPanel
 
 struct HistoryPanel: View {
-    @Environment(\.panelId) private var panelId
-    @EnvironmentObject private var panelModel: PanelModel
+    let panelId: UUID
 
     var body: some View {
         panel.frame(width: 320)
@@ -41,7 +40,7 @@ struct HistoryPanel: View {
             PanelTitle(name: "History")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
-                .multipleGesture(panelModel.moveGesture(panelId: panelId))
+                .multipleGesture(global.panel.moveGesture(panelId: panelId))
             scrollView
         }
         .background(.ultraThinMaterial)

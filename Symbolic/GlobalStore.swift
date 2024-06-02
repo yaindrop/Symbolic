@@ -21,6 +21,8 @@ struct GlobalStore {
 
     private let addingPathStore = AddingPathStore()
 
+    let panel = PanelStore()
+
     let toolbar = ToolbarStore()
 
     let canvasAction = CanvasActionStore()

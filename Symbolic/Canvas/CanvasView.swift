@@ -7,8 +7,6 @@ struct CanvasView: View {
     @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    @StateObject var panelModel = PanelModel()
-
     // MARK: body
 
     var body: some View { tracer.range("CanvasView body") {
@@ -27,11 +25,11 @@ struct CanvasView: View {
                 setup.multipleTouchPress(multipleTouchPress: multipleTouchPress)
             }
             .onAppear {
-                panelModel.register(align: .bottomTrailing) { ActivePathPanel() }
-                panelModel.register(align: .bottomLeading) { HistoryPanel() }
-                panelModel.register(align: .bottomLeading) { ItemPanel() }
-                panelModel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
-                panelModel.register(align: .topLeading) { CanvasActionPanel() }
+                global.panel.register(align: .bottomTrailing) { ActivePathPanel(panelId: $0) }
+                global.panel.register(align: .bottomLeading) { HistoryPanel(panelId: $0) }
+                global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
+                global.panel.register(align: .topTrailing) { DebugPanel(panelId: $0, multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
+                global.panel.register(align: .topLeading) { _ in CanvasActionPanel() }
             }
             .onAppear {
                 global.document.setDocument(.init(from: fooSvg))
@@ -104,7 +102,6 @@ struct CanvasView: View {
             ContextMenuRoot()
 
             PanelRoot()
-                .environmentObject(panelModel)
         }
         .allowsHitTesting(!multipleTouch.active)
     } }

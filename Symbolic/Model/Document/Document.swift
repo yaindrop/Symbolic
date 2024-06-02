@@ -4,12 +4,8 @@ import SwiftUI
 
 // MARK: - Document
 
-struct Document: Equatable, Encodable {
+struct Document: Encodable {
     let events: [DocumentEvent]
-
-    static func == (lhs: Document, rhs: Document) -> Bool {
-        lhs.events.count == rhs.events.count && lhs.events.enumerated().allSatisfy { i, e in e.id == rhs.events[i].id }
-    }
 
     init(events: [DocumentEvent] = []) {
         self.events = events
@@ -33,6 +29,10 @@ struct Document: Equatable, Encodable {
         parser.parse()
         self.events = events
     }
+}
+
+extension Document: EquatableBy {
+    var equatableBy: some Equatable { events.map { $0.id } }
 }
 
 // MARK: - DocumentStore

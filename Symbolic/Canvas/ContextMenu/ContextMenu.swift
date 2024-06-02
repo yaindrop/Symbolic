@@ -54,20 +54,8 @@ struct ContextMenuRoot: View {
     }
 }
 
-private struct MenuSizeKey: EnvironmentKey {
-    typealias Value = CGSize
-    static let defaultValue: Value = .zero
-}
-
-private extension EnvironmentValues {
-    var menuSize: CGSize {
-        get { self[MenuSizeKey.self] }
-        set { self[MenuSizeKey.self] = newValue }
-    }
-}
-
-private struct MenuPositionKey: PreferenceKey {
-    typealias Value = Point2
+private struct MenuAlignBoundsKey: PreferenceKey {
+    typealias Value = CGRect
     static var defaultValue: Value = .zero
     static func reduce(value: inout Value, nextValue: () -> Value) { value = nextValue() }
 }
@@ -75,64 +63,108 @@ private struct MenuPositionKey: PreferenceKey {
 struct ContextMenu: View {
     let data: ContextMenuData
 
+    @Selected private var viewSize = global.viewport.store.viewSize
+
     @State private var size: CGSize = .zero
-    @State private var position: Point2 = .zero
+    @State private var bounds: CGRect = .zero
 
     var body: some View {
+        let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
+        let menuBox = bounds.alignedBox(at: menuAlign, size: size, gap: 12).clamped(by: CGRect(viewSize).inset(by: 12))
         Group {
             switch data {
             case let .pathNode(data): EmptyView()
-            case let .path(data): EmptyView()
+            case let .path(data): PathMenu(data: data)
             case let .group(data): GroupMenu(data: data)
             case let .selection(data): SelectionMenu(data: data)
             }
         }
         .padding(12)
-        .background(.thickMaterial)
+        .background(.regularMaterial)
         .fixedSize()
         .sizeReader { size = $0 }
-        .cornerRadius(size.height / 2)
-        .position(position)
-        .environment(\.menuSize, size)
-        .onPreferenceChange(MenuPositionKey.self) { position = $0 }
+        .clipRounded(radius: size.height / 2)
+        .position(menuBox.center)
+        .onPreferenceChange(MenuAlignBoundsKey.self) { bounds = $0 }
     }
 }
 
+// MARK: - GroupMenu
+
 extension ContextMenu {
-    struct SelectionMenu: View {
-        let data: ContextMenuData.Selection
-
-        @Selected private var bounds = global.activeItem.selectionBounds
-        @Selected private var viewSize = global.viewport.store.viewSize
-
-        @Environment(\.menuSize) private var menuSize: CGSize
+    struct PathMenu: View {
+        let data: ContextMenuData.Path
 
         var body: some View {
             if let bounds {
-                let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-                let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 12).clamped(by: CGRect(viewSize).inset(by: 12))
-                HStack {
-                    Button { onGroup() } label: { Image(systemName: "rectangle.3.group") }
-                    Divider()
-                    Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
-                }
-                .preference(key: MenuPositionKey.self, value: menuBox.center)
+                menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
             }
         }
 
-        private func onGroup() {
-            global.documentUpdater.groupSelection()
+        init(data: ContextMenuData.Path) {
+            self.data = data
+            _path = .init { global.path.path(id: data.pathId) }
+            _bounds = .init { global.activeItem.boundingRect(itemId: data.pathId) }
         }
 
-        private func onDelete() {
-            global.documentUpdater.deleteSelection()
+        // MARK: private
+
+        @Selected private var path: Path?
+        @Selected private var bounds: CGRect?
+
+        private var menu: some View {
+            HStack {
+                Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+
+                Divider()
+
+                Button {} label: { Image(systemName: "lock") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+                Menu {
+                    Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
+                    Button("Move above") {}
+                    Button("Move below") {}
+                    Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
+                } label: { Image(systemName: "square.3.layers.3d") }
+                    .frame(minWidth: 32)
+                    .menuOrder(.fixed)
+                    .tint(.label)
+
+                Divider()
+
+                Menu {
+                    Button("Copy", systemImage: "doc.on.doc") {}
+                    Button("Cut", systemImage: "scissors") {}
+                    Button("Duplicate", systemImage: "plus.square.on.square") {}
+                } label: { Image(systemName: "doc.on.doc") }
+                    .frame(minWidth: 32)
+                    .menuOrder(.fixed)
+                    .tint(.label)
+                Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+                    .frame(minWidth: 32)
+            }
         }
+
+        private func onUngroup() {}
+
+        private func onDelete() {}
     }
 }
+
+// MARK: - GroupMenu
 
 extension ContextMenu {
     struct GroupMenu: View {
         let data: ContextMenuData.Group
+
+        var body: some View {
+            if let bounds {
+                menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
+            }
+        }
 
         init(data: ContextMenuData.Group) {
             self.data = data
@@ -140,22 +172,47 @@ extension ContextMenu {
             _bounds = .init { global.activeItem.boundingRect(itemId: data.groupId) }
         }
 
+        // MARK: private
+
         @Selected private var group: ItemGroup?
         @Selected private var bounds: CGRect?
-        @Selected private var viewSize = global.viewport.store.viewSize
 
-        @Environment(\.menuSize) private var menuSize: CGSize
+        private var menu: some View {
+            HStack {
+                Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
 
-        var body: some View {
-            if let bounds {
-                let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-                let menuBox = bounds.alignedBox(at: menuAlign, size: menuSize, gap: 12).clamped(by: CGRect(viewSize).inset(by: 12))
-                HStack {
-                    Button { onUngroup() } label: { Image(systemName: "rectangle.slash") }
-                    Divider()
-                    Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
-                }
-                .preference(key: MenuPositionKey.self, value: menuBox.center)
+                Divider()
+
+                Button {} label: { Image(systemName: "lock") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+                Menu {
+                    Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
+                    Button("Move above") {}
+                    Button("Move below") {}
+                    Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
+                } label: { Image(systemName: "square.3.layers.3d") }
+                    .frame(minWidth: 32)
+                    .menuOrder(.fixed)
+                    .tint(.label)
+                Button { onUngroup() } label: { Image(systemName: "rectangle.3.group") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+
+                Divider()
+
+                Menu {
+                    Button("Copy", systemImage: "doc.on.doc") {}
+                    Button("Cut", systemImage: "scissors") {}
+                    Button("Duplicate", systemImage: "plus.square.on.square") {}
+                } label: { Image(systemName: "doc.on.doc") }
+                    .frame(minWidth: 32)
+                    .menuOrder(.fixed)
+                    .tint(.label)
+                Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+                    .frame(minWidth: 32)
             }
         }
 
@@ -167,5 +224,70 @@ extension ContextMenu {
         }
 
         private func onDelete() {}
+    }
+}
+
+// MARK: - SelectionMenu
+
+extension ContextMenu {
+    struct SelectionMenu: View {
+        let data: ContextMenuData.Selection
+
+        var body: some View {
+            if let bounds {
+                menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
+            }
+        }
+
+        // MARK: private
+
+        @Selected private var bounds = global.activeItem.selectionBounds
+
+        var menu: some View {
+            HStack {
+                Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+
+                Divider()
+
+                Button {} label: { Image(systemName: "lock") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+                Menu {
+                    Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
+                    Button("Move above") {}
+                    Button("Move below") {}
+                    Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
+                } label: { Image(systemName: "square.3.layers.3d") }
+                    .frame(minWidth: 32)
+                    .menuOrder(.fixed)
+                    .tint(.label)
+                Button { onGroup() } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
+                    .frame(minWidth: 32)
+                    .tint(.label)
+
+                Divider()
+
+                Menu {
+                    Button("Copy", systemImage: "doc.on.doc") {}
+                    Button("Cut", systemImage: "scissors") {}
+                    Button("Duplicate", systemImage: "plus.square.on.square") {}
+                } label: { Image(systemName: "doc.on.doc") }
+                    .frame(minWidth: 32)
+                    .menuOrder(.fixed)
+                    .tint(.label)
+                Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+                    .frame(minWidth: 32)
+            }
+        }
+
+        private func onGroup() {
+            global.documentUpdater.groupSelection()
+        }
+
+        private func onDelete() {
+            global.documentUpdater.deleteSelection()
+        }
     }
 }

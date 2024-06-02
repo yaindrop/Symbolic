@@ -131,7 +131,7 @@ extension ActiveItemService {
         guard let item = item.item(id: itemId) else { return nil }
         if let pathId = item.pathId {
             guard let path = path.path(id: pathId) else { return nil }
-            return path.boundingRect
+            return path.boundingRect.applying(viewport.toView)
         }
         guard let group = item.group else { return nil }
         var outsetLevel = 1

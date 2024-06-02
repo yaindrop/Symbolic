@@ -37,7 +37,7 @@ struct DebugPanel: View {
         }
         .padding(12)
         .background(.ultraThinMaterial)
-        .cornerRadius(12)
+        .clipRounded(radius: 12)
     }
 
     private struct Row: View {

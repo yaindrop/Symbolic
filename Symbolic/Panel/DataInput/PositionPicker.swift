@@ -20,7 +20,7 @@ struct PositionPicker: View {
         .frame(height: 20)
         .padding(6)
         .background(Color.tertiarySystemBackground)
-        .cornerRadius(6)
+        .clipRounded(radius: 6)
     }
 
     init(position: Point2,

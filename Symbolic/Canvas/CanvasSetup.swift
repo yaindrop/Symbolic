@@ -93,7 +93,7 @@ struct CanvasSetup {
             if case .select = toolbarMode, !draggingSelectionActive {
                 global.canvasAction.start(continuous: .draggingSelection)
                 global.draggingSelection.onStart(from: info.current)
-            } else if case let .addPath(addPath) = toolbarMode {
+            } else if case .addPath = toolbarMode {
                 global.canvasAction.start(continuous: .addingPath)
                 global.addingPath.onStart(from: info.current)
             }
@@ -115,6 +115,9 @@ struct CanvasSetup {
         }
 
         multipleTouchPress.onDrag {
+            global.canvasAction.end(triggering: .select)
+            global.canvasAction.end(triggering: .addPath)
+
             global.draggingSelection.onDrag($0)
             global.addingPath.onDrag($0)
         }

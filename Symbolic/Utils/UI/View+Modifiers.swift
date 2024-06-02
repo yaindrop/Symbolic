@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: - viewSizeReader
+// MARK: - geometryReader
 
 extension View {
     func sizeReader(onSize: @escaping (CGSize) -> Void) -> some View {
@@ -35,6 +35,8 @@ extension View {
             .position(rect.center)
     }
 }
+
+// MARK: - clipRounded
 
 extension View {
     @ViewBuilder func clipRounded<S: ShapeStyle>(radius: Scalar, border: S, stroke: StrokeStyle? = nil) -> some View {

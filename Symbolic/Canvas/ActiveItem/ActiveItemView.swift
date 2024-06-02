@@ -27,6 +27,9 @@ extension ActiveItemView {
 
         var body: some View {
             boundsRect
+            if focused {
+                global.contextMenu.representative(.group(.init(groupId: group.id)))
+            }
         }
 
         init(group: ItemGroup, viewport: ViewportInfo) {
@@ -68,9 +71,6 @@ extension ActiveItemView {
                         onDrag: { updateDrag($0, pending: true) },
                         onDragEnd: { updateDrag($0) }
                     ))
-                if focused {
-                    global.contextMenu.representative(.group(.init(groupId: group.id)))
-                }
             }
         }
 
@@ -95,6 +95,9 @@ extension ActiveItemView {
 
         var body: some View {
             boundsRect
+            if focused {
+                global.contextMenu.representative(.path(.init(pathId: path.id)))
+            }
         }
 
         init(path: Path, viewport: ViewportInfo) {

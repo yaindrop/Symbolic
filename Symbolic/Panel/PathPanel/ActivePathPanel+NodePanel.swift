@@ -19,7 +19,7 @@ extension ActivePathPanel {
             }
             .padding(12)
             .background(.ultraThickMaterial)
-            .cornerRadius(12)
+            .clipRounded(radius: 12)
         }}
 
         init(path: Path, index: Int, node: PathNode) {

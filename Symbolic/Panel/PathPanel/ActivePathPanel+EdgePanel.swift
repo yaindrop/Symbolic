@@ -19,7 +19,7 @@ extension ActivePathPanel {
                 }
                 .padding(12)
                 .background(.ultraThinMaterial)
-                .cornerRadius(12)
+                .clipRounded(radius: 12)
                 .onChange(of: focused) {
                     withAnimation { expanded = focused }
                 }
@@ -153,7 +153,7 @@ private struct BezierPanel: View, EquatableBy {
         }
         .padding(12)
         .background(.regularMaterial)
-        .cornerRadius(12)
+        .clipRounded(radius: 12)
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {

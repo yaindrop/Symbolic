@@ -11,19 +11,19 @@ struct CanvasActionPanel: View {
                 Text(continuousHints.joined(separator: " "))
                     .padding(8)
                     .background(.green.opacity(0.5))
-                    .cornerRadius(12)
+                    .clipRounded(radius: 12)
             }
             if !triggeringHints.isEmpty {
                 Text(triggeringHints.joined(separator: " "))
                     .padding(8)
                     .background(.orange.opacity(0.5))
-                    .cornerRadius(12)
+                    .clipRounded(radius: 12)
             }
             if !instantHints.isEmpty {
                 Text(instantHints.joined(separator: " "))
                     .padding(8)
                     .background(.blue.opacity(0.5))
-                    .cornerRadius(12)
+                    .clipRounded(radius: 12)
             }
         }
         .font(.footnote)

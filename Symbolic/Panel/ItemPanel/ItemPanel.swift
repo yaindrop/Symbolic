@@ -26,7 +26,7 @@ struct ItemPanel: View {
             scrollView
         }
         .background(.ultraThinMaterial)
-        .cornerRadius(12)
+        .clipRounded(radius: 12)
     }
 
     @ViewBuilder private var scrollView: some View {

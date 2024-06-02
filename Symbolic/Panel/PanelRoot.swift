@@ -8,6 +8,7 @@ struct PanelView: View {
 
     var body: some View { tracer.range("PanelView \(panel.origin)") {
         panel.view(panel.id)
+            .id(panel.id)
             .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
             .offset(x: panel.origin.x, y: panel.origin.y)
             .innerAligned(.topLeading)

@@ -27,9 +27,13 @@ extension View {
     }
 }
 
-// MARK: - framePosition
+// MARK: - frame
 
 extension View {
+    func frame(size: CGSize) -> some View {
+        frame(width: size.width, height: size.height)
+    }
+
     func framePosition(rect: CGRect) -> some View {
         frame(width: rect.width, height: rect.height)
             .position(rect.center)

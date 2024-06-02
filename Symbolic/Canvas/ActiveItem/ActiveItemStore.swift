@@ -34,7 +34,7 @@ class ActiveItemStore: Store {
     @Trackable var pathFocusedPart: PathFocusedPart?
 
     fileprivate func update(active: Set<UUID>, focused: UUID? = nil) {
-        withAnimation(.default.speed(5)) {
+        withFastAnimation {
             withStoreUpdating {
                 update { $0(\._activeItemIds, active) }
                 update { $0(\._focusedItemId, focused) }
@@ -43,19 +43,19 @@ class ActiveItemStore: Store {
     }
 
     fileprivate func update(select itemId: UUID) {
-        withAnimation(.default.speed(5)) {
+        withFastAnimation {
             update(active: activeItemIds.with { $0.insert(itemId) })
         }
     }
 
     fileprivate func update(deselect itemIds: [UUID]) {
-        withAnimation(.default.speed(5)) {
+        withFastAnimation {
             update(active: activeItemIds.with { $0.subtract(itemIds) })
         }
     }
 
     fileprivate func update(pathFocusedPart: PathFocusedPart?) {
-        withAnimation(.default.speed(5)) {
+        withFastAnimation {
             update { $0(\._pathFocusedPart, pathFocusedPart) }
         }
     }

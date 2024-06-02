@@ -159,13 +159,30 @@ extension ItemPanel {
             _path = .init { global.path.path(id: pathId) }
         }
 
+        struct PathThumbnail: View {
+            let path: Path
+
+            var body: some View {
+                let size = CGSize(24, 24)
+                Rectangle()
+                    .opacity(.zero)
+                    .overlay {
+                        SUPath { path.append(to: &$0) }
+                            .transform(.init(fit: path.boundingRect, to: .init(size)))
+                            .stroke(.primary, lineWidth: 0.5)
+                            .fill(.primary.opacity(0.2))
+                    }
+                    .frame(size: size)
+            }
+        }
+
         @Selected private var path: Path?
 
         @ViewBuilder private var title: some View {
             if let path {
                 HStack {
                     HStack {
-                        Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath")
+                        PathThumbnail(path: path)
                             .padding(4)
                         Text("#\(path.id.uuidString.prefix(4))")
                     }

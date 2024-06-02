@@ -15,6 +15,7 @@ class PanelStore: Store {
     var rootRect: CGRect { .init(rootSize) }
 
     func panel(id: UUID) -> PanelData? { panelMap.value(key: id) }
+    func moving(id: UUID) -> Bool { movingPanel.value(key: id) != nil }
 
     fileprivate var movingPanel: [UUID: PanelData] = [:]
 
@@ -30,7 +31,9 @@ class PanelStore: Store {
 extension PanelStore {
     func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping (_ panelId: UUID) -> any View) {
         var panelData = PanelData(view: { AnyView(panel($0)) })
-        panelData.affinities += Axis.allCases.map { axis in .root(.init(axis: axis, align: align.getAxisInnerAlign(in: axis))) }
+        for axis in Axis.allCases {
+            panelData.affinities[axis] = .root(.init(axis: axis, align: align.getAxisInnerAlign(in: axis)))
+        }
 
         var updated = panelMap
         updated[panelData.id] = panelData
@@ -142,7 +145,7 @@ extension PanelStore {
         updated[panel.id] = panel
 
         for panel in panels {
-            if panel.affinities.contains(where: { $0.related(to: panelId) }) {
+            if panel.affinities.related(to: panelId) {
                 var panel = panel
                 panel.affinities = getAffinities(of: panel)
                 panel.origin += affinityOffset(of: panel)
@@ -151,7 +154,7 @@ extension PanelStore {
             }
         }
 
-        withAnimation {
+        withFastAnimation {
             update(panelMap: updated)
         }
     }
@@ -159,7 +162,7 @@ extension PanelStore {
     func onRootResized(size: CGSize) {
         let _r = subtracer.range("resize root \(size)"); defer { _r() }
 
-        withAnimation {
+        withFastAnimation {
             withStoreUpdating {
                 update(rootSize: size)
 
@@ -224,7 +227,7 @@ extension PanelStore {
         }
     }
 
-    private func getAffinities(of panel: PanelData) -> [PanelAffinity] {
+    private func getAffinities(of panel: PanelData) -> PanelAffinityPair {
         func isValid(candidate: PanelAffinityCandidate) -> Bool {
             let (affinity, distance) = candidate
             var threshold: Scalar
@@ -259,7 +262,7 @@ extension PanelStore {
         let vertical = candidates
             .filter { $0.affinity.axis == .vertical }
             .max { $0.distance < $1.distance }
-        return [horizontal, vertical].compactMap { $0?.affinity }
+        return .init(horizontal: horizontal?.affinity, vertical: vertical?.affinity)
     }
 }
 
@@ -294,9 +297,8 @@ extension PanelStore {
     }
 
     private func affinityOffset(of panel: PanelData) -> Vector2 {
-        var sum = Vector2.zero
-        sum += panel.affinities.first { $0.axis == .horizontal }.map { offset(of: panel, by: $0) } ?? .zero
-        sum += panel.affinities.first { $0.axis == .vertical }.map { offset(of: panel, by: $0) } ?? .zero
-        return sum
+        Axis.allCases.reduce(into: .zero) {
+            $0 += panel.affinities[$1].map { offset(of: panel, by: $0) } ?? .zero
+        }
     }
 }

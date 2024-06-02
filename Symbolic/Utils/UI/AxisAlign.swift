@@ -19,7 +19,7 @@ extension AxisInnerAlign: CustomStringConvertible {
 
 // MARK: - PlaneInnerAlign
 
-enum PlaneInnerAlign {
+enum PlaneInnerAlign: CaseIterable {
     case topLeading, topCenter, topTrailing
     case centerLeading, center, centerTrailing
     case bottomLeading, bottomCenter, bottomTrailing
@@ -66,6 +66,20 @@ extension CGRect {
         case .bottomLeading: .init(minX, maxY)
         case .bottomCenter: .init(midX, maxY)
         case .bottomTrailing: maxPoint
+        }
+    }
+
+    func alignedBox(at align: PlaneInnerAlign, size: CGSize, gap _: Scalar = 0) -> CGRect {
+        switch align {
+        case .topLeading: .init(origin: alignedPoint(at: .topLeading), size: size)
+        case .topCenter: .init(center: alignedPoint(at: .topCenter) + .init(0, size.height / 2), size: size)
+        case .topTrailing: .init(origin: alignedPoint(at: .topTrailing) - .init(size.width, 0), size: size)
+        case .centerLeading: .init(center: alignedPoint(at: .centerLeading) + .init(size.width / 2, 0), size: size)
+        case .center: .init(center: alignedPoint(at: .center), size: size)
+        case .centerTrailing: .init(center: alignedPoint(at: .centerTrailing) - .init(size.width / 2, 0), size: size)
+        case .bottomLeading: .init(origin: alignedPoint(at: .bottomLeading) - .init(0, size.height), size: size)
+        case .bottomCenter: .init(center: alignedPoint(at: .bottomCenter) - .init(0, size.height / 2), size: size)
+        case .bottomTrailing: .init(origin: alignedPoint(at: .bottomTrailing) - .init(size.width, size.height), size: size)
         }
     }
 }
@@ -134,7 +148,7 @@ extension PlaneOuterAlign {
 }
 
 extension CGRect {
-    func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: Scalar) -> CGRect {
+    func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: Scalar = 0) -> CGRect {
         func point(from align: PlaneInnerAlign, _ gapOffset: Vector2, _ sizeOffset: Vector2) -> Point2 {
             alignedPoint(at: align).offset(by: gapOffset).offset(by: sizeOffset)
         }

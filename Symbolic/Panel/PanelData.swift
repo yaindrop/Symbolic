@@ -18,18 +18,17 @@ enum PanelAffinity {
 
     case root(Root)
     case peer(Peer)
+}
 
-    var axis: Axis {
-        switch self {
-        case let .root(root): root.axis
-        case let .peer(peer): peer.axis
-        }
-    }
+extension PanelAffinity {
+    var root: Root? { if case let .root(v) = self { v } else { nil } }
+    var peer: Peer? { if case let .peer(v) = self { v } else { nil } }
 }
 
 // MARK: Impl
 
 private protocol PanelAffinityImpl: Equatable {
+    var axis: Axis { get }
     func related(to peerId: UUID) -> Bool
 }
 
@@ -44,6 +43,8 @@ extension PanelAffinity.Peer: PanelAffinityImpl {
 extension PanelAffinity: PanelAffinityImpl {
     fileprivate typealias Impl = any PanelAffinityImpl
 
+    var axis: Axis { impl.axis }
+
     func related(to peerId: UUID) -> Bool { impl.related(to: peerId) }
 
     private var impl: Impl {
@@ -51,6 +52,19 @@ extension PanelAffinity: PanelAffinityImpl {
         case let .root(root): root
         case let .peer(peer): peer
         }
+    }
+}
+
+struct PanelAffinityPair: Equatable {
+    var horizontal: PanelAffinity?, vertical: PanelAffinity?
+
+    func related(to peerId: UUID) -> Bool {
+        horizontal?.related(to: peerId) ?? false || vertical?.related(to: peerId) ?? false
+    }
+
+    subscript(axis: Axis) -> PanelAffinity? {
+        get { axis == .horizontal ? horizontal : vertical }
+        set { if axis == .horizontal { horizontal = newValue } else { vertical = newValue } }
     }
 }
 
@@ -83,7 +97,7 @@ struct PanelData: Identifiable, UniqueEquatable {
     var origin: Point2 = .zero
     var size: CGSize = .zero
 
-    var affinities: [PanelAffinity] = []
+    var affinities = PanelAffinityPair()
 
     var rect: CGRect { .init(origin: origin, size: size) }
 }

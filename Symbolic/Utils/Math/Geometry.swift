@@ -9,6 +9,10 @@ extension CGSize {
 
     func with(height: Scalar) -> Self { .init(width: width, height: height) }
 
+    public static func * (lhs: Self, rhs: Scalar) -> Self {
+        .init(lhs.width * rhs, lhs.height * rhs)
+    }
+
     init(_ width: Scalar, _ height: Scalar) { self.init(width: width, height: height) }
 
     init(squared size: Scalar) { self.init(size, size) }

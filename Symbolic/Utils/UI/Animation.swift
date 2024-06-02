@@ -14,3 +14,7 @@ struct AnimatedValue<Value: Equatable>: ViewModifier {
             .onDisappear { value = from }
     }
 }
+
+public func withFastAnimation<Result>(_ animation: Animation? = .default, _ body: () throws -> Result) rethrows -> Result {
+    try withAnimation(animation?.speed(5), body)
+}

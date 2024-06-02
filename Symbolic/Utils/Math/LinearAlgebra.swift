@@ -152,4 +152,11 @@ extension CGAffineTransform: TriviallyCloneable {
     init(translation vector: Vector2) { self.init(translationX: vector.dx, y: vector.dy) }
 
     init(scale: Scalar) { self.init(scaleX: scale, y: scale) }
+
+    init(fit rect: CGRect, to container: CGRect, by innerAlign: PlaneInnerAlign = .center) {
+        let scale = min(container.width / rect.width, container.height / rect.height)
+        let aligned = container.alignedBox(at: innerAlign, size: rect.size * scale)
+        let offset = rect.origin.offset(to: aligned.origin)
+        self = Self.identity.translatedBy(offset).centered(at: rect.origin) { $0.scaledBy(scale) }
+    }
 }

@@ -2,11 +2,11 @@ import Combine
 import Foundation
 import SwiftUI
 
+// MARK: - AddingPathStore
+
 class AddingPathStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
-
-    var active: Bool { from != nil }
 
     fileprivate func update(from: Point2?) {
         update {
@@ -22,15 +22,20 @@ class AddingPathStore: Store {
     }
 }
 
+// MARK: - AddingPathService
+
 struct AddingPathService {
-    let toolbar: ToolbarStore
     let viewport: ViewportService
     let grid: GridStore
     let store: AddingPathStore
+}
 
+// MARK: selectors
+
+extension AddingPathService {
     var from: Point2? { store.from }
     var to: Point2 { store.to }
-    var active: Bool { store.active }
+    var active: Bool { store.from != nil }
 
     var segment: PathSegment? {
         guard let from = store.from else { return nil }
@@ -50,7 +55,11 @@ struct AddingPathService {
         ]
         return .init(id: UUID(), pairs: pairs, isClosed: false)
     }
+}
 
+// MARK: actions
+
+extension AddingPathService {
     func onStart(from: Point2) {
         store.update(from: grid.snap(from))
     }
@@ -68,6 +77,8 @@ struct AddingPathService {
         store.update(from: nil)
     }
 }
+
+// MARK: - AddingPathView
 
 struct AddingPathView: View {
     @Selected var addingPath = global.addingPath.addingPath

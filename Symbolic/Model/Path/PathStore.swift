@@ -45,7 +45,11 @@ struct PathService: PathStoreProtocol {
     let viewport: ViewportService
     let store: PathStore
     let pendingStore: PendingPathStore
+}
 
+// MARK: selectors
+
+extension PathService {
     var map: PathMap { pendingStore.active ? pendingStore.map : store.map }
 
     func hitTest(path: Path, position: Point2, threshold: Scalar = 24) -> Bool {
@@ -57,9 +61,11 @@ struct PathService: PathStoreProtocol {
         let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
         return map.values.first { $0.hitPath(width: width).contains(position) }
     }
+}
 
-    // MARK: load document
+// MARK: load document
 
+extension PathService {
     func loadDocument(_ document: Document) {
         let _r = subtracer.range("load document, pending: \(pendingStore.active)", type: .intent); defer { _r() }
         withStoreUpdating {

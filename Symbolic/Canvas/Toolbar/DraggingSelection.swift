@@ -2,6 +2,8 @@ import Combine
 import Foundation
 import SwiftUI
 
+// MARK: - DraggingSelectionStore
+
 class DraggingSelectionStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
@@ -25,11 +27,16 @@ class DraggingSelectionStore: Store {
     }
 }
 
+// MARK: - DraggingSelectionService
+
 struct DraggingSelectionService {
-    let pathStore: PathStore
     let viewport: ViewportService
     let store: DraggingSelectionStore
+}
 
+// MARK: selectors
+
+extension DraggingSelectionService {
     var active: Bool { store.active }
 
     var rect: CGRect? {
@@ -52,7 +59,11 @@ struct DraggingSelectionService {
                 .contains { intersects(item: $0) }
         }
     }
+}
 
+// MARK: actions
+
+extension DraggingSelectionService {
     func onStart(from: Point2) {
         store.update(from: from)
     }
@@ -73,6 +84,8 @@ struct DraggingSelectionService {
         store.update(from: nil)
     }
 }
+
+// MARK: - DraggingSelectionView
 
 struct DraggingSelectionView: View {
     @Selected private var rect = global.draggingSelection.rect

@@ -2,6 +2,8 @@ import Combine
 import Foundation
 import SwiftUI
 
+// MARK: - Document
+
 struct Document: Equatable, Encodable {
     let events: [DocumentEvent]
 
@@ -33,6 +35,8 @@ struct Document: Equatable, Encodable {
     }
 }
 
+// MARK: - DocumentStore
+
 class DocumentStore: Store {
     @Trackable var activeDocument: Document = .init()
     @Trackable var pendingEvent: DocumentEvent?
@@ -46,11 +50,31 @@ class DocumentStore: Store {
     }
 }
 
+// MARK: - DocumentService
+
 struct DocumentService {
     let store: DocumentStore
+}
 
+// MARK: selectors
+
+extension DocumentService {
     var activeDocument: Document { store.activeDocument }
 
+    var undoable: Bool {
+        guard let last = store.activeDocument.events.last else { return false }
+        if case let .pathAction(p) = last.action {
+            if case .load = p {
+                return false
+            }
+        }
+        return true
+    }
+}
+
+// MARK: actions
+
+extension DocumentService {
     func setDocument(_ document: Document) {
         let _r = tracer.range("Document set"); defer { _r() }
         withStoreUpdating {
@@ -76,16 +100,6 @@ struct DocumentService {
     func setPendingEvent(_ event: DocumentEvent?) {
         let _r = tracer.range("Document set pending event"); defer { _r() }
         store.update(pendingEvent: event)
-    }
-
-    var undoable: Bool {
-        guard let last = store.activeDocument.events.last else { return false }
-        if case let .pathAction(p) = last.action {
-            if case .load = p {
-                return false
-            }
-        }
-        return true
     }
 
     func undo() {

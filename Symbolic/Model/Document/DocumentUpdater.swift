@@ -21,9 +21,11 @@ struct DocumentUpdater {
     let viewport: ViewportService
     let grid: GridStore
     let store: DocumentUpdaterStore
+}
 
-    // MARK: update activePath
+// MARK: update activePath
 
+extension DocumentUpdater {
     func update(activePath kind: PathAction.Single.Kind, pending: Bool = false) {
         guard let activePathId = activeItem.activePath?.id else { return }
         handle(.pathAction(.single(.init(pathId: activePathId, kind: kind))), pending: pending)
@@ -52,9 +54,11 @@ struct DocumentUpdater {
         }
         update(activePath: kindInWorld, pending: pending)
     }
+}
 
-    // MARK: update path
+// MARK: update path
 
+extension DocumentUpdater {
     func update(path action: PathAction, pending: Bool = false) {
         handle(.pathAction(action), pending: pending)
     }
@@ -69,9 +73,11 @@ struct DocumentUpdater {
         }
         update(path: actionInWorld, pending: pending)
     }
+}
 
-    // MARK: update selection
+// MARK: update selection
 
+extension DocumentUpdater {
     func groupSelection() {
         let groupId = UUID()
         let members = activeItem.selectedItems.map { $0.id }
@@ -85,9 +91,11 @@ struct DocumentUpdater {
         // TODO: fixme
         global.documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
     }
+}
 
-    // MARK: update item
+// MARK: update item
 
+extension DocumentUpdater {
     func update(item action: ItemAction, pending: Bool = false) {
         handle(.itemAction(action), pending: pending)
     }

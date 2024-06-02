@@ -308,7 +308,7 @@ struct MultipleTouchGestureModifier: ViewModifier {
             }
     }
 
-    @State private var multipleTouch = MultipleTouchModel(configs: .init(inGlobalCoordinate: true))
+    @StateObject private var multipleTouch = MultipleTouchModel(configs: .init(inGlobalCoordinate: true))
     @State private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }

@@ -2,6 +2,8 @@ import Combine
 import SwiftUI
 import UIKit
 
+private let subtracer = tracer.tagged("MultipleTouch")
+
 // MARK: - PanInfo
 
 struct PanInfo: Equatable {
@@ -64,7 +66,7 @@ extension PinchInfo: CustomStringConvertible {
 
 // MARK: - MultipleTouchModel
 
-class MultipleTouchModel {
+class MultipleTouchModel: ObservableObject {
     struct Configs {
         var inGlobalCoordinate = false
     }
@@ -84,15 +86,18 @@ class MultipleTouchModel {
     }
 
     fileprivate func onFirstTouchBegan() {
+        let _r = subtracer.range("onFirstTouchBegan"); defer { _r() }
         startTime = .now
     }
 
     fileprivate func onAllTouchesEnded() {
+        let _r = subtracer.range("onAllTouchesEnded"); defer { _r() }
         onTouchesChanged(count: 0)
         startTime = nil
     }
 
     fileprivate func onTouchesChanged(count: Int) {
+        let _r = subtracer.range("onTouchesChanged count=\(count)"); defer { _r() }
         touchesCount = count
         if panInfo != nil {
             panInfo = nil

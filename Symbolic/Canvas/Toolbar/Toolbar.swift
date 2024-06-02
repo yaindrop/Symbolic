@@ -31,13 +31,14 @@ struct ToolbarModifier: ViewModifier {
         content.toolbar { toolbar }
     }
 
+    @Selected private var viewSize = global.viewport.store.viewSize // strange bug that toolbar is lost when window size changes, need to reset ids
     @Selected private var toolbarMode = global.toolbar.mode
     @Selected private var undoable = global.document.undoable
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
-        ToolbarItem(placement: .topBarLeading) { leading }
-        ToolbarItem(placement: .principal) { principal }
-        ToolbarItem(placement: .topBarTrailing) { trailing }
+        ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }
+        ToolbarItem(placement: .principal) { principal.id(UUID()) }
+        ToolbarItem(placement: .topBarTrailing) { trailing.id(UUID()) }
     }}}
 
     private var leading: some View {

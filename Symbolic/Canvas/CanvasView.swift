@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - CanvasView
 
 struct CanvasView: View {
-    @State var multipleTouch = MultipleTouchModel()
+    @StateObject var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
     // MARK: body

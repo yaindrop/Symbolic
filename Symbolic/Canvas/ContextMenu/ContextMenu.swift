@@ -51,6 +51,7 @@ struct ContextMenuView: View {
 
     var body: some View {
         wrapper
+            .if(bounds == nil) { $0.hidden() }
             .onChange(of: bounds) { prevBounds = bounds ?? prevBounds }
     }
 
@@ -59,15 +60,20 @@ struct ContextMenuView: View {
     @Selected private var viewSize = global.viewport.store.viewSize
     @Selected private var focusedPath = global.activeItem.activePath
     @Selected private var focusedGroup = global.activeItem.focusedGroup
+
     @Selected private var bounds: CGRect?
 
+    @State private var menuId: UUID = .init()
     @State private var prevBounds: CGRect = .zero
     @State private var size: CGSize = .zero
 
-    @ViewBuilder var wrapper: some View {
+    var menuBox: CGRect {
         let bounds = bounds ?? prevBounds
         let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-        let menuBox = bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(viewSize).inset(by: 12))
+        return bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(viewSize).inset(by: 12))
+    }
+
+    @ViewBuilder var wrapper: some View {
         menu
             .padding(12)
             .background(.regularMaterial)
@@ -75,21 +81,41 @@ struct ContextMenuView: View {
             .sizeReader { size = $0 }
             .clipRounded(radius: size.height / 2)
             .position(menuBox.center)
+            .id(menuId)
     }
 
     @ViewBuilder var menu: some View {
         switch data {
         case .pathNode: EmptyView()
         case .focusedPath:
-            if let focusedPath {
-                PathMenu(bounds: $bounds, path: focusedPath)
-            }
+            focusedPathMenu
+                .onChange(of: focusedPath?.id) {
+                    $bounds { focusedPath.map { global.activeItem.boundingRect(itemId: $0.id) } }
+                    menuId = focusedPath?.id ?? .init()
+                }
         case .focusedGroup:
-            if let focusedGroup {
-                GroupMenu(bounds: $bounds, group: focusedGroup)
-            }
+            focusedGroupMenu
+                .onChange(of: focusedGroup?.id) {
+                    $bounds { focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) } }
+                    menuId = focusedGroup?.id ?? .init()
+                }
         case .selection:
-            SelectionMenu(bounds: $bounds)
+            SelectionMenu()
+                .onAppear {
+                    $bounds { global.activeItem.selectionBounds }
+                }
+        }
+    }
+
+    @ViewBuilder var focusedPathMenu: some View {
+        if let focusedPath {
+            PathMenu(path: focusedPath)
+        }
+    }
+
+    @ViewBuilder var focusedGroupMenu: some View {
+        if let focusedGroup {
+            GroupMenu(group: focusedGroup)
         }
     }
 }
@@ -104,15 +130,7 @@ extension ContextMenuView {
             menu
         }
 
-        init(bounds: Reselected<CGRect?>, path: Path) {
-            self.path = path
-            _bounds = bounds
-            _bounds.reselect { global.activeItem.boundingRect(itemId: path.id) }
-        }
-
         // MARK: private
-
-        @Reselected private var bounds: CGRect?
 
         @ViewBuilder private var menu: some View {
             HStack {
@@ -166,15 +184,7 @@ extension ContextMenuView {
             menu
         }
 
-        init(bounds: Reselected<CGRect?>, group: ItemGroup) {
-            self.group = group
-            _bounds = bounds
-            _bounds.reselect { global.activeItem.boundingRect(itemId: group.id) }
-        }
-
         // MARK: private
-
-        @Reselected private var bounds: CGRect?
 
         @ViewBuilder private var menu: some View {
             HStack {
@@ -232,14 +242,7 @@ extension ContextMenuView {
             menu
         }
 
-        init(bounds: Reselected<CGRect?>) {
-            _bounds = bounds
-            _bounds.reselect { global.activeItem.selectionBounds }
-        }
-
         // MARK: private
-
-        @Reselected private var bounds: CGRect?
 
         @ViewBuilder var menu: some View {
             HStack {

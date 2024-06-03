@@ -279,7 +279,12 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
     var wrappedValue: Value { storage.value! }
 
-    var projectedValue: Reselected<Value> { .init(storage: storage) }
+    var projectedValue: Selected<Value> { self }
+
+    func callAsFunction(_ selector: @escaping () -> Value) {
+        storage.selector = selector
+        storage.select()
+    }
 
     init(_ selector: @escaping () -> Value, name: String? = nil) {
         _storage = StateObject(wrappedValue: Storage(name: name, selector: selector))
@@ -287,17 +292,5 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
     init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
         self.init(wrappedValue, name: name)
-    }
-}
-
-@propertyWrapper
-struct Reselected<Value: Equatable>: DynamicProperty {
-    @ObservedObject fileprivate var storage: Selected<Value>.Storage
-
-    var wrappedValue: Value { storage.value! }
-
-    func reselect(_ selector: @escaping () -> Value) {
-        storage.selector = selector
-        storage.select()
     }
 }

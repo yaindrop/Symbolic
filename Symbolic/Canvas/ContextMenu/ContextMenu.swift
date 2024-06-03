@@ -1,12 +1,16 @@
 import Foundation
 import SwiftUI
 
+// MARK: - ContextMenuData
+
 enum ContextMenuData: HashIdentifiable {
     case pathNode
     case focusedPath
     case focusedGroup
     case selection
 }
+
+// MARK: - ContextMenuStore
 
 class ContextMenuStore: Store {
     @Trackable var menus = Set<ContextMenuData>()
@@ -35,23 +39,22 @@ struct ContextMenuRoot: View {
 
     var body: some View {
         ZStack {
-            ForEach(Array(menus)) { ContextMenu(data: $0) }
+            ForEach(Array(menus)) { ContextMenuView(data: $0) }
         }
     }
 }
 
-private struct MenuAlignBoundsKey: PreferenceKey {
-    typealias Value = CGRect
-    static var defaultValue: Value = .zero
-    static func reduce(value: inout Value, nextValue: () -> Value) { value = nextValue() }
-}
+// MARK: - ContextMenuView
 
-struct ContextMenu: View {
+struct ContextMenuView: View {
     let data: ContextMenuData
 
     var body: some View {
         wrapper
+            .onChange(of: bounds) { prevBounds = bounds ?? prevBounds }
     }
+
+    // MARK: private
 
     @Selected private var viewSize = global.viewport.store.viewSize
     @Selected private var focusedPath = global.activeItem.activePath
@@ -72,7 +75,6 @@ struct ContextMenu: View {
             .sizeReader { size = $0 }
             .clipRounded(radius: size.height / 2)
             .position(menuBox.center)
-            .onChange(of: self.bounds) { prevBounds = self.bounds ?? prevBounds }
     }
 
     @ViewBuilder var menu: some View {
@@ -94,14 +96,12 @@ struct ContextMenu: View {
 
 // MARK: - GroupMenu
 
-extension ContextMenu {
+extension ContextMenuView {
     struct PathMenu: View {
         let path: Path
 
         var body: some View {
-            if let bounds {
-                menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
-            }
+            menu
         }
 
         init(bounds: Reselected<CGRect?>, path: Path) {
@@ -158,14 +158,12 @@ extension ContextMenu {
 
 // MARK: - GroupMenu
 
-extension ContextMenu {
+extension ContextMenuView {
     struct GroupMenu: View {
         let group: ItemGroup
 
         var body: some View {
-            if let bounds {
-                menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
-            }
+            menu
         }
 
         init(bounds: Reselected<CGRect?>, group: ItemGroup) {
@@ -228,12 +226,10 @@ extension ContextMenu {
 
 // MARK: - SelectionMenu
 
-extension ContextMenu {
+extension ContextMenuView {
     struct SelectionMenu: View {
         var body: some View {
-            if let bounds {
-                menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
-            }
+            menu
         }
 
         init(bounds: Reselected<CGRect?>) {

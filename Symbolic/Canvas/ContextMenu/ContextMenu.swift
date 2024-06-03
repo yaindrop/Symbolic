@@ -2,34 +2,20 @@ import Foundation
 import SwiftUI
 
 enum ContextMenuData: HashIdentifiable {
-    struct PathNode: HashIdentifiable {
-        let pathId: UUID, nodeId: UUID
-    }
-
-    struct Path: HashIdentifiable {
-        let pathId: UUID
-    }
-
-    struct Group: HashIdentifiable {
-        let groupId: UUID
-    }
-
-    struct Selection: HashIdentifiable {}
-
-    case pathNode(PathNode)
-    case path(Path)
-    case group(Group)
-    case selection(Selection)
+    case pathNode
+    case focusedPath
+    case focusedGroup
+    case selection
 }
 
 class ContextMenuStore: Store {
     @Trackable var menus = Set<ContextMenuData>()
 
-    fileprivate func register(_ data: ContextMenuData) {
+    func register(_ data: ContextMenuData) {
         update { $0(\._menus, menus.with { $0.insert(data) }) }
     }
 
-    fileprivate func deregister(_ data: ContextMenuData) {
+    func deregister(_ data: ContextMenuData) {
         update { $0(\._menus, menus.with { $0.remove(data) }) }
     }
 
@@ -45,7 +31,7 @@ class ContextMenuStore: Store {
 }
 
 struct ContextMenuRoot: View {
-    @Selected var menus = global.contextMenu.menus
+    @Selected private var menus = global.contextMenu.menus
 
     var body: some View {
         ZStack {
@@ -63,29 +49,46 @@ private struct MenuAlignBoundsKey: PreferenceKey {
 struct ContextMenu: View {
     let data: ContextMenuData
 
-    @Selected private var viewSize = global.viewport.store.viewSize
-
-    @State private var size: CGSize = .zero
-    @State private var bounds: CGRect = .zero
-
     var body: some View {
+        wrapper
+    }
+
+    @Selected private var viewSize = global.viewport.store.viewSize
+    @Selected private var focusedPath = global.activeItem.activePath
+    @Selected private var focusedGroup = global.activeItem.focusedGroup
+    @Selected private var bounds: CGRect?
+
+    @State private var prevBounds: CGRect = .zero
+    @State private var size: CGSize = .zero
+
+    @ViewBuilder var wrapper: some View {
+        let bounds = bounds ?? prevBounds
         let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
         let menuBox = bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(viewSize).inset(by: 12))
-        Group {
-            switch data {
-            case let .pathNode(data): EmptyView()
-            case let .path(data): PathMenu(data: data)
-            case let .group(data): GroupMenu(data: data)
-            case let .selection(data): SelectionMenu(data: data)
+        menu
+            .padding(12)
+            .background(.regularMaterial)
+            .fixedSize()
+            .sizeReader { size = $0 }
+            .clipRounded(radius: size.height / 2)
+            .position(menuBox.center)
+            .onChange(of: self.bounds) { prevBounds = self.bounds ?? prevBounds }
+    }
+
+    @ViewBuilder var menu: some View {
+        switch data {
+        case .pathNode: EmptyView()
+        case .focusedPath:
+            if let focusedPath {
+                PathMenu(bounds: $bounds, path: focusedPath)
             }
+        case .focusedGroup:
+            if let focusedGroup {
+                GroupMenu(bounds: $bounds, group: focusedGroup)
+            }
+        case .selection:
+            SelectionMenu(bounds: $bounds)
         }
-        .padding(12)
-        .background(.regularMaterial)
-        .fixedSize()
-        .sizeReader { size = $0 }
-        .clipRounded(radius: size.height / 2)
-        .position(menuBox.center)
-        .onPreferenceChange(MenuAlignBoundsKey.self) { bounds = $0 }
     }
 }
 
@@ -93,7 +96,7 @@ struct ContextMenu: View {
 
 extension ContextMenu {
     struct PathMenu: View {
-        let data: ContextMenuData.Path
+        let path: Path
 
         var body: some View {
             if let bounds {
@@ -101,18 +104,17 @@ extension ContextMenu {
             }
         }
 
-        init(data: ContextMenuData.Path) {
-            self.data = data
-            _path = .init { global.path.path(id: data.pathId) }
-            _bounds = .init { global.activeItem.boundingRect(itemId: data.pathId) }
+        init(bounds: Reselected<CGRect?>, path: Path) {
+            self.path = path
+            _bounds = bounds
+            _bounds.reselect { global.activeItem.boundingRect(itemId: path.id) }
         }
 
         // MARK: private
 
-        @Selected private var path: Path?
-        @Selected private var bounds: CGRect?
+        @Reselected private var bounds: CGRect?
 
-        private var menu: some View {
+        @ViewBuilder private var menu: some View {
             HStack {
                 Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                     .frame(minWidth: 32)
@@ -158,7 +160,7 @@ extension ContextMenu {
 
 extension ContextMenu {
     struct GroupMenu: View {
-        let data: ContextMenuData.Group
+        let group: ItemGroup
 
         var body: some View {
             if let bounds {
@@ -166,18 +168,17 @@ extension ContextMenu {
             }
         }
 
-        init(data: ContextMenuData.Group) {
-            self.data = data
-            _group = .init { global.item.group(id: data.groupId) }
-            _bounds = .init { global.activeItem.boundingRect(itemId: data.groupId) }
+        init(bounds: Reselected<CGRect?>, group: ItemGroup) {
+            self.group = group
+            _bounds = bounds
+            _bounds.reselect { global.activeItem.boundingRect(itemId: group.id) }
         }
 
         // MARK: private
 
-        @Selected private var group: ItemGroup?
-        @Selected private var bounds: CGRect?
+        @Reselected private var bounds: CGRect?
 
-        private var menu: some View {
+        @ViewBuilder private var menu: some View {
             HStack {
                 Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                     .frame(minWidth: 32)
@@ -217,10 +218,8 @@ extension ContextMenu {
         }
 
         private func onUngroup() {
-            if let group {
-                global.documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
-                global.activeItem.select(itemIds: group.members)
-            }
+            global.documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
+            global.activeItem.select(itemIds: group.members)
         }
 
         private func onDelete() {}
@@ -231,19 +230,22 @@ extension ContextMenu {
 
 extension ContextMenu {
     struct SelectionMenu: View {
-        let data: ContextMenuData.Selection
-
         var body: some View {
             if let bounds {
                 menu.preference(key: MenuAlignBoundsKey.self, value: bounds)
             }
         }
 
+        init(bounds: Reselected<CGRect?>) {
+            _bounds = bounds
+            _bounds.reselect { global.activeItem.selectionBounds }
+        }
+
         // MARK: private
 
-        @Selected private var bounds = global.activeItem.selectionBounds
+        @Reselected private var bounds: CGRect?
 
-        var menu: some View {
+        @ViewBuilder var menu: some View {
             HStack {
                 Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                     .frame(minWidth: 32)

@@ -250,8 +250,9 @@ func withStoreUpdating(_ apply: () -> Void) {
 @propertyWrapper
 struct Selected<Value: Equatable>: DynamicProperty {
     fileprivate class Storage: ObservableObject {
-        var name: String?
         @Published var value: Value?
+        var selector: () -> Value
+        var name: String?
         var subscriptionId: Int?
 
         init(name: String? = nil, selector: @escaping () -> Value) {
@@ -260,9 +261,7 @@ struct Selected<Value: Equatable>: DynamicProperty {
             select()
         }
 
-        private let selector: () -> Value
-
-        private func select() {
+        func select() {
             let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
             if let subscriptionId {
                 manager.expire(subscriptionId: subscriptionId)
@@ -276,11 +275,11 @@ struct Selected<Value: Equatable>: DynamicProperty {
         }
     }
 
-    @StateObject private var storage: Storage
+    @StateObject fileprivate var storage: Storage
 
     var wrappedValue: Value { storage.value! }
 
-    var projectedValue: Selected<Value> { self }
+    var projectedValue: Reselected<Value> { .init(storage: storage) }
 
     init(_ selector: @escaping () -> Value, name: String? = nil) {
         _storage = StateObject(wrappedValue: Storage(name: name, selector: selector))
@@ -288,5 +287,17 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
     init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
         self.init(wrappedValue, name: name)
+    }
+}
+
+@propertyWrapper
+struct Reselected<Value: Equatable>: DynamicProperty {
+    @ObservedObject fileprivate var storage: Selected<Value>.Storage
+
+    var wrappedValue: Value { storage.value! }
+
+    func reselect(_ selector: @escaping () -> Value) {
+        storage.selector = selector
+        storage.select()
     }
 }

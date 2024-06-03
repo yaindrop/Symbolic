@@ -35,7 +35,11 @@ extension CGRect {
 
     func clamped(by rect: CGRect) -> Self { self + clampingOffset(by: rect) }
 
-    func inset(by size: Scalar) -> Self { insetBy(dx: size, dy: size) }
+    func inset(by size: Scalar) -> Self {
+        let dx = min(width / 2, size)
+        let dy = min(height / 2, size)
+        return insetBy(dx: dx, dy: dy)
+    }
 
     func outset(by size: Scalar) -> Self { insetBy(dx: -size, dy: -size) }
 

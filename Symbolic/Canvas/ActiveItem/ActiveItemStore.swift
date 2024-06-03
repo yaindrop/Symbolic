@@ -117,7 +117,14 @@ extension ActiveItemService {
 
     var activePath: Path? {
         if let focusedItemId {
-            return path.map[focusedItemId]
+            return path.path(id: focusedItemId)
+        }
+        return nil
+    }
+
+    var focusedGroup: ItemGroup? {
+        if let focusedItemId {
+            return item.group(id: focusedItemId)
         }
         return nil
     }

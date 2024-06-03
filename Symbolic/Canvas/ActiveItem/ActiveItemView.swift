@@ -27,9 +27,6 @@ extension ActiveItemView {
 
         var body: some View {
             boundsRect
-            if focused {
-                global.contextMenu.representative(.group(.init(groupId: group.id)))
-            }
         }
 
         init(group: ItemGroup, viewport: ViewportInfo) {
@@ -95,9 +92,6 @@ extension ActiveItemView {
 
         var body: some View {
             boundsRect
-            if focused {
-                global.contextMenu.representative(.path(.init(pathId: path.id)))
-            }
         }
 
         init(path: Path, viewport: ViewportInfo) {
@@ -166,7 +160,6 @@ extension ActiveItemView {
                     .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
                     .framePosition(rect: bounds)
                     .modifier(AnimatedValue(value: $dashPhase, from: 0, to: 16, animation: .linear(duration: 0.4).repeatForever(autoreverses: false)))
-                global.contextMenu.representative(.selection(.init()))
             }
         }
     }

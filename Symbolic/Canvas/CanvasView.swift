@@ -32,6 +32,12 @@ struct CanvasView: View {
                 global.panel.register(align: .topLeading) { _ in CanvasActionPanel() }
             }
             .onAppear {
+                global.contextMenu.register(.pathNode)
+                global.contextMenu.register(.focusedPath)
+                global.contextMenu.register(.focusedGroup)
+                global.contextMenu.register(.selection)
+            }
+            .onAppear {
                 global.document.setDocument(.init(from: fooSvg))
             }
     }}

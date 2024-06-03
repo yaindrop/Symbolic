@@ -86,6 +86,7 @@
 		57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F14A2BD54AA5001E1B2E /* Document.swift */; };
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
+		57B847912C0E12AC00D0E7C3 /* PathPropertyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */; };
 		57DD2A162C0236E60046931C /* ItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A152C0236E60046931C /* ItemStore.swift */; };
 		57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A182C02D7540046931C /* CanvasSetup.swift */; };
 		57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */; };
@@ -194,6 +195,7 @@
 		57B5F14A2BD54AA5001E1B2E /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
+		57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyStore.swift; sourceTree = "<group>"; };
 		57DD2A152C0236E60046931C /* ItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemStore.swift; sourceTree = "<group>"; };
 		57DD2A182C02D7540046931C /* CanvasSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasSetup.swift; sourceTree = "<group>"; };
 		57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionStore.swift; sourceTree = "<group>"; };
@@ -504,6 +506,7 @@
 			isa = PBXGroup;
 			children = (
 				57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */,
+				57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */,
 			);
 			path = PathProperty;
 			sourceTree = "<group>";
@@ -716,6 +719,7 @@
 				57DD2A212C02DB850046931C /* Item.swift in Sources */,
 				5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */,
 				574CC7BA2BF3B2950042FEE3 /* GlobalStore.swift in Sources */,
+				57B847912C0E12AC00D0E7C3 /* PathPropertyStore.swift in Sources */,
 				574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */,
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */,

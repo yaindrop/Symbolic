@@ -130,27 +130,8 @@ class ItemStore: Store, ItemStoreProtocol {
 
 // MARK: - PendingItemStore
 
-class PendingItemStore: Store, ItemStoreProtocol {
-    @Trackable var map = ItemMap()
-    @Trackable var rootIds: [UUID] = []
+class PendingItemStore: ItemStore {
     @Trackable fileprivate var active: Bool = false
-
-    @Trackable var ancestorMap = AncestorMap()
-
-    override init() {
-        super.init()
-        $map.willUpdate
-            .sink { _ in self.update { $0(\._ancestorMap, self.idToAncestorIds) } }
-            .store(in: self)
-    }
-
-    fileprivate func update(map: ItemMap) {
-        update { $0(\._map, map) }
-    }
-
-    fileprivate func update(rootIds: [UUID]) {
-        update { $0(\._rootIds, rootIds) }
-    }
 
     fileprivate func update(active: Bool) {
         update { $0(\._active, active) }

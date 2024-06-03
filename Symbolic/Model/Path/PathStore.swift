@@ -26,13 +26,8 @@ class PathStore: Store, PathStoreProtocol {
 
 // MARK: - PendingPathStore
 
-class PendingPathStore: Store, PathStoreProtocol {
-    @Trackable var map = PathMap()
+class PendingPathStore: PathStore {
     @Trackable fileprivate var active: Bool = false
-
-    fileprivate func update(map: PathMap) {
-        update { $0(\._map, map) }
-    }
 
     fileprivate func update(active: Bool) {
         update { $0(\._active, active) }

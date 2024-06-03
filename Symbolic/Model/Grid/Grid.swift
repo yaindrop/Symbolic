@@ -11,9 +11,9 @@ extension Snappable {
 }
 
 struct CartesianGrid: Equatable {
-    let cellSize: CGFloat
+    let cellSize: Scalar
 
-    func snap(_ point: CGPoint) -> CGPoint {
+    func snap(_ point: Point2) -> Point2 {
         let x = round(point.x / cellSize) * cellSize
         let y = round(point.y / cellSize) * cellSize
         return .init(x: x, y: y)

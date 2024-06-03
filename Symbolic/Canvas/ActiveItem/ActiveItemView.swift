@@ -158,7 +158,7 @@ extension ActiveItemView {
 
         @Selected private var bounds = global.activeItem.selectionBounds
 
-        @State private var dashPhase: CGFloat = 0
+        @State private var dashPhase: Scalar = 0
 
         @ViewBuilder private var boundsRect: some View {
             if let bounds {

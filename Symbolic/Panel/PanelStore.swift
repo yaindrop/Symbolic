@@ -180,23 +180,6 @@ extension PanelStore {
 
 // MARK: - get affinities
 
-private func getKeyPath(axis: Axis, align: AxisAlign) -> KeyPath<CGRect, Scalar> {
-    switch axis {
-    case .horizontal:
-        switch align {
-        case .start: \.minX
-        case .center: \.midX
-        case .end: \.maxX
-        }
-    case .vertical:
-        switch align {
-        case .start: \.minY
-        case .center: \.midY
-        case .end: \.maxY
-        }
-    }
-}
-
 extension PanelStore {
     static let rootAffinityThreshold = 32.0
     static let peerAffinityThreshold = 16.0
@@ -207,7 +190,7 @@ extension PanelStore {
     private func getRootAffinityCandidates(of rect: CGRect) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
             AxisAlign.allCases.map { align in
-                let kp = getKeyPath(axis: axis, align: align)
+                let kp = CGRect.keyPath(on: axis, align: align)
                 let distance = abs(rect[keyPath: kp] - rootRect[keyPath: kp])
                 return (.root(.init(axis: axis, align: align)), distance)
             }
@@ -218,8 +201,8 @@ extension PanelStore {
         Axis.allCases.flatMap { axis in
             AxisAlign.allCases.flatMap { selfAlign in
                 AxisAlign.allCases.map { peerAlign in
-                    let selfKp = getKeyPath(axis: axis, align: selfAlign)
-                    let peerKp = getKeyPath(axis: axis, align: peerAlign)
+                    let selfKp = CGRect.keyPath(on: axis, align: selfAlign)
+                    let peerKp = CGRect.keyPath(on: axis, align: peerAlign)
                     let distance = abs(rect[keyPath: selfKp] - peer.rect[keyPath: peerKp])
                     return (.peer(.init(peerId: peer.id, axis: axis, selfAlign: selfAlign, peerAlign: peerAlign)), distance)
                 }
@@ -270,7 +253,7 @@ extension PanelStore {
 
 extension PanelStore {
     private func offset(of panel: PanelData, by affinity: PanelAffinity.Root) -> Vector2 {
-        let axis = affinity.axis, align = affinity.align, keyPath = getKeyPath(axis: axis, align: align)
+        let axis = affinity.axis, align = affinity.align, keyPath = CGRect.keyPath(on: axis, align: align)
 
         var offset = rootRect[keyPath: keyPath] - panel.rect[keyPath: keyPath]
         offset += align == .start ? Self.rootAffinityGap : align == .end ? -Self.rootAffinityGap : 0
@@ -281,7 +264,7 @@ extension PanelStore {
     private func offset(of panel: PanelData, by affinity: PanelAffinity.Peer) -> Vector2 {
         guard let peerPanel = self.panel(id: affinity.peerId) else { return .zero }
         let axis = affinity.axis, selfAlign = affinity.selfAlign, peerAlign = affinity.peerAlign
-        let panelKeyPath = getKeyPath(axis: axis, align: selfAlign), peerKeyPath = getKeyPath(axis: axis, align: peerAlign)
+        let panelKeyPath = CGRect.keyPath(on: axis, align: selfAlign), peerKeyPath = CGRect.keyPath(on: axis, align: peerAlign)
 
         var offset = peerPanel.rect[keyPath: peerKeyPath] - panel.rect[keyPath: panelKeyPath]
         offset += selfAlign == peerAlign ? 0 : selfAlign == .start ? Self.peerAffinityGap : selfAlign == .end ? -Self.peerAffinityGap : 0

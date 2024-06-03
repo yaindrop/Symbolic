@@ -19,7 +19,7 @@ extension AxisAlign: CustomStringConvertible {
 
 // MARK: - PlaneInnerAlign
 
-enum PlaneInnerAlign: CaseIterable {
+enum PlaneInnerAlign: CaseIterable, HashIdentifiable {
     case topLeading, topCenter, topTrailing
     case centerLeading, center, centerTrailing
     case bottomLeading, bottomCenter, bottomTrailing
@@ -84,7 +84,7 @@ extension PlaneInnerAlign {
 
 // MARK: - PlaneOuterAlign
 
-enum PlaneOuterAlign: CaseIterable {
+enum PlaneOuterAlign: CaseIterable, HashIdentifiable {
     case topLeading, topInnerLeading, topCenter, topInnerTrailing, topTrailing
     case innerTopLeading, innerTopTrailing
     case centerLeading, centerTrailing
@@ -149,18 +149,39 @@ extension PlaneOuterAlign {
 // MARK: - rect align
 
 extension CGRect {
-    func alignedPoint(at align: PlaneInnerAlign) -> Point2 {
-        switch align {
-        case .topLeading: minPoint
-        case .topCenter: .init(midX, minY)
-        case .topTrailing: .init(maxX, minY)
-        case .centerLeading: .init(minX, midY)
-        case .center: midPoint
-        case .centerTrailing: .init(maxX, midY)
-        case .bottomLeading: .init(minX, maxY)
-        case .bottomCenter: .init(midX, maxY)
-        case .bottomTrailing: maxPoint
+    static func keyPath(on axis: Axis, align: AxisAlign) -> KeyPath<Self, Scalar> {
+        switch axis {
+        case .horizontal:
+            switch align {
+            case .start: \.minX
+            case .center: \.midX
+            case .end: \.maxX
+            }
+        case .vertical:
+            switch align {
+            case .start: \.minY
+            case .center: \.midY
+            case .end: \.maxY
+            }
         }
+    }
+
+    func alignedPoint(at align: PlaneInnerAlign) -> Point2 {
+        var x: Scalar {
+            switch align[.horizontal] {
+            case .start: minX
+            case .center: midX
+            case .end: maxX
+            }
+        }
+        var y: Scalar {
+            switch align[.vertical] {
+            case .start: minY
+            case .center: midY
+            case .end: maxY
+            }
+        }
+        return .init(x: x, y: y)
     }
 
     func alignedPoint(at align: PlaneInnerAlign, gap: CGSize) -> Point2 {

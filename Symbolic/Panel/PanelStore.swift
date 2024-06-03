@@ -32,7 +32,7 @@ extension PanelStore {
     func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping (_ panelId: UUID) -> any View) {
         var panelData = PanelData(view: { AnyView(panel($0)) })
         for axis in Axis.allCases {
-            panelData.affinities[axis] = .root(.init(axis: axis, align: align.getAxisInnerAlign(in: axis)))
+            panelData.affinities[axis] = .root(.init(axis: axis, align: align[axis]))
         }
 
         var updated = panelMap
@@ -180,7 +180,7 @@ extension PanelStore {
 
 // MARK: - get affinities
 
-private func getKeyPath(axis: Axis, align: AxisInnerAlign) -> KeyPath<CGRect, Scalar> {
+private func getKeyPath(axis: Axis, align: AxisAlign) -> KeyPath<CGRect, Scalar> {
     switch axis {
     case .horizontal:
         switch align {
@@ -206,7 +206,7 @@ extension PanelStore {
     typealias PanelAffinityCandidate = (affinity: PanelAffinity, distance: Scalar)
     private func getRootAffinityCandidates(of rect: CGRect) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
-            AxisInnerAlign.allCases.map { align in
+            AxisAlign.allCases.map { align in
                 let kp = getKeyPath(axis: axis, align: align)
                 let distance = abs(rect[keyPath: kp] - rootRect[keyPath: kp])
                 return (.root(.init(axis: axis, align: align)), distance)
@@ -216,8 +216,8 @@ extension PanelStore {
 
     private func getPeerAffinityCandidates(of rect: CGRect, peer: PanelData) -> [PanelAffinityCandidate] {
         Axis.allCases.flatMap { axis in
-            AxisInnerAlign.allCases.flatMap { selfAlign in
-                AxisInnerAlign.allCases.map { peerAlign in
+            AxisAlign.allCases.flatMap { selfAlign in
+                AxisAlign.allCases.map { peerAlign in
                     let selfKp = getKeyPath(axis: axis, align: selfAlign)
                     let peerKp = getKeyPath(axis: axis, align: peerAlign)
                     let distance = abs(rect[keyPath: selfKp] - peer.rect[keyPath: peerKp])

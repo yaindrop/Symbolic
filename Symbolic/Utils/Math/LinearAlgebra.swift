@@ -13,6 +13,15 @@ extension Vector2 {
 
     static let unitY: Self = .init(0, 1)
 
+    static let unitXY: Self = .init(1, 1)
+
+    static func unit(on axis: Axis) -> Self {
+        switch axis {
+        case .horizontal: unitX
+        case .vertical: unitY
+        }
+    }
+
     var isZero: Bool { self == .zero }
 
     var length: Scalar { hypot(dx, dy) }
@@ -38,6 +47,8 @@ extension Vector2 {
     func dotProduct(_ rhs: Self) -> Scalar { dx * rhs.dx + dy * rhs.dy }
 
     func crossProduct(_ rhs: Self) -> Scalar { dx * rhs.dy - dy * rhs.dx }
+
+    func elementWiseProduct(_ rhs: Self) -> Self { .init(dx * rhs.dx, dy * rhs.dy) }
 
     func radian(to v: Self) -> Scalar {
         let dot = dotProduct(v)

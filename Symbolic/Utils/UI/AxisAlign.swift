@@ -1,13 +1,13 @@
 import Foundation
 import SwiftUI
 
-// MARK: - AxisInnerAlign
+// MARK: - AxisAlign
 
-enum AxisInnerAlign: CaseIterable {
+enum AxisAlign: CaseIterable {
     case start, center, end
 }
 
-extension AxisInnerAlign: CustomStringConvertible {
+extension AxisAlign: CustomStringConvertible {
     var description: String {
         switch self {
         case .start: "start"
@@ -23,23 +23,51 @@ enum PlaneInnerAlign: CaseIterable {
     case topLeading, topCenter, topTrailing
     case centerLeading, center, centerTrailing
     case bottomLeading, bottomCenter, bottomTrailing
+}
 
-    var isLeading: Bool { [.topLeading, .centerLeading, .bottomLeading].contains(self) }
-    var isHorizontalCenter: Bool { [.topCenter, .center, .bottomCenter].contains(self) }
-    var isTrailing: Bool { [.topTrailing, .centerTrailing, .bottomTrailing].contains(self) }
-
-    var isTop: Bool { [.topLeading, .topCenter, .topTrailing].contains(self) }
-    var isVerticalCenter: Bool { [.centerLeading, .center, .centerTrailing].contains(self) }
-    var isBottom: Bool { [.bottomLeading, .bottomCenter, .bottomTrailing].contains(self) }
-
-    func getAxisInnerAlign(in axis: Axis) -> AxisInnerAlign {
-        switch axis {
-        case .horizontal: isLeading ? .start : isTrailing ? .end : .center
-        case .vertical: isTop ? .start : isBottom ? .end : .center
+extension PlaneInnerAlign {
+    var horizontal: AxisAlign {
+        switch self {
+        case .topLeading, .centerLeading, .bottomLeading: .start
+        case .topCenter, .center, .bottomCenter: .center
+        case .topTrailing, .centerTrailing, .bottomTrailing: .end
         }
     }
 
-    init(horizontal: AxisInnerAlign, vertical: AxisInnerAlign) {
+    var vertical: AxisAlign {
+        switch self {
+        case .topLeading, .topCenter, .topTrailing: .start
+        case .centerLeading, .center, .centerTrailing: .center
+        case .bottomLeading, .bottomCenter, .bottomTrailing: .end
+        }
+    }
+
+    var isLeading: Bool { horizontal == .start }
+    var isHorizontalCenter: Bool { horizontal == .center }
+    var isTrailing: Bool { horizontal == .end }
+
+    var isTop: Bool { vertical == .start }
+    var isVerticalCenter: Bool { vertical == .center }
+    var isBottom: Bool { vertical == .end }
+
+    var direction: Vector2 {
+        Axis.allCases.reduce(into: .zero) {
+            switch self[$1] {
+            case .start: $0 += .unit(on: $1)
+            case .center: $0 += .zero
+            case .end: $0 += -.unit(on: $1)
+            }
+        }
+    }
+
+    subscript(axis: Axis) -> AxisAlign {
+        switch axis {
+        case .horizontal: horizontal
+        case .vertical: vertical
+        }
+    }
+
+    init(horizontal: AxisAlign, vertical: AxisAlign) {
         switch (horizontal, vertical) {
         case (.start, .start): self = .topLeading
         case (.start, .center): self = .centerLeading
@@ -53,6 +81,72 @@ enum PlaneInnerAlign: CaseIterable {
         }
     }
 }
+
+// MARK: - PlaneOuterAlign
+
+enum PlaneOuterAlign: CaseIterable {
+    case topLeading, topInnerLeading, topCenter, topInnerTrailing, topTrailing
+    case innerTopLeading, innerTopTrailing
+    case centerLeading, centerTrailing
+    case innerBottomLeading, innerBottomTrailing
+    case bottomLeading, bottomInnerLeading, bottomCenter, bottomInnerTrailing, bottomTrailing
+}
+
+extension PlaneOuterAlign {
+    var horizontal: AxisAlign? {
+        switch self {
+        case .topLeading, .innerTopLeading, .centerLeading, .innerBottomLeading, .bottomLeading: .start
+        case .topCenter, .bottomCenter: .center
+        case .topTrailing, .innerTopTrailing, .centerTrailing, .innerBottomTrailing, .bottomTrailing: .end
+        default: nil
+        }
+    }
+
+    var vertical: AxisAlign? {
+        switch self {
+        case .topLeading, .topInnerLeading, .topCenter, .topInnerTrailing, .topTrailing: .start
+        case .centerLeading, .centerTrailing: .center
+        case .bottomLeading, .bottomInnerLeading, .bottomCenter, .bottomInnerTrailing, .bottomTrailing: .end
+        default: nil
+        }
+    }
+
+    var isLeading: Bool { horizontal == .start }
+    var isHorizontalCenter: Bool { horizontal == .center }
+    var isTrailing: Bool { horizontal == .end }
+
+    var isTop: Bool { vertical == .start }
+    var isVerticalCenter: Bool { vertical == .center }
+    var isBottom: Bool { vertical == .end }
+
+    var innerAlign: PlaneInnerAlign {
+        switch self {
+        case .topLeading, .topInnerLeading, .innerTopLeading: .topLeading
+        case .topCenter: .topCenter
+        case .topInnerTrailing, .topTrailing, .innerTopTrailing: .topTrailing
+        case .centerLeading: .centerLeading
+        case .centerTrailing: .centerTrailing
+        case .innerBottomLeading, .bottomLeading, .bottomInnerLeading: .bottomLeading
+        case .bottomCenter: .bottomCenter
+        case .innerBottomTrailing, .bottomInnerTrailing, .bottomTrailing: .bottomTrailing
+        }
+    }
+
+    var direction: Vector2 {
+        switch self {
+        case .topLeading: -.unitXY
+        case .topInnerLeading, .topCenter, .topInnerTrailing: -.unitY
+        case .topTrailing: .unitX - .unitY
+        case .innerTopLeading, .centerLeading, .innerBottomLeading: -.unitX
+        case .innerTopTrailing, .centerTrailing, .innerBottomTrailing: .unitX
+        case .bottomLeading: -.unitX + .unitY
+        case .bottomInnerLeading, .bottomCenter, .bottomInnerTrailing: .unitY
+        case .bottomTrailing: .unitXY
+        }
+    }
+}
+
+// MARK: - rect align
 
 extension CGRect {
     func alignedPoint(at align: PlaneInnerAlign) -> Point2 {
@@ -69,22 +163,28 @@ extension CGRect {
         }
     }
 
-    func alignedBox(at align: PlaneInnerAlign, size: CGSize, gap _: Scalar = 0) -> CGRect {
-        switch align {
-        case .topLeading: .init(origin: alignedPoint(at: .topLeading), size: size)
-        case .topCenter: .init(center: alignedPoint(at: .topCenter) + .init(0, size.height / 2), size: size)
-        case .topTrailing: .init(origin: alignedPoint(at: .topTrailing) - .init(size.width, 0), size: size)
-        case .centerLeading: .init(center: alignedPoint(at: .centerLeading) + .init(size.width / 2, 0), size: size)
-        case .center: .init(center: alignedPoint(at: .center), size: size)
-        case .centerTrailing: .init(center: alignedPoint(at: .centerTrailing) - .init(size.width / 2, 0), size: size)
-        case .bottomLeading: .init(origin: alignedPoint(at: .bottomLeading) - .init(0, size.height), size: size)
-        case .bottomCenter: .init(center: alignedPoint(at: .bottomCenter) - .init(0, size.height / 2), size: size)
-        case .bottomTrailing: .init(origin: alignedPoint(at: .bottomTrailing) - .init(size.width, size.height), size: size)
-        }
+    func alignedPoint(at align: PlaneInnerAlign, gap: CGSize) -> Point2 {
+        alignedPoint(at: align) + align.direction.elementWiseProduct(.init(gap))
+    }
+
+    func alignedBox(at align: PlaneInnerAlign, size: CGSize) -> CGRect {
+        .init(center: alignedPoint(at: align) + align.direction.elementWiseProduct(.init(size)) / 2, size: size)
+    }
+
+    func alignedBox(at align: PlaneInnerAlign, size: CGSize, gap: CGSize) -> CGRect {
+        alignedBox(at: align, size: size) + align.direction.elementWiseProduct(.init(gap))
+    }
+
+    func alignedBox(at align: PlaneOuterAlign, size: CGSize) -> CGRect {
+        alignedBox(at: align.innerAlign, size: size) + align.direction.elementWiseProduct(.init(size))
+    }
+
+    func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: CGSize) -> CGRect {
+        alignedBox(at: align, size: size) + align.direction.elementWiseProduct(.init(gap))
     }
 }
 
-// MARK: - AtPlaneAlignModifier
+// MARK: - InnerAlignModifier
 
 struct InnerAlignModifier: ViewModifier {
     let position: PlaneInnerAlign
@@ -105,88 +205,5 @@ struct InnerAlignModifier: ViewModifier {
 extension View {
     func innerAligned(_ position: PlaneInnerAlign) -> some View {
         modifier(InnerAlignModifier(position: position))
-    }
-}
-
-enum PlaneOuterAlign: CaseIterable {
-    case topLeading, topInnerLeading, topCenter, topInnerTrailing, topTrailing
-    case innerTopLeading, innerTopTrailing
-    case centerLeading, centerTrailing
-    case innerBottomLeading, innerBottomTrailing
-    case bottomLeading, bottomInnerLeading, bottomCenter, bottomInnerTrailing, bottomTrailing
-
-    var isLeading: Bool { [.topLeading, .innerTopLeading, .centerLeading, .innerBottomLeading, .bottomLeading].contains(self) }
-    var isHorizontalCenter: Bool { [.topCenter, .bottomCenter].contains(self) }
-    var isTrailing: Bool { [.topTrailing, .innerTopTrailing, .centerTrailing, .innerBottomTrailing, .bottomTrailing].contains(self) }
-
-    var isTop: Bool { [.topLeading, .topInnerLeading, .topCenter, .topInnerTrailing, .topTrailing].contains(self) }
-    var isVerticalCenter: Bool { [.centerLeading, .centerTrailing].contains(self) }
-    var isBottom: Bool { [.bottomLeading, .bottomInnerLeading, .bottomCenter, .bottomInnerTrailing, .bottomTrailing].contains(self) }
-}
-
-extension PlaneOuterAlign {
-    var opposite: Self {
-        switch self {
-        case .topLeading: .bottomLeading
-        case .topInnerLeading: .bottomInnerLeading
-        case .topCenter: .bottomCenter
-        case .topInnerTrailing: .bottomInnerTrailing
-        case .topTrailing: .bottomTrailing
-        case .innerTopLeading: .innerTopTrailing
-        case .innerTopTrailing: .innerTopLeading
-        case .centerLeading: .centerTrailing
-        case .centerTrailing: .centerLeading
-        case .innerBottomLeading: .innerBottomTrailing
-        case .innerBottomTrailing: .innerBottomLeading
-        case .bottomLeading: .topLeading
-        case .bottomInnerLeading: .topInnerLeading
-        case .bottomCenter: .topCenter
-        case .bottomInnerTrailing: .topInnerTrailing
-        case .bottomTrailing: .topTrailing
-        }
-    }
-}
-
-extension CGRect {
-    func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: Scalar = 0) -> CGRect {
-        func point(from align: PlaneInnerAlign, _ gapOffset: Vector2, _ sizeOffset: Vector2) -> Point2 {
-            alignedPoint(at: align).offset(by: gapOffset).offset(by: sizeOffset)
-        }
-        return {
-            switch align {
-            case .topLeading:
-                .init(origin: point(from: .topLeading, .init(-gap, -gap), -.init(size)), size: size)
-            case .topInnerLeading:
-                .init(origin: point(from: .topLeading, .init(0, -gap), -.init(size).vectorY), size: size)
-            case .topCenter:
-                .init(center: point(from: .topCenter, .init(0, -gap), -.init(size).vectorY / 2), size: size)
-            case .topInnerTrailing:
-                .init(origin: point(from: .topTrailing, .init(0, -gap), -.init(size)), size: size)
-            case .topTrailing:
-                .init(origin: point(from: .topTrailing, .init(gap, -gap), -.init(size).vectorY), size: size)
-            case .innerTopLeading:
-                .init(origin: point(from: .topLeading, .init(-gap, 0), -.init(size).vectorX), size: size)
-            case .innerTopTrailing:
-                .init(origin: point(from: .topTrailing, .init(gap, 0), .zero), size: size)
-            case .centerLeading:
-                .init(center: point(from: .centerLeading, .init(-gap, 0), -.init(size).vectorX / 2), size: size)
-            case .centerTrailing:
-                .init(center: point(from: .centerTrailing, .init(gap, 0), .init(size).vectorX / 2), size: size)
-            case .innerBottomLeading:
-                .init(origin: point(from: .bottomLeading, .init(-gap, 0), -.init(size)), size: size)
-            case .innerBottomTrailing:
-                .init(origin: point(from: .bottomTrailing, .init(gap, 0), -.init(size).vectorY), size: size)
-            case .bottomLeading:
-                .init(origin: point(from: .bottomLeading, .init(-gap, gap), -.init(size).vectorX), size: size)
-            case .bottomInnerLeading:
-                .init(origin: point(from: .bottomLeading, .init(0, gap), .zero), size: size)
-            case .bottomCenter:
-                .init(center: point(from: .bottomCenter, .init(0, gap), .init(size).vectorY / 2), size: size)
-            case .bottomInnerTrailing:
-                .init(origin: point(from: .bottomTrailing, .init(0, gap), -.init(size).vectorX), size: size)
-            case .bottomTrailing:
-                .init(origin: point(from: .bottomTrailing, .init(gap, gap), .zero), size: size)
-            }
-        }()
     }
 }

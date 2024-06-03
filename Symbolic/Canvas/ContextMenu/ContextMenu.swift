@@ -70,7 +70,7 @@ struct ContextMenu: View {
 
     var body: some View {
         let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-        let menuBox = bounds.alignedBox(at: menuAlign, size: size, gap: 12).clamped(by: CGRect(viewSize).inset(by: 12))
+        let menuBox = bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(viewSize).inset(by: 12))
         Group {
             switch data {
             case let .pathNode(data): EmptyView()

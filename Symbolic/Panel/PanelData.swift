@@ -6,14 +6,14 @@ import SwiftUI
 enum PanelAffinity {
     struct Root {
         let axis: Axis
-        let align: AxisInnerAlign
+        let align: AxisAlign
     }
 
     struct Peer {
         let peerId: UUID
         let axis: Axis
-        let selfAlign: AxisInnerAlign
-        let peerAlign: AxisInnerAlign
+        let selfAlign: AxisAlign
+        let peerAlign: AxisAlign
     }
 
     case root(Root)

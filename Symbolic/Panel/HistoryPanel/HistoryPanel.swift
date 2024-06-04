@@ -6,16 +6,37 @@ private extension DocumentEvent {
         switch action {
         case let .pathAction(pathAction):
             switch pathAction {
-            case .load: "PathLoad"
+            case let .load(action): "Load path \(action.path.id.uuidString.prefix(4))"
+            case let .create(action): "Create path \(action.path.id.uuidString.prefix(4))"
+            case let .move(action): "Move \(action.pathIds.map { $0.uuidString.prefix(4) }) by \(action.offset)"
+            case let .delete(action): "Delete \(action.pathIds.map { $0.uuidString.prefix(4) })"
             case let .single(single):
                 switch single.kind {
-                case let .moveEdge(moveEdge): "\(single.pathId) MoveEdge \(moveEdge.fromNodeId) offset \(moveEdge.offset)"
-                default: "single pathAction"
+                case let .deleteNode(action): "In path \(single.pathId.uuidString.prefix(4)) delete node \(action.nodeId.uuidString.prefix(4))"
+                case let .setNodePosition(action): "In path \(single.pathId.uuidString.prefix(4)) set node \(action.nodeId.uuidString.prefix(4)) to \(action.position)"
+                case let .setEdge(action): "In path \(single.pathId.uuidString.prefix(4)) set edge from \(action.fromNodeId.uuidString.prefix(4))"
+
+                case let .addEndingNode(action): "In path \(single.pathId.uuidString.prefix(4)) add ending node from \(action.endingNodeId.uuidString.prefix(4)) to \(action.newNodeId.uuidString.prefix(4)) with \(action.offset)"
+                case let .splitSegment(action): "In path \(single.pathId.uuidString.prefix(4)) split segment from \(action.fromNodeId.uuidString.prefix(4)) at \(action.paramT) to \(action.newNodeId.uuidString.prefix(4)) with \(action.offset)"
+
+                case let .move(action): "Move path \(single.pathId.uuidString.prefix(4)) by \(action.offset)"
+                case let .moveNode(action): "In path \(single.pathId.uuidString.prefix(4)) move node \(action.nodeId.uuidString.prefix(4)) by \(action.offset)"
+                case let .moveEdge(action): "In path \(single.pathId.uuidString.prefix(4)) move edge from \(action.fromNodeId.uuidString.prefix(4)) by \(action.offset)"
+                case let .moveEdgeControl(action): "In path \(single.pathId.uuidString.prefix(4)) move edge control from \(action.fromNodeId.uuidString.prefix(4)) by \(action.offset0) and \(action.offset1)"
                 }
-            default: "pathAction"
+            case .merge: "Merge paths"
+            case let .breakAtNode(action): "Break path \(action.pathId.uuidString.prefix(4)) at node \(action.nodeId.uuidString.prefix(4))"
+            case let .breakAtEdge(action): "Break path \(action.pathId.uuidString.prefix(4)) at edge from \(action.fromNodeId.uuidString.prefix(4))"
             }
         case let .itemAction(action):
-            "itemAction"
+            switch action {
+            case let .group(action):
+                "Group of \(action.group.members.map { $0.uuidString.prefix(4) }) as \(action.group.id.uuidString.prefix(4))"
+            case let .ungroup(action):
+                "Ungroup \(action.groupIds.map { $0.uuidString.prefix(4) })"
+            case let .reorder(action):
+                "Reorder \(action.inGroupId.map { $0.uuidString.prefix(4) } ?? "root")"
+            }
         }
     }
 }

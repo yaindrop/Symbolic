@@ -62,11 +62,11 @@ extension PathEvent {
 // MARK: - PathPropertyEvent
 
 struct PathPropertyEvent: Equatable, Encodable {
-    enum Kind: Equatable, Encodable {
-        struct SetName: Equatable, Encodable { let name: String? }
-        struct SetNodeType: Equatable, Encodable { let nodeId: UUID, nodeType: PathNodeType? }
-        struct SetEdgeType: Equatable, Encodable { let fromNodeId: UUID, edgeType: PathEdgeType? }
+    struct SetName: Equatable, Encodable { let name: String? }
+    struct SetNodeType: Equatable, Encodable { let nodeId: UUID, nodeType: PathNodeType? }
+    struct SetEdgeType: Equatable, Encodable { let fromNodeId: UUID, edgeType: PathEdgeType? }
 
+    enum Kind: Equatable, Encodable {
         case setName(SetName)
         case setNodeType(SetNodeType)
         case setEdgeType(SetEdgeType)
@@ -104,7 +104,33 @@ struct DocumentEvent: Identifiable, Equatable, Encodable {
     let action: DocumentAction
 }
 
+extension PathEvent.Compound {
+    var affectedPathIds: [UUID] {
+        switch self {
+        case let .merge(event):
+            [event.pathId, event.mergedPathId]
+        case let .nodeBreak(event):
+            [event.pathId, event.newPathId]
+        case let .edgeBreak(event):
+            [event.pathId, event.newPathId]
+        }
+    }
+}
+
 extension PathEvent {
+    var affectedPathIds: [UUID] {
+        switch self {
+        case let .create(event):
+            [event.path.id]
+        case let .delete(event):
+            [event.pathId]
+        case let .update(event):
+            [event.pathId]
+        case let .compound(event):
+            event.affectedPathIds
+        }
+    }
+
     init(in pathId: UUID, _ kind: PathEvent.Update.Kind) {
         self = .update(.init(pathId: pathId, kind: kind))
     }

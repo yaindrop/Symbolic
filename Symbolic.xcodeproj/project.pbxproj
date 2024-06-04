@@ -555,11 +555,11 @@
 		57DD2A292C0432D50046931C /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				57B8478B2C0DB06900D0E7C3 /* PathProperty */,
 				57B5F1472BD54260001E1B2E /* Document */,
 				574CC7F02BFCCFBF0042FEE3 /* Grid */,
 				57DD2A142C0236B80046931C /* Item */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
+				57B8478B2C0DB06900D0E7C3 /* PathProperty */,
 			);
 			path = Model;
 			sourceTree = "<group>";

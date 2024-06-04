@@ -16,6 +16,10 @@ extension ItemStoreProtocol {
         map.value(key: id)
     }
 
+    func exists(id: UUID) -> Bool {
+        item(id: id) != nil
+    }
+
     func ancestorIds(of itemId: UUID) -> [UUID] {
         ancestorMap[itemId] ?? []
     }
@@ -173,6 +177,45 @@ extension ItemService: ItemStoreProtocol {
     }
 }
 
+// MARK: - modify item map
+
+extension ItemService {
+    var targetStore: ItemStore { pendingStore.active ? pendingStore : store }
+
+    private func add(item: Item) {
+        let _r = subtracer.range("add"); defer { _r() }
+        guard !exists(id: item.id) else { return }
+        if case let .path(path) = item.kind {
+            guard self.path.exists(id: path.id) else { return }
+        }
+        targetStore.update(map: map.with { $0[item.id] = item })
+    }
+
+    private func remove(itemId: UUID) {
+        let _r = subtracer.range("remove"); defer { _r() }
+        guard let item = item(id: itemId) else { return }
+        if case let .path(path) = item.kind {
+            guard !self.path.exists(id: path.id) else { return }
+        }
+        targetStore.update(map: map.with { $0.removeValue(forKey: itemId) })
+    }
+
+    private func update(item: Item) {
+        let _r = subtracer.range("update"); defer { _r() }
+        guard exists(id: item.id) else { return }
+        if case let .path(path) = item.kind {
+            guard self.path.exists(id: path.id) else { remove(itemId: item.id); return }
+        }
+        targetStore.update(map: map.with { $0[item.id] = item })
+    }
+
+    private func clear() {
+        let _r = subtracer.range("clear"); defer { _r() }
+        targetStore.update(map: .init())
+        targetStore.update(rootIds: .init())
+    }
+}
+
 // MARK: load document
 
 extension ItemService {
@@ -198,55 +241,6 @@ extension ItemService {
                 pendingStore.update(active: false)
             }
         }
-    }
-}
-
-// MARK: - modify item map
-
-extension ItemService {
-    private func update(map: ItemMap) {
-        if pendingStore.active {
-            pendingStore.update(map: map)
-        } else {
-            store.update(map: map)
-        }
-    }
-
-    private func update(rootIds: [UUID]) {
-        if pendingStore.active {
-            pendingStore.update(rootIds: rootIds)
-        } else {
-            store.update(rootIds: rootIds)
-        }
-    }
-
-    private func add(item: Item) {
-        let _r = subtracer.range("add"); defer { _r() }
-        if case let .path(path) = item.kind {
-            guard self.path.path(id: path.id) != nil else { return }
-        }
-        update(map: map.with { $0[item.id] = item })
-    }
-
-    private func remove(itemId: UUID) {
-        let _r = subtracer.range("remove"); defer { _r() }
-        guard item(id: itemId) != nil else { return }
-        update(map: map.with { $0.removeValue(forKey: itemId) })
-    }
-
-    private func update(item: Item) {
-        let _r = subtracer.range("update"); defer { _r() }
-        if case let .path(path) = item.kind {
-            guard self.path.path(id: path.id) != nil else { remove(itemId: item.id); return }
-        }
-        guard self.item(id: item.id) != nil else { return }
-        update(map: map.with { $0[item.id] = item })
-    }
-
-    private func clear() {
-        let _r = subtracer.range("clear"); defer { _r() }
-        update(map: .init())
-        update(rootIds: .init())
     }
 }
 
@@ -290,48 +284,23 @@ extension ItemService {
                 update(item: .init(kind: .group(.init(id: inGroupId, members: members))))
             }
         } else {
-            update(rootIds: members)
+            targetStore.update(rootIds: members)
         }
     }
 
     // MARK: path event
 
     private func loadEvent(_ event: PathEvent) {
-        let _r = subtracer.range("load event"); defer { _r() }
-        switch event {
-        case let .create(event):
-            loadAffectedPaths(event.path.id)
-        case let .delete(event):
-            loadAffectedPaths(event.pathId)
-        case let .update(event):
-            loadAffectedPaths(event.pathId)
-        case let .compound(event):
-            loadEvent(event)
-        }
-    }
-
-    private func loadEvent(_ event: PathEvent.Compound) {
-        switch event {
-        case let .merge(event):
-            loadAffectedPaths(event.pathId, event.mergedPathId)
-        case let .nodeBreak(event):
-            loadAffectedPaths(event.pathId, event.newPathId)
-        case let .edgeBreak(event):
-            loadAffectedPaths(event.pathId, event.newPathId)
-        }
-    }
-
-    private func loadAffectedPaths(_ pathIds: UUID...) {
-        for pathId in pathIds {
+        for pathId in event.affectedPathIds {
             let item = item(id: pathId)
             let path = path.path(id: pathId)
             if path == nil {
                 guard item?.pathId != nil else { continue }
                 remove(itemId: pathId)
-                update(rootIds: rootIds.filter { $0 != pathId })
+                targetStore.update(rootIds: rootIds.filter { $0 != pathId })
             } else if item == nil {
                 add(item: .init(kind: .path(pathId)))
-                update(rootIds: rootIds + [pathId])
+                targetStore.update(rootIds: rootIds + [pathId])
             }
         }
     }

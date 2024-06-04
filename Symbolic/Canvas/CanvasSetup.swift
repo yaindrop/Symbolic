@@ -20,6 +20,7 @@ struct CanvasSetup {
         global.document.store.$activeDocument.didSet
             .sink {
                 global.path.loadDocument($0)
+                global.pathProperty.loadDocument($0)
                 global.item.loadDocument($0)
             }
             .store(in: global.item.store)
@@ -27,6 +28,7 @@ struct CanvasSetup {
         global.document.store.$pendingEvent.didSet
             .sink {
                 global.path.loadPendingEvent($0)
+                global.pathProperty.loadPendingEvent($0)
                 global.item.loadPendingEvent($0)
             }
             .store(in: global.item.store)

@@ -12,6 +12,9 @@ struct GlobalStore {
     private let pathStore = PathStore()
     private let pendingPathStore = PendingPathStore()
 
+    private let pathPropertyStore = PathPropertyStore()
+    private let pendingPathPropertyStore = PendingPathPropertyStore()
+
     private let itemStore = ItemStore()
     private let pendingItemStore = PendingItemStore()
 
@@ -42,6 +45,8 @@ extension GlobalStore {
     var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, itemStore: itemStore, activeItem: activeItem, viewport: viewport, grid: grid, store: documentUpdaterStore) }
 
     var path: PathService { .init(viewport: viewport, store: pathStore, pendingStore: pendingPathStore) }
+
+    var pathProperty: PathPropertyService { .init(path: path, store: pathPropertyStore, pendingStore: pendingPathPropertyStore) }
 
     var item: ItemService { .init(path: path, store: itemStore, pendingStore: pendingItemStore) }
 

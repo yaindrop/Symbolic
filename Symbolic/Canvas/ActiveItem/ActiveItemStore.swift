@@ -68,6 +68,7 @@ struct ActiveItemService {
     let toolbar: ToolbarStore
     let item: ItemService
     let path: PathService
+    let pathProperty: PathPropertyService
     let store: ActiveItemStore
 }
 
@@ -118,6 +119,13 @@ extension ActiveItemService {
     var activePath: Path? {
         if let focusedItemId {
             return path.path(id: focusedItemId)
+        }
+        return nil
+    }
+
+    var activePathProperty: PathProperty? {
+        if let focusedItemId {
+            return pathProperty.property(id: focusedItemId)
         }
         return nil
     }

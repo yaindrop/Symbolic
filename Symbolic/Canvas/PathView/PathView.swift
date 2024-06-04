@@ -27,6 +27,7 @@ class PathViewModel: ObservableObject {
 
 struct PathView: View {
     let path: Path
+    let property: PathProperty
     let focusedPart: PathFocusedPart?
 
     var body: some View { subtracer.range("body") { build {
@@ -52,9 +53,9 @@ struct PathView: View {
         }
 
         ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
-        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(nodeId: id, position: position, focusedPart: focusedPart) }
+        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(nodeId: id, position: position, property: property, focusedPart: focusedPart) }
         ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
-        ForEach(segmentData, id: \.fromId) { fromId, toId, segment in EdgeKindHandle(fromId: fromId, toId: toId, segment: segment, focusedPart: focusedPart) }
+        ForEach(segmentData, id: \.fromId) { fromId, toId, segment in BezierHandle(fromId: fromId, toId: toId, segment: segment, focusedPart: focusedPart) }
     }
 }
 

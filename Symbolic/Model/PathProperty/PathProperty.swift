@@ -19,3 +19,13 @@ struct PathProperty: Identifiable, Equatable, Encodable, TriviallyCloneable {
     var nodeTypeMap: [UUID: PathNodeType] = [:]
     var edgeTypeMap: [UUID: PathEdgeType] = [:]
 }
+
+extension PathProperty {
+    func nodeType(id: UUID) -> PathNodeType {
+        nodeTypeMap[id] ?? .corner
+    }
+
+    func edgeType(id: UUID) -> PathEdgeType {
+        edgeTypeMap[id] ?? .cubic
+    }
+}

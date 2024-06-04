@@ -1,6 +1,47 @@
 import Foundation
 
-extension PathAction.Single {
+// MARK: - ItemAction
+
+enum ItemAction: Equatable, Encodable {
+    struct Group: Equatable, Encodable { let group: ItemGroup, inGroupId: UUID? }
+    struct Ungroup: Equatable, Encodable { let groupIds: [UUID] }
+    struct Reorder: Equatable, Encodable { let members: [UUID], inGroupId: UUID? }
+
+    case group(Group)
+    case ungroup(Ungroup)
+    case reorder(Reorder)
+}
+
+// MARK: - PathAction
+
+enum PathAction: Equatable, Encodable {
+    struct Load: Equatable, Encodable { let path: Path }
+
+    struct Create: Equatable, Encodable { let path: Path }
+    struct Delete: Equatable, Encodable { let pathIds: [UUID] }
+    struct Update: Equatable, Encodable { let pathId: UUID, kind: Kind }
+
+    // multi update
+    struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
+    struct Merge: Equatable, Encodable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct BreakAtNode: Equatable, Encodable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
+    struct BreakAtEdge: Equatable, Encodable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
+
+    case load(Load)
+
+    case create(Create)
+    case delete(Delete)
+    case update(Update)
+
+    case move(Move)
+    case merge(Merge)
+    case breakAtNode(BreakAtNode)
+    case breakAtEdge(BreakAtEdge)
+}
+
+// MARK: Update
+
+extension PathAction.Update {
     struct DeleteNode: Equatable, Encodable { let nodeId: UUID }
 
     struct SetNodePosition: Equatable, Encodable { let nodeId: UUID, position: Point2 }
@@ -31,44 +72,30 @@ extension PathAction.Single {
     }
 }
 
-enum PathAction: Equatable, Encodable {
-    struct Load: Equatable, Encodable { let path: Path }
+// MARK: - PathPropertyAction
 
-    struct Create: Equatable, Encodable { let path: Path }
+enum PathPropertyAction: Equatable, Encodable {
+    struct Update: Equatable, Encodable { let pathId: UUID, kind: Kind }
 
-    struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
-    struct Delete: Equatable, Encodable { let pathIds: [UUID] }
-
-    struct Single: Equatable, Encodable { let pathId: UUID, kind: Kind }
-
-    struct Merge: Equatable, Encodable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct BreakAtNode: Equatable, Encodable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
-    struct BreakAtEdge: Equatable, Encodable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
-
-    case load(Load)
-    case create(Create)
-
-    case move(Move)
-    case delete(Delete)
-
-    case single(Single)
-
-    case merge(Merge)
-    case breakAtNode(BreakAtNode)
-    case breakAtEdge(BreakAtEdge)
+    case update(Update)
 }
 
-enum ItemAction: Equatable, Encodable {
-    struct Group: Equatable, Encodable { let group: ItemGroup, inGroupId: UUID? }
-    struct Ungroup: Equatable, Encodable { let groupIds: [UUID] }
-    struct Reorder: Equatable, Encodable { let members: [UUID], inGroupId: UUID? }
+extension PathPropertyAction.Update {
+    struct SetName: Equatable, Encodable { let name: String? }
+    struct SetNodeType: Equatable, Encodable { let nodeId: UUID, nodeType: PathNodeType? }
+    struct SetEdgeType: Equatable, Encodable { let fromNodeId: UUID, edgeType: PathEdgeType? }
 
-    case group(Group)
-    case ungroup(Ungroup)
-    case reorder(Reorder)
+    enum Kind: Equatable, Encodable {
+        case setName(SetName)
+        case setNodeType(SetNodeType)
+        case setEdgeType(SetEdgeType)
+    }
 }
+
+// MARK: - DocumentAction
 
 enum DocumentAction: Equatable, Encodable {
-    case pathAction(PathAction)
-    case itemAction(ItemAction)
+    case item(ItemAction)
+    case path(PathAction)
+    case pathProperty(PathPropertyAction)
 }

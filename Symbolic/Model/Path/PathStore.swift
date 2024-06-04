@@ -149,7 +149,9 @@ extension PathService {
         case let .create(event): loadEvent(event)
         case let .delete(event): loadEvent(event)
         case let .update(event): loadEvent(event)
-        case let .compound(event): loadEvent(event)
+        case let .merge(event): loadEvent(event)
+        case let .nodeBreak(event): loadEvent(event)
+        case let .edgeBreak(event): loadEvent(event)
         }
     }
 
@@ -169,14 +171,6 @@ extension PathService {
         case let .nodeDelete(event): loadEvent(pathId, event)
         case let .nodeUpdate(event): loadEvent(pathId, event)
         case let .edgeUpdate(event): loadEvent(pathId, event)
-        }
-    }
-
-    private func loadEvent(_ event: PathEvent.Compound) {
-        switch event {
-        case let .merge(event): loadEvent(event)
-        case let .nodeBreak(event): loadEvent(event)
-        case let .edgeBreak(event): loadEvent(event)
         }
     }
 
@@ -212,9 +206,9 @@ extension PathService {
         update(path: path)
     }
 
-    // MARK: path compound
+    // MARK: path multi update
 
-    private func loadEvent(_ event: PathEvent.Compound.Merge) {
+    private func loadEvent(_ event: PathEvent.Merge) {
         let pathId = event.pathId, mergedPathId = event.mergedPathId
         guard let path = path(id: pathId),
               let mergedPath = self.path(id: mergedPathId) else { return }
@@ -225,7 +219,7 @@ extension PathService {
         update(path: path)
     }
 
-    private func loadEvent(_ event: PathEvent.Compound.NodeBreak) {
+    private func loadEvent(_ event: PathEvent.NodeBreak) {
         let pathId = event.pathId
         guard let path = path(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
@@ -235,7 +229,7 @@ extension PathService {
         }
     }
 
-    private func loadEvent(_ event: PathEvent.Compound.EdgeBreak) {
+    private func loadEvent(_ event: PathEvent.EdgeBreak) {
         let pathId = event.pathId
         guard let path = path(id: pathId) else { return }
         let newPath = path.update(edgeBreak: event)

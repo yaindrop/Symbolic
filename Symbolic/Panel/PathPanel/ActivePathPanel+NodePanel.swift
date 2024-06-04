@@ -27,9 +27,11 @@ extension ActivePathPanel {
             self.index = index
             self.node = node
             _focused = .init { global.activeItem.pathFocusedPart?.nodeId == node.id }
+            _property = .init { global.pathProperty.property(id: path.id) }
         }
 
         @Selected private var focused: Bool
+        @Selected private var property: PathProperty?
 
         private var mergableNode: PathNode? {
             path.mergableNode(id: node.id)
@@ -48,6 +50,9 @@ extension ActivePathPanel {
             Memo {
                 Menu {
                     Label("\(node.id)", systemImage: "number")
+                    Button(property?.nodeType(id: node.id) == .corner ? "Locked" : "Corner") {
+                        global.documentUpdater.update(pathProperty: .update(.init(pathId: path.id, kind: .setNodeType(.init(nodeId: node.id, nodeType: property?.nodeType(id: node.id) == .corner ? .locked : .corner)))))
+                    }
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                     if mergableNode != nil {
                         Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
@@ -59,7 +64,7 @@ extension ActivePathPanel {
                     title
                 }
                 .tint(.label)
-            } deps: { node; focused }
+            } deps: { node; focused; property }
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {

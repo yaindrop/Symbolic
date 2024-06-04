@@ -106,7 +106,7 @@ extension ItemPanel {
         private var title: some View {
             HStack {
                 expandButton
-                Text("#\(group.id.uuidString.prefix(4))")
+                Text(group.id.shortDescription)
                     .font(.subheadline)
                     .padding(.vertical, 12)
                 Spacer()
@@ -184,7 +184,7 @@ extension ItemPanel {
                     HStack {
                         PathThumbnail(path: path)
                             .padding(4)
-                        Text("#\(path.id.uuidString.prefix(4))")
+                        Text(path.id.shortDescription)
                     }
                     .font(.subheadline)
                     .padding(12)

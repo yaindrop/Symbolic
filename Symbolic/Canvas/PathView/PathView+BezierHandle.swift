@@ -3,22 +3,9 @@ import SwiftUI
 
 private let subtracer = tracer.tagged("PathView")
 
+// MARK: - BezierHandle
+
 extension PathView {
-    // MARK: - EdgeKindHandle
-
-    struct EdgeKindHandle: View {
-        let fromId: UUID
-        let toId: UUID
-        let segment: PathSegment
-        let focusedPart: PathFocusedPart?
-
-        var body: some View { subtracer.range("EdgeKindHandle") { build {
-            BezierHandle(fromId: fromId, toId: toId, segment: segment, focusedPart: focusedPart)
-        }}}
-    }
-
-    // MARK: - BezierHandle
-
     struct BezierHandle: View, EquatableBy {
         @EnvironmentObject var viewModel: PathViewModel
 

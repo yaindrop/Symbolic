@@ -7,6 +7,10 @@ extension UUID: Identifiable {
     public var id: UUID { self }
 }
 
+extension UUID {
+    var shortDescription: String { "#\(uuidString.prefix(4))" }
+}
+
 extension Optional {
     func map<U>(_ then: (Wrapped) throws -> U?) rethrows -> U? {
         if case let .some(v) = self {

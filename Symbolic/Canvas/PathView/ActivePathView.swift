@@ -172,13 +172,14 @@ class ActivePathViewModel: PathViewModel {
 
 struct ActivePathView: View {
     var body: some View { tracer.range("ActivePathView body") { build {
-        if let activePath {
-            PathView(path: activePath, focusedPart: focusedPart)
+        if let activePath, let activePathProperty {
+            PathView(path: activePath, property: activePathProperty, focusedPart: focusedPart)
                 .environmentObject(viewModel)
         }
     } } }
 
     @Selected private var activePath = global.activeItem.activePath
+    @Selected private var activePathProperty = global.activeItem.activePathProperty
     @Selected private var focusedPart = global.activeItem.pathFocusedPart
     private var viewModel: PathViewModel = ActivePathViewModel()
 }

@@ -1,42 +1,43 @@
 import Foundation
 import SwiftUI
 
-private extension DocumentEvent {
-    var name: String {
-        switch action {
-        case let .pathAction(pathAction):
-            switch pathAction {
-            case let .load(action): "Load path \(action.path.id.uuidString.prefix(4))"
-            case let .create(action): "Create path \(action.path.id.uuidString.prefix(4))"
-            case let .move(action): "Move \(action.pathIds.map { $0.uuidString.prefix(4) }) by \(action.offset)"
-            case let .delete(action): "Delete \(action.pathIds.map { $0.uuidString.prefix(4) })"
-            case let .single(single):
-                switch single.kind {
-                case let .deleteNode(action): "In path \(single.pathId.uuidString.prefix(4)) delete node \(action.nodeId.uuidString.prefix(4))"
-                case let .setNodePosition(action): "In path \(single.pathId.uuidString.prefix(4)) set node \(action.nodeId.uuidString.prefix(4)) to \(action.position)"
-                case let .setEdge(action): "In path \(single.pathId.uuidString.prefix(4)) set edge from \(action.fromNodeId.uuidString.prefix(4))"
-
-                case let .addEndingNode(action): "In path \(single.pathId.uuidString.prefix(4)) add ending node from \(action.endingNodeId.uuidString.prefix(4)) to \(action.newNodeId.uuidString.prefix(4)) with \(action.offset)"
-                case let .splitSegment(action): "In path \(single.pathId.uuidString.prefix(4)) split segment from \(action.fromNodeId.uuidString.prefix(4)) at \(action.paramT) to \(action.newNodeId.uuidString.prefix(4)) with \(action.offset)"
-
-                case let .move(action): "Move path \(single.pathId.uuidString.prefix(4)) by \(action.offset)"
-                case let .moveNode(action): "In path \(single.pathId.uuidString.prefix(4)) move node \(action.nodeId.uuidString.prefix(4)) by \(action.offset)"
-                case let .moveEdge(action): "In path \(single.pathId.uuidString.prefix(4)) move edge from \(action.fromNodeId.uuidString.prefix(4)) by \(action.offset)"
-                case let .moveEdgeControl(action): "In path \(single.pathId.uuidString.prefix(4)) move edge control from \(action.fromNodeId.uuidString.prefix(4)) by \(action.offset0) and \(action.offset1)"
-                }
-            case .merge: "Merge paths"
-            case let .breakAtNode(action): "Break path \(action.pathId.uuidString.prefix(4)) at node \(action.nodeId.uuidString.prefix(4))"
-            case let .breakAtEdge(action): "Break path \(action.pathId.uuidString.prefix(4)) at edge from \(action.fromNodeId.uuidString.prefix(4))"
-            }
-        case let .itemAction(action):
+private extension DocumentAction {
+    var readable: String {
+        switch self {
+        case let .item(action):
             switch action {
             case let .group(action):
-                "Group of \(action.group.members.map { $0.uuidString.prefix(4) }) as \(action.group.id.uuidString.prefix(4))"
+                "Group of \(action.group.members.map { $0.shortDescription }.joined(separator: ", ")) as \(action.group.id.shortDescription) in \(action.inGroupId.map { $0.shortDescription } ?? "root")"
             case let .ungroup(action):
-                "Ungroup \(action.groupIds.map { $0.uuidString.prefix(4) })"
+                "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
             case let .reorder(action):
-                "Reorder \(action.inGroupId.map { $0.uuidString.prefix(4) } ?? "root")"
+                "Reorder \(action.inGroupId.map { $0.shortDescription } ?? "root")"
             }
+        case let .path(action):
+            switch action {
+            case let .load(action): "Load path \(action.path.id.shortDescription)"
+            case let .create(action): "Create path \(action.path.id.shortDescription)"
+            case let .delete(action): "Delete path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
+            case let .update(update):
+                switch update.kind {
+                case let .deleteNode(action): "In path \(update.pathId.shortDescription) delete node \(action.nodeId.shortDescription)"
+                case let .setNodePosition(action): "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.position.shortDescription)"
+                case let .setEdge(action): "In path \(update.pathId.shortDescription) set edge from \(action.fromNodeId.shortDescription)"
+
+                case let .addEndingNode(action): "In path \(update.pathId.shortDescription) add ending node from \(action.endingNodeId.shortDescription) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
+                case let .splitSegment(action): "In path \(update.pathId.shortDescription) split segment from \(action.fromNodeId.shortDescription) at \(action.paramT) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
+
+                case let .move(action): "Move path \(update.pathId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveNode(action): "In path \(update.pathId.shortDescription) move node \(action.nodeId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveEdge(action): "In path \(update.pathId.shortDescription) move edge from \(action.fromNodeId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveEdgeControl(action): "In path \(update.pathId.shortDescription) move edge control from \(action.fromNodeId.shortDescription) by \(action.offset0.shortDescription) and \(action.offset1.shortDescription)"
+                }
+            case let .move(action): "Move path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
+            case let .merge(action): "Merge path \(action.pathId.shortDescription) node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
+            case let .breakAtNode(action): "Break path \(action.pathId.shortDescription) at node \(action.nodeId.shortDescription)"
+            case let .breakAtEdge(action): "Break path \(action.pathId.shortDescription) at edge from \(action.fromNodeId.shortDescription)"
+            }
+        case let .pathProperty(action): "pathPropertyAction"
         }
     }
 }
@@ -82,7 +83,14 @@ struct HistoryPanel: View {
             PanelSectionTitle(name: "Events")
             VStack(spacing: 12) {
                 ForEach(document.events) { e in
-                    Text("\(e.name)")
+                    HStack {
+                        Text("\(e.action.readable)")
+                            .font(.footnote)
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(.ultraThinMaterial)
+                    .clipRounded(radius: 12)
                 }
             }
         }

@@ -11,14 +11,16 @@ extension PathView {
 
         let nodeId: UUID
         let position: Point2
+
+        let property: PathProperty
         let focusedPart: PathFocusedPart?
 
         var focused: Bool { focusedPart?.nodeId == nodeId }
 
-        var equatableBy: some Equatable { nodeId; position; focused }
+        var equatableBy: some Equatable { nodeId; position; focused; property }
 
         var body: some View { subtracer.range("NodeHandle \(nodeId)") {
-            circle(at: position, color: .blue)
+            circle(at: position, color: property.nodeType(id: nodeId) == .corner ? .blue : .red)
         }}
 
         // MARK: private

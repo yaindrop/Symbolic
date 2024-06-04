@@ -85,7 +85,7 @@ struct AddingPathView: View {
 
     var body: some View {
         if let addingPath {
-            PathView(path: addingPath, focusedPart: nil)
+            PathView(path: addingPath, property: .init(id: addingPath.id), focusedPart: nil)
                 .environmentObject(PathViewModel())
         }
     }

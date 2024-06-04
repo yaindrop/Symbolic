@@ -253,7 +253,7 @@ extension Path {
         pairs[edgeUpdate.fromNodeId]?.edge = edgeUpdate.edge
     }
 
-    func update(merge: PathEvent.Compound.Merge, mergedPath: Path) {
+    func update(merge: PathEvent.Merge, mergedPath: Path) {
         let endingNodeId = merge.endingNodeId, mergedEndingNodeId = merge.mergedEndingNodeId
         let _r = tracer.range("Path.update move"); defer { _r() }
         guard let endingNode = node(id: endingNodeId),
@@ -282,7 +282,7 @@ extension Path {
 //        }
     }
 
-    func update(nodeBreak: PathEvent.Compound.NodeBreak) -> Path? {
+    func update(nodeBreak: PathEvent.NodeBreak) -> Path? {
         let nodeId = nodeBreak.nodeId, newNodeId = nodeBreak.newNodeId, newPathId = nodeBreak.newPathId
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
@@ -303,7 +303,7 @@ extension Path {
         }
     }
 
-    func update(edgeBreak: PathEvent.Compound.EdgeBreak) -> Path? {
+    func update(edgeBreak: PathEvent.EdgeBreak) -> Path? {
         let nodeId = edgeBreak.fromNodeId, newPathId = edgeBreak.newPathId
         let _r = tracer.range("Path.update edgeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId) else { return nil }

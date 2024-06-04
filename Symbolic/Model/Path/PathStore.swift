@@ -73,23 +73,14 @@ extension PathService {
 
     func loadPendingEvent(_ event: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
-        guard let event else {
-            pendingStore.update(active: false)
-            return
-        }
-
         withStoreUpdating {
-            pendingStore.update(active: true)
-            pendingStore.update(map: store.map.cloned)
-            loadEvent(event)
-        }
-    }
-
-    private func update(map: PathMap) {
-        if pendingStore.active {
-            pendingStore.update(map: map)
-        } else {
-            store.update(map: map)
+            if let event {
+                pendingStore.update(active: true)
+                pendingStore.update(map: store.map.cloned)
+                loadEvent(event)
+            } else {
+                pendingStore.update(active: false)
+            }
         }
     }
 }
@@ -97,6 +88,14 @@ extension PathService {
 // MARK: - modify path map
 
 extension PathService {
+    private func update(map: PathMap) {
+        if pendingStore.active {
+            pendingStore.update(map: map)
+        } else {
+            store.update(map: map)
+        }
+    }
+
     private func add(path: Path) {
         let _r = subtracer.range("add"); defer { _r() }
         guard path.count > 1 else { return }
@@ -132,23 +131,18 @@ extension PathService {
     private func loadEvent(_ event: DocumentEvent) {
         let _r = subtracer.range("load document event \(event.id)", type: .intent); defer { _r() }
         switch event.kind {
-        case let .compoundEvent(event):
+        case let .compound(event):
+            event.events.forEach { loadEvent($0) }
+        case let .single(event):
             loadEvent(event)
-        case let .pathEvent(event):
-            loadEvent(event)
-        case .itemEvent:
-            break
         }
     }
 
-    private func loadEvent(_ event: CompoundEvent) {
-        for event in event.events {
-            switch event {
-            case let .pathEvent(pathEvent):
-                loadEvent(pathEvent)
-            case .itemEvent:
-                break
-            }
+    private func loadEvent(_ event: SingleEvent) {
+        switch event {
+        case .item: break
+        case let .path(event): loadEvent(event)
+        case .pathProperty: break
         }
     }
 

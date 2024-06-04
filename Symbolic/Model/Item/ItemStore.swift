@@ -190,16 +190,15 @@ extension ItemService {
 
     func loadPendingEvent(_ event: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
-        guard let event else {
-            pendingStore.update(active: false)
-            return
-        }
-
         withStoreUpdating {
-            pendingStore.update(active: true)
-            pendingStore.update(map: store.map.cloned)
-            pendingStore.update(rootIds: store.rootIds)
-            loadEvent(event)
+            if let event {
+                pendingStore.update(active: true)
+                pendingStore.update(map: store.map.cloned)
+                pendingStore.update(rootIds: store.rootIds)
+                loadEvent(event)
+            } else {
+                pendingStore.update(active: false)
+            }
         }
     }
 }
@@ -259,18 +258,41 @@ extension ItemService {
     private func loadEvent(_ event: DocumentEvent) {
         let _r = subtracer.range("load document event \(event.id)", type: .intent); defer { _r() }
         switch event.kind {
-        case let .pathEvent(event): loadEvent(event)
-        case let .compoundEvent(event): loadEvent(event)
-        case let .itemEvent(event): loadEvent(event)
+        case let .compound(event):
+            event.events.forEach { loadEvent($0) }
+        case let .single(event):
+            loadEvent(event)
         }
     }
 
-    private func loadEvent(_ event: CompoundEvent) {
-        for item in event.events {
-            switch item {
-            case let .pathEvent(event): loadEvent(event)
-            case let .itemEvent(event): loadEvent(event)
+    private func loadEvent(_ event: SingleEvent) {
+        switch event {
+        case let .item(event): loadEvent(event)
+        case let .path(event): loadEvent(event)
+        case .pathProperty: break
+        }
+    }
+
+    // MARK: item event
+
+    private func loadEvent(_ event: ItemEvent) {
+        switch event {
+        case let .setMembers(event): loadEvent(event)
+        }
+    }
+
+    private func loadEvent(_ event: ItemEvent.SetMembers) {
+        let members = event.members, inGroupId = event.inGroupId
+        if let inGroupId {
+            if members.isEmpty {
+                remove(itemId: inGroupId)
+            } else if item(id: inGroupId) == nil {
+                add(item: .init(kind: .group(.init(id: inGroupId, members: members))))
+            } else {
+                update(item: .init(kind: .group(.init(id: inGroupId, members: members))))
             }
+        } else {
+            update(rootIds: members)
         }
     }
 
@@ -313,29 +335,6 @@ extension ItemService {
                 add(item: .init(kind: .path(pathId)))
                 update(rootIds: rootIds + [pathId])
             }
-        }
-    }
-
-    // MARK: item event
-
-    private func loadEvent(_ event: ItemEvent) {
-        switch event {
-        case let .setMembers(event): loadEvent(event)
-        }
-    }
-
-    private func loadEvent(_ event: ItemEvent.SetMembers) {
-        let members = event.members, inGroupId = event.inGroupId
-        if let inGroupId {
-            if members.isEmpty {
-                remove(itemId: inGroupId)
-            } else if item(id: inGroupId) == nil {
-                add(item: .init(kind: .group(.init(id: inGroupId, members: members))))
-            } else {
-                update(item: .init(kind: .group(.init(id: inGroupId, members: members))))
-            }
-        } else {
-            update(rootIds: members)
         }
     }
 }

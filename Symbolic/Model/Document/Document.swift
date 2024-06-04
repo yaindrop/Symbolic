@@ -23,7 +23,8 @@ struct Document: Encodable {
         delegate.onPath {
             let path = Path(from: $0)
             let pathEvent: PathEvent = .create(.init(path: path))
-            let event = DocumentEvent(kind: .pathEvent(pathEvent), action: .pathAction(.load(.init(path: path))))
+            let action = DocumentAction.pathAction(.load(.init(path: path)))
+            let event = DocumentEvent(kind: .single(.path(pathEvent)), action: action)
             events.append(event)
         }
         parser.parse()

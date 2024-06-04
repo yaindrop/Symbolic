@@ -1,14 +1,11 @@
 import Foundation
 
-// MARK: - CompoundEvent
+// MARK: - ItemEvent
 
-struct CompoundEvent: Equatable, Encodable {
-    enum Kind: Equatable, Encodable {
-        case pathEvent(PathEvent)
-        case itemEvent(ItemEvent)
-    }
+enum ItemEvent: Equatable, Encodable {
+    struct SetMembers: Equatable, Encodable { let members: [UUID], inGroupId: UUID? }
 
-    let events: [Kind]
+    case setMembers(SetMembers)
 }
 
 // MARK: - PathEvent
@@ -23,7 +20,7 @@ enum PathEvent: Equatable, Encodable {
     case compound(Compound)
 }
 
-// MARK: PathEvent.Update
+// MARK: Update
 
 extension PathEvent {
     struct Update: Equatable, Encodable {
@@ -47,7 +44,7 @@ extension PathEvent {
     }
 }
 
-// MARK: PathEvent.Compound
+// MARK: Compound
 
 extension PathEvent {
     enum Compound: Equatable, Encodable {
@@ -62,21 +59,43 @@ extension PathEvent {
     }
 }
 
-// MARK: - ItemEvent
+// MARK: - PathPropertyEvent
 
-enum ItemEvent: Equatable, Encodable {
-    struct SetMembers: Equatable, Encodable { let members: [UUID], inGroupId: UUID? }
+struct PathPropertyEvent: Equatable, Encodable {
+    enum Kind: Equatable, Encodable {
+        struct SetName: Equatable, Encodable { let name: String? }
+        struct SetNodeType: Equatable, Encodable { let nodeId: UUID, nodeType: PathNodeType? }
+        struct SetEdgeType: Equatable, Encodable { let fromNodeId: UUID, edgeType: PathEdgeType? }
 
-    case setMembers(SetMembers)
+        case setName(SetName)
+        case setNodeType(SetNodeType)
+        case setEdgeType(SetEdgeType)
+    }
+
+    let pathId: UUID
+    let kind: Kind
+}
+
+// MARK: - SingleEvent
+
+enum SingleEvent: Equatable, Encodable {
+    case item(ItemEvent)
+    case path(PathEvent)
+    case pathProperty(PathPropertyEvent)
+}
+
+// MARK: - CompoundEvent
+
+struct CompoundEvent: Equatable, Encodable {
+    let events: [SingleEvent]
 }
 
 // MARK: - DocumentEvent
 
 struct DocumentEvent: Identifiable, Equatable, Encodable {
     enum Kind: Equatable, Encodable {
-        case compoundEvent(CompoundEvent)
-        case pathEvent(PathEvent)
-        case itemEvent(ItemEvent)
+        case single(SingleEvent)
+        case compound(CompoundEvent)
     }
 
     let id: UUID = .init()

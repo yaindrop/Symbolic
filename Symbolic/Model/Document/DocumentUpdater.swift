@@ -110,14 +110,14 @@ extension DocumentUpdater {
 extension DocumentUpdater {
     private func handle(_ action: DocumentAction, pending: Bool) {
         let _r = subtracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
-        var eventKinds: [DocumentEvent.Kind] = []
+        var events: [SingleEvent] = []
 
         switch action {
-        case let .pathAction(action): collectEvents(to: &eventKinds, action)
-        case let .itemAction(action): collectEvents(to: &eventKinds, action)
+        case let .itemAction(action): collectEvents(to: &events, action)
+        case let .pathAction(action): collectEvents(to: &events, action)
         }
 
-        guard let first = eventKinds.first else {
+        guard let first = events.first else {
             if pending {
                 cancel()
             }
@@ -125,17 +125,10 @@ extension DocumentUpdater {
         }
 
         let event: DocumentEvent
-        if eventKinds.count == 1 {
-            event = .init(kind: first, action: action)
+        if events.count == 1 {
+            event = .init(kind: .single(first), action: action)
         } else {
-            let compoundKinds = eventKinds.flatMap { kind -> [CompoundEvent.Kind] in
-                switch kind {
-                case let .compoundEvent(event): event.events
-                case let .itemEvent(event): [.itemEvent(event)]
-                case let .pathEvent(event): [.pathEvent(event)]
-                }
-            }
-            event = .init(kind: .compoundEvent(.init(events: compoundKinds)), action: action)
+            event = .init(kind: .compound(.init(events: events)), action: action)
         }
 
         if pending {
@@ -148,17 +141,17 @@ extension DocumentUpdater {
     }
 }
 
-// MARK: collect group events
+// MARK: collect item events
 
 extension DocumentUpdater {
-    private func collectEvents(to eventKinds: inout [DocumentEvent.Kind], _ action: ItemAction) {
-        var events: [ItemEvent] = []
+    private func collectEvents(to events: inout [SingleEvent], _ action: ItemAction) {
+        var itemEvents: [ItemEvent] = []
         switch action {
-        case let .group(action): collectEvents(to: &events, action)
-        case let .ungroup(action): collectEvents(to: &events, action)
-        case let .reorder(action): collectEvents(to: &events, action)
+        case let .group(action): collectEvents(to: &itemEvents, action)
+        case let .ungroup(action): collectEvents(to: &itemEvents, action)
+        case let .reorder(action): collectEvents(to: &itemEvents, action)
         }
-        eventKinds += events.map { .itemEvent($0) }
+        events += itemEvents.map { .item($0) }
     }
 
     private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Group) {
@@ -235,19 +228,19 @@ extension DocumentUpdater {
 // MARK: collect path events
 
 extension DocumentUpdater {
-    private func collectEvents(to eventKinds: inout [DocumentEvent.Kind], _ action: PathAction) {
-        var events: [PathEvent] = []
+    private func collectEvents(to events: inout [SingleEvent], _ action: PathAction) {
+        var pathEvents: [PathEvent] = []
         switch action {
-        case let .load(action): collectEvents(to: &events, action)
-        case let .create(action): collectEvents(to: &events, action)
-        case let .move(action): collectEvents(to: &events, action)
-        case let .delete(action): collectEvents(to: &events, action)
-        case let .single(action): collectEvents(to: &events, action)
-        case let .merge(action): collectEvents(to: &events, action)
-        case let .breakAtNode(action): collectEvents(to: &events, action)
-        case let .breakAtEdge(action): collectEvents(to: &events, action)
+        case let .load(action): collectEvents(to: &pathEvents, action)
+        case let .create(action): collectEvents(to: &pathEvents, action)
+        case let .move(action): collectEvents(to: &pathEvents, action)
+        case let .delete(action): collectEvents(to: &pathEvents, action)
+        case let .single(action): collectEvents(to: &pathEvents, action)
+        case let .merge(action): collectEvents(to: &pathEvents, action)
+        case let .breakAtNode(action): collectEvents(to: &pathEvents, action)
+        case let .breakAtEdge(action): collectEvents(to: &pathEvents, action)
         }
-        eventKinds += events.map { .pathEvent($0) }
+        events += pathEvents.map { .path($0) }
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Load) {
@@ -295,7 +288,13 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.DeleteNode) {
         let nodeId = action.nodeId
-        events.append(.init(in: pathId, .nodeDelete(.init(nodeId: nodeId))))
+        guard let path = pathStore.path(id: pathId),
+              path.node(id: nodeId) != nil else { return }
+        if path.nodes.count - 1 < 2 {
+            events.append(.delete(.init(pathId: pathId)))
+        } else {
+            events.append(.init(in: pathId, .nodeDelete(.init(nodeId: nodeId))))
+        }
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Single.AddEndingNode) {

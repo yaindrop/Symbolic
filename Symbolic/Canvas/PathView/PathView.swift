@@ -53,7 +53,7 @@ struct PathView: View {
         }
 
         ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
-        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(property: property, focusedPart: focusedPart, nodeId: id, position: position) }
+        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(pathId: path.id, nodeId: id, position: position) }
         ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
         ForEach(segmentData, id: \.fromId) { fromId, toId, segment in BezierHandle(property: property, focusedPart: focusedPart, fromId: fromId, toId: toId, segment: segment) }
     }

@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct CanvasActionPanel: View {
-    @Listened(name: "triggeringHints") var triggeringHints = Array(global.canvasAction.triggering).map { $0.hint }
-    @Listened(name: "continuousHints") var continuousHints = Array(global.canvasAction.continuous).map { $0.hint }
-    @Listened(name: "instantHints") var instantHints = Array(global.canvasAction.instant).map { $0.hint }
+    @Selected("triggeringHints") var triggeringHints = Array(global.canvasAction.triggering).map { $0.hint }
+    @Selected("continuousHints") var continuousHints = Array(global.canvasAction.continuous).map { $0.hint }
+    @Selected("instantHints") var instantHints = Array(global.canvasAction.instant).map { $0.hint }
 
     var body: some View { tracer.range("CanvasActionPanel body") { build {
         VStack(alignment: .leading) {
@@ -27,8 +27,5 @@ struct CanvasActionPanel: View {
             }
         }
         .font(.footnote)
-        .onReceive($triggeringHints) { _triggeringHints.value = $0 }
-        .onReceive($continuousHints) { _continuousHints.value = $0 }
-        .onReceive($instantHints) { _instantHints.value = $0 }
     } } }
 }

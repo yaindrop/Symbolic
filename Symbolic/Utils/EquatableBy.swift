@@ -12,10 +12,8 @@ extension Monostate: CustomStringConvertible {
 
 // MARK: - EquatableTuple
 
-struct EquatableTuple<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable>: Equatable {
+struct EquatableTuple<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable> {
     let v0: T0, v1: T1, v2: T2, v3: T3, v4: T4, v5: T5
-    var tuple: (T0, T1, T2, T3, T4, T5) { (v0, v1, v2, v3, v4, v5) }
-    static func == (lhs: Self, rhs: Self) -> Bool { lhs.tuple == rhs.tuple }
 
     init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4, _ v5: T5) {
         self.v0 = v0
@@ -27,20 +25,33 @@ struct EquatableTuple<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable
     }
 }
 
+extension EquatableTuple: Equatable {
+    private var fullTuple: (T0, T1, T2, T3, T4, T5) { (v0, v1, v2, v3, v4, v5) }
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.fullTuple == rhs.fullTuple }
+}
+
 extension EquatableTuple where T2 == Monostate, T3 == Monostate, T4 == Monostate, T5 == Monostate {
+    var tuple: (T0, T1) { (v0, v1) }
     init(_ v0: T0, _ v1: T1) { self.init(v0, v1, .value, .value, .value, .value) }
 }
 
 extension EquatableTuple where T3 == Monostate, T4 == Monostate, T5 == Monostate {
+    var tuple: (T0, T1, T2) { (v0, v1, v2) }
     init(_ v0: T0, _ v1: T1, _ v2: T2) { self.init(v0, v1, v2, .value, .value, .value) }
 }
 
 extension EquatableTuple where T4 == Monostate, T5 == Monostate {
+    var tuple: (T0, T1, T2, T3) { (v0, v1, v2, v3) }
     init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3) { self.init(v0, v1, v2, v3, .value, .value) }
 }
 
 extension EquatableTuple where T5 == Monostate {
+    var tuple: (T0, T1, T2, T3, T4) { (v0, v1, v2, v3, v4) }
     init(_ v0: T0, _ v1: T1, _ v2: T2, _ v3: T3, _ v4: T4) { self.init(v0, v1, v2, v3, v4, .value) }
+}
+
+extension EquatableTuple {
+    var tuple: (T0, T1, T2, T3, T4, T5) { (v0, v1, v2, v3, v4, v5) }
 }
 
 // MARK: - EquatableTupleBuilder

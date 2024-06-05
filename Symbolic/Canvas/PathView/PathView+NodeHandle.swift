@@ -9,22 +9,25 @@ extension PathView {
     struct NodeHandle: View, EquatableBy {
         @EnvironmentObject var viewModel: PathViewModel
 
-        let property: PathProperty
-        let focusedPart: PathFocusedPart?
-
+        let pathId: UUID
         let nodeId: UUID
         let position: Point2
 
-        var nodeType: PathNodeType { property.nodeType(id: nodeId) }
-        var focused: Bool { focusedPart?.nodeId == nodeId }
-
-        var equatableBy: some Equatable { nodeId; position; nodeType; focused }
+        var equatableBy: some Equatable { nodeId; position }
 
         var body: some View { subtracer.range("NodeHandle \(nodeId)") {
             handle
+                .compute(_nodeType, (pathId, nodeId))
+                .compute(_focused, nodeId)
         }}
 
         // MARK: private
+
+        @Computed({ (pathId: UUID, nodeId: UUID) in global.pathProperty.property(id: pathId)?.nodeType(id: nodeId) })
+        private var nodeType: PathNodeType? = .corner
+
+        @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
+        private var focused: Bool = false
 
         private static let circleSize: Scalar = 12
         private static let rectSize: Scalar = circleSize / 2 * 1.7725 // sqrt of pi

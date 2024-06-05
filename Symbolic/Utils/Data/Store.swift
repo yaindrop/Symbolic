@@ -26,7 +26,7 @@ private class StoreManager {
 
     private(set) var tracking: TrackingContext?
 
-    func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> (value: T, id: Int) {
+    func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> (value: T, TrackingContext) {
         guard tracking == nil else {
             fatalError("Nested tracking of store properties is not supported.")
         }
@@ -39,7 +39,7 @@ private class StoreManager {
         self.tracking = nil
 
         idToSubscription[id] = .init(id: id, callback: onUpdate)
-        return (result, id)
+        return (result, tracking)
     }
 
     func expire(subscriptionId: Int) {
@@ -82,13 +82,7 @@ private class StoreManager {
 
     func notify(subscriptionIds: Set<Int>) {
         let _r = managerTracer.range("notify"); defer { _r() }
-        var activeSubscriptions: [StoreSubscription] = []
-        for id in subscriptionIds {
-            if let subscription = idToSubscription.removeValue(forKey: id) {
-                activeSubscriptions.append(subscription)
-            }
-        }
-
+        let activeSubscriptions = subscriptionIds.compactMap { idToSubscription.removeValue(forKey: $0) }
         updating.forSome {
             managerTracer.instant("append \(activeSubscriptions.map { $0.id })")
             $0.subscriptions += activeSubscriptions
@@ -156,21 +150,18 @@ class Store: CancellableHolder {
 
     fileprivate func generateTrackableId() -> Int { trackableIdGen.generate() }
 
-    fileprivate func onAccess(of trackableId: Int) {
-        let tracking = manager.tracking
-        let _r = storeTracer.range("on access of \(trackableId), \(tracking.map { "with tracking \($0)" } ?? "without tracking")"); defer { _r() }
-        if let tracking {
-            var ids = trackableIdToSubscriptionIds[trackableId] ?? []
-            ids.insert(tracking.subscriptionId)
-            trackableIdToSubscriptionIds[trackableId] = ids
-        }
+    fileprivate func onTrack(of trackableId: Int, in subscriptionId: Int) {
+        let _r = storeTracer.range("on track of \(trackableId) in subscription \(subscriptionId)"); defer { _r() }
+        var ids = trackableIdToSubscriptionIds[trackableId] ?? []
+        ids.insert(subscriptionId)
+        trackableIdToSubscriptionIds[trackableId] = ids
     }
 
-    fileprivate func onChange(of trackableId: Int) {
+    fileprivate func onChange(of trackableId: Int) -> Set<Int> {
         let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: trackableId)
         let _r = storeTracer.range("on change of \(trackableId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")"); defer { _r() }
-        guard let subscriptionIds else { return }
-        manager.notify(subscriptionIds: subscriptionIds)
+        guard let subscriptionIds else { return [] }
+        return subscriptionIds
     }
 }
 
@@ -229,7 +220,6 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
 
         func update() {
             let _r = trackableTracer.range("update derived"); defer { _r() }
-
             guard let derive else { return }
             let (value, context) = manager.withDeriving(derive)
 
@@ -306,7 +296,6 @@ extension _StoreProtocol {
     fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
         let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
         @Ref(self, keypath) var wrapper
-        trackableTracer.instant("A")
         let id: Int
         if let wrapperId = wrapper.id {
             id = wrapperId
@@ -314,8 +303,9 @@ extension _StoreProtocol {
             id = generateTrackableId()
             wrapper.id = id
         }
-        trackableTracer.instant("B")
-        onAccess(of: id)
+        if let tracking = manager.tracking {
+            onTrack(of: id, in: tracking.subscriptionId)
+        }
         if let deriving = manager.deriving {
             deriving.trackableIds.append(id)
             deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
@@ -327,8 +317,10 @@ extension _StoreProtocol {
         let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
         @Ref(self, keypath) var wrapper
         let storage = wrapper.storage
-        for id in storage.trackableIds {
-            onAccess(of: id)
+        if let tracking = manager.tracking {
+            for id in storage.trackableIds {
+                onTrack(of: id, in: tracking.subscriptionId)
+            }
         }
         if let deriving = manager.deriving {
             deriving.trackableIds += storage.trackableIds
@@ -348,9 +340,10 @@ extension _StoreProtocol {
             wrapper.id = id
         }
         guard wrapper.value != newValue else { return }
-        onChange(of: id)
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
+
+        manager.notify(subscriptionIds: onChange(of: id))
         manager.willUpdate {
             wrapper.willUpdateSubject.send(wrapper.value)
         }
@@ -367,151 +360,145 @@ func withStoreUpdating(_ apply: () -> Void) {
     manager.withUpdating(apply)
 }
 
+// MARK: - SelectedStorage
+
+class SelectedStorage<Value: Equatable>: ObservableObject {
+    private(set) var name: String?
+    private var _value: Value?
+    private var subscriptionId: Int?
+    private var updateTask: Task<Void, Never>?
+
+    // value must have been assigned after track in init
+    var value: Value { _value! }
+
+    init(name: String? = nil) {
+        self.name = name
+        track()
+    }
+
+    deinit {
+        updateTask?.cancel()
+    }
+
+    func select() -> Value { fatalError("Not implemented") }
+
+    func track() {
+        let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
+        if let subscriptionId {
+            manager.expire(subscriptionId: subscriptionId)
+        }
+        let (newValue, context) = manager.withTracking { select() } onUpdate: { [weak self] in self?.track() }
+        subscriptionId = context.subscriptionId
+        if _value != newValue {
+            _value = newValue
+            setupUpdateTask()
+            selectedTracer.instant("updated")
+        }
+    }
+
+    private func setupUpdateTask() {
+        updateTask?.cancel()
+        updateTask = Task { @MainActor in self.objectWillChange.send() }
+    }
+}
+
 // MARK: - Selected
 
 @propertyWrapper
 struct Selected<Value: Equatable>: DynamicProperty {
-    fileprivate class Storage: ObservableObject {
-        @Published var value: Value?
+    private class Storage: SelectedStorage<Value> {
         var selector: () -> Value
-        var name: String?
-        var subscriptionId: Int?
 
-        init(name: String? = nil, selector: @escaping () -> Value) {
-            self.name = name
+        init(selector: @escaping () -> Value, name: String? = nil) {
             self.selector = selector
-            select()
+            super.init(name: name)
         }
 
-        func select() {
-            let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
-            if let subscriptionId {
-                manager.expire(subscriptionId: subscriptionId)
-            }
-            let (newValue, id) = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
-            subscriptionId = id
-            if value != newValue {
-                value = newValue
-                selectedTracer.instant("updated")
-            }
+        override func select() -> Value {
+            selector()
         }
     }
 
-    @StateObject fileprivate var storage: Storage
+    @StateObject private var storage: Storage
 
-    var wrappedValue: Value { storage.value! }
+    var wrappedValue: Value { storage.value }
 
     // reselect
     func callAsFunction(_ selector: @escaping () -> Value) {
         storage.selector = selector
-        storage.select()
+        storage.track()
     }
 
-    init(_ selector: @escaping () -> Value, name: String? = nil) {
-        _storage = StateObject(wrappedValue: Storage(name: name, selector: selector))
+    init(_ selector: @escaping () -> Value, _ name: String? = nil) {
+        _storage = StateObject(wrappedValue: Storage(selector: selector, name: name))
     }
 
-    init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
-        self.init(wrappedValue, name: name)
-    }
-}
-
-@propertyWrapper
-struct Listened<Value: Equatable>: DynamicProperty {
-    fileprivate class Storage: ObservableObject {
-        let subject: CurrentValueSubject<Value, Never>
-        var selector: () -> Value
-        var name: String?
-        var subscriptionId: Int?
-
-        init(name: String? = nil, selector: @escaping () -> Value) {
-            self.subject = .init(selector())
-            self.name = name
-            self.selector = selector
-            select()
-        }
-
-        func select() {
-            let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
-            if let subscriptionId {
-                manager.expire(subscriptionId: subscriptionId)
-            }
-            let (newValue, id) = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
-            subscriptionId = id
-            if subject.value != newValue {
-                subject.send(newValue)
-                selectedTracer.instant("updated")
-            }
-        }
-    }
-
-    fileprivate var storage: Storage
-    @State var value: Value
-
-    var wrappedValue: Value { value }
-
-    var projectedValue: AnyPublisher<Value, Never> { storage.subject.eraseToAnyPublisher() }
-
-    // reselect
-    func callAsFunction(_ selector: @escaping () -> Value) {
-        storage.selector = selector
-        storage.select()
-    }
-
-    init(_ selector: @escaping () -> Value, name: String? = nil) {
-        let storage = Storage(name: name, selector: selector)
-        self.storage = storage
-        self.value = storage.subject.value
-    }
-
-    init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
-        self.init(wrappedValue, name: name)
+    init(wrappedValue: @autoclosure @escaping () -> Value, _ name: String? = nil) {
+        self.init(wrappedValue, name)
     }
 }
+
+// MARK: - Computed
 
 @propertyWrapper
 struct Computed<Input, Value: Equatable>: DynamicProperty {
-    fileprivate class Storage: ObservableObject {
-        @Published var value: Value?
+    private class Storage: SelectedStorage<Value> {
         var defaultValue: Value
-
         var compute: (Input) -> Value
         var input: Input?
 
-        var name: String?
-        var subscriptionId: Int?
-
         init(defaultValue: Value, name: String? = nil, compute: @escaping (Input) -> Value) {
             self.defaultValue = defaultValue
-            self.name = name
             self.compute = compute
+            super.init(name: name)
         }
 
-        func select() {
-            guard let input else { return }
-            let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
-            if let subscriptionId {
-                manager.expire(subscriptionId: subscriptionId)
-            }
-            let (newValue, id) = manager.withTracking { compute(input) } onUpdate: { [weak self] in self?.select() }
-            subscriptionId = id
-            if value != newValue {
-                value = newValue
-                selectedTracer.instant("updated")
-            }
+        override func select() -> Value {
+            input.map { compute($0) } ?? defaultValue
         }
     }
 
-    @StateObject fileprivate var storage: Storage
+    @StateObject private var storage: Storage
 
-    var wrappedValue: Value { storage.value ?? storage.defaultValue }
+    var wrappedValue: Value { storage.value }
 
+    // setup
     func callAsFunction(_ input: Input) {
         storage.input = input
-        storage.select()
+        storage.track()
     }
 
-    init(wrappedValue: Value, name: String? = nil, _ compute: @escaping (Input) -> Value) {
+    init(wrappedValue: Value, _ name: String, _ compute: @escaping (Input) -> Value) {
         _storage = StateObject(wrappedValue: Storage(defaultValue: wrappedValue, name: name, compute: compute))
+    }
+
+    init(wrappedValue: Value, _ compute: @escaping (Input) -> Value) {
+        _storage = StateObject(wrappedValue: Storage(defaultValue: wrappedValue, name: nil, compute: compute))
+    }
+}
+
+extension View {
+    func compute<Input: Equatable, Value: Equatable>(_ wrapper: Computed<Input, Value>, _ input: Input) -> some View {
+        onChange(of: input, initial: true) { wrapper(input) }
+    }
+
+    func compute<T0: Equatable, T1: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1), Value>, _ input: (T0, T1)) -> some View {
+        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
+    }
+
+    func compute<T0: Equatable, T1: Equatable, T2: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2), Value>, _ input: (T0, T1, T2)) -> some View {
+        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
+    }
+
+    func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3), Value>, _ input: (T0, T1, T2, T3)) -> some View {
+        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
+    }
+
+    func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3, T4), Value>, _ input: (T0, T1, T2, T3, T4)) -> some View {
+        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
+    }
+
+    func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3, T4, T5), Value>, _ input: (T0, T1, T2, T3, T4, T5)) -> some View {
+        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
     }
 }

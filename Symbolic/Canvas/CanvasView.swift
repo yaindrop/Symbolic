@@ -105,9 +105,9 @@ struct CanvasView: View {
 }
 
 struct ItemsView: View {
-    @Selected(name: "ItemsView toView") private var toView = global.viewport.toView
-    @Selected(name: "ItemsView allPaths") private var allPaths = global.item.allPaths
-    @Selected(name: "ItemsView activePathId") private var activePathId = global.activeItem.focusedItemId
+    @Selected("ItemsView toView") private var toView = global.viewport.toView
+    @Selected("ItemsView allPaths") private var allPaths = global.item.allPaths
+    @Selected("ItemsView activePathId") private var activePathId = global.activeItem.focusedItemId
 
     var body: some View { tracer.range("ItemsView body") {
         ForEach(allPaths.filter { $0.id != activePathId }) { p in

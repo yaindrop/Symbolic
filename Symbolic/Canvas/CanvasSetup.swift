@@ -58,6 +58,10 @@ struct CanvasSetup {
             global.canvasAction.end(triggering: .select)
             global.canvasAction.end(triggering: .addPath)
             if cancelled {
+                global.viewportUpdater.setBlocked(false)
+                global.canvasAction.end(continuous: .draggingSelection)
+                global.canvasAction.end(continuous: .addingPath)
+
                 global.draggingSelection.cancel()
                 global.addingPath.cancel()
             }

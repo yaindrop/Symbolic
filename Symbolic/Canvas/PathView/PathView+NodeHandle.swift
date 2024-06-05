@@ -3,51 +3,69 @@ import SwiftUI
 
 private let subtracer = tracer.tagged("PathView")
 
-extension PathView {
-    // MARK: - NodeHandle
+// MARK: - NodeHandle
 
+extension PathView {
     struct NodeHandle: View, EquatableBy {
         @EnvironmentObject var viewModel: PathViewModel
-
-        let nodeId: UUID
-        let position: Point2
 
         let property: PathProperty
         let focusedPart: PathFocusedPart?
 
+        let nodeId: UUID
+        let position: Point2
+
+        var nodeType: PathNodeType { property.nodeType(id: nodeId) }
         var focused: Bool { focusedPart?.nodeId == nodeId }
 
-        var equatableBy: some Equatable { nodeId; position; focused; property }
+        var equatableBy: some Equatable { nodeId; position; nodeType; focused }
 
         var body: some View { subtracer.range("NodeHandle \(nodeId)") {
-            circle(at: position, color: property.nodeType(id: nodeId) == .corner ? .blue : .red)
+            handle
         }}
 
         // MARK: private
 
-        private static let lineWidth: Scalar = 2
-        private static let circleSize: Scalar = 16
-        private static let touchablePadding: Scalar = 16
+        private static let circleSize: Scalar = 12
+        private static let rectSize: Scalar = circleSize / 2 * 1.7725 // sqrt of pi
+        private static let touchablePadding: Scalar = 20
 
         @State private var menuSize: CGSize = .zero
         @State private var viewSize = global.viewport.store.viewSize
         @State private var nodeGestureContext = PathViewModel.NodeGestureContext()
 
-        @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
-            Circle()
-                .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
-                .fill(color.opacity(0.5))
-                .frame(width: Self.circleSize, height: Self.circleSize)
-                .if(focused) { $0.overlay {
-                    Circle()
-                        .fill(color)
-                        .scaleEffect(0.5)
-                        .allowsHitTesting(false)
-                }}
+        @ViewBuilder private var handle: some View {
+            nodeShape
                 .padding(Self.touchablePadding)
                 .invisibleSoildOverlay()
-                .position(point)
+                .position(position)
                 .multipleGesture(viewModel.nodeGesture(nodeId: nodeId, context: nodeGestureContext))
+        }
+
+        @ViewBuilder private var nodeShape: some View {
+            if nodeType == .corner {
+                Rectangle()
+                    .stroke(.blue, style: StrokeStyle(lineWidth: 1))
+                    .fill(.blue.opacity(0.5))
+                    .if(focused) { $0.overlay {
+                        Rectangle()
+                            .fill(.blue)
+                            .scaleEffect(0.5)
+                            .allowsHitTesting(false)
+                    }}
+                    .frame(width: Self.rectSize, height: Self.rectSize)
+            } else {
+                Circle()
+                    .stroke(.blue, style: StrokeStyle(lineWidth: nodeType == .mirrored ? 2 : 1))
+                    .fill(.blue.opacity(0.5))
+                    .if(focused) { $0.overlay {
+                        Circle()
+                            .fill(.blue)
+                            .scaleEffect(0.5)
+                            .allowsHitTesting(false)
+                    }}
+                    .frame(width: Self.circleSize, height: Self.circleSize)
+            }
         }
     }
 }

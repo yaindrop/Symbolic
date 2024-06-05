@@ -90,19 +90,19 @@ struct ContextMenuView: View {
         case .focusedPath:
             focusedPathMenu
                 .onChange(of: focusedPath?.id) {
-                    $bounds { focusedPath.map { global.activeItem.boundingRect(itemId: $0.id) } }
+                    _bounds { focusedPath.map { global.activeItem.boundingRect(itemId: $0.id) } }
                     menuId = focusedPath?.id ?? .init()
                 }
         case .focusedGroup:
             focusedGroupMenu
                 .onChange(of: focusedGroup?.id) {
-                    $bounds { focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) } }
+                    _bounds { focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) } }
                     menuId = focusedGroup?.id ?? .init()
                 }
         case .selection:
             SelectionMenu()
                 .onAppear {
-                    $bounds { global.activeItem.selectionBounds }
+                    _bounds { global.activeItem.selectionBounds }
                 }
         }
     }

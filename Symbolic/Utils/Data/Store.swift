@@ -2,10 +2,10 @@ import Combine
 import Foundation
 import SwiftUI
 
-private let storeTracer = tracer.tagged("store")
-private let managerTracer = storeTracer.tagged("manager")
-private let trackableTracer = storeTracer.tagged("trackable")
-private let selectedTracer = storeTracer.tagged("selected")
+private let storeTracer = tracer.tagged("store", enabled: true)
+private let managerTracer = storeTracer.tagged("manager", enabled: true)
+private let trackableTracer = storeTracer.tagged("trackable", enabled: true)
+private let selectedTracer = storeTracer.tagged("selected", enabled: true)
 
 private struct StoreSubscription {
     let id: Int
@@ -134,11 +134,16 @@ private class StoreManager {
     }
 }
 
-private let queue = DispatchQueue(label: "StoreManagerQueue", attributes: .concurrent)
 private var _manager = StoreManager()
 private var manager: StoreManager {
-    get { queue.sync { _manager } }
-    set { queue.async(flags: .barrier) { _manager = newValue } }
+    get {
+        assert(Thread.isMainThread, "Store manager can only be used on main thread.")
+        return _manager
+    }
+    set {
+        assert(Thread.isMainThread, "Store manager can only be used on main thread.")
+        _manager = newValue
+    }
 }
 
 // MARK: - Store
@@ -301,6 +306,7 @@ extension _StoreProtocol {
     fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
         let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
         @Ref(self, keypath) var wrapper
+        trackableTracer.instant("A")
         let id: Int
         if let wrapperId = wrapper.id {
             id = wrapperId
@@ -308,6 +314,7 @@ extension _StoreProtocol {
             id = generateTrackableId()
             wrapper.id = id
         }
+        trackableTracer.instant("B")
         onAccess(of: id)
         if let deriving = manager.deriving {
             deriving.trackableIds.append(id)
@@ -384,8 +391,8 @@ struct Selected<Value: Equatable>: DynamicProperty {
             let (newValue, id) = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
             subscriptionId = id
             if value != newValue {
-                selectedTracer.instant("updated")
                 value = newValue
+                selectedTracer.instant("updated")
             }
         }
     }
@@ -393,8 +400,6 @@ struct Selected<Value: Equatable>: DynamicProperty {
     @StateObject fileprivate var storage: Storage
 
     var wrappedValue: Value { storage.value! }
-
-    var projectedValue: Selected<Value> { self }
 
     // reselect
     func callAsFunction(_ selector: @escaping () -> Value) {
@@ -408,5 +413,105 @@ struct Selected<Value: Equatable>: DynamicProperty {
 
     init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
         self.init(wrappedValue, name: name)
+    }
+}
+
+@propertyWrapper
+struct Listened<Value: Equatable>: DynamicProperty {
+    fileprivate class Storage: ObservableObject {
+        let subject: CurrentValueSubject<Value, Never>
+        var selector: () -> Value
+        var name: String?
+        var subscriptionId: Int?
+
+        init(name: String? = nil, selector: @escaping () -> Value) {
+            self.subject = .init(selector())
+            self.name = name
+            self.selector = selector
+            select()
+        }
+
+        func select() {
+            let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
+            if let subscriptionId {
+                manager.expire(subscriptionId: subscriptionId)
+            }
+            let (newValue, id) = manager.withTracking { selector() } onUpdate: { [weak self] in self?.select() }
+            subscriptionId = id
+            if subject.value != newValue {
+                subject.send(newValue)
+                selectedTracer.instant("updated")
+            }
+        }
+    }
+
+    fileprivate var storage: Storage
+    @State var value: Value
+
+    var wrappedValue: Value { value }
+
+    var projectedValue: AnyPublisher<Value, Never> { storage.subject.eraseToAnyPublisher() }
+
+    // reselect
+    func callAsFunction(_ selector: @escaping () -> Value) {
+        storage.selector = selector
+        storage.select()
+    }
+
+    init(_ selector: @escaping () -> Value, name: String? = nil) {
+        let storage = Storage(name: name, selector: selector)
+        self.storage = storage
+        self.value = storage.subject.value
+    }
+
+    init(wrappedValue: @autoclosure @escaping () -> Value, name: String? = nil) {
+        self.init(wrappedValue, name: name)
+    }
+}
+
+@propertyWrapper
+struct Computed<Input, Value: Equatable>: DynamicProperty {
+    fileprivate class Storage: ObservableObject {
+        @Published var value: Value?
+        var defaultValue: Value
+
+        var compute: (Input) -> Value
+        var input: Input?
+
+        var name: String?
+        var subscriptionId: Int?
+
+        init(defaultValue: Value, name: String? = nil, compute: @escaping (Input) -> Value) {
+            self.defaultValue = defaultValue
+            self.name = name
+            self.compute = compute
+        }
+
+        func select() {
+            guard let input else { return }
+            let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
+            if let subscriptionId {
+                manager.expire(subscriptionId: subscriptionId)
+            }
+            let (newValue, id) = manager.withTracking { compute(input) } onUpdate: { [weak self] in self?.select() }
+            subscriptionId = id
+            if value != newValue {
+                value = newValue
+                selectedTracer.instant("updated")
+            }
+        }
+    }
+
+    @StateObject fileprivate var storage: Storage
+
+    var wrappedValue: Value { storage.value ?? storage.defaultValue }
+
+    func callAsFunction(_ input: Input) {
+        storage.input = input
+        storage.select()
+    }
+
+    init(wrappedValue: Value, name: String? = nil, _ compute: @escaping (Input) -> Value) {
+        _storage = StateObject(wrappedValue: Storage(defaultValue: wrappedValue, name: name, compute: compute))
     }
 }

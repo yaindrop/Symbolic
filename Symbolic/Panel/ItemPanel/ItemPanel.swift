@@ -6,9 +6,9 @@ import SwiftUI
 struct ItemPanel: View {
     let panelId: UUID
 
-    var body: some View {
+    var body: some View { tracer.range("ItemPanel body") {
         panel.frame(width: 320)
-    }
+    } }
 
     // MARK: private
 
@@ -162,7 +162,7 @@ extension ItemPanel {
         struct PathThumbnail: View {
             let path: Path
 
-            var body: some View {
+            var body: some View { tracer.range("PathThumbnail") { build {
                 let size = CGSize(24, 24)
                 Rectangle()
                     .opacity(.zero)
@@ -173,7 +173,7 @@ extension ItemPanel {
                             .fill(.primary.opacity(0.2))
                     }
                     .frame(size: size)
-            }
+            } } }
         }
 
         @Selected private var path: Path?

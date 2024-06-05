@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - ActiveItemView
 
 struct ActiveItemView: View {
-    var body: some View {
+    var body: some View { tracer.range("ActiveItemView body") { build {
         ForEach(activeGroups) {
             GroupBounds(group: $0, viewport: viewport)
         }
@@ -11,7 +11,7 @@ struct ActiveItemView: View {
             PathBounds(path: $0, viewport: viewport)
         }
         SelectionBounds()
-    }
+    } } }
 
     @Selected private var viewport = global.viewport.info
     @Selected private var activePaths = global.activeItem.activePaths
@@ -90,9 +90,9 @@ extension ActiveItemView {
         let path: Path
         let viewport: ViewportInfo
 
-        var body: some View {
+        var body: some View { tracer.range("PathBounds body") {
             boundsRect
-        }
+        } }
 
         init(path: Path, viewport: ViewportInfo) {
             self.path = path

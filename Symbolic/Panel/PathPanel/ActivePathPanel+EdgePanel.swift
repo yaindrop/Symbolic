@@ -5,10 +5,16 @@ extension ActivePathPanel {
     // MARK: - EdgePanel
 
     struct EdgePanel: View, EquatableBy {
-        let fromNodeId: UUID
-        let edge: PathEdge
+        let path: Path
+        let property: PathProperty
+        let focusedPart: PathFocusedPart?
 
-        var equatableBy: some Equatable { fromNodeId; edge }
+        let fromNodeId: UUID
+
+        var segment: PathSegment? { path.segment(from: fromNodeId) }
+        var focused: Bool { focusedPart?.edgeId == fromNodeId }
+
+        var equatableBy: some Equatable { fromNodeId; segment; focused }
 
         var body: some View { tracer.range("ActivePathPanel EdgePanel body") {
             HStack {
@@ -25,16 +31,6 @@ extension ActivePathPanel {
                 }
             }
         }}
-
-        init(fromNodeId: UUID, edge: PathEdge) {
-            self.fromNodeId = fromNodeId
-            self.edge = edge
-            _segment = .init { global.activeItem.activePath?.segment(from: fromNodeId) }
-            _focused = .init { global.activeItem.pathFocusedPart?.edgeId == fromNodeId }
-        }
-
-        @Selected private var segment: PathSegment?
-        @Selected private var focused: Bool
 
         @State private var expanded = false
 
@@ -83,7 +79,7 @@ extension ActivePathPanel {
                     title
                 }
                 .tint(.label)
-            } deps: { edge; focused }
+            } deps: { fromNodeId; focused }
         }}
 
         @ViewBuilder private var expandButton: some View {
@@ -99,12 +95,14 @@ extension ActivePathPanel {
         @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
             Memo {
                 Group {
-                    BezierPanel(fromNodeId: fromNodeId, edge: edge)
+                    if let segment {
+                        BezierPanel(fromNodeId: fromNodeId, edge: segment.edge)
+                    }
                 }
                 .padding(.top, 6)
                 .frame(height: expanded ? nil : 0, alignment: .top)
                 .clipped()
-            } deps: { edge; expanded }
+            } deps: { segment; expanded }
         } }
 
         private func toggleFocus() {

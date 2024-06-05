@@ -3,15 +3,17 @@ import SwiftUI
 
 private let subtracer = tracer.tagged("PathView")
 
-extension PathView {
-    // MARK: - EdgeHandle
+// MARK: - EdgeHandle
 
+extension PathView {
     struct EdgeHandle: View, EquatableBy {
         @EnvironmentObject var viewModel: PathViewModel
 
+        let property: PathProperty
+        let focusedPart: PathFocusedPart?
+
         let fromId: UUID
         let segment: PathSegment
-        let focusedPart: PathFocusedPart?
 
         var focused: Bool { focusedPart?.edgeId == fromId }
 
@@ -19,9 +21,6 @@ extension PathView {
 
         var body: some View { subtracer.range("EdgeHandle") {
             outline
-            //        if let longPressPosition {
-            //            circle(at: p, color: .teal)
-            //        }
         }}
 
         @State private var edgeGestureContext = PathViewModel.EdgeGestureContext()
@@ -45,15 +44,19 @@ extension PathView {
                 .position(point)
         }
     }
+}
 
-    // MARK: - FocusedEdgeHandle
+// MARK: - FocusedEdgeHandle
 
+extension PathView {
     struct FocusedEdgeHandle: View, EquatableBy {
         @EnvironmentObject var viewModel: PathViewModel
 
+        let property: PathProperty
+        let focusedPart: PathFocusedPart?
+
         let fromId: UUID
         let segment: PathSegment
-        let focusedPart: PathFocusedPart?
 
         var focused: Bool { focusedPart?.edgeId == fromId }
 

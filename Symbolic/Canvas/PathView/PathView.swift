@@ -52,16 +52,16 @@ struct PathView: View {
             return (fromId: n.id, toId: toId, segmentInView: s.applying(toView))
         }
 
-        ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
-        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(nodeId: id, position: position, property: property, focusedPart: focusedPart) }
-        ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(fromId: fromId, segment: segment, focusedPart: focusedPart) }
-        ForEach(segmentData, id: \.fromId) { fromId, toId, segment in BezierHandle(fromId: fromId, toId: toId, segment: segment, focusedPart: focusedPart) }
+        ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
+        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(property: property, focusedPart: focusedPart, nodeId: id, position: position) }
+        ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
+        ForEach(segmentData, id: \.fromId) { fromId, toId, segment in BezierHandle(property: property, focusedPart: focusedPart, fromId: fromId, toId: toId, segment: segment) }
     }
 }
 
-extension PathView {
-    // MARK: - Stroke
+// MARK: - Stroke
 
+extension PathView {
     struct Stroke: View {
         let path: Path
         let toView: CGAffineTransform

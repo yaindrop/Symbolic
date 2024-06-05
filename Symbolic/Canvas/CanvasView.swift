@@ -44,10 +44,6 @@ struct CanvasView: View {
 
     // MARK: private
 
-    @Selected private var toView = global.viewport.toView
-    @Selected private var allPaths = global.item.allPaths
-    @Selected private var activePathId = global.activeItem.focusedItemId
-
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
     @State private var longPressPosition: Point2?
@@ -74,13 +70,8 @@ struct CanvasView: View {
         Background()
     } }
 
-    @ViewBuilder var items: some View { tracer.range("CanvasView inactivePaths") {
-        ForEach(allPaths.filter { $0.id != activePathId }) { p in
-            SUPath { path in p.append(to: &path) }
-                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-        }
-        .transformEffect(toView)
-        .blur(radius: 1)
+    @ViewBuilder var items: some View { tracer.range("CanvasView items") {
+        ItemsView()
     } }
 
     @ViewBuilder private var foreground: some View { tracer.range("CanvasView foreground") {
@@ -110,6 +101,21 @@ struct CanvasView: View {
             PanelRoot()
         }
         .allowsHitTesting(!multipleTouch.active)
+    } }
+}
+
+struct ItemsView: View {
+    @Selected(name: "ItemsView toView") private var toView = global.viewport.toView
+    @Selected(name: "ItemsView allPaths") private var allPaths = global.item.allPaths
+    @Selected(name: "ItemsView activePathId") private var activePathId = global.activeItem.focusedItemId
+
+    var body: some View { tracer.range("ItemsView body") {
+        ForEach(allPaths.filter { $0.id != activePathId }) { p in
+            SUPath { path in p.append(to: &path) }
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        }
+        .transformEffect(toView)
+        .blur(radius: 1)
     } }
 }
 

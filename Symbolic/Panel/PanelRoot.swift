@@ -3,8 +3,10 @@ import SwiftUI
 
 // MARK: - PanelView
 
-struct PanelView: View {
+struct PanelView: View, EquatableBy {
     let panel: PanelData
+
+    var equatableBy: some Equatable { panel }
 
     var body: some View { tracer.range("PanelView \(panel.origin)") {
         panel.view(panel.id)

@@ -12,7 +12,8 @@ struct ActivePathPanel: View {
 
     // MARK: private
 
-    @Selected private var activePath = global.activeItem.activePath
+    @Selected private var path = global.activeItem.activePath
+    @Selected private var property = global.activeItem.activePathProperty
     @Selected private var focusedPart = global.activeItem.store.pathFocusedPart
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
@@ -30,9 +31,9 @@ struct ActivePathPanel: View {
     }
 
     @ViewBuilder private var scrollView: some View {
-        if let activePath {
+        if let path, let property {
             ManagedScrollView(model: scrollViewModel) { proxy in
-                Components(activePath: activePath).id(activePath.id)
+                Components(path: path, property: property, focusedPart: focusedPart).id(path.id)
                     .onChange(of: focusedPart) {
                         guard let id = focusedPart?.id else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }

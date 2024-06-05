@@ -6,10 +6,16 @@ extension ActivePathPanel {
 
     struct NodePanel: View, EquatableBy {
         let path: Path
+        let property: PathProperty
+        let focusedPart: PathFocusedPart?
+
         let index: Int
         let node: PathNode
 
-        var equatableBy: some Equatable { index; node }
+        private var focused: Bool { focusedPart?.nodeId == node.id }
+        private var nodeType: PathNodeType { property.nodeType(id: node.id) }
+
+        var equatableBy: some Equatable { index; node; focused; nodeType }
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
             HStack {
@@ -21,17 +27,6 @@ extension ActivePathPanel {
             .background(.ultraThickMaterial)
             .clipRounded(radius: 12)
         }}
-
-        init(path: Path, index: Int, node: PathNode) {
-            self.path = path
-            self.index = index
-            self.node = node
-            _focused = .init { global.activeItem.pathFocusedPart?.nodeId == node.id }
-            _property = .init { global.pathProperty.property(id: path.id) }
-        }
-
-        @Selected private var focused: Bool
-        @Selected private var property: PathProperty?
 
         private var mergableNode: PathNode? {
             path.mergableNode(id: node.id)
@@ -50,12 +45,27 @@ extension ActivePathPanel {
             Memo {
                 Menu {
                     Label("\(node.id)", systemImage: "number")
-                    Button(property?.nodeType(id: node.id) == .corner ? "Locked" : "Corner") {
-                        global.documentUpdater.update(pathProperty: .update(.init(pathId: path.id, kind: .setNodeType(.init(nodeId: node.id, nodeType: property?.nodeType(id: node.id) == .corner ? .locked : .corner)))))
-                    }
+
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                     if mergableNode != nil {
                         Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
+                    }
+                    Divider()
+                    ControlGroup {
+                        Button("Corner") {
+                            global.documentUpdater.update(pathProperty: .update(.init(pathId: path.id, kind: .setNodeType(.init(nodeId: node.id, nodeType: .corner)))))
+                        }
+                        .disabled(nodeType == .corner)
+                        Button("Locked") {
+                            global.documentUpdater.update(pathProperty: .update(.init(pathId: path.id, kind: .setNodeType(.init(nodeId: node.id, nodeType: .locked)))))
+                        }
+                        .disabled(nodeType == .locked)
+                        Button("Mirrored") {
+                            global.documentUpdater.update(pathProperty: .update(.init(pathId: path.id, kind: .setNodeType(.init(nodeId: node.id, nodeType: .mirrored)))))
+                        }
+                        .disabled(nodeType == .mirrored)
+                    } label: {
+                        Text("Node Type")
                     }
                     Divider()
                     Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
@@ -64,7 +74,7 @@ extension ActivePathPanel {
                     title
                 }
                 .tint(.label)
-            } deps: { node; focused; property }
+            } deps: { node; focused; nodeType }
         } }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {

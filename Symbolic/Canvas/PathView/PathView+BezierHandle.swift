@@ -9,10 +9,12 @@ extension PathView {
     struct BezierHandle: View, EquatableBy {
         @EnvironmentObject var viewModel: PathViewModel
 
+        let property: PathProperty
+        let focusedPart: PathFocusedPart?
+
         let fromId: UUID
         let toId: UUID
         let segment: PathSegment
-        let focusedPart: PathFocusedPart?
 
         var nodeFocused: Bool { focusedPart?.nodeId == fromId }
         var edgeFocused: Bool { focusedPart?.edgeId == fromId }

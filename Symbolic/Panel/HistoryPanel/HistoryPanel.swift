@@ -15,29 +15,56 @@ private extension DocumentAction {
             }
         case let .path(action):
             switch action {
-            case let .load(action): "Load path \(action.path.id.shortDescription)"
-            case let .create(action): "Create path \(action.path.id.shortDescription)"
-            case let .delete(action): "Delete path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
+            case let .load(action):
+                "Load path \(action.path.id.shortDescription)"
+            case let .create(action):
+                "Create path \(action.path.id.shortDescription)"
+            case let .delete(action):
+                "Delete path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
             case let .update(update):
                 switch update.kind {
-                case let .deleteNode(action): "In path \(update.pathId.shortDescription) delete node \(action.nodeId.shortDescription)"
-                case let .setNodePosition(action): "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.position.shortDescription)"
-                case let .setEdge(action): "In path \(update.pathId.shortDescription) set edge from \(action.fromNodeId.shortDescription)"
+                case let .deleteNode(action):
+                    "In path \(update.pathId.shortDescription) delete node \(action.nodeId.shortDescription)"
+                case let .setNodePosition(action):
+                    "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.position.shortDescription)"
+                case let .setEdge(action):
+                    "In path \(update.pathId.shortDescription) set edge from \(action.fromNodeId.shortDescription)"
 
-                case let .addEndingNode(action): "In path \(update.pathId.shortDescription) add ending node from \(action.endingNodeId.shortDescription) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
-                case let .splitSegment(action): "In path \(update.pathId.shortDescription) split segment from \(action.fromNodeId.shortDescription) at \(action.paramT) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
+                case let .addEndingNode(action):
+                    "In path \(update.pathId.shortDescription) add ending node from \(action.endingNodeId.shortDescription) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
+                case let .splitSegment(action):
+                    "In path \(update.pathId.shortDescription) split segment from \(action.fromNodeId.shortDescription) at \(action.paramT) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
 
-                case let .move(action): "Move path \(update.pathId.shortDescription) by \(action.offset.shortDescription)"
-                case let .moveNode(action): "In path \(update.pathId.shortDescription) move node \(action.nodeId.shortDescription) by \(action.offset.shortDescription)"
-                case let .moveEdge(action): "In path \(update.pathId.shortDescription) move edge from \(action.fromNodeId.shortDescription) by \(action.offset.shortDescription)"
-                case let .moveEdgeControl(action): "In path \(update.pathId.shortDescription) move edge control from \(action.fromNodeId.shortDescription) by \(action.offset0.shortDescription) and \(action.offset1.shortDescription)"
+                case let .move(action):
+                    "Move path \(update.pathId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveNode(action):
+                    "In path \(update.pathId.shortDescription) move node \(action.nodeId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveEdge(action):
+                    "In path \(update.pathId.shortDescription) move edge from \(action.fromNodeId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveEdgeControl(action):
+                    "In path \(update.pathId.shortDescription) move edge control from \(action.fromNodeId.shortDescription) by \(action.offset0.shortDescription) and \(action.offset1.shortDescription)"
                 }
-            case let .move(action): "Move path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
-            case let .merge(action): "Merge path \(action.pathId.shortDescription) node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
-            case let .breakAtNode(action): "Break path \(action.pathId.shortDescription) at node \(action.nodeId.shortDescription)"
-            case let .breakAtEdge(action): "Break path \(action.pathId.shortDescription) at edge from \(action.fromNodeId.shortDescription)"
+            case let .move(action):
+                "Move path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
+            case let .merge(action):
+                "Merge path \(action.pathId.shortDescription) node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
+            case let .breakAtNode(action):
+                "Break path \(action.pathId.shortDescription) at node \(action.nodeId.shortDescription)"
+            case let .breakAtEdge(action):
+                "Break path \(action.pathId.shortDescription) at edge from \(action.fromNodeId.shortDescription)"
             }
-        case let .pathProperty(action): "pathPropertyAction"
+        case let .pathProperty(action):
+            switch action {
+            case let .update(update):
+                switch update.kind {
+                case let .setName(action):
+                    "Set path \(update.pathId.shortDescription) name \(action.name ?? "nil")"
+                case let .setNodeType(action):
+                    "Set path \(update.pathId.shortDescription) node \(action.nodeId.shortDescription) type \(action.nodeType?.description ?? "nil")"
+                case let .setEdgeType(action):
+                    "Set path \(update.pathId.shortDescription) edge from \(action.fromNodeId.shortDescription) type \(action.edgeType?.description ?? "nil")"
+                }
+            }
         }
     }
 }

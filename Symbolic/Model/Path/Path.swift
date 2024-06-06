@@ -61,7 +61,7 @@ extension PathNode: CustomStringConvertible {
 // MARK: - Path
 
 class Path: Identifiable, ReflectedStringConvertible, Cloneable {
-    struct NodeEdgePair: TriviallyCloneable, Encodable {
+    struct NodeEdgePair: Equatable, TriviallyCloneable, Encodable {
         var node: PathNode, edge: PathEdge
 
         var id: UUID { node.id }

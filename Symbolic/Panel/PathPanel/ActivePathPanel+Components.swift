@@ -12,12 +12,16 @@ extension ActivePathPanel {
         @ViewBuilder var body: some View { tracer.range("ActivePathPanel Components body") {
             VStack(spacing: 4) {
                 PanelSectionTitle(name: "Components")
-                VStack(spacing: 12) {
-                    ForEach(path.pairs.values, id: \.node.id) { p in
-                        let i = path.nodeIndex(id: p.node.id) ?? 0
-                        NodeEdgeGroup(path: path, property: property, focusedPart: focusedPart, index: i, node: p.node, edge: p.edge)
+                VStack(spacing: 0) {
+                    ForEach(path.nodes) { node in
+                        NodePanel(pathId: path.id, nodeId: node.id)
+                        if node.id != path.nodes.last?.id {
+                            Divider()
+                        }
                     }
                 }
+                .background(.ultraThickMaterial)
+                .clipRounded(radius: 12)
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 24)
@@ -38,10 +42,7 @@ private extension ActivePathPanel {
 
         var body: some View {
             Group {
-                NodePanel(path: path, property: property, focusedPart: focusedPart, index: index, node: node)
-                if !path.isLastEndingNode(id: node.id) {
-                    EdgePanel(path: path, property: property, focusedPart: focusedPart, fromNodeId: node.id)
-                }
+//                NodePanel(path: path, property: property, focusedPart: focusedPart, index: index, node: node)
             }
             .scaleEffect(scale)
             .onChange(of: focused) { animateOnFocused() }

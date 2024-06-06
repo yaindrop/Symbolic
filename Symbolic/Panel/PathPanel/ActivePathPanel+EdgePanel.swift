@@ -62,16 +62,6 @@ extension ActivePathPanel {
                     Label("\(fromNodeId)", systemImage: "number")
                     Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
                     Divider()
-//                    ControlGroup {
-//                        Button("Arc", systemImage: "circle") { changeEdge(to: .arc) }
-//                            .disabled(edge.case == .arc)
-//                        Button("Bezier", systemImage: "point.bottomleft.forward.to.point.topright.scurvepath") { changeEdge(to: .bezier) }
-//                            .disabled(edge.case == .bezier)
-//                        Button("Line", systemImage: "chart.xyaxis.line") { changeEdge(to: .line) }
-//                            .disabled(edge.case == .line)
-//                    } label: {
-//                        Text("Type")
-//                    }
                     Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
                     Divider()
                     Button("Break", systemImage: "trash", role: .destructive) { breakEdge() }

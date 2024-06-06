@@ -6,10 +6,30 @@ enum PathNodeType: Encodable {
     case mirrored
 }
 
+extension PathNodeType: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .corner: "corner"
+        case .locked: "locked"
+        case .mirrored: "mirrored"
+        }
+    }
+}
+
 enum PathEdgeType: Encodable {
     case cubic
     case line
     case quadratic
+}
+
+extension PathEdgeType: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .cubic: "cubic"
+        case .line: "line"
+        case .quadratic: "quadratic"
+        }
+    }
 }
 
 struct PathProperty: Identifiable, Equatable, Encodable, TriviallyCloneable {

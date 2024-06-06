@@ -114,12 +114,7 @@ class ItemStore: Store, ItemStoreProtocol {
     @Trackable var map = ItemMap()
     @Trackable var rootIds: [UUID] = []
 
-    @Derived var ancestorMap = AncestorMap()
-
-    override init() {
-        super.init()
-        _ancestorMap { self.idToAncestorIds }
-    }
+    @Derived({ $0.idToAncestorIds }) var ancestorMap
 
     fileprivate func update(map: ItemMap) {
         update { $0(\._map, map) }

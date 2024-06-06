@@ -18,13 +18,20 @@ private class StoreManager {
     private var subscriptionIdGen = IncrementalIdGenerator()
     private var idToSubscription: [Int: StoreSubscription] = [:]
 
-    // MARK: tracking
-
-    struct TrackingContext {
-        var subscriptionId: Int
-    }
-
     private(set) var tracking: TrackingContext?
+    private var updating: UpdatingContext?
+}
+
+// MARK: tracking
+
+extension StoreManager {
+    class TrackingContext {
+        let subscriptionId: Int
+
+        init(subscriptionId: Int) {
+            self.subscriptionId = subscriptionId
+        }
+    }
 
     func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> (value: T, TrackingContext) {
         guard tracking == nil else {
@@ -45,16 +52,16 @@ private class StoreManager {
     func expire(subscriptionId: Int) {
         idToSubscription.removeValue(forKey: subscriptionId)
     }
+}
 
-    // MARK: updating
+// MARK: updating
 
+extension StoreManager {
     class UpdatingContext: CancellableHolder {
         var cancellables = Set<AnyCancellable>()
         var subscriptions: [StoreSubscription] = []
         var willUpdateSubject = PassthroughSubject<Void, Never>()
     }
-
-    private var updating: UpdatingContext?
 
     func withUpdating(_ apply: () -> Void) {
         if updating != nil {
@@ -102,30 +109,6 @@ private class StoreManager {
             subscription.callback()
         }
     }
-
-    // MARK: deriving
-
-    class DerivingContext {
-        var trackableIds: [Int] = []
-        var publishers: [AnyPublisher<Void, Never>] = []
-    }
-
-    var deriving: DerivingContext?
-
-    func withDeriving<T>(_ apply: () -> T) -> (value: T, DerivingContext) {
-        guard deriving == nil else {
-            fatalError("Nested deriving of store properties is not supported.")
-        }
-        let _r = managerTracer.range("deriving"); defer { _r() }
-
-        let deriving = DerivingContext()
-        self.deriving = deriving
-        let result = apply()
-        self.deriving = nil
-        managerTracer.instant("trackableIds \(deriving.trackableIds)")
-
-        return (result, deriving)
-    }
 }
 
 private var _manager = StoreManager()
@@ -148,16 +131,44 @@ class Store: CancellableHolder {
     private var trackableIdGen = IncrementalIdGenerator()
     private var trackableIdToSubscriptionIds: [Int: Set<Int>] = [:]
 
-    fileprivate func generateTrackableId() -> Int { trackableIdGen.generate() }
+    fileprivate private(set) var deriving: DerivingContext?
+}
 
-    fileprivate func onTrack(of trackableId: Int, in subscriptionId: Int) {
+// MARK: deriving
+
+private extension Store {
+    class DerivingContext {
+        var trackableIds: Set<Int> = []
+        var publishers: [AnyPublisher<Void, Never>] = []
+    }
+
+    func withDeriving<T>(_ apply: () -> T) -> (value: T, DerivingContext) {
+        guard deriving == nil else {
+            fatalError("Nested deriving of store properties is not supported.")
+        }
+        let _r = storeTracer.range("deriving"); defer { _r() }
+
+        let deriving = DerivingContext()
+        self.deriving = deriving
+        let result = apply()
+        self.deriving = nil
+        storeTracer.instant("trackableIds \(deriving.trackableIds)")
+
+        return (result, deriving)
+    }
+}
+
+private extension Store {
+    func generateTrackableId() -> Int { trackableIdGen.generate() }
+
+    func onTrack(of trackableId: Int, in subscriptionId: Int) {
         let _r = storeTracer.range("on track of \(trackableId) in subscription \(subscriptionId)"); defer { _r() }
         var ids = trackableIdToSubscriptionIds[trackableId] ?? []
         ids.insert(subscriptionId)
         trackableIdToSubscriptionIds[trackableId] = ids
     }
 
-    fileprivate func onChange(of trackableId: Int) -> Set<Int> {
+    func onChange(of trackableId: Int) -> Set<Int> {
         let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: trackableId)
         let _r = storeTracer.range("on change of \(trackableId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")"); defer { _r() }
         guard let subscriptionIds else { return [] }
@@ -206,22 +217,21 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
 @propertyWrapper
 struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate class Storage: CancellableHolder {
-        var value: Value
-        var derive: (() -> Value)?
+        var derive: (Instance) -> Value
+        var value: Value?
 
-        var trackableIds: [Int] = []
+        var trackableIds: Set<Int> = []
         let willUpdateSubject = PassthroughSubject<Value, Never>()
 
         var cancellables = Set<AnyCancellable>()
 
-        init(value: Value) {
-            self.value = value
+        init(derive: @escaping (Instance) -> Value) {
+            self.derive = derive
         }
 
-        func update() {
+        func update(_ instance: Instance) {
             let _r = trackableTracer.range("update derived"); defer { _r() }
-            guard let derive else { return }
-            let (value, context) = manager.withDeriving(derive)
+            let (value, context) = instance.withDeriving { derive(instance) }
 
             self.value = value
             willUpdateSubject.send(value)
@@ -230,7 +240,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
             cancellables.removeAll()
             for publisher in context.publishers {
                 publisher
-                    .sink { self.update() }
+                    .sink { self.update(instance) }
                     .store(in: self)
             }
         }
@@ -259,15 +269,8 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
         @available(*, unavailable) set {}
     }
 
-    // setup
-    func callAsFunction(derive: @escaping () -> Value) {
-        guard storage.derive == nil else { return }
-        storage.derive = derive
-        storage.update()
-    }
-
-    init(wrappedValue: Value) {
-        storage = .init(value: wrappedValue)
+    init(_ derive: @escaping (Instance) -> Value) {
+        storage = .init(derive: derive)
     }
 }
 
@@ -306,8 +309,8 @@ extension _StoreProtocol {
         if let tracking = manager.tracking {
             onTrack(of: id, in: tracking.subscriptionId)
         }
-        if let deriving = manager.deriving {
-            deriving.trackableIds.append(id)
+        if let deriving = deriving, !deriving.trackableIds.contains(id) {
+            deriving.trackableIds.insert(id)
             deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
         }
         return wrapper.value
@@ -317,16 +320,19 @@ extension _StoreProtocol {
         let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
         @Ref(self, keypath) var wrapper
         let storage = wrapper.storage
+        if storage.value == nil {
+            storage.update(self)
+        }
         if let tracking = manager.tracking {
             for id in storage.trackableIds {
                 onTrack(of: id, in: tracking.subscriptionId)
             }
         }
-        if let deriving = manager.deriving {
-            deriving.trackableIds += storage.trackableIds
+        if let deriving = deriving, !deriving.trackableIds.contains(storage.trackableIds) {
+            deriving.trackableIds.formUnion(storage.trackableIds)
             deriving.publishers.append(storage.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
         }
-        return storage.value
+        return storage.value!
     }
 
     fileprivate func update<T>(_ keypath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
@@ -383,7 +389,7 @@ class SelectedStorage<Value: Equatable>: ObservableObject {
     func select() -> Value { fatalError("Not implemented") }
 
     func track() {
-        let _r = selectedTracer.range(name.map { "select \($0)" } ?? "select"); defer { _r() }
+        let _r = selectedTracer.range(name.map { "track \($0)" } ?? "track"); defer { _r() }
         if let subscriptionId {
             manager.expire(subscriptionId: subscriptionId)
         }
@@ -415,7 +421,8 @@ struct Selected<Value: Equatable>: DynamicProperty {
         }
 
         override func select() -> Value {
-            selector()
+            let _r = selectedTracer.range("selector"); defer { _r() }
+            return selector()
         }
     }
 
@@ -454,7 +461,8 @@ struct Computed<Input, Value: Equatable>: DynamicProperty {
         }
 
         override func select() -> Value {
-            input.map { compute($0) } ?? defaultValue
+            let _r = selectedTracer.range("compute"); defer { _r() }
+            return input.map { compute($0) } ?? defaultValue
         }
     }
 

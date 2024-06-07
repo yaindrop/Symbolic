@@ -27,7 +27,7 @@ class PathViewModel: ObservableObject {
 
 struct PathView: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.viewport.toView }) var toView
+        @Selected({ global.viewport.toView }) var toView
     }
 
     @StateObject var selector = Selector()

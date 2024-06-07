@@ -73,7 +73,7 @@ private extension DocumentAction {
 
 struct HistoryPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.document.activeDocument }) var document
+        @Selected({ global.document.activeDocument }) var document
     }
 
     @StateObject var selector = Selector()

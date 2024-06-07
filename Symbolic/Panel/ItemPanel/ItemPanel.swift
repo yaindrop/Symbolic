@@ -5,7 +5,7 @@ import SwiftUI
 
 struct ItemPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.item.rootIds }) var rootIds
+        @Selected({ global.item.rootIds }) var rootIds
     }
 
     @StateObject var selector = Selector()
@@ -69,7 +69,7 @@ extension ItemPanel {
     struct ItemRow: View, EquatableBy, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Tracked({ (itemId: UUID) in global.item.item(id: itemId) }) var item
+            @Selected({ (itemId: UUID) in global.item.item(id: itemId) }) var item
         }
 
         @StateObject var selector = Selector()
@@ -102,7 +102,7 @@ extension ItemPanel {
     struct GroupRow: View, EquatableBy, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Tracked({ global.item.depth(itemId: $0) }) var depth
+            @Selected({ global.item.depth(itemId: $0) }) var depth
         }
 
         @StateObject var selector = Selector()
@@ -191,7 +191,7 @@ extension ItemPanel {
     struct PathRow: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Tracked({ global.path.path(id: $0) }) var path
+            @Selected({ global.path.path(id: $0) }) var path
         }
 
         @StateObject var selector = Selector()

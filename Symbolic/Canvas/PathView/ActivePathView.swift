@@ -172,9 +172,9 @@ class ActivePathViewModel: PathViewModel {
 
 struct ActivePathView: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.activeItem.activePath }) var activePath
-        @Tracked({ global.activeItem.activePathProperty }) var activePathProperty
-        @Tracked({ global.activeItem.pathFocusedPart }) var focusedPart
+        @Selected({ global.activeItem.activePath }) var activePath
+        @Selected({ global.activeItem.activePathProperty }) var activePathProperty
+        @Selected({ global.activeItem.pathFocusedPart }) var focusedPart
     }
 
     @StateObject var selector = Selector()

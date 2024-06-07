@@ -4,9 +4,9 @@ import SwiftUI
 
 struct ActiveItemView: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.viewport.info }) var viewport
-        @Tracked({ global.activeItem.activePaths }) var activePaths
-        @Tracked({ global.activeItem.activeGroups }) var activeGroups
+        @Selected({ global.viewport.info }) var viewport
+        @Selected({ global.activeItem.activePaths }) var activePaths
+        @Selected({ global.activeItem.activeGroups }) var activeGroups
     }
 
     @StateObject var selector = Selector()
@@ -30,9 +30,9 @@ extension ActiveItemView {
     struct GroupBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Tracked({ groupId in global.activeItem.focusedItemId == groupId }) var focused
-            @Tracked({ groupId in global.activeItem.selectedItemIds.contains(groupId) }) var selected
-            @Tracked({ groupId in global.activeItem.boundingRect(itemId: groupId) }) var bounds
+            @Selected({ groupId in global.activeItem.focusedItemId == groupId }) var focused
+            @Selected({ groupId in global.activeItem.selectedItemIds.contains(groupId) }) var selected
+            @Selected({ groupId in global.activeItem.boundingRect(itemId: groupId) }) var bounds
         }
 
         @StateObject var selector = Selector()
@@ -94,8 +94,8 @@ extension ActiveItemView {
     struct PathBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Tracked({ pathId in global.activeItem.focusedItemId == pathId }) var focused
-            @Tracked({ pathId in global.activeItem.selectedItemIds.contains(pathId) }) var selected
+            @Selected({ pathId in global.activeItem.focusedItemId == pathId }) var focused
+            @Selected({ pathId in global.activeItem.selectedItemIds.contains(pathId) }) var selected
         }
 
         @StateObject var selector = Selector()
@@ -152,7 +152,7 @@ extension ActiveItemView {
 extension ActiveItemView {
     struct SelectionBounds: View, SelectorHolder {
         class Selector: SelectorBase {
-            @Tracked({ global.activeItem.selectionBounds }) var bounds
+            @Selected({ global.activeItem.selectionBounds }) var bounds
         }
 
         @StateObject var selector = Selector()

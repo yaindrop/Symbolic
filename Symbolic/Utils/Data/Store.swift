@@ -172,14 +172,127 @@ private extension Store {
     }
 }
 
+// MARK: - StoreProtocol
+
+protocol _StoreProtocol: Store {
+    typealias Trackable<T: Equatable> = _Trackable<Self, T>
+    typealias Derived<T: Equatable> = _Derived<Self, T>
+}
+
+extension Store: _StoreProtocol {
+    struct Updater<S: _StoreProtocol> {
+        let store: S
+
+        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
+            store.update(keyPath: keyPath, value)
+        }
+
+        fileprivate init(_ store: S) {
+            self.store = store
+        }
+    }
+}
+
+extension _StoreProtocol {
+    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
+        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
+        let id: Int
+        if let wrapperId = wrapper.id {
+            id = wrapperId
+        } else {
+            id = generateTrackableId()
+            wrapper.id = id
+        }
+        if let tracking = manager.tracking {
+            onTrack(of: id, in: tracking.subscriptionId)
+        }
+        if let deriving = deriving, !deriving.trackableIds.contains(id) {
+            deriving.trackableIds.insert(id)
+            deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
+        }
+        return wrapper.value
+    }
+
+    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
+        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
+        let value = wrapper.value ?? update(keyPath: keyPath)
+
+        if let tracking = manager.tracking {
+            for id in wrapper.trackableIds {
+                onTrack(of: id, in: tracking.subscriptionId)
+            }
+        }
+        if let deriving = deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
+            deriving.trackableIds.formUnion(wrapper.trackableIds)
+            deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
+        }
+        return value
+    }
+
+    fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
+        let _r = trackableTracer.range("update \(keyPath) with \(newValue)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
+        let id: Int
+        if let wrapperId = wrapper.id {
+            id = wrapperId
+        } else {
+            id = generateTrackableId()
+            wrapper.id = id
+        }
+        guard wrapper.value != newValue else { return }
+        wrapper.value = newValue
+        wrapper.didSetSubject.send(newValue)
+
+        manager.notify(subscriptionIds: onChange(of: id))
+        if wrapper.willUpdateCancellable == nil {
+            wrapper.willUpdateCancellable = manager.willUpdate?.sink {
+                wrapper.willUpdateSubject.send(wrapper.value)
+                wrapper.willUpdateCancellable = nil
+            }
+        }
+    }
+
+    @discardableResult fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
+        let _r = trackableTracer.range("update derived"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
+        let (value, context) = withDeriving { wrapper.derive(self) }
+
+        wrapper.value = value
+        wrapper.willUpdateSubject.send(value)
+
+        wrapper.trackableIds = context.trackableIds
+        wrapper.cancellables.removeAll()
+        for publisher in context.publishers {
+            publisher
+                .sink { self.update(keyPath: keyPath) }
+                .store(in: &wrapper.cancellables)
+        }
+        return value
+    }
+
+    func update(_ callback: (Updater<Self>) -> Void) {
+        manager.withUpdating {
+            callback(Updater(self))
+        }
+    }
+}
+
+func withStoreUpdating(_ apply: () -> Void) {
+    manager.withUpdating(apply)
+}
+
 // MARK: - Trackable
 
 @propertyWrapper
 struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var id: Int?
     fileprivate var value: Value
+
     fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
     fileprivate let willUpdateSubject = PassthroughSubject<Value, Never>()
+
     fileprivate var willUpdateCancellable: AnyCancellable?
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
@@ -213,37 +326,13 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
 
 @propertyWrapper
 struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
-    fileprivate class Storage: CancellableHolder {
-        var derive: (Instance) -> Value
-        var value: Value?
+    fileprivate let derive: (Instance) -> Value
+    fileprivate var value: Value?
 
-        var trackableIds: Set<Int> = []
-        let willUpdateSubject = PassthroughSubject<Value, Never>()
+    fileprivate var trackableIds: Set<Int> = []
+    fileprivate let willUpdateSubject = PassthroughSubject<Value, Never>()
 
-        var cancellables = Set<AnyCancellable>()
-
-        init(derive: @escaping (Instance) -> Value) {
-            self.derive = derive
-        }
-
-        func update(_ instance: Instance) {
-            let _r = trackableTracer.range("update derived"); defer { _r() }
-            let (value, context) = instance.withDeriving { derive(instance) }
-
-            self.value = value
-            willUpdateSubject.send(value)
-
-            trackableIds = context.trackableIds
-            cancellables.removeAll()
-            for publisher in context.publishers {
-                publisher
-                    .sink { self.update(instance) }
-                    .store(in: self)
-            }
-        }
-    }
-
-    fileprivate let storage: Storage
+    fileprivate var cancellables = Set<AnyCancellable>()
 
     @available(*, unavailable, message: "@Derived can only be applied to Store")
     var wrappedValue: Value {
@@ -255,7 +344,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
         let willUpdate: AnyPublisher<Value, Never>
     }
 
-    var projectedValue: Projected { .init(willUpdate: storage.willUpdateSubject.eraseToAnyPublisher()) }
+    var projectedValue: Projected { .init(willUpdate: willUpdateSubject.eraseToAnyPublisher()) }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -267,117 +356,13 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
     }
 
     init(_ derive: @escaping (Instance) -> Value) {
-        storage = .init(derive: derive)
+        self.derive = derive
     }
-}
-
-// MARK: - StoreProtocol
-
-protocol _StoreProtocol: Store {
-    typealias Trackable<T: Equatable> = _Trackable<Self, T>
-    typealias Derived<T: Equatable> = _Derived<Self, T>
-}
-
-extension Store: _StoreProtocol {
-    struct Updater<S: _StoreProtocol> {
-        let store: S
-
-        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
-            store.update(keyPath, value)
-        }
-
-        fileprivate init(_ store: S) {
-            self.store = store
-        }
-    }
-}
-
-extension _StoreProtocol {
-    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
-        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
-        @Ref(self, keyPath) var wrapper
-        let id: Int
-        if let wrapperId = wrapper.id {
-            id = wrapperId
-        } else {
-            id = generateTrackableId()
-            wrapper.id = id
-        }
-        if let tracking = manager.tracking {
-            onTrack(of: id, in: tracking.subscriptionId)
-        }
-        if let deriving = deriving, !deriving.trackableIds.contains(id) {
-            deriving.trackableIds.insert(id)
-            deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
-        }
-        return wrapper.value
-    }
-
-    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
-        @Ref(self, keyPath) var wrapper
-        let storage = wrapper.storage
-        if storage.value == nil {
-            storage.update(self)
-        }
-        if let tracking = manager.tracking {
-            for id in storage.trackableIds {
-                onTrack(of: id, in: tracking.subscriptionId)
-            }
-        }
-        if let deriving = deriving, !deriving.trackableIds.contains(storage.trackableIds) {
-            deriving.trackableIds.formUnion(storage.trackableIds)
-            deriving.publishers.append(storage.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
-        }
-        return storage.value!
-    }
-
-    fileprivate func update<T>(_ keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
-        let _r = trackableTracer.range("update \(keyPath) with \(newValue)"); defer { _r() }
-        @Ref(self, keyPath) var wrapper
-        let id: Int
-        if let wrapperId = wrapper.id {
-            id = wrapperId
-        } else {
-            id = generateTrackableId()
-            wrapper.id = id
-        }
-        guard wrapper.value != newValue else { return }
-        wrapper.value = newValue
-        wrapper.didSetSubject.send(newValue)
-
-        manager.notify(subscriptionIds: onChange(of: id))
-        if wrapper.willUpdateCancellable == nil {
-            wrapper.willUpdateCancellable = manager.willUpdate?.sink {
-                wrapper.willUpdateSubject.send(wrapper.value)
-                wrapper.willUpdateCancellable = nil
-            }
-        }
-    }
-
-    func update(_ callback: (Updater<Self>) -> Void) {
-        manager.withUpdating {
-            callback(Updater(self))
-        }
-    }
-}
-
-func withStoreUpdating(_ apply: () -> Void) {
-    manager.withUpdating(apply)
 }
 
 // MARK: - Selector
 
-protocol _SelectorProtocol: AnyObject {
-    associatedtype Props: Equatable
-    var props: Props? { get }
-    func onUpdate()
-    func onRetrack(callback: @escaping () -> Void)
-
-    typealias Tracked<T: Equatable> = _Tracked<Self, T>
-}
-
-class _Selector<Props: Equatable>: _SelectorProtocol, ObservableObject, CancellableHolder {
+class _Selector<Props: Equatable>: ObservableObject, CancellableHolder {
     struct Configs {
         var name: String?
         var syncUpdate: Bool
@@ -402,6 +387,24 @@ class _Selector<Props: Equatable>: _SelectorProtocol, ObservableObject, Cancella
         }
     }
 
+    deinit {
+        updateTask?.cancel()
+    }
+}
+
+// MARK: - SelectorProtocol
+
+protocol _SelectorProtocol: AnyObject {
+    associatedtype Props: Equatable
+    var props: Props? { get }
+
+    func onUpdate()
+    func onRetrack(callback: @escaping () -> Void)
+
+    typealias Selected<T: Equatable> = _Selected<Self, T>
+}
+
+extension _Selector: _SelectorProtocol {
     func onUpdate() {
         if configs.syncUpdate {
             objectWillChange.send()
@@ -419,22 +422,50 @@ class _Selector<Props: Equatable>: _SelectorProtocol, ObservableObject, Cancella
             .sink(receiveValue: callback)
             .store(in: self)
     }
+}
 
-    deinit {
-        updateTask?.cancel()
+private extension _SelectorProtocol {
+    func access<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
+        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
+    }
+
+    @discardableResult
+    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
+        @Ref(self, keyPath) var wrapper
+        let _r = selectedTracer.range(wrapper.name.map { "track \($0)" } ?? "track"); defer { _r() }
+        if let subscriptionId = wrapper.subscriptionId {
+            manager.expire(subscriptionId: subscriptionId)
+        }
+
+        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onUpdate: { [weak self] in self?.track(keyPath: keyPath) }
+        wrapper.subscriptionId = context.subscriptionId
+
+        if wrapper.value == nil {
+            wrapper.value = newValue
+            onRetrack { self.track(keyPath: keyPath) }
+            selectedTracer.instant("setup")
+        } else if wrapper.value != newValue {
+            wrapper.value = newValue
+            onUpdate()
+            selectedTracer.instant("updated \(newValue)")
+        } else {
+            selectedTracer.instant("unchanged")
+        }
+        return newValue
     }
 }
 
-// MARK: - Tracked
+// MARK: - Selected
 
 @propertyWrapper
-struct _Tracked<Instance: _SelectorProtocol, Value: Equatable> {
+struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     let name: String?
     let selector: (Instance.Props) -> Value
     var value: Value?
     var subscriptionId: Int?
 
-    @available(*, unavailable, message: "@Tracked can only be applied to SelectedModel")
+    @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value {
         get { fatalError() }
         set { fatalError() }
@@ -467,40 +498,6 @@ struct _Tracked<Instance: _SelectorProtocol, Value: Equatable> {
     init(_ name: String? = nil, _ selector: @escaping () -> Value) {
         self.name = name
         self.selector = { _ in selector() }
-    }
-}
-
-// MARK: - SelectorProtocol
-
-private extension _SelectorProtocol {
-    func access<T>(keyPath: ReferenceWritableKeyPath<Self, Tracked<T>>) -> T {
-        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
-        return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
-    }
-
-    @discardableResult
-    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Tracked<T>>) -> T {
-        @Ref(self, keyPath) var wrapper
-        let _r = selectedTracer.range(wrapper.name.map { "track \($0)" } ?? "track"); defer { _r() }
-        if let subscriptionId = wrapper.subscriptionId {
-            manager.expire(subscriptionId: subscriptionId)
-        }
-
-        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onUpdate: { [weak self] in self?.track(keyPath: keyPath) }
-        wrapper.subscriptionId = context.subscriptionId
-
-        if wrapper.value == nil {
-            wrapper.value = newValue
-            onRetrack { self.track(keyPath: keyPath) }
-            selectedTracer.instant("setup")
-        } else if wrapper.value != newValue {
-            wrapper.value = newValue
-            onUpdate()
-            selectedTracer.instant("updated \(newValue)")
-        } else {
-            selectedTracer.instant("unchanged")
-        }
-        return newValue
     }
 }
 

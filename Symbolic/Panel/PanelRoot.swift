@@ -21,7 +21,7 @@ struct PanelView: View, EquatableBy {
 
 struct PanelRoot: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.panel.panels }) var panels
+        @Selected({ global.panel.panels }) var panels
     }
 
     @StateObject var selector = Selector()

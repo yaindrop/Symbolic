@@ -28,9 +28,9 @@ class ToolbarStore: Store {
 
 struct ToolbarModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.viewport.store.viewSize }) var viewSize
-        @Tracked({ global.toolbar.mode }) var toolbarMode
-        @Tracked({ global.document.undoable }) var undoable
+        @Selected({ global.viewport.store.viewSize }) var viewSize
+        @Selected({ global.toolbar.mode }) var toolbarMode
+        @Selected({ global.document.undoable }) var undoable
     }
 
     @StateObject var selector = Selector()

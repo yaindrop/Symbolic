@@ -35,7 +35,7 @@ extension ActivePathPanel {
         class Selector: SelectorBase {
             override var configs: Configs { .init(name: "NodePanel") }
 
-            @Tracked("NodePanel focused", { global.activeItem.pathFocusedPart?.nodeId == $0 }) var focused
+            @Selected("NodePanel focused", { global.activeItem.pathFocusedPart?.nodeId == $0 }) var focused
         }
 
         @StateObject var selector = Selector()
@@ -108,9 +108,9 @@ private extension ActivePathPanel {
         class Selector: SelectorBase {
             override var configs: Configs { .init(name: "NodePanel") }
 
-            @Tracked({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
-            @Tracked({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
-            @Tracked({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
+            @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
+            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
         @StateObject var selector = Selector()
@@ -192,10 +192,10 @@ private extension ActivePathPanel {
         class Selector: SelectorBase {
             override var configs: Configs { .init(name: "NodePanel") }
 
-            @Tracked({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
-            @Tracked({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId) }) var node
-            @Tracked({ global.path.path(id: $0.pathId)?.segment(from: $0.nodeId)?.edge }) var edge
-            @Tracked({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
+            @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId) }) var node
+            @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.nodeId)?.edge }) var edge
+            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
         @StateObject var selector = Selector()

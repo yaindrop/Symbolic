@@ -5,8 +5,8 @@ import SwiftUI
 
 struct ActivePathPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.activeItem.activePath }) var path
-        @Tracked({ global.activeItem.store.pathFocusedPart }) var focusedPart
+        @Selected({ global.activeItem.activePath }) var path
+        @Selected({ global.activeItem.store.pathFocusedPart }) var focusedPart
     }
 
     @StateObject var selector = Selector()

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DebugPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.viewport.info }) var viewportInfo
+        @Selected({ global.viewport.info }) var viewportInfo
     }
 
     @StateObject var selector = Selector()

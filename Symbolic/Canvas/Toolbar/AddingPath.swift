@@ -82,7 +82,7 @@ extension AddingPathService {
 
 struct AddingPathView: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.addingPath.addingPath }) var addingPath
+        @Selected({ global.addingPath.addingPath }) var addingPath
     }
 
     @StateObject var selector = Selector()

@@ -108,9 +108,9 @@ struct ItemsView: View, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: Configs { .init(name: "ItemsView", syncUpdate: true) }
 
-        @Tracked("ItemsView toView", { global.viewport.toView }) var toView
-        @Tracked("ItemsView allPaths", { global.item.allPaths }) var allPaths
-        @Tracked("ItemsView activePathId", { global.activeItem.focusedItemId }) var activePathId
+        @Selected("ItemsView toView", { global.viewport.toView }) var toView
+        @Selected("ItemsView allPaths", { global.item.allPaths }) var allPaths
+        @Selected("ItemsView activePathId", { global.activeItem.focusedItemId }) var activePathId
     }
 
     @StateObject var selector = Selector()

@@ -8,10 +8,10 @@ private enum GridLineType: CaseIterable {
 
 struct Background: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Tracked({ global.viewport.info }) var viewportInfo
-        @Tracked({ global.viewport.store.viewSize }) var viewSize
-        @Tracked({ global.viewport.worldRect }) var worldRect
-        @Tracked({ global.grid.grid.cellSize }) var cellSize
+        @Selected({ global.viewport.info }) var viewportInfo
+        @Selected({ global.viewport.store.viewSize }) var viewSize
+        @Selected({ global.viewport.worldRect }) var worldRect
+        @Selected({ global.grid.grid.cellSize }) var cellSize
     }
 
     @StateObject var selector = Selector()

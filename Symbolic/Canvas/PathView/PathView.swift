@@ -25,13 +25,19 @@ class PathViewModel: ObservableObject {
 
 // MARK: - PathView
 
-struct PathView: View {
+struct PathView: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.viewport.toView }) var toView
+    }
+
+    @StateObject var selector = Selector()
+
     let path: Path
     let property: PathProperty
     let focusedPart: PathFocusedPart?
 
     var body: some View { subtracer.range("body") {
-        WithSelector(selector, .value) {
+        setupSelector {
             ZStack {
                 Stroke(path: path, toView: selector.toView)
                 handles(path: path)
@@ -40,12 +46,6 @@ struct PathView: View {
     }}
 
     // MARK: private
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.viewport.toView }) var toView
-    }
-
-    @StateObject private var selector = Selector()
 
     @ViewBuilder private func handles(path: Path) -> some View {
         let nodes = path.nodes

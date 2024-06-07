@@ -80,19 +80,19 @@ extension AddingPathService {
 
 // MARK: - AddingPathView
 
-struct AddingPathView: View {
+struct AddingPathView: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.addingPath.addingPath }) var addingPath
+    }
+
+    @StateObject var selector = Selector()
+
     var body: some View {
-        WithSelector(selector, .value) {
+        setupSelector {
             if let addingPath = selector.addingPath {
                 PathView(path: addingPath, property: .init(id: addingPath.id), focusedPart: nil)
                     .environmentObject(PathViewModel())
             }
         }
     }
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.addingPath.addingPath }) var addingPath
-    }
-
-    @StateObject private var selector = Selector()
 }

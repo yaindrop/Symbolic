@@ -1,13 +1,19 @@
 import SwiftUI
 
-struct DebugPanel: View {
+struct DebugPanel: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.viewport.info }) var viewportInfo
+    }
+
+    @StateObject var selector = Selector()
+
     let panelId: UUID
 
     var multipleTouch: MultipleTouchModel
     var multipleTouchPress: MultipleTouchPressModel
 
     var body: some View {
-        WithSelector(selector, .value) {
+        setupSelector {
             panel.frame(width: 320)
         }
     }
@@ -22,12 +28,6 @@ struct DebugPanel: View {
             Spacer()
         }
     }
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.viewport.info }) var viewportInfo
-    }
-
-    @StateObject private var selector = Selector()
 
     @ViewBuilder private var panel: some View {
         VStack {

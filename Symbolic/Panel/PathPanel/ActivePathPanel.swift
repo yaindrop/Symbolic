@@ -3,23 +3,23 @@ import SwiftUI
 
 // MARK: - ActivePathPanel
 
-struct ActivePathPanel: View {
+struct ActivePathPanel: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.activeItem.activePath }) var path
+        @Tracked({ global.activeItem.store.pathFocusedPart }) var focusedPart
+    }
+
+    @StateObject var selector = Selector()
+
     let panelId: UUID
 
     var body: some View { tracer.range("ActivePathPanel body") {
-        WithSelector(selector, .value) {
+        setupSelector {
             panel.frame(width: 320)
         }
     }}
 
     // MARK: private
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.activeItem.activePath }) var path
-        @Tracked({ global.activeItem.store.pathFocusedPart }) var focusedPart
-    }
-
-    @StateObject private var selector = Selector()
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 

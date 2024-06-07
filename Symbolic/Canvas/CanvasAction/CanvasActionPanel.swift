@@ -1,8 +1,18 @@
 import SwiftUI
 
-struct CanvasActionPanel: View {
+struct CanvasActionPanel: View, SelectorHolder {
+    class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "CanvasActionPanel") }
+
+        @Tracked("triggeringHints", { Array(global.canvasAction.triggering).map { $0.hint } }) var triggeringHints
+        @Tracked("continuousHints", { Array(global.canvasAction.continuous).map { $0.hint } }) var continuousHints
+        @Tracked("instantHints", { Array(global.canvasAction.instant).map { $0.hint } }) var instantHints
+    }
+
+    @StateObject var selector = Selector()
+
     var body: some View { tracer.range("CanvasActionPanel body") { build {
-        WithSelector(selector, .value) {
+        setupSelector {
             VStack(alignment: .leading) {
                 if !selector.continuousHints.isEmpty {
                     Text(selector.continuousHints.joined(separator: " "))
@@ -26,17 +36,4 @@ struct CanvasActionPanel: View {
             .font(.footnote)
         }
     } } }
-
-    private class Selector: StoreSelector<Monostate> {
-        override var configs: Configs { .init(name: "CanvasActionPanel") }
-
-        @Tracked("triggeringHints", { Array(global.canvasAction.triggering).map { $0.hint } })
-        var triggeringHints
-        @Tracked("continuousHints", { Array(global.canvasAction.continuous).map { $0.hint } })
-        var continuousHints
-        @Tracked("instantHints", { Array(global.canvasAction.instant).map { $0.hint } })
-        var instantHints
-    }
-
-    @StateObject private var selector = Selector()
 }

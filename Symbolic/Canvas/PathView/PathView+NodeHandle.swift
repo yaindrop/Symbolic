@@ -6,7 +6,18 @@ private let subtracer = tracer.tagged("PathView")
 // MARK: - NodeHandle
 
 extension PathView {
-    struct NodeHandle: View, EquatableBy {
+    struct NodeHandle: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(syncUpdate: true) }
+
+            @Tracked({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
+            @Tracked({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
+            @Tracked({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+        }
+
+        @StateObject var selector = Selector()
+
         @EnvironmentObject var viewModel: PathViewModel
 
         let pathId: UUID
@@ -15,23 +26,12 @@ extension PathView {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { subtracer.range("NodeHandle \(nodeId)") { build {
-            WithSelector(selector, .init(pathId: pathId, nodeId: nodeId)) {
+            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 handle
             }
         }}}
 
         // MARK: private
-
-        private struct Props: Equatable { let pathId: UUID, nodeId: UUID }
-        private class Selector: StoreSelector<Props> {
-            override var configs: Configs { .init(syncUpdate: true) }
-
-            @Tracked({ props in global.path.path(id: props.pathId)?.node(id: props.nodeId)?.position.applying(global.viewport.toView) }) var position
-            @Tracked({ props in global.pathProperty.property(id: props.pathId)?.nodeType(id: props.nodeId) }) var nodeType
-            @Tracked({ props in global.activeItem.pathFocusedPart?.nodeId == props.nodeId }) var focused
-        }
-
-        @StateObject private var selector = Selector()
 
         private static let circleSize: Scalar = 12
         private static let rectSize: Scalar = circleSize / 2 * 1.7725 // sqrt of pi

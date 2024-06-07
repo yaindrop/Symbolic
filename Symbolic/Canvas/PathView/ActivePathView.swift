@@ -170,23 +170,23 @@ class ActivePathViewModel: PathViewModel {
 
 // MARK: - ActivePathView
 
-struct ActivePathView: View {
+struct ActivePathView: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.activeItem.activePath }) var activePath
+        @Tracked({ global.activeItem.activePathProperty }) var activePathProperty
+        @Tracked({ global.activeItem.pathFocusedPart }) var focusedPart
+    }
+
+    @StateObject var selector = Selector()
+
     var body: some View { tracer.range("ActivePathView body") {
-        WithSelector(selector, .value) {
+        setupSelector {
             if let path = selector.activePath, let property = selector.activePathProperty {
                 PathView(path: path, property: property, focusedPart: selector.focusedPart)
                     .environmentObject(viewModel)
             }
         }
     } }
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.activeItem.activePath }) var activePath
-        @Tracked({ global.activeItem.activePathProperty }) var activePathProperty
-        @Tracked({ global.activeItem.pathFocusedPart }) var focusedPart
-    }
-
-    @StateObject private var selector = Selector()
 
     private var viewModel: PathViewModel = ActivePathViewModel()
 }

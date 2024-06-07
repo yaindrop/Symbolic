@@ -71,22 +71,22 @@ private extension DocumentAction {
 
 // MARK: - HistoryPanel
 
-struct HistoryPanel: View {
+struct HistoryPanel: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.document.activeDocument }) var document
+    }
+
+    @StateObject var selector = Selector()
+
     let panelId: UUID
 
     var body: some View {
-        WithSelector(selector, .value) {
+        setupSelector {
             panel.frame(width: 320)
         }
     }
 
     // MARK: private
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.document.activeDocument }) var document
-    }
-
-    @StateObject private var selector = Selector()
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 

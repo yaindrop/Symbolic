@@ -26,21 +26,21 @@ class ToolbarStore: Store {
     }
 }
 
-struct ToolbarModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        WithSelector(selector, .value) {
-            let _ = selector.viewSize // strange bug that toolbar is lost when window size changes, need to reset ids
-            content.toolbar { toolbar }
-        }
-    }
-
-    private class Selector: StoreSelector<Monostate> {
+struct ToolbarModifier: ViewModifier, SelectorHolder {
+    class Selector: SelectorBase {
         @Tracked({ global.viewport.store.viewSize }) var viewSize
         @Tracked({ global.toolbar.mode }) var toolbarMode
         @Tracked({ global.document.undoable }) var undoable
     }
 
-    @StateObject private var selector = Selector()
+    @StateObject var selector = Selector()
+
+    func body(content: Content) -> some View {
+        setupSelector {
+            let _ = selector.viewSize // strange bug that toolbar is lost when window size changes, need to reset ids
+            content.toolbar { toolbar }
+        }
+    }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
         ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }

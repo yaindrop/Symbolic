@@ -30,14 +30,23 @@ extension ActivePathPanel {
 // MARK: - NodePanel
 
 extension ActivePathPanel {
-    struct NodePanel: View, EquatableBy {
+    struct NodePanel: View, EquatableBy, ComputedSelectorHolder {
+        typealias SelectorProps = UUID
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "NodePanel") }
+
+            @Tracked("NodePanel focused", { global.activeItem.pathFocusedPart?.nodeId == $0 }) var focused
+        }
+
+        @StateObject var selector = Selector()
+
         let pathId: UUID
         let nodeId: UUID
 
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
-            WithSelector(selector, nodeId) {
+            setupSelector(nodeId) {
                 content
                     .onChange(of: selector.focused) {
                         withAnimation { expanded = selector.focused }
@@ -46,15 +55,6 @@ extension ActivePathPanel {
         } }
 
         // MARK: private
-
-        private class Selector: StoreSelector<UUID> {
-            override var configs: Configs { .init(name: "NodePanel") }
-
-            @Tracked("NodePanel focused", { nodeId in global.activeItem.pathFocusedPart?.nodeId == nodeId })
-            var focused
-        }
-
-        @StateObject private var selector = Selector()
 
         private var content: some View {
             VStack {
@@ -102,7 +102,19 @@ extension ActivePathPanel {
 // MARK: - NodeMenu
 
 private extension ActivePathPanel {
-    struct NodeMenu<Content: View>: View, EquatableBy {
+    struct NodeMenu<Content: View>: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
+
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "NodePanel") }
+
+            @Tracked({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
+            @Tracked({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
+            @Tracked({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+        }
+
+        @StateObject var selector = Selector()
+
         let pathId: UUID
         let nodeId: UUID
         @ViewBuilder let content: () -> Content
@@ -110,29 +122,12 @@ private extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodeMenu body") {
-            WithSelector(selector, .init(pathId: pathId, nodeId: nodeId)) {
+            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 menu
             }
         } }
 
         // MARK: private
-
-        private struct Props: Equatable { let pathId: UUID, nodeId: UUID }
-
-        private class Selector: StoreSelector<Props> {
-            override var configs: Configs { .init(name: "NodePanel") }
-
-            @Tracked({ props in global.path.path(id: props.pathId)?.mergableNode(id: props.nodeId) })
-            var mergableNode
-
-            @Tracked({ props in global.pathProperty.property(id: props.pathId)?.nodeType(id: props.nodeId) })
-            var nodeType
-
-            @Tracked({ props in global.activeItem.pathFocusedPart?.nodeId == props.nodeId })
-            var focused
-        }
-
-        @StateObject private var selector = Selector()
 
         var menu: some View {
             Menu {
@@ -191,41 +186,32 @@ private extension ActivePathPanel {
 // MARK: - NodeDetailPanel
 
 private extension ActivePathPanel {
-    struct NodeDetailPanel: View, EquatableBy {
+    struct NodeDetailPanel: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
+
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "NodePanel") }
+
+            @Tracked({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
+            @Tracked({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId) }) var node
+            @Tracked({ global.path.path(id: $0.pathId)?.segment(from: $0.nodeId)?.edge }) var edge
+            @Tracked({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+        }
+
+        @StateObject var selector = Selector()
+
         let pathId: UUID
         let nodeId: UUID
 
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodeDetailPanel body") {
-            WithSelector(selector, props) {
+            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 content
             }
         } }
 
         // MARK: private
-
-        private struct Props: Equatable { let pathId: UUID, nodeId: UUID }
-
-        private var props: Props { .init(pathId: pathId, nodeId: nodeId) }
-
-        private class Selector: StoreSelector<Props> {
-            override var configs: Configs { .init(name: "NodePanel") }
-
-            @Tracked({ props in global.path.path(id: props.pathId)?.pair(before: props.nodeId) })
-            var prevPair
-
-            @Tracked({ props in global.path.path(id: props.pathId)?.node(id: props.nodeId) })
-            var node
-
-            @Tracked({ props in global.path.path(id: props.pathId)?.segment(from: props.nodeId)?.edge })
-            var edge
-
-            @Tracked({ props in global.activeItem.pathFocusedPart?.nodeId == props.nodeId })
-            var focused
-        }
-
-        @StateObject private var selector = Selector()
 
         private var content: some View {
             VStack(spacing: 12) {

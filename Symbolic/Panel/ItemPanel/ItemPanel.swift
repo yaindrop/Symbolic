@@ -3,23 +3,23 @@ import SwiftUI
 
 // MARK: - ItemPanel
 
-struct ItemPanel: View {
+struct ItemPanel: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.item.rootIds }) var rootIds
+    }
+
+    @StateObject var selector = Selector()
+
     let panelId: UUID
 
     var body: some View { tracer.range("ItemPanel body") {
-        WithSelector(selector, .value) {
+        setupSelector {
             content
                 .frame(width: 320)
         }
     } }
 
     // MARK: private
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.item.rootIds }) var rootIds
-    }
-
-    @StateObject private var selector = Selector()
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
@@ -66,25 +66,25 @@ struct ItemPanel: View {
 // MARK: - ItemRow
 
 extension ItemPanel {
-    struct ItemRow: View, EquatableBy {
+    struct ItemRow: View, EquatableBy, ComputedSelectorHolder {
+        typealias SelectorProps = UUID
+        class Selector: SelectorBase {
+            @Tracked({ (itemId: UUID) in global.item.item(id: itemId) }) var item
+        }
+
+        @StateObject var selector = Selector()
+
         let itemId: UUID
 
         var equatableBy: some Equatable { itemId }
 
         var body: some View { tracer.range("ItemRow body") {
-            WithSelector(selector, itemId) {
+            setupSelector(itemId) {
                 content
             }
         } }
 
         // MARK: private
-
-        class Selector: StoreSelector<UUID> {
-            @Tracked({ (itemId: UUID) in global.item.item(id: itemId) })
-            var item: Item?
-        }
-
-        @StateObject var selector = Selector()
 
         @ViewBuilder var content: some View {
             if let pathId = selector.item?.pathId {
@@ -99,25 +99,25 @@ extension ItemPanel {
 // MARK: - GroupRow
 
 extension ItemPanel {
-    struct GroupRow: View, EquatableBy {
+    struct GroupRow: View, EquatableBy, ComputedSelectorHolder {
+        typealias SelectorProps = UUID
+        class Selector: SelectorBase {
+            @Tracked({ global.item.depth(itemId: $0) }) var depth
+        }
+
+        @StateObject var selector = Selector()
+
         let group: ItemGroup
 
         var equatableBy: some Equatable { group }
 
         var body: some View { tracer.range("GroupRow body") {
-            WithSelector(selector, group.id) {
+            setupSelector(group.id) {
                 content
             }
         } }
 
         // MARK: private
-
-        class Selector: StoreSelector<UUID> {
-            @Tracked({ (itemId: UUID) in global.item.depth(itemId: itemId) })
-            var depth: Int
-        }
-
-        @StateObject var selector = Selector()
 
         @State private var expanded = true
 
@@ -188,23 +188,23 @@ extension ItemPanel {
 // MARK: - PathRow
 
 extension ItemPanel {
-    struct PathRow: View {
+    struct PathRow: View, ComputedSelectorHolder {
+        typealias SelectorProps = UUID
+        class Selector: SelectorBase {
+            @Tracked({ global.path.path(id: $0) }) var path
+        }
+
+        @StateObject var selector = Selector()
+
         let pathId: UUID
 
         var body: some View { tracer.range("PathRow body") {
-            WithSelector(selector, pathId) {
+            setupSelector(pathId) {
                 content
             }
         } }
 
         // MARK: private
-
-        class Selector: StoreSelector<UUID> {
-            @Tracked({ (pathId: UUID) in global.path.path(id: pathId) })
-            var path: Path?
-        }
-
-        @StateObject var selector = Selector()
 
         private struct PathThumbnail: View {
             let path: Path

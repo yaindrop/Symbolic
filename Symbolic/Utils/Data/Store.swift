@@ -366,162 +366,9 @@ func withStoreUpdating(_ apply: () -> Void) {
     manager.withUpdating(apply)
 }
 
-// MARK: - SelectedStorage
-
-class SelectedStorage<Value: Equatable>: ObservableObject {
-    private(set) var name: String?
-    private var _value: Value?
-    private var subscriptionId: Int?
-    private var updateTask: Task<Void, Never>?
-
-    // value must have been assigned after track in init
-    var value: Value { _value! }
-
-    init(name: String? = nil) {
-        self.name = name
-        track()
-    }
-
-    deinit {
-        updateTask?.cancel()
-    }
-
-    func select() -> Value { fatalError("Not implemented") }
-
-    func track() {
-        let _r = selectedTracer.range(name.map { "track \($0)" } ?? "track"); defer { _r() }
-        if let subscriptionId {
-            manager.expire(subscriptionId: subscriptionId)
-        }
-        let (newValue, context) = manager.withTracking { select() } onUpdate: { [weak self] in self?.track() }
-        subscriptionId = context.subscriptionId
-        if _value != newValue {
-            _value = newValue
-            setupUpdateTask()
-            selectedTracer.instant("updated \(newValue)")
-        }
-    }
-
-    private func setupUpdateTask() {
-        updateTask?.cancel()
-        updateTask = Task { @MainActor in
-            self.objectWillChange.send()
-            self.updateTask = nil
-        }
-    }
-}
-
-// MARK: - Selected
-
-@propertyWrapper
-struct Selected<Value: Equatable>: DynamicProperty {
-    private class Storage: SelectedStorage<Value> {
-        var selector: () -> Value
-
-        init(selector: @escaping () -> Value, name: String? = nil) {
-            self.selector = selector
-            super.init(name: name)
-        }
-
-        override func select() -> Value {
-            let _r = selectedTracer.range("selector"); defer { _r() }
-            return selector()
-        }
-    }
-
-    @StateObject private var storage: Storage
-
-    var wrappedValue: Value { storage.value }
-
-    // reselect
-    func callAsFunction(_ selector: @escaping () -> Value) {
-        storage.selector = selector
-        storage.track()
-    }
-
-    init(_ selector: @escaping () -> Value, _ name: String? = nil) {
-        _storage = StateObject(wrappedValue: Storage(selector: selector, name: name))
-    }
-
-    init(wrappedValue: @autoclosure @escaping () -> Value, _ name: String? = nil) {
-        self.init(wrappedValue, name)
-    }
-}
-
-// MARK: - Computed
-
-@propertyWrapper
-struct Computed<Input, Value: Equatable>: DynamicProperty {
-    private class Storage: SelectedStorage<Value> {
-        var defaultValue: Value
-        var compute: (Input) -> Value
-        var input: Input?
-
-        init(defaultValue: Value, name: String? = nil, compute: @escaping (Input) -> Value) {
-            self.defaultValue = defaultValue
-            self.compute = compute
-            super.init(name: name)
-        }
-
-        override func select() -> Value {
-            let _r = selectedTracer.range("compute"); defer { _r() }
-            return input.map { compute($0) } ?? defaultValue
-        }
-    }
-
-    private let obj: Storage
-    @StateObject private var storage: Storage
-
-    var wrappedValue: Value { obj.value }
-
-    // setup
-    func callAsFunction(_ input: Input) {
-        obj.input = input
-        obj.track()
-    }
-
-    init(wrappedValue: Value, _ name: String, _ compute: @escaping (Input) -> Value) {
-        let obj = Storage(defaultValue: wrappedValue, name: name, compute: compute)
-        self.obj = obj
-        _storage = StateObject(wrappedValue: obj)
-    }
-
-    init(wrappedValue: Value, _ compute: @escaping (Input) -> Value) {
-        let obj = Storage(defaultValue: wrappedValue, name: nil, compute: compute)
-        self.obj = obj
-        _storage = StateObject(wrappedValue: obj)
-    }
-}
-
-extension View {
-    func compute<Input: Equatable, Value: Equatable>(_ wrapper: Computed<Input, Value>, _ input: Input) -> some View {
-        onChange(of: input, initial: true) { wrapper(input) }
-    }
-
-    func compute<T0: Equatable, T1: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1), Value>, _ input: (T0, T1)) -> some View {
-        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
-    }
-
-    func compute<T0: Equatable, T1: Equatable, T2: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2), Value>, _ input: (T0, T1, T2)) -> some View {
-        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
-    }
-
-    func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3), Value>, _ input: (T0, T1, T2, T3)) -> some View {
-        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
-    }
-
-    func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3, T4), Value>, _ input: (T0, T1, T2, T3, T4)) -> some View {
-        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
-    }
-
-    func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3, T4, T5), Value>, _ input: (T0, T1, T2, T3, T4, T5)) -> some View {
-        onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
-    }
-}
-
 // MARK: - Selector
 
-protocol _StoreSelectorProtocol: AnyObject {
+protocol _SelectorProtocol: AnyObject {
     associatedtype Props: Equatable
     var props: Props? { get }
     func onUpdate()
@@ -530,7 +377,7 @@ protocol _StoreSelectorProtocol: AnyObject {
     typealias Tracked<T: Equatable> = _Tracked<Self, T>
 }
 
-class StoreSelector<Props: Equatable>: _StoreSelectorProtocol, ObservableObject, CancellableHolder {
+class _Selector<Props: Equatable>: _SelectorProtocol, ObservableObject, CancellableHolder {
     struct Configs {
         var name: String?
         var syncUpdate: Bool
@@ -581,7 +428,7 @@ class StoreSelector<Props: Equatable>: _StoreSelectorProtocol, ObservableObject,
 // MARK: - Tracked
 
 @propertyWrapper
-struct _Tracked<Instance: _StoreSelectorProtocol, Value: Equatable> {
+struct _Tracked<Instance: _SelectorProtocol, Value: Equatable> {
     let name: String?
     let selector: (Instance.Props) -> Value
     var value: Value?
@@ -625,7 +472,7 @@ struct _Tracked<Instance: _StoreSelectorProtocol, Value: Equatable> {
 
 // MARK: - SelectorProtocol
 
-private extension _StoreSelectorProtocol {
+private extension _SelectorProtocol {
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Tracked<T>>) -> T {
         let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
         return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
@@ -657,20 +504,33 @@ private extension _StoreSelectorProtocol {
     }
 }
 
-struct WithSelector<Props: Equatable, S: StoreSelector<Props>, Content: View>: View {
-    let selector: S
-    let props: Props
-    @ViewBuilder let content: () -> Content
+protocol SelectorHolder {
+    associatedtype Selector: _Selector<Monostate>
+    typealias SelectorBase = _Selector<Monostate>
+    var selector: Selector { get }
+}
 
-    var body: some View {
+extension SelectorHolder {
+    func setupSelector<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
+        selector.setup(.value)
+        return content()
+    }
+}
+
+protocol ComputedSelectorHolder {
+    associatedtype SelectorProps: Equatable
+    associatedtype Selector: _Selector<SelectorProps>
+    typealias SelectorBase = _Selector<SelectorProps>
+    var selector: Selector { get }
+}
+
+extension ComputedSelectorHolder {
+    func setupSelector<Content: View>(_ props: SelectorProps, @ViewBuilder content: @escaping () -> Content) -> some View {
         selector.setup(props)
         return content()
-            .onChange(of: props) { selector.retrackSubject.send() }
-    }
-
-    init(_ selector: S, _ props: Props, @ViewBuilder content: @escaping () -> Content) {
-        self.selector = selector
-        self.props = props
-        self.content = content
+            .onChange(of: props) {
+                selector.props = props
+                selector.retrackSubject.send()
+            }
     }
 }

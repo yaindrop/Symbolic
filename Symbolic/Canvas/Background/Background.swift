@@ -6,23 +6,23 @@ private enum GridLineType: CaseIterable {
     case axis
 }
 
-struct Background: View {
-    var body: some View {
-        WithSelector(selector, .value) {
-            linePaths
-        }
-    }
-
-    // MARK: private
-
-    private class Selector: StoreSelector<Monostate> {
+struct Background: View, SelectorHolder {
+    class Selector: SelectorBase {
         @Tracked({ global.viewport.info }) var viewportInfo
         @Tracked({ global.viewport.store.viewSize }) var viewSize
         @Tracked({ global.viewport.worldRect }) var worldRect
         @Tracked({ global.grid.grid.cellSize }) var cellSize
     }
 
-    @StateObject private var selector = Selector()
+    @StateObject var selector = Selector()
+
+    var body: some View {
+        setupSelector {
+            linePaths
+        }
+    }
+
+    // MARK: private
 
     private static let targetCellSize: Scalar = 24
     private static let gridLineColor: Color = .red

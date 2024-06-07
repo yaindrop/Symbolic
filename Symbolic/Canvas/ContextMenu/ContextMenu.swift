@@ -34,37 +34,27 @@ class ContextMenuStore: Store {
     }
 }
 
-struct ContextMenuRoot: View {
+struct ContextMenuRoot: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.contextMenu.menus }) var menus
+    }
+
+    @StateObject var selector = Selector()
+
     var body: some View {
-        WithSelector(selector, .value) {
+        setupSelector {
             ZStack {
                 ForEach(Array(selector.menus)) { ContextMenuView(data: $0) }
             }
         }
     }
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.contextMenu.menus }) var menus
-    }
-
-    @StateObject private var selector = Selector()
 }
 
 // MARK: - ContextMenuView
 
-struct ContextMenuView: View {
-    let data: ContextMenuData
-
-    var body: some View {
-        WithSelector(selector, data) {
-            wrapper
-                .if(selector.bounds == nil) { $0.hidden() }
-        }
-    }
-
-    // MARK: private
-
-    private class Selector: StoreSelector<ContextMenuData> {
+struct ContextMenuView: View, ComputedSelectorHolder {
+    typealias SelectorProps = ContextMenuData
+    class Selector: SelectorBase {
         @Tracked({ global.viewport.store.viewSize }) var viewSize
         @Tracked({ global.activeItem.activePath }) var focusedPath
         @Tracked({ global.activeItem.focusedGroup }) var focusedGroup
@@ -78,7 +68,18 @@ struct ContextMenuView: View {
         }) var bounds
     }
 
-    @StateObject private var selector = Selector()
+    @StateObject var selector = Selector()
+
+    let data: ContextMenuData
+
+    var body: some View {
+        setupSelector(data) {
+            wrapper
+                .if(selector.bounds == nil) { $0.hidden() }
+        }
+    }
+
+    // MARK: private
 
     @State private var menuId: UUID = .init()
     @State private var prevBounds: CGRect = .zero

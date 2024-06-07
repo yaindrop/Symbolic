@@ -2,9 +2,17 @@ import SwiftUI
 
 // MARK: - ActiveItemView
 
-struct ActiveItemView: View {
+struct ActiveItemView: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Tracked({ global.viewport.info }) var viewport
+        @Tracked({ global.activeItem.activePaths }) var activePaths
+        @Tracked({ global.activeItem.activeGroups }) var activeGroups
+    }
+
+    @StateObject var selector = Selector()
+
     var body: some View { tracer.range("ActiveItemView body") { build {
-        WithSelector(selector, .value) {
+        setupSelector {
             ForEach(selector.activeGroups) {
                 GroupBounds(group: $0, viewport: selector.viewport)
             }
@@ -14,40 +22,31 @@ struct ActiveItemView: View {
             SelectionBounds()
         }
     } } }
-
-    // MARK: private
-
-    private class Selector: StoreSelector<Monostate> {
-        @Tracked({ global.viewport.info }) var viewport
-        @Tracked({ global.activeItem.activePaths }) var activePaths
-        @Tracked({ global.activeItem.activeGroups }) var activeGroups
-    }
-
-    @StateObject private var selector = Selector()
 }
 
 // MARK: - GroupBounds
 
 extension ActiveItemView {
-    struct GroupBounds: View {
-        let group: ItemGroup
-        let viewport: ViewportInfo
-
-        var body: some View {
-            WithSelector(selector, group.id) {
-                boundsRect
-            }
-        }
-
-        // MARK: private
-
-        private class Selector: StoreSelector<UUID> {
+    struct GroupBounds: View, ComputedSelectorHolder {
+        typealias SelectorProps = UUID
+        class Selector: SelectorBase {
             @Tracked({ groupId in global.activeItem.focusedItemId == groupId }) var focused
             @Tracked({ groupId in global.activeItem.selectedItemIds.contains(groupId) }) var selected
             @Tracked({ groupId in global.activeItem.boundingRect(itemId: groupId) }) var bounds
         }
 
-        @StateObject private var selector = Selector()
+        @StateObject var selector = Selector()
+
+        let group: ItemGroup
+        let viewport: ViewportInfo
+
+        var body: some View {
+            setupSelector(group.id) {
+                boundsRect
+            }
+        }
+
+        // MARK: private
 
         private var toView: CGAffineTransform { viewport.worldToView }
 
@@ -92,24 +91,25 @@ extension ActiveItemView {
 // MARK: - PathBounds
 
 extension ActiveItemView {
-    struct PathBounds: View {
+    struct PathBounds: View, ComputedSelectorHolder {
+        typealias SelectorProps = UUID
+        class Selector: SelectorBase {
+            @Tracked({ pathId in global.activeItem.focusedItemId == pathId }) var focused
+            @Tracked({ pathId in global.activeItem.selectedItemIds.contains(pathId) }) var selected
+        }
+
+        @StateObject var selector = Selector()
+
         let path: Path
         let viewport: ViewportInfo
 
         var body: some View { tracer.range("PathBounds body") {
-            WithSelector(selector, path.id) {
+            setupSelector(path.id) {
                 boundsRect
             }
         } }
 
         // MARK: private
-
-        private class Selector: StoreSelector<UUID> {
-            @Tracked({ pathId in global.activeItem.focusedItemId == pathId }) var focused
-            @Tracked({ pathId in global.activeItem.selectedItemIds.contains(pathId) }) var selected
-        }
-
-        @StateObject private var selector = Selector()
 
         private var toView: CGAffineTransform { viewport.worldToView }
 
@@ -150,20 +150,20 @@ extension ActiveItemView {
 // MARK: - SelectionBounds
 
 extension ActiveItemView {
-    struct SelectionBounds: View {
+    struct SelectionBounds: View, SelectorHolder {
+        class Selector: SelectorBase {
+            @Tracked({ global.activeItem.selectionBounds }) var bounds
+        }
+
+        @StateObject var selector = Selector()
+
         var body: some View {
-            WithSelector(selector, .value) {
+            setupSelector {
                 boundsRect
             }
         }
 
         // MARK: private
-
-        private class Selector: StoreSelector<Monostate> {
-            @Tracked({ global.activeItem.selectionBounds }) var bounds
-        }
-
-        @StateObject private var selector = Selector()
 
         @State private var dashPhase: Scalar = 0
 

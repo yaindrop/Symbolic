@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - CanvasView
 
 struct CanvasView: View {
-    @StateObject var multipleTouch = MultipleTouchModel()
+    @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
     // MARK: body
@@ -104,9 +104,19 @@ struct CanvasView: View {
     } }
 }
 
-struct ItemsView: View {
+struct ItemsView: View, SelectorHolder {
+    class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "ItemsView", syncUpdate: true) }
+
+        @Tracked("ItemsView toView", { global.viewport.toView }) var toView
+        @Tracked("ItemsView allPaths", { global.item.allPaths }) var allPaths
+        @Tracked("ItemsView activePathId", { global.activeItem.focusedItemId }) var activePathId
+    }
+
+    @StateObject var selector = Selector()
+
     var body: some View { tracer.range("ItemsView body") {
-        WithSelector(selector, .value) {
+        setupSelector {
             ForEach(selector.allPaths.filter { $0.id != selector.activePathId }) { p in
                 SUPath { path in p.append(to: &path) }
                     .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
@@ -115,19 +125,6 @@ struct ItemsView: View {
             .blur(radius: 1)
         }
     } }
-
-    private class Selector: StoreSelector<Monostate> {
-        override var configs: Configs { .init(name: "ItemsView", syncUpdate: true) }
-
-        @Tracked("ItemsView toView", { global.viewport.toView })
-        var toView: CGAffineTransform
-        @Tracked("ItemsView allPaths", { global.item.allPaths })
-        var allPaths: [Path]
-        @Tracked("ItemsView activePathId", { global.activeItem.focusedItemId })
-        var activePathId: UUID?
-    }
-
-    @StateObject private var selector = Selector()
 }
 
 #Preview {

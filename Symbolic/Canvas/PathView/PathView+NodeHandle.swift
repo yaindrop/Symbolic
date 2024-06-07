@@ -24,11 +24,11 @@ extension PathView {
 
         var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { subtracer.range("NodeHandle \(nodeId)") { build {
+        var body: some View { subtracer.range("NodeHandle \(nodeId)") {
             setupSelector {
                 handle
             }
-        }}}
+        } }
 
         // MARK: private
 

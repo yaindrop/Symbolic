@@ -4,24 +4,23 @@ import SwiftUI
 
 struct ActiveItemView: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.viewport.info }) var viewport
         @Selected({ global.activeItem.activePaths }) var activePaths
         @Selected({ global.activeItem.activeGroups }) var activeGroups
     }
 
     @StateObject var selector = Selector()
 
-    var body: some View { tracer.range("ActiveItemView body") { build {
+    var body: some View { tracer.range("ActiveItemView body") {
         setupSelector {
             ForEach(selector.activeGroups) {
-                GroupBounds(group: $0, viewport: selector.viewport)
+                GroupBounds(group: $0)
             }
             ForEach(selector.activePaths) {
-                PathBounds(path: $0, viewport: selector.viewport)
+                PathBounds(path: $0)
             }
             SelectionBounds()
         }
-    } } }
+    } }
 }
 
 // MARK: - GroupBounds
@@ -30,6 +29,8 @@ extension ActiveItemView {
     struct GroupBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
+            override var configs: Configs { .init(syncUpdate: true) }
+
             @Selected({ global.activeItem.focusedItemId == $0 }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
             @Selected({ global.activeItem.boundingRect(itemId: $0) }) var bounds
@@ -38,7 +39,6 @@ extension ActiveItemView {
         @StateObject var selector = Selector()
 
         let group: ItemGroup
-        let viewport: ViewportInfo
 
         var body: some View {
             setupSelector(group.id) {
@@ -47,8 +47,6 @@ extension ActiveItemView {
         }
 
         // MARK: private
-
-        private var toView: CGAffineTransform { viewport.worldToView }
 
         @ViewBuilder private var boundsRect: some View {
             if let bounds = selector.bounds {
@@ -94,14 +92,16 @@ extension ActiveItemView {
     struct PathBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
+            override var configs: Configs { .init(syncUpdate: true) }
+
             @Selected({ global.activeItem.focusedItemId == $0 }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
+            @Selected({ global.activeItem.boundingRect(itemId: $0) }) var bounds
         }
 
         @StateObject var selector = Selector()
 
         let path: Path
-        let viewport: ViewportInfo
 
         var body: some View { tracer.range("PathBounds body") {
             setupSelector(path.id) {
@@ -111,29 +111,25 @@ extension ActiveItemView {
 
         // MARK: private
 
-        private var toView: CGAffineTransform { viewport.worldToView }
-
-        private var bounds: CGRect {
-            path.boundingRect.applying(toView)
-        }
-
         @ViewBuilder private var boundsRect: some View {
-            RoundedRectangle(cornerRadius: 2)
-                .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
-                .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
-                .multipleTouchGesture(.init(
-                    onPress: {
-                        global.canvasAction.start(continuous: .moveSelection)
-                    },
-                    onPressEnd: { cancelled in
-                        global.canvasAction.end(continuous: .moveSelection)
-                        if cancelled { global.documentUpdater.cancel() }
-                    },
-                    onTap: { _ in global.activeItem.onTap(pathId: path.id) },
-                    onDrag: { updateDrag($0, pending: true) },
-                    onDragEnd: { updateDrag($0) }
-                ))
-                .framePosition(rect: bounds)
+            if let bounds = selector.bounds {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
+                    .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
+                    .multipleTouchGesture(.init(
+                        onPress: {
+                            global.canvasAction.start(continuous: .moveSelection)
+                        },
+                        onPressEnd: { cancelled in
+                            global.canvasAction.end(continuous: .moveSelection)
+                            if cancelled { global.documentUpdater.cancel() }
+                        },
+                        onTap: { _ in global.activeItem.onTap(pathId: path.id) },
+                        onDrag: { updateDrag($0, pending: true) },
+                        onDragEnd: { updateDrag($0) }
+                    ))
+                    .framePosition(rect: bounds)
+            }
         }
 
         private func updateDrag(_ v: PanInfo, pending: Bool = false) {
@@ -152,6 +148,8 @@ extension ActiveItemView {
 extension ActiveItemView {
     struct SelectionBounds: View, SelectorHolder {
         class Selector: SelectorBase {
+            override var configs: Configs { .init(syncUpdate: true) }
+
             @Selected({ global.activeItem.selectionBounds }) var bounds
         }
 

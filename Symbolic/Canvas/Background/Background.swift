@@ -8,6 +8,8 @@ private enum GridLineType: CaseIterable {
 
 struct Background: View, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(syncUpdate: true) }
+
         @Selected({ global.viewport.info }) var viewportInfo
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.viewport.worldRect }) var worldRect

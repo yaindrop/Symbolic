@@ -11,7 +11,7 @@ struct CanvasActionPanel: View, SelectorHolder {
 
     @StateObject var selector = Selector()
 
-    var body: some View { tracer.range("CanvasActionPanel body") { build {
+    var body: some View { tracer.range("CanvasActionPanel body") {
         setupSelector {
             VStack(alignment: .leading) {
                 if !selector.continuousHints.isEmpty {
@@ -35,5 +35,5 @@ struct CanvasActionPanel: View, SelectorHolder {
             }
             .font(.footnote)
         }
-    } } }
+    } }
 }

@@ -52,14 +52,15 @@ struct ContextMenuRoot: View, SelectorHolder {
 
 // MARK: - ContextMenuView
 
-struct ContextMenuView: View, ComputedSelectorHolder {
-    typealias SelectorProps = ContextMenuData
+struct ContextMenuView: View, EquatableBy, ReflectiveSelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(syncUpdate: true) }
+
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.activeItem.activePath }) var focusedPath
         @Selected({ global.activeItem.focusedGroup }) var focusedGroup
-        @Selected({ data in
-            switch data {
+        @Selected({
+            switch $0.data {
             case .focusedPath: global.activeItem.activePath.map { global.activeItem.boundingRect(itemId: $0.id) }
             case .focusedGroup: global.activeItem.focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) }
             case .selection: global.activeItem.selectionBounds
@@ -72,8 +73,10 @@ struct ContextMenuView: View, ComputedSelectorHolder {
 
     let data: ContextMenuData
 
+    var equatableBy: some Equatable { data }
+
     var body: some View {
-        setupSelector(data) {
+        setupSelector {
             wrapper
                 .if(selector.bounds == nil) { $0.hidden() }
         }

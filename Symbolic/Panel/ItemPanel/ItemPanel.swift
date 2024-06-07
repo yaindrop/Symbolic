@@ -85,7 +85,7 @@ extension ItemPanel {
 
         // MARK: private
 
-        @ViewBuilder var content: some View {
+        @ViewBuilder private var content: some View {
             if let pathId = selector.item?.pathId {
                 PathRow(pathId: pathId)
             } else if let group = selector.item?.group {
@@ -186,18 +186,19 @@ extension ItemPanel {
 // MARK: - PathRow
 
 extension ItemPanel {
-    struct PathRow: View, ComputedSelectorHolder {
-        typealias SelectorProps = UUID
+    struct PathRow: View, EquatableBy, ReflectiveSelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.path.path(id: $0) }) var path
+            @Selected({ global.path.path(id: $0.pathId) }) var path
         }
 
         @StateObject var selector = Selector()
 
         let pathId: UUID
 
+        var equatableBy: some Equatable { pathId }
+
         var body: some View { tracer.range("PathRow body") {
-            setupSelector(pathId) {
+            setupSelector {
                 content
             }
         } }

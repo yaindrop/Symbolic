@@ -69,3 +69,16 @@ extension View {
         clipShape(UnevenRoundedRectangle(cornerRadii: .init(topLeading: topLeading, bottomLeading: bottomLeading, bottomTrailing: bottomTrailing, topTrailing: topTrailing)))
     }
 }
+
+extension View {
+    @ViewBuilder func background(level: Int) -> some View {
+        switch level {
+        case 0: background(.background)
+        case 1: background(.secondary)
+        case 2: background(.tertiary)
+        case 3: background(.quaternary)
+        case 4: background(.quinary)
+        default: if level < 0 { background(.clear) } else { background(.quinary) }
+        }
+    }
+}

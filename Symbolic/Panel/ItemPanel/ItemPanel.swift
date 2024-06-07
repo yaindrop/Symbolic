@@ -7,8 +7,10 @@ struct ItemPanel: View {
     let panelId: UUID
 
     var body: some View { tracer.range("ItemPanel body") {
-        panel.frame(width: 320)
+        content
+            .frame(width: 320)
     } }
+    
 
     // MARK: private
 
@@ -16,7 +18,7 @@ struct ItemPanel: View {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
-    @ViewBuilder private var panel: some View {
+    @ViewBuilder private var content: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "Items")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
@@ -30,88 +32,111 @@ struct ItemPanel: View {
 
     @ViewBuilder private var scrollView: some View {
         ManagedScrollView(model: scrollViewModel) { _ in
-            content
+            items
         }
         .frame(maxHeight: 400)
         .fixedSize(horizontal: false, vertical: true)
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
     }
 
-    @ViewBuilder private var content: some View {
+    @ViewBuilder private var items: some View {
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Items")
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 ForEach(rootIds) {
                     ItemRow(itemId: $0)
+                    if $0 != rootIds.last {
+                        Divider()
+                    }
                 }
             }
+            .background(.ultraThickMaterial)
+            .clipRounded(radius: 12)
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 24)
     }
 }
 
+// MARK: - ItemRow
+
 extension ItemPanel {
-    struct ItemRow: View {
+    struct ItemRow: View, EquatableBy {
         let itemId: UUID
 
-        var body: some View {
-            Group {
-                if let pathId = item?.pathId {
-                    PathRow(pathId: pathId)
-                } else if let group = item?.group {
-                    GroupRow(group: group)
-                }
-            }
-            .if(isRoot) {
-                $0.if(item?.group != nil) {
-                    $0.clipRounded(radius: 12, border: .ultraThinMaterial, stroke: .init(lineWidth: 4))
-                } else: {
-                    $0.clipRounded(radius: 12)
-                }
-            } else: {
-                $0.clipRounded(leading: 12, trailing: 0)
-            }
-        }
+        var equatableBy: some Equatable { itemId }
 
+        var body: some View { tracer.range("ItemRow body") {
+            content
+                .compute(_item, itemId)
+        } }
+        
         init(itemId: UUID) {
             self.itemId = itemId
-            _item = .init { global.item.item(id: itemId) }
-            _isRoot = .init { global.item.rootIds.contains(itemId) }
+            _item(itemId)
+            print("dbgdbg", item)
         }
 
-        @Selected private var item: Item?
-        @Selected private var isRoot: Bool
-    }
+        // MARK: private
 
-    struct GroupRow: View {
+        @Computed({ (itemId: UUID) in global.item.item(id: itemId) })
+        private var item: Item? = nil
+
+        @ViewBuilder var content: some View {
+            if let pathId = item?.pathId {
+                PathRow(pathId: pathId)
+            } else if let group = item?.group {
+                GroupRow(group: group)
+            }
+        }
+    }
+}
+
+// MARK: - GroupRow
+
+extension ItemPanel {
+    struct GroupRow: View, EquatableBy {
         let group: ItemGroup
 
-        var body: some View {
+        var equatableBy: some Equatable { group }
+
+        var body: some View { tracer.range("GroupRow body") {
+            content
+                .compute(_depth, group.id)
+        } }
+
+        // MARK: private
+
+        @Computed({ (itemId: UUID) in global.item.depth(itemId: itemId) })
+        private var depth: Int = 0
+
+        @State private var expanded = true
+
+        private var content: some View {
             VStack {
-                title
+                row
                 if expanded {
                     members
                 }
             }
-            .background(.regularMaterial)
         }
 
-        init(group: ItemGroup) {
-            self.group = group
-        }
-
-        @State private var expanded = false
-
-        private var title: some View {
+        private var row: some View {
             HStack {
-                expandButton
-                Text(group.id.shortDescription)
-                    .font(.subheadline)
-                    .padding(.vertical, 12)
+                name
                 Spacer()
                 menu
             }
+        }
+
+        private var name: some View {
+            HStack {
+                expandButton
+                    .padding(4)
+                Text(group.id.shortDescription)
+                    .font(.subheadline)
+            }
+            .padding(12)
         }
 
         private var expandButton: some View {
@@ -119,8 +144,7 @@ extension ItemPanel {
                 withAnimation { expanded.toggle() }
             } label: {
                 Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                    .padding(.horizontal, 12)
-                    .frame(maxHeight: .infinity)
+                    .frame(width: 24, height: 24)
             }
             .tint(.label)
         }
@@ -137,60 +161,78 @@ extension ItemPanel {
         }
 
         private var members: some View {
-            VStack {
-                ForEach(group.members) {
-                    ItemRow(itemId: $0)
+            HStack(spacing: 0) {
+                VStack {
+                    ForEach(group.members) {
+                        ItemRow(itemId: $0)
+                            .id($0)
+                    }
                 }
+                .if(depth < 5) { $0.background(.secondary) }
+                .clipRounded(radius: 12, border: depth < 5 ? Color.clear : Color.label)
+                .padding(.leading, 12)
             }
-            .padding(.leading.union(.bottom), 12)
         }
     }
+}
 
+// MARK: - PathRow
+
+extension ItemPanel {
     struct PathRow: View {
         let pathId: UUID
 
-        var body: some View {
-            title
-                .background(.ultraThinMaterial)
-        }
-
+        var body: some View { tracer.range("PathRow body") {
+            content
+                .compute(_path, pathId)
+        } }
+        
         init(pathId: UUID) {
             self.pathId = pathId
-            _path = .init { global.path.path(id: pathId) }
+            _path(pathId)
+            print("dbgdbg", path)
         }
 
-        struct PathThumbnail: View {
+        // MARK: private
+
+        @Computed({ (pathId: UUID) in global.path.path(id: pathId) })
+        private var path: Path? = nil
+
+        private struct PathThumbnail: View {
             let path: Path
 
-            var body: some View { tracer.range("PathThumbnail") { build {
-                let size = CGSize(24, 24)
+            static let size = CGSize(24, 24)
+
+            var body: some View { tracer.range("PathThumbnail body") {
                 Rectangle()
                     .opacity(.zero)
                     .overlay {
                         SUPath { path.append(to: &$0) }
-                            .transform(.init(fit: path.boundingRect, to: .init(size)))
+                            .transform(.init(fit: path.boundingRect, to: .init(Self.size)))
                             .stroke(.primary, lineWidth: 0.5)
                             .fill(.primary.opacity(0.2))
                     }
-                    .frame(size: size)
-            } } }
+                    .frame(size: Self.size)
+            } }
         }
 
-        @Selected private var path: Path?
+        @ViewBuilder private var content: some View {
+            HStack {
+                name
+                Spacer()
+                menu
+            }
+        }
 
-        @ViewBuilder private var title: some View {
+        @ViewBuilder private var name: some View {
             if let path {
                 HStack {
-                    HStack {
-                        PathThumbnail(path: path)
-                            .padding(4)
-                        Text(path.id.shortDescription)
-                    }
-                    .font(.subheadline)
-                    .padding(12)
-                    Spacer()
-                    menu
+                    PathThumbnail(path: path)
+                        .padding(4)
+                    Text(pathId.shortDescription)
+                        .font(.subheadline)
                 }
+                .padding(12)
             }
         }
 

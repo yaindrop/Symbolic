@@ -51,6 +51,10 @@ extension ItemStoreProtocol {
         return 1 + group.members.map { height(itemId: $0) }.max()!
     }
 
+    func depth(itemId: UUID) -> Int {
+        ancestorIds(of: itemId).count
+    }
+
     func expandedItems(rootItemId: UUID) -> [Item] {
         guard let item = item(id: rootItemId) else { return [] }
         guard let group = item.group else { return [item] }

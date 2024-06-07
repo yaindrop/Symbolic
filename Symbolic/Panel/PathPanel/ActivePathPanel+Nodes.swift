@@ -1,6 +1,32 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Nodes
+
+extension ActivePathPanel {
+    struct Nodes: View {
+        let path: Path
+
+        @ViewBuilder var body: some View { tracer.range("ActivePathPanel Nodes body") {
+            VStack(spacing: 4) {
+                PanelSectionTitle(name: "Nodes")
+                VStack(spacing: 0) {
+                    ForEach(path.nodes) { node in
+                        NodePanel(pathId: path.id, nodeId: node.id)
+                        if node.id != path.nodes.last?.id {
+                            Divider()
+                        }
+                    }
+                }
+                .background(.ultraThickMaterial)
+                .clipRounded(radius: 12)
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 24)
+        }}
+    }
+}
+
 // MARK: - NodePanel
 
 extension ActivePathPanel {
@@ -12,9 +38,6 @@ extension ActivePathPanel {
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
             content
-                .compute(_path, pathId)
-                .compute(_node, (pathId, nodeId))
-                .compute(_nodeType, (pathId, nodeId))
                 .compute(_focused, nodeId)
                 .onChange(of: focused) {
                     withAnimation { expanded = focused }
@@ -23,22 +46,13 @@ extension ActivePathPanel {
 
         // MARK: private
 
-        @Computed({ (pathId: UUID) in global.path.path(id: pathId) })
-        private var path: Path? = nil
-
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.path.path(id: pathId)?.node(id: nodeId) })
-        private var node: PathNode? = nil
-
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.pathProperty.property(id: pathId)?.nodeType(id: nodeId) })
-        private var nodeType: PathNodeType? = nil
-
         @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
         private var focused: Bool = false
 
         private var content: some View {
             VStack {
                 HStack {
-                    titleMenu
+                    NodeMenu(pathId: pathId, nodeId: nodeId) { title }
                     Spacer()
                     expandButton
                 }
@@ -49,10 +63,6 @@ extension ActivePathPanel {
                     .clipped()
             }
             .padding(12)
-        }
-
-        private var mergableNode: PathNode? {
-            path?.mergableNode(id: nodeId)
         }
 
         @State private var expanded = false
@@ -76,44 +86,72 @@ extension ActivePathPanel {
             .if(focused) { $0.foregroundStyle(.blue) }
         }
 
-        @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel NodePanel titleMenu") {
-            Memo {
-                Menu {
-                    Label("\(nodeId)", systemImage: "number")
-
-                    Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
-                    if mergableNode != nil {
-                        Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
-                    }
-                    Divider()
-                    ControlGroup {
-                        Button("Corner") {
-                            global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .corner)))))
-                        }
-                        .disabled(nodeType == .corner)
-                        Button("Locked") {
-                            global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .locked)))))
-                        }
-                        .disabled(nodeType == .locked)
-                        Button("Mirrored") {
-                            global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .mirrored)))))
-                        }
-                        .disabled(nodeType == .mirrored)
-                    } label: {
-                        Text("Node Type")
-                    }
-                    Divider()
-                    Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
-                    Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-                } label: {
-                    title
-                }
-                .tint(.label)
-            } deps: { node; focused; nodeType }
-        } }
-
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
             { global.documentUpdater.update(activePath: .setNodePosition(.init(nodeId: nodeId, position: $0)), pending: pending) }
+        }
+    }
+}
+
+// MARK: - NodeMenu
+
+private extension ActivePathPanel {
+    struct NodeMenu<Content: View>: View, EquatableBy {
+        let pathId: UUID
+        let nodeId: UUID
+        @ViewBuilder let content: () -> Content
+
+        var equatableBy: some Equatable { pathId; nodeId }
+
+        var body: some View { tracer.range("ActivePathPanel NodeMenu body") {
+            menu
+                .compute(_mergableNode, (pathId, nodeId))
+                .compute(_nodeType, (pathId, nodeId))
+                .compute(_focused, nodeId)
+        } }
+
+        // MARK: private
+
+        @Computed({ (pathId: UUID, nodeId: UUID) in global.path.path(id: pathId)?.mergableNode(id: nodeId) })
+        private var mergableNode: PathNode? = nil
+
+        @Computed({ (pathId: UUID, nodeId: UUID) in global.pathProperty.property(id: pathId)?.nodeType(id: nodeId) })
+        private var nodeType: PathNodeType? = nil
+
+        @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
+        private var focused: Bool = false
+
+        var menu: some View {
+            Menu {
+                Label("\(nodeId)", systemImage: "number")
+
+                Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
+                if mergableNode != nil {
+                    Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
+                }
+                Divider()
+                ControlGroup {
+                    Button("Corner") {
+                        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .corner)))))
+                    }
+                    .disabled(nodeType == .corner)
+                    Button("Locked") {
+                        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .locked)))))
+                    }
+                    .disabled(nodeType == .locked)
+                    Button("Mirrored") {
+                        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .mirrored)))))
+                    }
+                    .disabled(nodeType == .mirrored)
+                } label: {
+                    Text("Node Type")
+                }
+                Divider()
+                Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
+                Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
+            } label: {
+                content()
+            }
+            .tint(.label)
         }
 
         private func toggleFocus() {
@@ -145,7 +183,7 @@ private extension ActivePathPanel {
 
         var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { tracer.range("ActivePathPanel NodeDetailPanel") {
+        var body: some View { tracer.range("ActivePathPanel NodeDetailPanel body") {
             content
                 .compute(_prevPair, (pathId, nodeId))
                 .compute(_node, (pathId, nodeId))

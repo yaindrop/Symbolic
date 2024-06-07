@@ -79,12 +79,8 @@ extension StoreManager {
         notifyAll(updating)
     }
 
-    func willUpdate(_ callback: @escaping () -> Void) {
-        updating.forSome {
-            $0.willUpdateSubject
-                .sink(receiveValue: callback)
-                .store(in: $0)
-        }
+    var willUpdate: AnyPublisher<Void, Never>? {
+        updating.map { $0.willUpdateSubject.eraseToAnyPublisher() }
     }
 
     func notify(subscriptionIds: Set<Int>) {
@@ -184,6 +180,7 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var value: Value
     fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
     fileprivate let willUpdateSubject = PassthroughSubject<Value, Never>()
+    fileprivate var willUpdateCancellable: AnyCancellable?
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
     var wrappedValue: Value {
@@ -350,8 +347,11 @@ extension _StoreProtocol {
         wrapper.didSetSubject.send(newValue)
 
         manager.notify(subscriptionIds: onChange(of: id))
-        manager.willUpdate {
-            wrapper.willUpdateSubject.send(wrapper.value)
+        if wrapper.willUpdateCancellable == nil {
+            wrapper.willUpdateCancellable = manager.willUpdate?.sink {
+                wrapper.willUpdateSubject.send(wrapper.value)
+                wrapper.willUpdateCancellable = nil
+            }
         }
     }
 
@@ -466,22 +466,27 @@ struct Computed<Input, Value: Equatable>: DynamicProperty {
         }
     }
 
+    private let obj: Storage
     @StateObject private var storage: Storage
 
-    var wrappedValue: Value { storage.value }
+    var wrappedValue: Value { obj.value }
 
     // setup
     func callAsFunction(_ input: Input) {
-        storage.input = input
-        storage.track()
+        obj.input = input
+        obj.track()
     }
 
     init(wrappedValue: Value, _ name: String, _ compute: @escaping (Input) -> Value) {
-        _storage = StateObject(wrappedValue: Storage(defaultValue: wrappedValue, name: name, compute: compute))
+        let obj = Storage(defaultValue: wrappedValue, name: name, compute: compute)
+        self.obj = obj
+        _storage = StateObject(wrappedValue: obj)
     }
 
     init(wrappedValue: Value, _ compute: @escaping (Input) -> Value) {
-        _storage = StateObject(wrappedValue: Storage(defaultValue: wrappedValue, name: nil, compute: compute))
+        let obj = Storage(defaultValue: wrappedValue, name: nil, compute: compute)
+        self.obj = obj
+        _storage = StateObject(wrappedValue: obj)
     }
 }
 

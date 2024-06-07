@@ -24,8 +24,7 @@
 		5723BF992BC39846002209F2 /* SymbolicUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */; };
 		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
 		572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* DocumentUpdater.swift */; };
-		5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */; };
-		5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */; };
+		5724877C2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift */; };
 		572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */; };
 		572487832BDF82420096DDE4 /* PathView+NodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* PathView+NodeHandle.swift */; };
 		572487852BDF832D0096DDE4 /* PathView+EdgeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* PathView+EdgeHandle.swift */; };
@@ -133,8 +132,7 @@
 		5723BF982BC39846002209F2 /* SymbolicUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		572487752BDBAF860096DDE4 /* DocumentUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentUpdater.swift; sourceTree = "<group>"; };
-		5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+Components.swift"; sourceTree = "<group>"; };
-		5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+NodePanel.swift"; sourceTree = "<group>"; };
+		5724877B2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+Nodes.swift"; sourceTree = "<group>"; };
 		5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+EdgePanel.swift"; sourceTree = "<group>"; };
 		572487822BDF82420096DDE4 /* PathView+NodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathView+NodeHandle.swift"; sourceTree = "<group>"; };
 		572487842BDF832D0096DDE4 /* PathView+EdgeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathView+EdgeHandle.swift"; sourceTree = "<group>"; };
@@ -319,9 +317,8 @@
 			isa = PBXGroup;
 			children = (
 				575C3CF52BD60C200035B758 /* ActivePathPanel.swift */,
-				5724877B2BDF80000096DDE4 /* ActivePathPanel+Components.swift */,
+				5724877B2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift */,
 				5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */,
-				5724877D2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift */,
 			);
 			path = PathPanel;
 			sourceTree = "<group>";
@@ -724,7 +721,7 @@
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
-				5724877C2BDF80000096DDE4 /* ActivePathPanel+Components.swift in Sources */,
+				5724877C2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57DD2A282C0321110046931C /* ItemPanel.swift in Sources */,
 				572552872BF0F563002147AE /* SimpleTracer.swift in Sources */,
@@ -772,7 +769,6 @@
 				574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,
-				5724877E2BDF80B00096DDE4 /* ActivePathPanel+NodePanel.swift in Sources */,
 				572487832BDF82420096DDE4 /* PathView+NodeHandle.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */,

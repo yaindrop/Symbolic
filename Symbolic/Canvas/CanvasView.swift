@@ -27,7 +27,7 @@ struct CanvasView: View {
             .onAppear {
                 global.panel.register(align: .bottomTrailing) { ActivePathPanel(panelId: $0) }
                 global.panel.register(align: .bottomLeading) { HistoryPanel(panelId: $0) }
-                global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
+//                global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
                 global.panel.register(align: .topTrailing) { DebugPanel(panelId: $0, multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
                 global.panel.register(align: .topLeading) { _ in CanvasActionPanel() }
             }
@@ -54,6 +54,7 @@ struct CanvasView: View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
             Text("sidebar")
                 .navigationTitle("Sidebar")
+            ItemPanel(panelId: .init())
         } detail: {
             ZStack {
                 canvas

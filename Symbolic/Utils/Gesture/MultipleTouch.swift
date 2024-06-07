@@ -19,7 +19,7 @@ struct PanInfo: Equatable {
 }
 
 extension PanInfo: CustomStringConvertible {
-    public var description: String { "(\(origin.shortDescription), \(offset.shortDescription)" }
+    public var description: String { "(\(origin.shortDescription), \(offset.shortDescription))" }
 }
 
 // MARK: - PinchInfo

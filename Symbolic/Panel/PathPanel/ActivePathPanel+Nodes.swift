@@ -37,17 +37,24 @@ extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
-            content
-                .compute(_focused, nodeId)
-                .onChange(of: focused) {
-                    withAnimation { expanded = focused }
-                }
+            WithSelector(selector, nodeId) {
+                content
+                    .onChange(of: selector.focused) {
+                        withAnimation { expanded = selector.focused }
+                    }
+            }
         } }
 
         // MARK: private
 
-        @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
-        private var focused: Bool = false
+        private class Selector: StoreSelector<UUID> {
+            override var configs: Configs { .init(name: "NodePanel") }
+
+            @Tracked("NodePanel focused", { nodeId in global.activeItem.pathFocusedPart?.nodeId == nodeId })
+            var focused
+        }
+
+        @StateObject private var selector = Selector()
 
         private var content: some View {
             VStack {
@@ -83,7 +90,7 @@ extension ActivePathPanel {
                 Text("\(nodeId.shortDescription)")
                     .font(.subheadline)
             }
-            .if(focused) { $0.foregroundStyle(.blue) }
+            .if(selector.focused) { $0.foregroundStyle(.blue) }
         }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
@@ -103,29 +110,36 @@ private extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodeMenu body") {
-            menu
-                .compute(_mergableNode, (pathId, nodeId))
-                .compute(_nodeType, (pathId, nodeId))
-                .compute(_focused, nodeId)
+            WithSelector(selector, .init(pathId: pathId, nodeId: nodeId)) {
+                menu
+            }
         } }
 
         // MARK: private
 
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.path.path(id: pathId)?.mergableNode(id: nodeId) })
-        private var mergableNode: PathNode? = nil
+        private struct Props: Equatable { let pathId: UUID, nodeId: UUID }
 
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.pathProperty.property(id: pathId)?.nodeType(id: nodeId) })
-        private var nodeType: PathNodeType? = nil
+        private class Selector: StoreSelector<Props> {
+            override var configs: Configs { .init(name: "NodePanel") }
 
-        @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
-        private var focused: Bool = false
+            @Tracked({ props in global.path.path(id: props.pathId)?.mergableNode(id: props.nodeId) })
+            var mergableNode
+
+            @Tracked({ props in global.pathProperty.property(id: props.pathId)?.nodeType(id: props.nodeId) })
+            var nodeType
+
+            @Tracked({ props in global.activeItem.pathFocusedPart?.nodeId == props.nodeId })
+            var focused
+        }
+
+        @StateObject private var selector = Selector()
 
         var menu: some View {
             Menu {
                 Label("\(nodeId)", systemImage: "number")
 
-                Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
-                if mergableNode != nil {
+                Button(selector.focused ? "Unfocus" : "Focus", systemImage: selector.focused ? "circle.slash" : "scope") { toggleFocus() }
+                if selector.mergableNode != nil {
                     Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
                 }
                 Divider()
@@ -133,15 +147,15 @@ private extension ActivePathPanel {
                     Button("Corner") {
                         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .corner)))))
                     }
-                    .disabled(nodeType == .corner)
+                    .disabled(selector.nodeType == .corner)
                     Button("Locked") {
                         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .locked)))))
                     }
-                    .disabled(nodeType == .locked)
+                    .disabled(selector.nodeType == .locked)
                     Button("Mirrored") {
                         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .mirrored)))))
                     }
-                    .disabled(nodeType == .mirrored)
+                    .disabled(selector.nodeType == .mirrored)
                 } label: {
                     Text("Node Type")
                 }
@@ -155,11 +169,11 @@ private extension ActivePathPanel {
         }
 
         private func toggleFocus() {
-            focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(node: nodeId)
+            selector.focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(node: nodeId)
         }
 
         private func mergeNode() {
-            if let mergableNode {
+            if let mergableNode = selector.mergableNode {
                 global.documentUpdater.update(path: .merge(.init(pathId: pathId, endingNodeId: nodeId, mergedPathId: pathId, mergedEndingNodeId: mergableNode.id)))
             }
         }
@@ -184,26 +198,34 @@ private extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodeDetailPanel body") {
-            content
-                .compute(_prevPair, (pathId, nodeId))
-                .compute(_node, (pathId, nodeId))
-                .compute(_edge, (pathId, nodeId))
-                .compute(_focused, nodeId)
+            WithSelector(selector, props) {
+                content
+            }
         } }
 
         // MARK: private
 
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.path.path(id: pathId)?.pair(before: nodeId) })
-        private var prevPair: Path.NodeEdgePair? = nil
+        private struct Props: Equatable { let pathId: UUID, nodeId: UUID }
 
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.path.path(id: pathId)?.node(id: nodeId) })
-        private var node: PathNode? = nil
+        private var props: Props { .init(pathId: pathId, nodeId: nodeId) }
 
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.path.path(id: pathId)?.segment(from: nodeId)?.edge })
-        private var edge: PathEdge? = nil
+        private class Selector: StoreSelector<Props> {
+            override var configs: Configs { .init(name: "NodePanel") }
 
-        @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
-        private var focused: Bool = false
+            @Tracked({ props in global.path.path(id: props.pathId)?.pair(before: props.nodeId) })
+            var prevPair
+
+            @Tracked({ props in global.path.path(id: props.pathId)?.node(id: props.nodeId) })
+            var node
+
+            @Tracked({ props in global.path.path(id: props.pathId)?.segment(from: props.nodeId)?.edge })
+            var edge
+
+            @Tracked({ props in global.activeItem.pathFocusedPart?.nodeId == props.nodeId })
+            var focused
+        }
+
+        @StateObject private var selector = Selector()
 
         private var content: some View {
             VStack(spacing: 12) {
@@ -217,7 +239,7 @@ private extension ActivePathPanel {
         }
 
         @ViewBuilder private var positionRow: some View {
-            if let node {
+            if let node = selector.node {
                 HStack {
                     Text("Position")
                         .font(.callout)
@@ -228,7 +250,7 @@ private extension ActivePathPanel {
         }
 
         @ViewBuilder private var cBeforeRow: some View {
-            if let prevPair {
+            if let prevPair = selector.prevPair {
                 Divider()
                 HStack {
                     HStack(spacing: 0) {
@@ -238,7 +260,7 @@ private extension ActivePathPanel {
                             .font(.caption2.monospaced())
                             .baselineOffset(-8)
                     }
-                    .if(focused) { $0.foregroundStyle(.orange.opacity(0.8)) }
+                    .if(selector.focused) { $0.foregroundStyle(.orange.opacity(0.8)) }
                     Spacer(minLength: 12)
                     PositionPicker(position: Point2(prevPair.edge.control1)) { updatePrevEdge(position: $0, pending: true) } onDone: { updatePrevEdge(position: $0) }
                 }
@@ -246,7 +268,7 @@ private extension ActivePathPanel {
         }
 
         @ViewBuilder private var cAfterRow: some View {
-            if let edge {
+            if let edge = selector.edge {
                 Divider()
                 HStack {
                     HStack(spacing: 0) {
@@ -256,7 +278,7 @@ private extension ActivePathPanel {
                             .font(.caption2.monospaced())
                             .baselineOffset(-8)
                     }
-                    .if(focused) { $0.foregroundStyle(.green.opacity(0.8)) }
+                    .if(selector.focused) { $0.foregroundStyle(.green.opacity(0.8)) }
                     Spacer(minLength: 12)
                     PositionPicker(position: Point2(edge.control0)) { updateEdge(position: $0, pending: true) } onDone: { updateEdge(position: $0) }
                 }
@@ -268,13 +290,13 @@ private extension ActivePathPanel {
         }
 
         private func updatePrevEdge(position: Point2, pending: Bool = false) {
-            if let prevPair {
+            if let prevPair = selector.prevPair {
                 global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: prevPair.node.id, edge: prevPair.edge.with(control0: .init(position)))), pending: pending)
             }
         }
 
         private func updateEdge(position: Point2, pending: Bool = false) {
-            if let edge {
+            if let edge = selector.edge {
                 global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: nodeId, edge: edge.with(control1: .init(position)))), pending: pending)
             }
         }

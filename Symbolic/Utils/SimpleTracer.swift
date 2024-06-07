@@ -116,6 +116,8 @@ extension Tracer.Node.Range {
 // MARK: - Tracer
 
 class Tracer {
+    let setupTime: ContinuousClock.Instant = .now
+
     func start() {
         nodes.removeAll()
         rangeStack.removeAll()
@@ -167,10 +169,11 @@ class Tracer {
         }
         nodes.append(node)
         if case let .range(r) = node {
+            let startTime = setupTime.duration(to: r.start)
             if r.type == .intent {
-                logInfo("[intent] \(r.tree)")
+                logInfo("[intent] (\(startTime)) \(r.tree)")
             } else {
-                let tree = r.buildTreeLines().enumerated().map { $0 == 0 ? " ... \($1)" : "     \($1)" }.joined(separator: "\n")
+                let tree = r.buildTreeLines().enumerated().map { $0 == 0 ? " ... (\(startTime)) \($1)" : "     \($1)" }.joined(separator: "\n")
                 logInfo(tree)
             }
         }

@@ -7,7 +7,9 @@ struct DebugPanel: View {
     var multipleTouchPress: MultipleTouchPressModel
 
     var body: some View {
-        panel.frame(width: 320)
+        WithSelector(selector, .value) {
+            panel.frame(width: 320)
+        }
     }
 
     var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
@@ -21,7 +23,11 @@ struct DebugPanel: View {
         }
     }
 
-    @Selected private var viewportInfo = global.viewport.info
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.viewport.info }) var viewportInfo
+    }
+
+    @StateObject private var selector = Selector()
 
     @ViewBuilder private var panel: some View {
         VStack {
@@ -32,7 +38,7 @@ struct DebugPanel: View {
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
             Divider()
-            Row(name: "Viewport", value: viewportInfo.description)
+            Row(name: "Viewport", value: selector.viewportInfo.description)
         }
         .padding(12)
         .background(.ultraThinMaterial)

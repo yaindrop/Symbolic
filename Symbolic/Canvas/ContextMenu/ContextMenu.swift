@@ -35,13 +35,19 @@ class ContextMenuStore: Store {
 }
 
 struct ContextMenuRoot: View {
-    @Selected private var menus = global.contextMenu.menus
-
     var body: some View {
-        ZStack {
-            ForEach(Array(menus)) { ContextMenuView(data: $0) }
+        WithSelector(selector, .value) {
+            ZStack {
+                ForEach(Array(selector.menus)) { ContextMenuView(data: $0) }
+            }
         }
     }
+
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.contextMenu.menus }) var menus
+    }
+
+    @StateObject private var selector = Selector()
 }
 
 // MARK: - ContextMenuView
@@ -50,27 +56,38 @@ struct ContextMenuView: View {
     let data: ContextMenuData
 
     var body: some View {
-        wrapper
-            .if(bounds == nil) { $0.hidden() }
-            .onChange(of: bounds) { prevBounds = bounds ?? prevBounds }
+        WithSelector(selector, data) {
+            wrapper
+                .if(selector.bounds == nil) { $0.hidden() }
+        }
     }
 
     // MARK: private
 
-    @Selected private var viewSize = global.viewport.store.viewSize
-    @Selected private var focusedPath = global.activeItem.activePath
-    @Selected private var focusedGroup = global.activeItem.focusedGroup
+    private class Selector: StoreSelector<ContextMenuData> {
+        @Tracked({ global.viewport.store.viewSize }) var viewSize
+        @Tracked({ global.activeItem.activePath }) var focusedPath
+        @Tracked({ global.activeItem.focusedGroup }) var focusedGroup
+        @Tracked({ data in
+            switch data {
+            case .focusedPath: global.activeItem.activePath.map { global.activeItem.boundingRect(itemId: $0.id) }
+            case .focusedGroup: global.activeItem.focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) }
+            case .selection: global.activeItem.selectionBounds
+            default: CGRect.zero
+            }
+        }) var bounds
+    }
 
-    @Selected private var bounds: CGRect?
+    @StateObject private var selector = Selector()
 
     @State private var menuId: UUID = .init()
     @State private var prevBounds: CGRect = .zero
     @State private var size: CGSize = .zero
 
     var menuBox: CGRect {
-        let bounds = bounds ?? prevBounds
-        let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(viewSize).midY ? .topCenter : .bottomCenter
-        return bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(viewSize).inset(by: 12))
+        let bounds = selector.bounds ?? prevBounds
+        let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(selector.viewSize).midY ? .topCenter : .bottomCenter
+        return bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(selector.viewSize).inset(by: 12))
     }
 
     @ViewBuilder var wrapper: some View {
@@ -81,7 +98,6 @@ struct ContextMenuView: View {
             .sizeReader { size = $0 }
             .clipRounded(radius: size.height / 2)
             .position(menuBox.center)
-            .id(menuId)
     }
 
     @ViewBuilder var menu: some View {
@@ -89,32 +105,21 @@ struct ContextMenuView: View {
         case .pathNode: EmptyView()
         case .focusedPath:
             focusedPathMenu
-                .onChange(of: focusedPath?.id) {
-                    _bounds { focusedPath.map { global.activeItem.boundingRect(itemId: $0.id) } }
-                    menuId = focusedPath?.id ?? .init()
-                }
         case .focusedGroup:
             focusedGroupMenu
-                .onChange(of: focusedGroup?.id) {
-                    _bounds { focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) } }
-                    menuId = focusedGroup?.id ?? .init()
-                }
         case .selection:
             SelectionMenu()
-                .onAppear {
-                    _bounds { global.activeItem.selectionBounds }
-                }
         }
     }
 
     @ViewBuilder var focusedPathMenu: some View {
-        if let focusedPath {
+        if let focusedPath = selector.focusedPath {
             PathMenu(path: focusedPath)
         }
     }
 
     @ViewBuilder var focusedGroupMenu: some View {
-        if let focusedGroup {
+        if let focusedGroup = selector.focusedGroup {
             GroupMenu(group: focusedGroup)
         }
     }

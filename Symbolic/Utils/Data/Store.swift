@@ -200,7 +200,7 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
         wrapped _: ReferenceWritableKeyPath<Instance, Value>,
         storage storageKeyPath: ReferenceWritableKeyPath<Instance, Self>
     ) -> Value {
-        get { instance.access(keypath: storageKeyPath) }
+        get { instance.access(keyPath: storageKeyPath) }
         @available(*, unavailable) set {}
     }
 
@@ -262,7 +262,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
         wrapped _: ReferenceWritableKeyPath<Instance, Value>,
         storage storageKeyPath: ReferenceWritableKeyPath<Instance, Self>
     ) -> Value {
-        get { instance.access(keypath: storageKeyPath) }
+        get { instance.access(keyPath: storageKeyPath) }
         @available(*, unavailable) set {}
     }
 
@@ -282,8 +282,8 @@ extension Store: _StoreProtocol {
     struct Updater<S: _StoreProtocol> {
         let store: S
 
-        func callAsFunction<T: Equatable>(_ keypath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
-            store.update(keypath, value)
+        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
+            store.update(keyPath, value)
         }
 
         fileprivate init(_ store: S) {
@@ -293,9 +293,9 @@ extension Store: _StoreProtocol {
 }
 
 extension _StoreProtocol {
-    fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
-        let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
-        @Ref(self, keypath) var wrapper
+    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
+        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
             id = wrapperId
@@ -313,9 +313,9 @@ extension _StoreProtocol {
         return wrapper.value
     }
 
-    fileprivate func access<T>(keypath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = trackableTracer.range("access \(keypath)"); defer { _r() }
-        @Ref(self, keypath) var wrapper
+    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
+        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
         let storage = wrapper.storage
         if storage.value == nil {
             storage.update(self)
@@ -332,9 +332,9 @@ extension _StoreProtocol {
         return storage.value!
     }
 
-    fileprivate func update<T>(_ keypath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
-        let _r = trackableTracer.range("update \(keypath) with \(newValue)"); defer { _r() }
-        @Ref(self, keypath) var wrapper
+    fileprivate func update<T>(_ keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
+        let _r = trackableTracer.range("update \(keyPath) with \(newValue)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
             id = wrapperId
@@ -398,13 +398,16 @@ class SelectedStorage<Value: Equatable>: ObservableObject {
         if _value != newValue {
             _value = newValue
             setupUpdateTask()
-            selectedTracer.instant("updated")
+            selectedTracer.instant("updated \(newValue)")
         }
     }
 
     private func setupUpdateTask() {
         updateTask?.cancel()
-        updateTask = Task { @MainActor in self.objectWillChange.send() }
+        updateTask = Task { @MainActor in
+            self.objectWillChange.send()
+            self.updateTask = nil
+        }
     }
 }
 
@@ -513,5 +516,161 @@ extension View {
 
     func compute<T0: Equatable, T1: Equatable, T2: Equatable, T3: Equatable, T4: Equatable, T5: Equatable, Value: Equatable>(_ wrapper: Computed<(T0, T1, T2, T3, T4, T5), Value>, _ input: (T0, T1, T2, T3, T4, T5)) -> some View {
         onChange(of: EquatableTuple.init <- input, initial: true) { wrapper(input) }
+    }
+}
+
+// MARK: - Selector
+
+protocol _StoreSelectorProtocol: AnyObject {
+    associatedtype Props: Equatable
+    var props: Props? { get }
+    func onUpdate()
+    func onRetrack(callback: @escaping () -> Void)
+
+    typealias Tracked<T: Equatable> = _Tracked<Self, T>
+}
+
+class StoreSelector<Props: Equatable>: _StoreSelectorProtocol, ObservableObject, CancellableHolder {
+    struct Configs {
+        var name: String?
+        var syncUpdate: Bool
+
+        init(name: String? = nil, syncUpdate: Bool = false) {
+            self.name = name
+            self.syncUpdate = syncUpdate
+        }
+    }
+
+    var configs: Configs { .init() }
+
+    var props: Props?
+    var cancellables = Set<AnyCancellable>()
+
+    private var updateTask: Task<Void, Never>?
+    fileprivate let retrackSubject = PassthroughSubject<Void, Never>()
+
+    func setup(_ props: Props) {
+        if self.props == nil {
+            self.props = props
+        }
+    }
+
+    func onUpdate() {
+        if configs.syncUpdate {
+            objectWillChange.send()
+            return
+        }
+        guard updateTask == nil else { return }
+        updateTask = Task(priority: .high) { @MainActor in
+            self.objectWillChange.send()
+            self.updateTask = nil
+        }
+    }
+
+    func onRetrack(callback: @escaping () -> Void) {
+        retrackSubject
+            .sink(receiveValue: callback)
+            .store(in: self)
+    }
+
+    deinit {
+        updateTask?.cancel()
+    }
+}
+
+// MARK: - Tracked
+
+@propertyWrapper
+struct _Tracked<Instance: _StoreSelectorProtocol, Value: Equatable> {
+    let name: String?
+    let selector: (Instance.Props) -> Value
+    var value: Value?
+    var subscriptionId: Int?
+
+    @available(*, unavailable, message: "@Tracked can only be applied to SelectedModel")
+    var wrappedValue: Value {
+        get { fatalError() }
+        set { fatalError() }
+    }
+
+    static subscript(
+        _enclosingInstance instance: Instance,
+        wrapped _: ReferenceWritableKeyPath<Instance, Value>,
+        storage storageKeyPath: ReferenceWritableKeyPath<Instance, Self>
+    ) -> Value {
+        get { instance.access(keyPath: storageKeyPath) }
+        @available(*, unavailable) set {}
+    }
+
+    init(_ selector: @escaping (Instance.Props) -> Value) {
+        name = nil
+        self.selector = selector
+    }
+
+    init(_ selector: @escaping () -> Value) {
+        name = nil
+        self.selector = { _ in selector() }
+    }
+
+    init(_ name: String? = nil, _ selector: @escaping (Instance.Props) -> Value) {
+        self.name = name
+        self.selector = selector
+    }
+
+    init(_ name: String? = nil, _ selector: @escaping () -> Value) {
+        self.name = name
+        self.selector = { _ in selector() }
+    }
+}
+
+// MARK: - SelectorProtocol
+
+private extension _StoreSelectorProtocol {
+    func access<T>(keyPath: ReferenceWritableKeyPath<Self, Tracked<T>>) -> T {
+        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
+    }
+
+    @discardableResult
+    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Tracked<T>>) -> T {
+        @Ref(self, keyPath) var wrapper
+        let _r = selectedTracer.range(wrapper.name.map { "track \($0)" } ?? "track"); defer { _r() }
+        if let subscriptionId = wrapper.subscriptionId {
+            manager.expire(subscriptionId: subscriptionId)
+        }
+
+        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onUpdate: { [weak self] in self?.track(keyPath: keyPath) }
+        wrapper.subscriptionId = context.subscriptionId
+
+        if wrapper.value == nil {
+            wrapper.value = newValue
+            onRetrack { self.track(keyPath: keyPath) }
+            selectedTracer.instant("setup")
+        } else if wrapper.value != newValue {
+            wrapper.value = newValue
+            onUpdate()
+            selectedTracer.instant("updated \(newValue)")
+        } else {
+            selectedTracer.instant("unchanged")
+        }
+        return newValue
+    }
+}
+
+struct WithSelector<Props: Equatable, S: StoreSelector<Props>, Content: View>: View {
+    let selector: S
+    let props: Props
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        selector.setup(props)
+        return content()
+            .onChange(of: props) { selector.retrackSubject.send() }
+    }
+
+    init(_ selector: S, _ props: Props, @ViewBuilder content: @escaping () -> Content) {
+        self.selector = selector
+        self.props = props
+        self.content = content
     }
 }

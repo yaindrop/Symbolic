@@ -30,30 +30,36 @@ struct PathView: View {
     let property: PathProperty
     let focusedPart: PathFocusedPart?
 
-    var body: some View { subtracer.range("body") { build {
-        ZStack {
-            Stroke(path: path, toView: toView)
-            handles(path: path)
+    var body: some View { subtracer.range("body") {
+        WithSelector(selector, .value) {
+            ZStack {
+                Stroke(path: path, toView: selector.toView)
+                handles(path: path)
+            }
         }
-    }}}
+    }}
 
     // MARK: private
 
-    @Selected private var toView = global.viewport.toView
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.viewport.toView }) var toView
+    }
+
+    @StateObject private var selector = Selector()
 
     @ViewBuilder private func handles(path: Path) -> some View {
         let nodes = path.nodes
         let nodeData = nodes.compactMap { n -> (nodeId: UUID, positionInView: Point2)? in
-            (nodeId: n.id, positionInView: n.position.applying(toView))
+            (nodeId: n.id, positionInView: n.position.applying(selector.toView))
         }
         let segmentData = nodes.compactMap { n -> (fromId: UUID, toId: UUID, segmentInView: PathSegment)? in
             guard let s = path.segment(from: n.id) else { return nil }
             guard let toId = path.node(after: n.id)?.id else { return nil }
-            return (fromId: n.id, toId: toId, segmentInView: s.applying(toView))
+            return (fromId: n.id, toId: toId, segmentInView: s.applying(selector.toView))
         }
 
         ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
-        ForEach(nodeData, id: \.nodeId) { id, position in NodeHandle(pathId: path.id, nodeId: id, position: position) }
+        ForEach(nodeData, id: \.nodeId) { id, _ in NodeHandle(pathId: path.id, nodeId: id) }
         ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
         ForEach(segmentData, id: \.fromId) { fromId, toId, segment in BezierHandle(property: property, focusedPart: focusedPart, fromId: fromId, toId: toId, segment: segment) }
     }

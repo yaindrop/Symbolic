@@ -75,12 +75,18 @@ struct HistoryPanel: View {
     let panelId: UUID
 
     var body: some View {
-        panel.frame(width: 320)
+        WithSelector(selector, .value) {
+            panel.frame(width: 320)
+        }
     }
 
     // MARK: private
 
-    @Selected private var document = global.document.activeDocument
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.document.activeDocument }) var document
+    }
+
+    @StateObject private var selector = Selector()
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
@@ -109,7 +115,7 @@ struct HistoryPanel: View {
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Events")
             VStack(spacing: 12) {
-                ForEach(document.events) { e in
+                ForEach(selector.document.events) { e in
                     HStack {
                         Text("\(e.action.readable)")
                             .font(.footnote)

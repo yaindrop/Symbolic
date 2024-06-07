@@ -11,23 +11,27 @@ extension PathView {
 
         let pathId: UUID
         let nodeId: UUID
-        let position: Point2
 
-        var equatableBy: some Equatable { nodeId; position }
+        var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { subtracer.range("NodeHandle \(nodeId)") {
-            handle
-                .compute(_nodeType, (pathId, nodeId))
-                .compute(_focused, nodeId)
-        }}
+        var body: some View { subtracer.range("NodeHandle \(nodeId)") { build {
+            WithSelector(selector, .init(pathId: pathId, nodeId: nodeId)) {
+                handle
+            }
+        }}}
 
         // MARK: private
 
-        @Computed({ (pathId: UUID, nodeId: UUID) in global.pathProperty.property(id: pathId)?.nodeType(id: nodeId) })
-        private var nodeType: PathNodeType? = .corner
+        private struct Props: Equatable { let pathId: UUID, nodeId: UUID }
+        private class Selector: StoreSelector<Props> {
+            override var configs: Configs { .init(syncUpdate: true) }
 
-        @Computed({ (nodeId: UUID) in global.activeItem.pathFocusedPart?.nodeId == nodeId })
-        private var focused: Bool = false
+            @Tracked({ props in global.path.path(id: props.pathId)?.node(id: props.nodeId)?.position.applying(global.viewport.toView) }) var position
+            @Tracked({ props in global.pathProperty.property(id: props.pathId)?.nodeType(id: props.nodeId) }) var nodeType
+            @Tracked({ props in global.activeItem.pathFocusedPart?.nodeId == props.nodeId }) var focused
+        }
+
+        @StateObject private var selector = Selector()
 
         private static let circleSize: Scalar = 12
         private static let rectSize: Scalar = circleSize / 2 * 1.7725 // sqrt of pi
@@ -38,19 +42,21 @@ extension PathView {
         @State private var nodeGestureContext = PathViewModel.NodeGestureContext()
 
         @ViewBuilder private var handle: some View {
-            nodeShape
-                .padding(Self.touchablePadding)
-                .invisibleSoildOverlay()
-                .position(position)
-                .multipleGesture(viewModel.nodeGesture(nodeId: nodeId, context: nodeGestureContext))
+            if let position = selector.position {
+                nodeShape
+                    .padding(Self.touchablePadding)
+                    .invisibleSoildOverlay()
+                    .position(position)
+                    .multipleGesture(viewModel.nodeGesture(nodeId: nodeId, context: nodeGestureContext))
+            }
         }
 
         @ViewBuilder private var nodeShape: some View {
-            if nodeType == .corner {
+            if selector.nodeType == .corner {
                 Rectangle()
                     .stroke(.blue, style: StrokeStyle(lineWidth: 1))
                     .fill(.blue.opacity(0.5))
-                    .if(focused) { $0.overlay {
+                    .if(selector.focused) { $0.overlay {
                         Rectangle()
                             .fill(.blue)
                             .scaleEffect(0.5)
@@ -59,9 +65,9 @@ extension PathView {
                     .frame(width: Self.rectSize, height: Self.rectSize)
             } else {
                 Circle()
-                    .stroke(.blue, style: StrokeStyle(lineWidth: nodeType == .mirrored ? 2 : 1))
+                    .stroke(.blue, style: StrokeStyle(lineWidth: selector.nodeType == .mirrored ? 2 : 1))
                     .fill(.blue.opacity(0.5))
-                    .if(focused) { $0.overlay {
+                    .if(selector.focused) { $0.overlay {
                         Circle()
                             .fill(.blue)
                             .scaleEffect(0.5)

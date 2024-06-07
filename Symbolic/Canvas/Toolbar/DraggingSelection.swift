@@ -88,16 +88,22 @@ extension DraggingSelectionService {
 // MARK: - DraggingSelectionView
 
 struct DraggingSelectionView: View {
-    @Selected private var rect = global.draggingSelection.rect
-    @Selected private var toView = global.viewport.toView
-
     var body: some View {
-        if let rect {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.gray.opacity(0.2))
-                .stroke(.gray.opacity(0.5))
-                .frame(width: rect.width, height: rect.height)
-                .position(rect.center)
+        WithSelector(selector, .value) {
+            if let rect = selector.rect {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(.gray.opacity(0.2))
+                    .stroke(.gray.opacity(0.5))
+                    .frame(width: rect.width, height: rect.height)
+                    .position(rect.center)
+            }
         }
     }
+
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.draggingSelection.rect }) var rect
+        @Tracked({ global.viewport.toView }) var toView
+    }
+
+    @StateObject private var selector = Selector()
 }

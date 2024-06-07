@@ -8,32 +8,38 @@ private enum GridLineType: CaseIterable {
 
 struct Background: View {
     var body: some View {
-        linePaths
+        WithSelector(selector, .value) {
+            linePaths
+        }
     }
 
     // MARK: private
 
-    @Selected private var viewportInfo = global.viewport.info
-    @Selected private var viewSize = global.viewport.store.viewSize
-    @Selected private var worldRect = global.viewport.worldRect
-    @Selected private var cellSize = global.grid.grid.cellSize
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.viewport.info }) var viewportInfo
+        @Tracked({ global.viewport.store.viewSize }) var viewSize
+        @Tracked({ global.viewport.worldRect }) var worldRect
+        @Tracked({ global.grid.grid.cellSize }) var cellSize
+    }
+
+    @StateObject private var selector = Selector()
 
     private static let targetCellSize: Scalar = 24
     private static let gridLineColor: Color = .red
 
-    private var toView: CGAffineTransform { viewportInfo.worldToView }
-    private var toWorld: CGAffineTransform { viewportInfo.viewToWorld }
+    private var toView: CGAffineTransform { selector.viewportInfo.worldToView }
+    private var toWorld: CGAffineTransform { selector.viewportInfo.viewToWorld }
 
     private var adjustedCellSize: Scalar {
         let targetSizeInWorld = (Vector2.unitX * Self.targetCellSize).applying(toWorld).dx
-        let adjustedRatio = pow(2, max(0, ceil(log2(targetSizeInWorld / cellSize))))
-        return cellSize * adjustedRatio
+        let adjustedRatio = pow(2, max(0, ceil(log2(targetSizeInWorld / selector.cellSize))))
+        return selector.cellSize * adjustedRatio
     }
 
     private var linePositions: (horizontal: [Scalar], vertical: [Scalar]) {
         let cellSize = adjustedCellSize
-        let horizontal = Array(stride(from: round(worldRect.minX / cellSize) * cellSize, to: worldRect.maxX, by: cellSize))
-        let vertical = Array(stride(from: round(worldRect.minY / cellSize) * cellSize, to: worldRect.maxY, by: cellSize))
+        let horizontal = Array(stride(from: round(selector.worldRect.minX / cellSize) * cellSize, to: selector.worldRect.maxX, by: cellSize))
+        let vertical = Array(stride(from: round(selector.worldRect.minY / cellSize) * cellSize, to: selector.worldRect.maxY, by: cellSize))
         return (horizontal, vertical)
     }
 
@@ -55,13 +61,13 @@ struct Background: View {
                     guard gridLineType(x) == type else { continue }
                     let xInView = Point2(x, 0).applying(toView).x
                     path.move(to: .init(xInView, 0))
-                    path.addLine(to: .init(xInView, viewSize.height))
+                    path.addLine(to: .init(xInView, selector.viewSize.height))
                 }
                 for y in vertical {
                     guard gridLineType(y) == type else { continue }
                     let yInView = Point2(0, y).applying(toView).y
                     path.move(to: .init(0, yInView))
-                    path.addLine(to: .init(viewSize.width, yInView))
+                    path.addLine(to: .init(selector.viewSize.width, yInView))
                 }
             }
         }

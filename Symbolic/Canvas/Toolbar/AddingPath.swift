@@ -81,12 +81,18 @@ extension AddingPathService {
 // MARK: - AddingPathView
 
 struct AddingPathView: View {
-    @Selected var addingPath = global.addingPath.addingPath
-
     var body: some View {
-        if let addingPath {
-            PathView(path: addingPath, property: .init(id: addingPath.id), focusedPart: nil)
-                .environmentObject(PathViewModel())
+        WithSelector(selector, .value) {
+            if let addingPath = selector.addingPath {
+                PathView(path: addingPath, property: .init(id: addingPath.id), focusedPart: nil)
+                    .environmentObject(PathViewModel())
+            }
         }
     }
+
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.addingPath.addingPath }) var addingPath
+    }
+
+    @StateObject private var selector = Selector()
 }

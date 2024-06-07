@@ -7,14 +7,19 @@ struct ItemPanel: View {
     let panelId: UUID
 
     var body: some View { tracer.range("ItemPanel body") {
-        content
-            .frame(width: 320)
+        WithSelector(selector, .value) {
+            content
+                .frame(width: 320)
+        }
     } }
-    
 
     // MARK: private
 
-    @Selected private var rootIds = global.item.rootIds
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.item.rootIds }) var rootIds
+    }
+
+    @StateObject private var selector = Selector()
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
@@ -43,9 +48,9 @@ struct ItemPanel: View {
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Items")
             VStack(spacing: 0) {
-                ForEach(rootIds) {
+                ForEach(selector.rootIds) {
                     ItemRow(itemId: $0)
-                    if $0 != rootIds.last {
+                    if $0 != selector.rootIds.last {
                         Divider()
                     }
                 }
@@ -67,25 +72,24 @@ extension ItemPanel {
         var equatableBy: some Equatable { itemId }
 
         var body: some View { tracer.range("ItemRow body") {
-            content
-                .compute(_item, itemId)
+            WithSelector(selector, itemId) {
+                content
+            }
         } }
-        
-        init(itemId: UUID) {
-            self.itemId = itemId
-            _item(itemId)
-            print("dbgdbg", item)
-        }
 
         // MARK: private
 
-        @Computed({ (itemId: UUID) in global.item.item(id: itemId) })
-        private var item: Item? = nil
+        class Selector: StoreSelector<UUID> {
+            @Tracked({ (itemId: UUID) in global.item.item(id: itemId) })
+            var item: Item?
+        }
+
+        @StateObject var selector = Selector()
 
         @ViewBuilder var content: some View {
-            if let pathId = item?.pathId {
+            if let pathId = selector.item?.pathId {
                 PathRow(pathId: pathId)
-            } else if let group = item?.group {
+            } else if let group = selector.item?.group {
                 GroupRow(group: group)
             }
         }
@@ -101,14 +105,19 @@ extension ItemPanel {
         var equatableBy: some Equatable { group }
 
         var body: some View { tracer.range("GroupRow body") {
-            content
-                .compute(_depth, group.id)
+            WithSelector(selector, group.id) {
+                content
+            }
         } }
 
         // MARK: private
 
-        @Computed({ (itemId: UUID) in global.item.depth(itemId: itemId) })
-        private var depth: Int = 0
+        class Selector: StoreSelector<UUID> {
+            @Tracked({ (itemId: UUID) in global.item.depth(itemId: itemId) })
+            var depth: Int
+        }
+
+        @StateObject var selector = Selector()
 
         @State private var expanded = true
 
@@ -168,8 +177,8 @@ extension ItemPanel {
                             .id($0)
                     }
                 }
-                .if(depth < 5) { $0.background(.secondary) }
-                .clipRounded(radius: 12, border: depth < 5 ? Color.clear : Color.label)
+                .if(selector.depth < 5) { $0.background(.secondary) }
+                .clipRounded(radius: 12, border: selector.depth < 5 ? Color.clear : Color.label)
                 .padding(.leading, 12)
             }
         }
@@ -183,20 +192,19 @@ extension ItemPanel {
         let pathId: UUID
 
         var body: some View { tracer.range("PathRow body") {
-            content
-                .compute(_path, pathId)
+            WithSelector(selector, pathId) {
+                content
+            }
         } }
-        
-        init(pathId: UUID) {
-            self.pathId = pathId
-            _path(pathId)
-            print("dbgdbg", path)
-        }
 
         // MARK: private
 
-        @Computed({ (pathId: UUID) in global.path.path(id: pathId) })
-        private var path: Path? = nil
+        class Selector: StoreSelector<UUID> {
+            @Tracked({ (pathId: UUID) in global.path.path(id: pathId) })
+            var path: Path?
+        }
+
+        @StateObject var selector = Selector()
 
         private struct PathThumbnail: View {
             let path: Path
@@ -225,7 +233,7 @@ extension ItemPanel {
         }
 
         @ViewBuilder private var name: some View {
-            if let path {
+            if let path = selector.path {
                 HStack {
                     PathThumbnail(path: path)
                         .padding(4)

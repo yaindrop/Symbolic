@@ -27,7 +27,7 @@ struct CanvasView: View {
             .onAppear {
                 global.panel.register(align: .bottomTrailing) { ActivePathPanel(panelId: $0) }
                 global.panel.register(align: .bottomLeading) { HistoryPanel(panelId: $0) }
-//                global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
+                global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
                 global.panel.register(align: .topTrailing) { DebugPanel(panelId: $0, multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
                 global.panel.register(align: .topLeading) { _ in CanvasActionPanel() }
             }
@@ -54,7 +54,6 @@ struct CanvasView: View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
             Text("sidebar")
                 .navigationTitle("Sidebar")
-            ItemPanel(panelId: .init())
         } detail: {
             ZStack {
                 canvas
@@ -106,18 +105,29 @@ struct CanvasView: View {
 }
 
 struct ItemsView: View {
-    @Selected("ItemsView toView") private var toView = global.viewport.toView
-    @Selected("ItemsView allPaths") private var allPaths = global.item.allPaths
-    @Selected("ItemsView activePathId") private var activePathId = global.activeItem.focusedItemId
-
     var body: some View { tracer.range("ItemsView body") {
-        ForEach(allPaths.filter { $0.id != activePathId }) { p in
-            SUPath { path in p.append(to: &path) }
-                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        WithSelector(selector, .value) {
+            ForEach(selector.allPaths.filter { $0.id != selector.activePathId }) { p in
+                SUPath { path in p.append(to: &path) }
+                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+            }
+            .transformEffect(selector.toView)
+            .blur(radius: 1)
         }
-        .transformEffect(toView)
-        .blur(radius: 1)
     } }
+
+    private class Selector: StoreSelector<Monostate> {
+        override var configs: Configs { .init(name: "ItemsView", syncUpdate: true) }
+
+        @Tracked("ItemsView toView", { global.viewport.toView })
+        var toView: CGAffineTransform
+        @Tracked("ItemsView allPaths", { global.item.allPaths })
+        var allPaths: [Path]
+        @Tracked("ItemsView activePathId", { global.activeItem.focusedItemId })
+        var activePathId: UUID?
+    }
+
+    @StateObject private var selector = Selector()
 }
 
 #Preview {

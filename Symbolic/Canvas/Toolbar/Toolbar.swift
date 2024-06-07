@@ -28,12 +28,19 @@ class ToolbarStore: Store {
 
 struct ToolbarModifier: ViewModifier {
     func body(content: Content) -> some View {
-        content.toolbar { toolbar }
+        WithSelector(selector, .value) {
+            let _ = selector.viewSize // strange bug that toolbar is lost when window size changes, need to reset ids
+            content.toolbar { toolbar }
+        }
     }
 
-    @Selected private var viewSize = global.viewport.store.viewSize // strange bug that toolbar is lost when window size changes, need to reset ids
-    @Selected private var toolbarMode = global.toolbar.mode
-    @Selected private var undoable = global.document.undoable
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.viewport.store.viewSize }) var viewSize
+        @Tracked({ global.toolbar.mode }) var toolbarMode
+        @Tracked({ global.document.undoable }) var undoable
+    }
+
+    @StateObject private var selector = Selector()
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
         ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }
@@ -64,10 +71,10 @@ struct ToolbarModifier: ViewModifier {
             Button {
                 global.toolbar.setMode(.select(.init()))
             } label: {
-                Image(systemName: toolbarMode.select != nil ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
+                Image(systemName: selector.toolbarMode.select != nil ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
             }
             .overlay {
-                if let select = toolbarMode.select {
+                if let select = selector.toolbarMode.select {
                     Menu {
                         Button(select.multiSelect ? "Disable multi-select" : "Tap to multi-select") {
                             var select = select
@@ -87,7 +94,7 @@ struct ToolbarModifier: ViewModifier {
             Button {
                 global.toolbar.setMode(.addPath(.init()))
             } label: {
-                Image(systemName: toolbarMode.addPath != nil ? "plus.circle.fill" : "plus.circle")
+                Image(systemName: selector.toolbarMode.addPath != nil ? "plus.circle.fill" : "plus.circle")
             }
         }
     }
@@ -98,6 +105,6 @@ struct ToolbarModifier: ViewModifier {
         } label: {
             Image(systemName: "arrow.uturn.backward")
         }
-        .disabled(!undoable)
+        .disabled(!selector.undoable)
     }
 }

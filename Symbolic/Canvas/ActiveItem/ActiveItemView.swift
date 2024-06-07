@@ -4,18 +4,26 @@ import SwiftUI
 
 struct ActiveItemView: View {
     var body: some View { tracer.range("ActiveItemView body") { build {
-        ForEach(activeGroups) {
-            GroupBounds(group: $0, viewport: viewport)
+        WithSelector(selector, .value) {
+            ForEach(selector.activeGroups) {
+                GroupBounds(group: $0, viewport: selector.viewport)
+            }
+            ForEach(selector.activePaths) {
+                PathBounds(path: $0, viewport: selector.viewport)
+            }
+            SelectionBounds()
         }
-        ForEach(activePaths) {
-            PathBounds(path: $0, viewport: viewport)
-        }
-        SelectionBounds()
     } } }
 
-    @Selected private var viewport = global.viewport.info
-    @Selected private var activePaths = global.activeItem.activePaths
-    @Selected private var activeGroups = global.activeItem.activeGroups
+    // MARK: private
+
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.viewport.info }) var viewport
+        @Tracked({ global.activeItem.activePaths }) var activePaths
+        @Tracked({ global.activeItem.activeGroups }) var activeGroups
+    }
+
+    @StateObject private var selector = Selector()
 }
 
 // MARK: - GroupBounds
@@ -26,30 +34,28 @@ extension ActiveItemView {
         let viewport: ViewportInfo
 
         var body: some View {
-            boundsRect
-        }
-
-        init(group: ItemGroup, viewport: ViewportInfo) {
-            self.group = group
-            self.viewport = viewport
-            _focused = .init { global.activeItem.focusedItemId == group.id }
-            _selected = .init { global.activeItem.selectedItemIds.contains(group.id) }
-            _bounds = .init { global.activeItem.boundingRect(itemId: group.id) }
+            WithSelector(selector, group.id) {
+                boundsRect
+            }
         }
 
         // MARK: private
 
-        @Selected private var focused: Bool
-        @Selected private var selected: Bool
-        @Selected private var bounds: CGRect?
+        private class Selector: StoreSelector<UUID> {
+            @Tracked({ groupId in global.activeItem.focusedItemId == groupId }) var focused
+            @Tracked({ groupId in global.activeItem.selectedItemIds.contains(groupId) }) var selected
+            @Tracked({ groupId in global.activeItem.boundingRect(itemId: groupId) }) var bounds
+        }
+
+        @StateObject private var selector = Selector()
 
         private var toView: CGAffineTransform { viewport.worldToView }
 
         @ViewBuilder private var boundsRect: some View {
-            if let bounds {
+            if let bounds = selector.bounds {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(.blue.opacity(selected ? 0.1 : 0.03))
-                    .stroke(.blue.opacity(focused ? 0.8 : selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
+                    .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
+                    .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
                     .framePosition(rect: bounds)
                     .multipleGesture(.init(
                         onPress: {
@@ -72,7 +78,7 @@ extension ActiveItemView {
         }
 
         private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            if selected {
+            if selector.selected {
                 let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
                 global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
             } else {
@@ -91,20 +97,19 @@ extension ActiveItemView {
         let viewport: ViewportInfo
 
         var body: some View { tracer.range("PathBounds body") {
-            boundsRect
+            WithSelector(selector, path.id) {
+                boundsRect
+            }
         } }
-
-        init(path: Path, viewport: ViewportInfo) {
-            self.path = path
-            self.viewport = viewport
-            _focused = .init { global.activeItem.focusedItemId == path.id }
-            _selected = .init { global.activeItem.selectedItemIds.contains(path.id) }
-        }
 
         // MARK: private
 
-        @Selected private var focused: Bool
-        @Selected private var selected: Bool
+        private class Selector: StoreSelector<UUID> {
+            @Tracked({ pathId in global.activeItem.focusedItemId == pathId }) var focused
+            @Tracked({ pathId in global.activeItem.selectedItemIds.contains(pathId) }) var selected
+        }
+
+        @StateObject private var selector = Selector()
 
         private var toView: CGAffineTransform { viewport.worldToView }
 
@@ -114,8 +119,8 @@ extension ActiveItemView {
 
         @ViewBuilder private var boundsRect: some View {
             RoundedRectangle(cornerRadius: 2)
-                .fill(.blue.opacity(focused ? 0.2 : 0.1))
-                .stroke(.blue.opacity(focused ? 0.8 : 0.5))
+                .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
+                .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
                 .multipleTouchGesture(.init(
                     onPress: {
                         global.canvasAction.start(continuous: .moveSelection)
@@ -132,7 +137,7 @@ extension ActiveItemView {
         }
 
         private func updateDrag(_ v: PanInfo, pending: Bool = false) {
-            if selected {
+            if selector.selected {
                 let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
                 global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
             } else {
@@ -147,15 +152,23 @@ extension ActiveItemView {
 extension ActiveItemView {
     struct SelectionBounds: View {
         var body: some View {
-            boundsRect
+            WithSelector(selector, .value) {
+                boundsRect
+            }
         }
 
-        @Selected private var bounds = global.activeItem.selectionBounds
+        // MARK: private
+
+        private class Selector: StoreSelector<Monostate> {
+            @Tracked({ global.activeItem.selectionBounds }) var bounds
+        }
+
+        @StateObject private var selector = Selector()
 
         @State private var dashPhase: Scalar = 0
 
         @ViewBuilder private var boundsRect: some View {
-            if let bounds {
+            if let bounds = selector.bounds {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
                     .framePosition(rect: bounds)

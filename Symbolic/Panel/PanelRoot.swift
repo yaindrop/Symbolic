@@ -20,12 +20,18 @@ struct PanelView: View, EquatableBy {
 // MARK: - PanelRoot
 
 struct PanelRoot: View {
-    @Selected var panels = global.panel.panels
-
     var body: some View {
-        ZStack {
-            ForEach(panels) { PanelView(panel: $0) }
+        WithSelector(selector, .value) {
+            ZStack {
+                ForEach(selector.panels) { PanelView(panel: $0) }
+            }
+            .sizeReader { global.panel.onRootResized(size: $0) }
         }
-        .sizeReader { global.panel.onRootResized(size: $0) }
     }
+
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.panel.panels }) var panels
+    }
+
+    @StateObject private var selector = Selector()
 }

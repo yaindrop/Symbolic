@@ -7,13 +7,19 @@ struct ActivePathPanel: View {
     let panelId: UUID
 
     var body: some View { tracer.range("ActivePathPanel body") {
-        panel.frame(width: 320)
+        WithSelector(selector, .value) {
+            panel.frame(width: 320)
+        }
     }}
 
     // MARK: private
 
-    @Selected private var path = global.activeItem.activePath
-    @Selected private var focusedPart = global.activeItem.store.pathFocusedPart
+    private class Selector: StoreSelector<Monostate> {
+        @Tracked({ global.activeItem.activePath }) var path
+        @Tracked({ global.activeItem.store.pathFocusedPart }) var focusedPart
+    }
+
+    @StateObject private var selector = Selector()
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
@@ -30,11 +36,11 @@ struct ActivePathPanel: View {
     }
 
     @ViewBuilder private var scrollView: some View {
-        if let path {
+        if let path = selector.path {
             ManagedScrollView(model: scrollViewModel) { proxy in
                 Nodes(path: path).id(path.id)
-                    .onChange(of: focusedPart) {
-                        guard let id = focusedPart?.id else { return }
+                    .onChange(of: selector.focusedPart) {
+                        guard let id = selector.focusedPart?.id else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                     }
             }

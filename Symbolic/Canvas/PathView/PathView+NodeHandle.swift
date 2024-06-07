@@ -6,8 +6,7 @@ private let subtracer = tracer.tagged("PathView")
 // MARK: - NodeHandle
 
 extension PathView {
-    struct NodeHandle: View, EquatableBy, ComputedSelectorHolder {
-        struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
+    struct NodeHandle: View, EquatableBy, ReflectiveSelectorHolder {
         class Selector: SelectorBase {
             override var configs: Configs { .init(syncUpdate: true) }
 
@@ -26,7 +25,7 @@ extension PathView {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { subtracer.range("NodeHandle \(nodeId)") { build {
-            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
+            setupSelector {
                 handle
             }
         }}}

@@ -30,9 +30,9 @@ extension ActiveItemView {
     struct GroupBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Selected({ groupId in global.activeItem.focusedItemId == groupId }) var focused
-            @Selected({ groupId in global.activeItem.selectedItemIds.contains(groupId) }) var selected
-            @Selected({ groupId in global.activeItem.boundingRect(itemId: groupId) }) var bounds
+            @Selected({ global.activeItem.focusedItemId == $0 }) var focused
+            @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
+            @Selected({ global.activeItem.boundingRect(itemId: $0) }) var bounds
         }
 
         @StateObject var selector = Selector()
@@ -94,8 +94,8 @@ extension ActiveItemView {
     struct PathBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            @Selected({ pathId in global.activeItem.focusedItemId == pathId }) var focused
-            @Selected({ pathId in global.activeItem.selectedItemIds.contains(pathId) }) var selected
+            @Selected({ global.activeItem.focusedItemId == $0 }) var focused
+            @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
         }
 
         @StateObject var selector = Selector()

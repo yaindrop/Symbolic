@@ -501,6 +501,8 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     }
 }
 
+// MARK: - SelectorHolder
+
 protocol SelectorHolder {
     associatedtype Selector: _Selector<Monostate>
     typealias SelectorBase = _Selector<Monostate>
@@ -527,6 +529,23 @@ extension ComputedSelectorHolder {
         return content()
             .onChange(of: props) {
                 selector.props = props
+                selector.retrackSubject.send()
+            }
+    }
+}
+
+protocol ReflectiveSelectorHolder where Self: Equatable {
+    associatedtype Selector: _Selector<Self>
+    typealias SelectorBase = _Selector<Self>
+    var selector: Selector { get }
+}
+
+extension ReflectiveSelectorHolder {
+    func setupSelector<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
+        selector.setup(self)
+        return content()
+            .onChange(of: self) {
+                selector.props = self
                 selector.retrackSubject.send()
             }
     }

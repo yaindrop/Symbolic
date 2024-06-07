@@ -66,10 +66,9 @@ struct ItemPanel: View, SelectorHolder {
 // MARK: - ItemRow
 
 extension ItemPanel {
-    struct ItemRow: View, EquatableBy, ComputedSelectorHolder {
-        typealias SelectorProps = UUID
+    struct ItemRow: View, EquatableBy, ReflectiveSelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ (itemId: UUID) in global.item.item(id: itemId) }) var item
+            @Selected({ global.item.item(id: $0.itemId) }) var item
         }
 
         @StateObject var selector = Selector()
@@ -79,7 +78,7 @@ extension ItemPanel {
         var equatableBy: some Equatable { itemId }
 
         var body: some View { tracer.range("ItemRow body") {
-            setupSelector(itemId) {
+            setupSelector {
                 content
             }
         } }
@@ -99,10 +98,9 @@ extension ItemPanel {
 // MARK: - GroupRow
 
 extension ItemPanel {
-    struct GroupRow: View, EquatableBy, ComputedSelectorHolder {
-        typealias SelectorProps = UUID
+    struct GroupRow: View, EquatableBy, ReflectiveSelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.item.depth(itemId: $0) }) var depth
+            @Selected({ global.item.depth(itemId: $0.group.id) }) var depth
         }
 
         @StateObject var selector = Selector()
@@ -112,7 +110,7 @@ extension ItemPanel {
         var equatableBy: some Equatable { group }
 
         var body: some View { tracer.range("GroupRow body") {
-            setupSelector(group.id) {
+            setupSelector {
                 content
             }
         } }

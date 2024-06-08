@@ -14,7 +14,7 @@ extension ActivePathPanel {
                     ForEach(path.nodes) { node in
                         NodePanel(pathId: path.id, nodeId: node.id)
                         if node.id != path.nodes.last?.id {
-                            Divider()
+                            Divider().padding(.leading, 12)
                         }
                     }
                 }
@@ -54,41 +54,47 @@ extension ActivePathPanel {
 
         // MARK: private
 
+        @State private var expanded = false
+
         private var content: some View {
-            VStack {
+            VStack(spacing: 0) {
                 HStack {
-                    NodeMenu(pathId: pathId, nodeId: nodeId) { title }
+                    NodeMenu(pathId: pathId, nodeId: nodeId) { name }
                     Spacer()
-                    expandButton
+                    expandButton { expandIcon }
                 }
                 NodeDetailPanel(pathId: pathId, nodeId: nodeId)
-                    .padding(.top, 12)
+                    .padding(12)
                     .frame(height: expanded ? nil : 0, alignment: .top)
                     .allowsHitTesting(expanded)
                     .clipped()
             }
-            .padding(12)
         }
 
-        @State private var expanded = false
-
-        @ViewBuilder private var expandButton: some View {
-            Button {
-                withAnimation { expanded.toggle() }
-            } label: {
-                Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                    .padding(6)
-            }
-            .tint(.label)
-        }
-
-        @ViewBuilder private var title: some View {
-            Group {
+        @ViewBuilder private var name: some View {
+            HStack {
                 Image(systemName: "smallcircle.filled.circle")
                 Text("\(nodeId.shortDescription)")
                     .font(.subheadline)
             }
             .if(selector.focused) { $0.foregroundStyle(.blue) }
+            .padding(12)
+            .frame(maxHeight: .infinity)
+        }
+
+        @ViewBuilder private var expandIcon: some View {
+            Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                .padding(12)
+                .frame(maxHeight: .infinity)
+        }
+
+        @ViewBuilder private func expandButton<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+            Button {
+                withAnimation { expanded.toggle() }
+            } label: {
+                content()
+            }
+            .tint(.label)
         }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
@@ -213,7 +219,7 @@ private extension ActivePathPanel {
                 cAfterRow
             }
             .padding(12)
-            .background(.tertiary)
+            .background(.background.secondary)
             .clipRounded(radius: 12)
         }
 

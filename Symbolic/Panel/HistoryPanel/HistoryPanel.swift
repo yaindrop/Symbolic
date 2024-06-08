@@ -13,6 +13,7 @@ private extension DocumentAction {
             case let .reorder(action):
                 "Reorder \(action.inGroupId.map { $0.shortDescription } ?? "root")"
             }
+
         case let .path(action):
             switch action {
             case let .load(action):
@@ -53,6 +54,7 @@ private extension DocumentAction {
             case let .breakAtEdge(action):
                 "Break path \(action.pathId.shortDescription) at edge from \(action.fromNodeId.shortDescription)"
             }
+
         case let .pathProperty(action):
             switch action {
             case let .update(update):
@@ -114,7 +116,7 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
     @ViewBuilder private var content: some View {
         VStack(spacing: 4) {
             PanelSectionTitle(name: "Events")
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 ForEach(selector.document.events) { e in
                     HStack {
                         Text("\(e.action.readable)")
@@ -123,9 +125,12 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
                     }
                     .padding(12)
                     .background(.ultraThinMaterial)
-                    .clipRounded(radius: 12)
+                    if e != selector.document.events.last {
+                        Divider().padding(.leading, 12)
+                    }
                 }
             }
+            .clipRounded(radius: 12)
         }
         .padding(.horizontal, 12)
         .padding(.bottom, 24)

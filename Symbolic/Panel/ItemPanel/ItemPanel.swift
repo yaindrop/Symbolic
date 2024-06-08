@@ -51,7 +51,7 @@ struct ItemPanel: View, TracedView, SelectorHolder {
                 ForEach(selector.rootIds) {
                     ItemRow(itemId: $0)
                     if $0 != selector.rootIds.last {
-                        Divider()
+                        Divider().padding(.leading, 12)
                     }
                 }
             }

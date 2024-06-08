@@ -23,15 +23,15 @@ struct DocumentUpdater {
     let store: DocumentUpdaterStore
 }
 
-// MARK: update activePath
+// MARK: update focusedPath
 
 extension DocumentUpdater {
-    func update(activePath kind: PathAction.Update.Kind, pending: Bool = false) {
-        guard let activePathId = activeItem.activePath?.id else { return }
-        handle(.path(.update(.init(pathId: activePathId, kind: kind))), pending: pending)
+    func update(focusedPath kind: PathAction.Update.Kind, pending: Bool = false) {
+        guard let pathId = activeItem.focusedPath?.id else { return }
+        handle(.path(.update(.init(pathId: pathId, kind: kind))), pending: pending)
     }
 
-    func updateInView(activePath kind: PathAction.Update.Kind, pending: Bool = false) {
+    func updateInView(focusedPath kind: PathAction.Update.Kind, pending: Bool = false) {
         let toWorld = viewport.toWorld
         var kindInWorld: PathAction.Update.Kind {
             switch kind {
@@ -50,7 +50,7 @@ extension DocumentUpdater {
             default: kind
             }
         }
-        update(activePath: kindInWorld, pending: pending)
+        update(focusedPath: kindInWorld, pending: pending)
     }
 }
 

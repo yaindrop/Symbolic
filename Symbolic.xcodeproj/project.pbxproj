@@ -15,6 +15,7 @@
 		5700C2CF2BEDB6EB00481FA7 /* DraggingSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CE2BEDB6EB00481FA7 /* DraggingSelection.swift */; };
 		5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */; };
 		5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */; };
+		571B9B2A2C148B0800AAD516 /* FocusedPathStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B292C148B0800AAD516 /* FocusedPathStore.swift */; };
 		5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF792BC39844002209F2 /* SymbolicApp.swift */; };
 		5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7B2BC39844002209F2 /* ContentView.swift */; };
 		5723BF802BC39846002209F2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5723BF7F2BC39846002209F2 /* Assets.xcassets */; };
@@ -62,9 +63,9 @@
 		574CC7EF2BFC42D10042FEE3 /* CanvasActionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */; };
 		574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
-		575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* ActivePathPanel.swift */; };
+		575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* PathPanel.swift */; };
 		575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF72BD808560035B758 /* DecimalInput.swift */; };
-		575C3CFA2BD9F11E0035B758 /* ActivePathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* ActivePathView.swift */; };
+		575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */; };
 		575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CFB2BDA14590035B758 /* PathStore.swift */; };
 		576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2642C048F6900353912 /* ActiveItemView.swift */; };
 		576BE2672C0828A000353912 /* View+Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2662C0828A000353912 /* View+Modifiers.swift */; };
@@ -120,6 +121,7 @@
 		5700C2CE2BEDB6EB00481FA7 /* DraggingSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingSelection.swift; sourceTree = "<group>"; };
 		5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddingPath.swift; sourceTree = "<group>"; };
 		5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasAction.swift; sourceTree = "<group>"; };
+		571B9B292C148B0800AAD516 /* FocusedPathStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusedPathStore.swift; sourceTree = "<group>"; };
 		5723BF762BC39844002209F2 /* Symbolic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Symbolic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5723BF792BC39844002209F2 /* SymbolicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicApp.swift; sourceTree = "<group>"; };
 		5723BF7B2BC39844002209F2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -170,9 +172,9 @@
 		574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionPanel.swift; sourceTree = "<group>"; };
 		574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridStore.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
-		575C3CF52BD60C200035B758 /* ActivePathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathPanel.swift; sourceTree = "<group>"; };
+		575C3CF52BD60C200035B758 /* PathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPanel.swift; sourceTree = "<group>"; };
 		575C3CF72BD808560035B758 /* DecimalInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecimalInput.swift; sourceTree = "<group>"; };
-		575C3CF92BD9F11E0035B758 /* ActivePathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePathView.swift; sourceTree = "<group>"; };
+		575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusedPathView.swift; sourceTree = "<group>"; };
 		575C3CFB2BDA14590035B758 /* PathStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathStore.swift; sourceTree = "<group>"; };
 		576BE2642C048F6900353912 /* ActiveItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveItemView.swift; sourceTree = "<group>"; };
 		576BE2662C0828A000353912 /* View+Modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Modifiers.swift"; sourceTree = "<group>"; };
@@ -316,7 +318,7 @@
 		5724877A2BDF7F5F0096DDE4 /* PathPanel */ = {
 			isa = PBXGroup;
 			children = (
-				575C3CF52BD60C200035B758 /* ActivePathPanel.swift */,
+				575C3CF52BD60C200035B758 /* PathPanel.swift */,
 				5724877B2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift */,
 				5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */,
 			);
@@ -326,7 +328,7 @@
 		572487812BDF82180096DDE4 /* PathView */ = {
 			isa = PBXGroup;
 			children = (
-				575C3CF92BD9F11E0035B758 /* ActivePathView.swift */,
+				575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */,
 				574CC7E92BFA53310042FEE3 /* PathView.swift */,
 				572487862BDF83620096DDE4 /* PathView+BezierHandle.swift */,
 				572487842BDF832D0096DDE4 /* PathView+EdgeHandle.swift */,
@@ -406,6 +408,7 @@
 			children = (
 				57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */,
 				576BE2642C048F6900353912 /* ActiveItemView.swift */,
+				571B9B292C148B0800AAD516 /* FocusedPathStore.swift */,
 			);
 			path = ActiveItem;
 			sourceTree = "<group>";
@@ -725,7 +728,7 @@
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57DD2A282C0321110046931C /* ItemPanel.swift in Sources */,
 				572552872BF0F563002147AE /* SimpleTracer.swift in Sources */,
-				575C3CFA2BD9F11E0035B758 /* ActivePathView.swift in Sources */,
+				575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */,
@@ -735,7 +738,7 @@
 				572487872BDF83620096DDE4 /* PathView+BezierHandle.swift in Sources */,
 				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
-				575C3CF62BD60C200035B758 /* ActivePathPanel.swift in Sources */,
+				575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */,
 				57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57DD2A162C0236E60046931C /* ItemStore.swift in Sources */,
@@ -775,6 +778,7 @@
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
 				57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */,
+				571B9B2A2C148B0800AAD516 /* FocusedPathStore.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,

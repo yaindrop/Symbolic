@@ -25,54 +25,56 @@ class PathViewModel: ObservableObject {
 
 struct PathView: View, TracedView {
     let path: Path
-    let property: PathProperty
-    let focusedPart: PathFocusedPart?
 
     var body: some View { trace {
-        ZStack {
-            Stroke(path: path)
-            handles(path: path)
-        }
+        content
     } }
 
     // MARK: private
 
-    @ViewBuilder private func handles(path: Path) -> some View {
-        let nodes = path.nodes
-        let segmentsNodes = nodes.filter { path.segment(from: $0.id) != nil }
-        ForEach(segmentsNodes) { EdgeHandle(pathId: path.id, fromNodeId: $0.id) }
-        ForEach(nodes) { NodeHandle(pathId: path.id, nodeId: $0.id) }
-        ForEach(segmentsNodes) { FocusedEdgeHandle(pathId: path.id, fromNodeId: $0.id) }
-        ForEach(segmentsNodes) { BezierHandle(pathId: path.id, fromNodeId: $0.id) }
+    @ViewBuilder private var content: some View {
+        let nodeIds = path.nodes.map { $0.id }
+        let segmentIds = path.nodes.filter { path.segment(from: $0.id) != nil }.map { $0.id }
+        ZStack {
+            Stroke(pathId: path.id)
+            ForEach(segmentIds) { EdgeHandle(pathId: path.id, fromNodeId: $0) }
+            ForEach(nodeIds) { NodeHandle(pathId: path.id, nodeId: $0) }
+            ForEach(segmentIds) { FocusedEdgeHandle(pathId: path.id, fromNodeId: $0) }
+            ForEach(segmentIds) { BezierHandle(pathId: path.id, fromNodeId: $0) }
+        }
     }
 }
 
 // MARK: - Stroke
 
 extension PathView {
-    struct Stroke: View, TracedView, SelectorHolder {
+    struct Stroke: View, TracedView, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
 
+            @Selected({ global.path.path(id: $0.pathId) }) var path
             @Selected({ global.viewport.toView }) var toView
         }
 
         @SelectorWrapper var selector
 
-        let path: Path
+        let pathId: UUID
 
         var body: some View { trace {
-            setupSelector {
+            setupSelector(.init(pathId: pathId)) {
                 content
             }
         } }
 
-        private var content: some View {
-            SUPath { path.append(to: &$0) }
-                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                .allowsHitTesting(false)
-                .id(path.id)
-                .transformEffect(selector.toView)
+        @ViewBuilder private var content: some View {
+            if let path = selector.path {
+                SUPath { path.append(to: &$0) }
+                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                    .allowsHitTesting(false)
+                    .id(path.id)
+                    .transformEffect(selector.toView)
+            }
         }
     }
 }

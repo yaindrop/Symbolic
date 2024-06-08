@@ -11,9 +11,9 @@ struct CanvasView: View, TracedView {
 
     var body: some View { trace {
         navigationView
-            .onChange(of: global.activeItem.activePath) {
-                let _r = tracer.range("Active path change \(global.activeItem.activePath?.id.uuidString ?? "nil")"); defer { _r() }
-                global.activeItem.onActivePathChanged()
+            .onChange(of: global.activeItem.focusedPath) {
+                let _r = tracer.range("Focused path change \(global.activeItem.focusedPath?.id.uuidString ?? "nil")"); defer { _r() }
+                global.focusedPath.onFocusedPathChanged()
             }
             .onAppear {
                 let setup = CanvasSetup()
@@ -25,7 +25,7 @@ struct CanvasView: View, TracedView {
                 setup.multipleTouchPress(multipleTouchPress: multipleTouchPress)
             }
             .onAppear {
-                global.panel.register(align: .bottomTrailing) { ActivePathPanel(panelId: $0) }
+                global.panel.register(align: .bottomTrailing) { PathPanel(panelId: $0) }
                 global.panel.register(align: .bottomLeading) { HistoryPanel(panelId: $0) }
                 global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
                 global.panel.register(align: .topTrailing) { DebugPanel(panelId: $0, multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
@@ -91,7 +91,7 @@ struct CanvasView: View, TracedView {
     @ViewBuilder private var overlay: some View { trace("overlay") {
         ZStack {
             ActiveItemView()
-            ActivePathView()
+            FocusedPathView()
 
             DraggingSelectionView()
             AddingPathView()
@@ -110,14 +110,14 @@ struct ItemsView: View, TracedView, SelectorHolder {
 
         @Selected({ global.viewport.toView }) var toView
         @Selected({ global.item.allPaths }) var allPaths
-        @Selected({ global.activeItem.focusedItemId }) var activePathId
+        @Selected({ global.activeItem.focusedItemId }) var focusedItemId
     }
 
     @SelectorWrapper var selector
 
     var body: some View { trace {
         setupSelector {
-            ForEach(selector.allPaths.filter { $0.id != selector.activePathId }) { p in
+            ForEach(selector.allPaths.filter { $0.id != selector.focusedItemId }) { p in
                 SUPath { path in p.append(to: &path) }
                     .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
             }

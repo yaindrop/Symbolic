@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Nodes
 
-extension ActivePathPanel {
+extension PathPanel {
     struct Nodes: View, TracedView {
         let path: Path
 
@@ -29,11 +29,11 @@ extension ActivePathPanel {
 
 // MARK: - NodePanel
 
-extension ActivePathPanel {
+extension PathPanel {
     struct NodePanel: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let nodeId: UUID }
         class Selector: SelectorBase {
-            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
         }
 
         @SelectorWrapper var selector
@@ -98,20 +98,20 @@ extension ActivePathPanel {
         }
 
         private func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-            { global.documentUpdater.update(activePath: .setNodePosition(.init(nodeId: nodeId, position: $0)), pending: pending) }
+            { global.documentUpdater.update(focusedPath: .setNodePosition(.init(nodeId: nodeId, position: $0)), pending: pending) }
         }
     }
 }
 
 // MARK: - NodeMenu
 
-private extension ActivePathPanel {
+private extension PathPanel {
     struct NodeMenu<Content: View>: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
-            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
         }
 
         @SelectorWrapper var selector
@@ -165,7 +165,7 @@ private extension ActivePathPanel {
         }
 
         private func toggleFocus() {
-            selector.focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(node: nodeId)
+            selector.focused ? global.focusedPath.clearFocus() : global.focusedPath.setFocus(node: nodeId)
         }
 
         private func mergeNode() {
@@ -179,21 +179,21 @@ private extension ActivePathPanel {
         }
 
         private func deleteNode() {
-            global.documentUpdater.update(activePath: .deleteNode(.init(nodeId: nodeId)))
+            global.documentUpdater.update(focusedPath: .deleteNode(.init(nodeId: nodeId)))
         }
     }
 }
 
 // MARK: - NodeDetailPanel
 
-private extension ActivePathPanel {
+private extension PathPanel {
     struct NodeDetailPanel: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId) }) var node
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.nodeId)?.edge }) var edge
-            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
         }
 
         @SelectorWrapper var selector
@@ -271,18 +271,18 @@ private extension ActivePathPanel {
         }
 
         private func updatePosition(position: Point2, pending: Bool = false) {
-            global.documentUpdater.update(activePath: .setNodePosition(.init(nodeId: nodeId, position: position)), pending: pending)
+            global.documentUpdater.update(focusedPath: .setNodePosition(.init(nodeId: nodeId, position: position)), pending: pending)
         }
 
         private func updatePrevEdge(position: Point2, pending: Bool = false) {
             if let prevPair = selector.prevPair {
-                global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: prevPair.node.id, edge: prevPair.edge.with(control0: .init(position)))), pending: pending)
+                global.documentUpdater.update(focusedPath: .setEdge(.init(fromNodeId: prevPair.node.id, edge: prevPair.edge.with(control0: .init(position)))), pending: pending)
             }
         }
 
         private func updateEdge(position: Point2, pending: Bool = false) {
             if let edge = selector.edge {
-                global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: nodeId, edge: edge.with(control1: .init(position)))), pending: pending)
+                global.documentUpdater.update(focusedPath: .setEdge(.init(fromNodeId: nodeId, edge: edge.with(control1: .init(position)))), pending: pending)
             }
         }
     }

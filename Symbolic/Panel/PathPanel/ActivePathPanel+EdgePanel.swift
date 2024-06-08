@@ -1,18 +1,17 @@
 import Foundation
 import SwiftUI
 
-extension ActivePathPanel {
+extension PathPanel {
     // MARK: - EdgePanel
 
     struct EdgePanel: View, TracedView, EquatableBy {
         let path: Path
         let property: PathProperty
-        let focusedPart: PathFocusedPart?
 
         let fromNodeId: UUID
 
         var segment: PathSegment? { path.segment(from: fromNodeId) }
-        var focused: Bool { focusedPart?.edgeId == fromNodeId }
+        var focused: Bool { false }
 
         var equatableBy: some Equatable { fromNodeId; segment; focused }
 
@@ -96,20 +95,20 @@ extension ActivePathPanel {
         } }
 
         private func toggleFocus() {
-            focused ? global.activeItem.clearFocus() : global.activeItem.setFocus(edge: fromNodeId)
+            focused ? global.focusedPath.clearFocus() : global.focusedPath.setFocus(segment: fromNodeId)
         }
 
         private func splitEdge() {
             guard let segment else { return }
             let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
             let id = UUID()
-            global.documentUpdater.update(activePath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
-            global.activeItem.setFocus(node: id)
+            global.documentUpdater.update(focusedPath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
+            global.focusedPath.setFocus(node: id)
         }
 
         private func breakEdge() {
-            if let activePathId = global.activeItem.focusedItemId {
-                global.documentUpdater.update(path: .breakAtEdge(.init(pathId: activePathId, fromNodeId: fromNodeId, newPathId: UUID())))
+            if let pathId = global.activeItem.focusedItemId {
+                global.documentUpdater.update(path: .breakAtEdge(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
             }
         }
     }
@@ -145,10 +144,10 @@ private struct BezierPanel: View, TracedView, EquatableBy {
     }}
 
     private func updateControl0(pending: Bool = false) -> (Point2) -> Void {
-        { global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control0: Vector2($0)))), pending: pending) }
+        { global.documentUpdater.update(focusedPath: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control0: Vector2($0)))), pending: pending) }
     }
 
     private func updateControl1(pending: Bool = false) -> (Point2) -> Void {
-        { global.documentUpdater.update(activePath: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control1: Vector2($0)))), pending: pending) }
+        { global.documentUpdater.update(focusedPath: .setEdge(.init(fromNodeId: fromNodeId, edge: edge.with(control1: Vector2($0)))), pending: pending) }
     }
 }

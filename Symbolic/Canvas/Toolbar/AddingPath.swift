@@ -90,7 +90,7 @@ struct AddingPathView: View, TracedView, SelectorHolder {
     var body: some View { trace {
         setupSelector {
             if let addingPath = selector.addingPath {
-                PathView(path: addingPath, property: .init(id: addingPath.id), focusedPart: nil)
+                PathView(path: addingPath)
                     .environmentObject(PathViewModel())
             }
         }

@@ -20,6 +20,8 @@ struct GlobalStore {
 
     private let activeItemStore = ActiveItemStore()
 
+    private let focusedPathStore = FocusedPathStore()
+
     private let draggingSelectionStore = DraggingSelectionStore()
 
     private let addingPathStore = AddingPathStore()
@@ -51,6 +53,8 @@ extension GlobalStore {
     var item: ItemService { .init(path: path, store: itemStore, pendingStore: pendingItemStore) }
 
     var activeItem: ActiveItemService { .init(viewport: viewport, toolbar: toolbar, item: item, path: path, pathProperty: pathProperty, store: activeItemStore) }
+
+    var focusedPath: FocusedPathService { .init(activeItem: activeItem, store: focusedPathStore) }
 
     var draggingSelection: DraggingSelectionService { .init(viewport: viewport, store: draggingSelectionStore) }
 

@@ -1,12 +1,13 @@
 import Foundation
 import SwiftUI
 
-// MARK: - ActivePathPanel
+// MARK: - PathPanel
 
-struct ActivePathPanel: View, TracedView, SelectorHolder {
+struct PathPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.activeItem.activePath }) var path
-        @Selected({ global.activeItem.store.pathFocusedPart }) var focusedPart
+        @Selected({ global.activeItem.focusedPath }) var path
+        @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
+        @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
     }
 
     @SelectorWrapper var selector
@@ -25,7 +26,7 @@ struct ActivePathPanel: View, TracedView, SelectorHolder {
 
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
-            PanelTitle(name: "Active Path")
+            PanelTitle(name: "Path")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
                 .invisibleSoildOverlay()
                 .multipleGesture(global.panel.moveGesture(panelId: panelId))
@@ -39,8 +40,12 @@ struct ActivePathPanel: View, TracedView, SelectorHolder {
         if let path = selector.path {
             ManagedScrollView(model: scrollViewModel) { proxy in
                 Nodes(path: path).id(path.id)
-                    .onChange(of: selector.focusedPart) {
-                        guard let id = selector.focusedPart?.id else { return }
+                    .onChange(of: selector.focusedNodeId) {
+                        guard let id = selector.focusedNodeId else { return }
+                        withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
+                    }
+                    .onChange(of: selector.focusedSegmentId) {
+                        guard let id = selector.focusedSegmentId else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                     }
             }

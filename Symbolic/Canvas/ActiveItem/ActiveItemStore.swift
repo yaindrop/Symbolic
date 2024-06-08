@@ -3,35 +3,11 @@ import SwiftUI
 
 private let subtracer = tracer.tagged("ActiveItemService")
 
-// MARK: - PathFocusedPart
-
-enum PathFocusedPart: Equatable {
-    case node(UUID)
-    case edge(UUID)
-
-    var id: UUID {
-        switch self {
-        case let .node(id): id
-        case let .edge(id): id
-        }
-    }
-
-    var edgeId: UUID? {
-        if case let .edge(id) = self { id } else { nil }
-    }
-
-    var nodeId: UUID? {
-        if case let .node(id) = self { id } else { nil }
-    }
-}
-
 // MARK: - ActiveItemStore
 
 class ActiveItemStore: Store {
     @Trackable var activeItemIds = Set<UUID>()
     @Trackable var focusedItemId: UUID?
-
-    @Trackable var pathFocusedPart: PathFocusedPart?
 
     fileprivate func update(active: Set<UUID>, focused: UUID? = nil) {
         withFastAnimation {
@@ -53,12 +29,6 @@ class ActiveItemStore: Store {
             update(active: activeItemIds.with { $0.subtract(itemIds) })
         }
     }
-
-    fileprivate func update(pathFocusedPart: PathFocusedPart?) {
-        withFastAnimation {
-            update { $0(\._pathFocusedPart, pathFocusedPart) }
-        }
-    }
 }
 
 // MARK: - ActiveItemService
@@ -77,7 +47,6 @@ struct ActiveItemService {
 extension ActiveItemService {
     var activeItemIds: Set<UUID> { store.activeItemIds }
     var focusedItemId: UUID? { store.focusedItemId }
-    var pathFocusedPart: PathFocusedPart? { store.pathFocusedPart }
 
     var selectedItemIds: Set<UUID> {
         guard store.focusedItemId == nil else { return [] }
@@ -116,14 +85,14 @@ extension ActiveItemService {
         selectedItemIds.contains(itemId)
     }
 
-    var activePath: Path? {
+    var focusedPath: Path? {
         if let focusedItemId {
             return path.path(id: focusedItemId)
         }
         return nil
     }
 
-    var activePathProperty: PathProperty? {
+    var focusedPathProperty: PathProperty? {
         if let focusedItemId {
             return pathProperty.property(id: focusedItemId)
         }
@@ -205,7 +174,6 @@ extension ActiveItemService {
         let ancestors = item.ancestorIds(of: itemId)
         if ancestors.isEmpty {
             store.update(active: store.activeItemIds.with { $0.insert(itemId) })
-
             return
         }
         let lastInactiveIndex = ancestors.lastIndex { !store.activeItemIds.contains($0) }
@@ -220,37 +188,6 @@ extension ActiveItemService {
     func selectRemove(itemIds: [UUID]) {
         let _r = subtracer.range(type: .intent, "deselect \(itemIds)"); defer { _r() }
         store.update(deselect: itemIds)
-    }
-}
-
-// MARK: path part focus actions
-
-extension ActiveItemService {
-    func setFocus(node id: UUID) {
-        let _r = subtracer.range(type: .intent, "set focus"); defer { _r() }
-        store.update(pathFocusedPart: .node(id))
-    }
-
-    func setFocus(edge fromNodeId: UUID) {
-        let _r = subtracer.range(type: .intent, "set focus"); defer { _r() }
-        store.update(pathFocusedPart: .edge(fromNodeId))
-    }
-
-    func clearFocus() {
-        let _r = subtracer.range(type: .intent, "clear focus"); defer { _r() }
-        store.update(pathFocusedPart: nil)
-    }
-
-    func onActivePathChanged() {
-        if let part = store.pathFocusedPart {
-            if let path = activePath {
-                if path.node(id: part.id) == nil {
-                    clearFocus()
-                }
-            } else {
-                clearFocus()
-            }
-        }
     }
 }
 

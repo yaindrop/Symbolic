@@ -11,7 +11,7 @@ extension PathView {
 
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
-            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
         }
 
         @SelectorWrapper var selector

@@ -10,9 +10,9 @@ extension PathView {
             override var syncUpdate: Bool { true }
 
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
-            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.fromNodeId }) var nodeFocused
-            @Selected({ global.activeItem.pathFocusedPart?.edgeId == $0.fromNodeId }) var edgeFocused
-            @Selected({ global.activeItem.pathFocusedPart?.nodeId == global.path.path(id: $0.pathId)?.node(after: $0.fromNodeId)?.id }) var nextFocused
+            @Selected({ global.focusedPath.focusedNodeId == $0.fromNodeId }) var nodeFocused
+            @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var segmentFocused
+            @Selected({ global.focusedPath.focusedNodeId == global.path.path(id: $0.pathId)?.node(after: $0.fromNodeId)?.id }) var nextFocused
         }
 
         @SelectorWrapper var selector
@@ -45,7 +45,7 @@ extension PathView {
 
         @ViewBuilder private var control0: some View {
             if let segment = selector.segment {
-                if selector.edgeFocused || selector.nodeFocused {
+                if selector.segmentFocused || selector.nodeFocused {
                     line(from: segment.from, to: segment.control0, color: .green)
                     circle(at: segment.control0, color: .green)
                         .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: true))
@@ -55,7 +55,7 @@ extension PathView {
 
         @ViewBuilder private var control1: some View {
             if let segment = selector.segment {
-                if selector.edgeFocused || selector.nextFocused {
+                if selector.segmentFocused || selector.nextFocused {
                     line(from: segment.to, to: segment.control1, color: .orange)
                     circle(at: segment.control1, color: .orange)
                         .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: false))

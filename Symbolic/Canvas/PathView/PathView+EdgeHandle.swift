@@ -61,7 +61,7 @@ extension PathView {
             override var syncUpdate: Bool { true }
 
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
-            @Selected({ global.activeItem.pathFocusedPart?.edgeId == $0.fromNodeId }) var focused
+            @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
         }
 
         @SelectorWrapper var selector

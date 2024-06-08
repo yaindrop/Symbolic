@@ -58,11 +58,11 @@ struct ContextMenuView: View, TracedView, EquatableBy, ComputedSelectorHolder {
         override var syncUpdate: Bool { true }
 
         @Selected({ global.viewport.store.viewSize }) var viewSize
-        @Selected({ global.activeItem.activePath }) var focusedPath
+        @Selected({ global.activeItem.focusedPath }) var focusedPath
         @Selected({ global.activeItem.focusedGroup }) var focusedGroup
         @Selected({
             switch $0.data {
-            case .focusedPath: global.activeItem.activePath.map { global.activeItem.boundingRect(itemId: $0.id) }
+            case .focusedPath: global.activeItem.focusedPath.map { global.activeItem.boundingRect(itemId: $0.id) }
             case .focusedGroup: global.activeItem.focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) }
             case .selection: global.activeItem.selectionBounds
             default: CGRect.zero

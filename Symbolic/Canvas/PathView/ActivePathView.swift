@@ -87,8 +87,8 @@ class ActivePathViewModel: PathViewModel {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
                 moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
-            } else {
-                global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending)
+            } else if let activePathId = global.activeItem.activePath?.id {
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: [activePathId], offset: v.offset)), pending: pending)
             }
         }
         func updateLongPress(segment _: PathSegment, pending: Bool = false) {

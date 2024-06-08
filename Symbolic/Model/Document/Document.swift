@@ -5,7 +5,7 @@ import SwiftUI
 // MARK: - Document
 
 struct Document: Encodable {
-    let events: [DocumentEvent]
+    var events: [DocumentEvent] = []
 
     init(events: [DocumentEvent] = []) {
         self.events = events
@@ -16,19 +16,15 @@ struct Document: Encodable {
             events = []
             return
         }
-        let parser = XMLParser(data: svgData)
+        var paths: [Path] = []
         let delegate = SVGParserDelegate()
-        var events: [DocumentEvent] = []
+        delegate.onPath { paths.append(Path(from: $0)) }
+
+        let parser = XMLParser(data: svgData)
         parser.delegate = delegate
-        delegate.onPath {
-            let path = Path(from: $0)
-            let pathEvent: PathEvent = .create(.init(path: path))
-            let action = DocumentAction.path(.load(.init(path: path)))
-            let event = DocumentEvent(kind: .single(.path(pathEvent)), action: action)
-            events.append(event)
-        }
         parser.parse()
-        self.events = events
+
+        events.append(.init(kind: .single(.path(.create(.init(paths: paths)))), action: .path(.load(.init(paths: paths)))))
     }
 }
 

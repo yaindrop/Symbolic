@@ -218,11 +218,11 @@ extension Path {
         .init(id: id, pairs: pairs, isClosed: isClosed ?? self.isClosed)
     }
 
-    func update(move: PathEvent.Update.Move) {
+    func update(moveOffset: Vector2) {
         let _r = tracer.range("Path.update move"); defer { _r() }
         for id in pairs.keys {
             guard var pair = pairs[id] else { return }
-            pair.node = pair.node.with(offset: move.offset)
+            pair.node = pair.node.with(offset: moveOffset)
             pairs[id] = pair
         }
     }

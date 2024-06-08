@@ -2,10 +2,10 @@ import Combine
 import Foundation
 import SwiftUI
 
-private let storeTracer = tracer.tagged("store", enabled: true)
-private let managerTracer = storeTracer.tagged("manager", enabled: true)
-private let trackableTracer = storeTracer.tagged("trackable", enabled: true)
-private let selectedTracer = storeTracer.tagged("selected", enabled: true)
+private let storeTracer = tracer.tagged("store", enabled: false)
+private let managerTracer = storeTracer.tagged("manager", enabled: false)
+private let trackableTracer = storeTracer.tagged("trackable", enabled: false)
+private let selectedTracer = storeTracer.tagged("selected", enabled: false)
 
 private struct StoreSubscription {
     let id: Int
@@ -183,8 +183,8 @@ extension Store: _StoreProtocol {
     struct Updater<S: _StoreProtocol> {
         let store: S
 
-        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T) {
-            store.update(keyPath: keyPath, value)
+        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T, forced: Bool = false) {
+            store.update(keyPath: keyPath, value, forced: forced)
         }
 
         fileprivate init(_ store: S) {
@@ -231,7 +231,7 @@ extension _StoreProtocol {
         return value
     }
 
-    fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T) {
+    fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T, forced: Bool) {
         let _r = trackableTracer.range("update \(keyPath) with \(newValue)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
@@ -241,7 +241,7 @@ extension _StoreProtocol {
             id = generateTrackableId()
             wrapper.id = id
         }
-        guard wrapper.value != newValue else { return }
+        guard forced || wrapper.value != newValue else { return }
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
 
@@ -383,13 +383,14 @@ class _Selector<Props>: ObservableObject, CancellableHolder {
     fileprivate let retrackSubject = PassthroughSubject<Void, Never>()
 
     func setup(_ props: Props) {
+        let _r = selectedTracer.range("setup selector\(configs.name.map { " \($0)" } ?? "")"); defer { _r() }
         if self.props == nil {
             self.props = props
         }
     }
 
     deinit {
-        print("dbg here!!!", configs.name)
+        let _r = selectedTracer.range("deinit selector\(configs.name.map { " \($0)" } ?? "")"); defer { _r() }
         updateTask?.cancel()
     }
 }

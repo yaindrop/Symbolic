@@ -11,8 +11,10 @@ enum ItemEvent: Equatable, Encodable {
 // MARK: - PathEvent
 
 enum PathEvent: Equatable, Encodable {
-    struct Create: Equatable, Encodable { let path: Path }
-    struct Delete: Equatable, Encodable { let pathId: UUID }
+    struct Create: Equatable, Encodable { let paths: [Path] }
+    struct Delete: Equatable, Encodable { let pathIds: [UUID] }
+    struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
+
     struct Update: Equatable, Encodable { let pathId: UUID, kind: Kind }
 
     // multi update
@@ -21,8 +23,9 @@ enum PathEvent: Equatable, Encodable {
     struct EdgeBreak: Equatable, Encodable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
 
     case create(Create)
-    case update(Update)
     case delete(Delete)
+    case move(Move)
+    case update(Update)
 
     // multi update
     case merge(Merge)
@@ -33,16 +36,12 @@ enum PathEvent: Equatable, Encodable {
 // MARK: Update
 
 extension PathEvent.Update {
-    struct Move: Equatable, Encodable { let offset: Vector2 }
-
     struct NodeCreate: Equatable, Encodable { let prevNodeId: UUID?, node: PathNode }
     struct NodeUpdate: Equatable, Encodable { let node: PathNode }
     struct NodeDelete: Equatable, Encodable { let nodeId: UUID }
-
     struct EdgeUpdate: Equatable, Encodable { let fromNodeId: UUID, edge: PathEdge }
 
     enum Kind: Equatable, Encodable {
-        case move(Move)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
@@ -102,9 +101,11 @@ extension PathEvent {
     var affectedPathIds: [UUID] {
         switch self {
         case let .create(event):
-            [event.path.id]
+            event.paths.map { $0.id }
         case let .delete(event):
-            [event.pathId]
+            event.pathIds
+        case let .move(event):
+            event.pathIds
         case let .update(event):
             [event.pathId]
         case let .merge(event):

@@ -15,14 +15,14 @@ enum ItemAction: Equatable, Encodable {
 // MARK: - PathAction
 
 enum PathAction: Equatable, Encodable {
-    struct Load: Equatable, Encodable { let path: Path }
+    struct Load: Equatable, Encodable { let paths: [Path] }
 
     struct Create: Equatable, Encodable { let path: Path }
     struct Delete: Equatable, Encodable { let pathIds: [UUID] }
+    struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
     struct Update: Equatable, Encodable { let pathId: UUID, kind: Kind }
 
     // multi update
-    struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
     struct Merge: Equatable, Encodable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     struct BreakAtNode: Equatable, Encodable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
     struct BreakAtEdge: Equatable, Encodable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
@@ -31,9 +31,9 @@ enum PathAction: Equatable, Encodable {
 
     case create(Create)
     case delete(Delete)
+    case move(Move)
     case update(Update)
 
-    case move(Move)
     case merge(Merge)
     case breakAtNode(BreakAtNode)
     case breakAtEdge(BreakAtEdge)
@@ -50,7 +50,6 @@ extension PathAction.Update {
     struct AddEndingNode: Equatable, Encodable { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
     struct SplitSegment: Equatable, Encodable { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
-    struct Move: Equatable, Encodable { let offset: Vector2 }
     struct MoveNode: Equatable, Encodable { let nodeId: UUID, offset: Vector2 }
     struct MoveEdge: Equatable, Encodable { let fromNodeId: UUID, offset: Vector2 }
     struct MoveEdgeControl: Equatable, Encodable { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
@@ -65,7 +64,6 @@ extension PathAction.Update {
         case addEndingNode(AddEndingNode)
         case splitSegment(SplitSegment)
 
-        case move(Move)
         case moveNode(MoveNode)
         case moveEdge(MoveEdge)
         case moveEdgeControl(MoveEdgeControl)

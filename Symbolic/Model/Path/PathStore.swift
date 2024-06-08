@@ -23,8 +23,8 @@ extension PathStoreProtocol {
 class PathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
 
-    fileprivate func update(map: PathMap) {
-        update { $0(\._map, map) }
+    fileprivate func update(map: PathMap, forced: Bool = false) {
+        update { $0(\._map, map, forced: forced) }
     }
 }
 
@@ -67,24 +67,35 @@ extension PathService {
 extension PathService {
     var targetStore: PathStore { pendingStore.active ? pendingStore : store }
 
-    private func add(path: Path) {
+    private func add(paths: [Path]) {
         let _r = subtracer.range("add"); defer { _r() }
-        guard !exists(id: path.id) else { return }
-        guard path.count > 1 else { return }
-        targetStore.update(map: map.with { $0[path.id] = path.cloned })
+        var updated = map
+        for path in paths {
+            guard !exists(id: path.id) else { continue }
+            guard path.count > 1 else { continue }
+            updated[path.id] = path.cloned
+        }
+        targetStore.update(map: updated)
     }
 
-    private func remove(pathId: UUID) {
+    private func remove(pathIds: [UUID]) {
         let _r = subtracer.range("remove"); defer { _r() }
-        guard exists(id: pathId) else { return }
-        targetStore.update(map: map.with { $0.removeValue(forKey: pathId) })
+        var updated = map
+        for pathId in pathIds {
+            updated.removeValue(forKey: pathId)
+        }
+        targetStore.update(map: updated)
     }
 
-    private func update(path: Path) {
+    private func update(paths: [Path]) {
         let _r = subtracer.range("update"); defer { _r() }
-        guard exists(id: path.id) else { return }
-        guard path.count > 1 else { remove(pathId: path.id); return }
-        targetStore.update(map: map.with { $0[path.id] = path.cloned })
+        var updated = map
+        for path in paths {
+            if path.count <= 1 {
+                updated.removeValue(forKey: path.id)
+            }
+        }
+        targetStore.update(map: updated, forced: true)
     }
 
     private func clear() {
@@ -148,6 +159,7 @@ extension PathService {
         switch event {
         case let .create(event): loadEvent(event)
         case let .delete(event): loadEvent(event)
+        case let .move(event): loadEvent(event)
         case let .update(event): loadEvent(event)
         case let .merge(event): loadEvent(event)
         case let .nodeBreak(event): loadEvent(event)
@@ -156,17 +168,25 @@ extension PathService {
     }
 
     private func loadEvent(_ event: PathEvent.Create) {
-        add(path: event.path)
+        add(paths: event.paths)
     }
 
     private func loadEvent(_ event: PathEvent.Delete) {
-        remove(pathId: event.pathId)
+        remove(pathIds: event.pathIds)
+    }
+
+    private func loadEvent(_ event: PathEvent.Move) {
+        let paths = event.pathIds.compactMap { pathId -> Path? in
+            guard let path = path(id: pathId) else { return nil }
+            path.update(moveOffset: event.offset)
+            return path
+        }
+        update(paths: paths)
     }
 
     private func loadEvent(_ event: PathEvent.Update) {
         let pathId = event.pathId
         switch event.kind {
-        case let .move(event): loadEvent(pathId, event)
         case let .nodeCreate(event): loadEvent(pathId, event)
         case let .nodeDelete(event): loadEvent(pathId, event)
         case let .nodeUpdate(event): loadEvent(pathId, event)
@@ -176,34 +196,28 @@ extension PathService {
 
     // MARK: path update
 
-    private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.Move) {
-        guard let path = path(id: pathId) else { return }
-        path.update(move: event)
-        update(path: path)
-    }
-
     private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.NodeCreate) {
         guard let path = path(id: pathId) else { return }
         path.update(nodeCreate: event)
-        update(path: path)
+        update(paths: [path])
     }
 
     private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.NodeDelete) {
         guard let path = path(id: pathId) else { return }
         path.update(nodeDelete: event)
-        update(path: path)
+        update(paths: [path])
     }
 
     private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.NodeUpdate) {
         guard let path = path(id: pathId) else { return }
         path.update(nodeUpdate: event)
-        update(path: path)
+        update(paths: [path])
     }
 
     private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.EdgeUpdate) {
         guard let path = path(id: pathId) else { return }
         path.update(edgeUpdate: event)
-        update(path: path)
+        update(paths: [path])
     }
 
     // MARK: path multi update
@@ -213,19 +227,19 @@ extension PathService {
         guard let path = path(id: pathId),
               let mergedPath = self.path(id: mergedPathId) else { return }
         if mergedPath != path {
-            remove(pathId: mergedPathId)
+            remove(pathIds: [mergedPathId])
         }
         path.update(merge: event, mergedPath: mergedPath)
-        update(path: path)
+        update(paths: [path])
     }
 
     private func loadEvent(_ event: PathEvent.NodeBreak) {
         let pathId = event.pathId
         guard let path = path(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
-        update(path: path)
+        update(paths: [path])
         if let newPath {
-            add(path: newPath)
+            add(paths: [newPath])
         }
     }
 
@@ -233,9 +247,9 @@ extension PathService {
         let pathId = event.pathId
         guard let path = path(id: pathId) else { return }
         let newPath = path.update(edgeBreak: event)
-        update(path: path)
+        update(paths: [path])
         if let newPath {
-            add(path: newPath)
+            add(paths: [newPath])
         }
     }
 }

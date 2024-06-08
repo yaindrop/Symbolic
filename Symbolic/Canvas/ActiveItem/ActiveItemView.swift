@@ -139,7 +139,7 @@ extension ActiveItemView {
                 let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
                 global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
             } else {
-                global.documentUpdater.updateInView(activePath: .move(.init(offset: v.offset)), pending: pending)
+                global.documentUpdater.updateInView(path: .move(.init(pathIds: [path.id], offset: v.offset)), pending: pending)
             }
         }
     }

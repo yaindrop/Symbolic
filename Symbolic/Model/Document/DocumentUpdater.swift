@@ -40,8 +40,6 @@ extension DocumentUpdater {
             case let .splitSegment(kind):
                 .splitSegment(.init(fromNodeId: kind.fromNodeId, paramT: kind.paramT, newNodeId: kind.newNodeId, offset: kind.offset.applying(toWorld)))
 
-            case let .move(kind):
-                .move(.init(offset: kind.offset.applying(toWorld)))
             case let .moveNode(kind):
                 .moveNode(.init(nodeId: kind.nodeId, offset: kind.offset.applying(toWorld)))
             case let .moveEdge(kind):
@@ -254,20 +252,18 @@ extension DocumentUpdater {
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Load) {
-        let path = action.path
-        events.append(.create(.init(path: path)))
+        let paths = action.paths
+        events.append(.create(.init(paths: paths)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Create) {
         let path = action.path
-        events.append(.create(.init(path: path)))
+        events.append(.create(.init(paths: [path])))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Delete) {
         let pathIds = action.pathIds
-        for pathId in pathIds {
-            events.append(.delete(.init(pathId: pathId)))
-        }
+        events.append(.delete(.init(pathIds: pathIds)))
     }
 
     // MARK: single path update actions
@@ -279,7 +275,6 @@ extension DocumentUpdater {
         case let .addEndingNode(action): collectEvents(to: &events, pathId: pathId, action)
         case let .splitSegment(action): collectEvents(to: &events, pathId: pathId, action)
 
-        case let .move(action): collectEvents(to: &events, pathId: pathId, action)
         case let .moveNode(action): collectEvents(to: &events, pathId: pathId, action)
         case let .moveEdge(action): collectEvents(to: &events, pathId: pathId, action)
         case let .moveEdgeControl(action): collectEvents(to: &events, pathId: pathId, action)
@@ -294,7 +289,7 @@ extension DocumentUpdater {
         guard let path = pathStore.path(id: pathId),
               path.node(id: nodeId) != nil else { return }
         if path.nodes.count - 1 < 2 {
-            events.append(.delete(.init(pathId: pathId)))
+            events.append(.delete(.init(pathIds: [pathId])))
         } else {
             events.append(.init(in: pathId, .nodeDelete(.init(nodeId: nodeId))))
         }
@@ -328,17 +323,6 @@ extension DocumentUpdater {
         events.append(.init(in: pathId, .nodeCreate(.init(prevNodeId: fromNodeId, node: .init(id: newNodeId, position: position + snappedOffset)))))
         events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: fromNodeId, edge: before.edge))))
         events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: newNodeId, edge: after.edge))))
-    }
-
-    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.Move) {
-        let offset = action.offset
-        guard let path = pathStore.path(id: pathId) else { return }
-
-        let position = path.boundingRect.minPoint
-        let snappedOffset = position.offset(to: grid.snap(position + offset))
-        guard !snappedOffset.isZero else { return }
-
-        events.append(.init(in: pathId, .move(.init(offset: snappedOffset))))
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveNode) {
@@ -393,9 +377,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Move) {
         let offset = action.offset, pathIds = action.pathIds
-        for pathId in pathIds {
-            events.append(.init(in: pathId, .move(.init(offset: offset))))
-        }
+        events.append(.move(.init(pathIds: pathIds, offset: offset)))
     }
 
     private func collectEvents(to events: inout [PathEvent], _ action: PathAction.Merge) {

@@ -21,6 +21,8 @@ struct PanelView: View, EquatableBy {
 
 struct PanelRoot: View, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "PanelRoot") }
+
         @Selected({ global.panel.panels }) var panels
     }
 

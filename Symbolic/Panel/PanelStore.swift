@@ -51,7 +51,7 @@ extension PanelStore {
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
         guard let origin = movingPanel[panelId]?.origin else { return }
         let offset = v.offset
-        let _r = subtracer.range("moving \(panelId) from \(origin) by \(offset)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "moving \(panelId) from \(origin) by \(offset)"); defer { _r() }
         guard var panel = panel(id: panelId) else { return }
         panel.origin = origin + offset
         subtracer.instant("panel.origin \(panel.origin)")
@@ -65,7 +65,7 @@ extension PanelStore {
     func onMoved(panelId: UUID, _ v: DragGesture.Value) {
         guard let origin = movingPanel[panelId]?.origin else { return }
         let offset = v.offset, speed = v.speed
-        let _r = subtracer.range("moved \(panelId) from \(origin) by \(offset) with speed \(speed)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "moved \(panelId) from \(origin) by \(offset) with speed \(speed)"); defer { _r() }
         guard var panel = panel(id: panelId) else { return }
         panel.origin = origin + offset
 

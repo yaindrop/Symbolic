@@ -130,17 +130,17 @@ class Tracer {
         return recorded
     }
 
-    func instant(_ message: String, type: NodeType = .normal) {
-        onNode(.instant(.init(type: type, time: .now, message: message)))
+    func instant(type: NodeType = .normal, _ message: @autoclosure () -> String) {
+        onNode(.instant(.init(type: type, time: .now, message: message())))
     }
 
-    func range(_ message: String, type: NodeType = .normal) -> EndRange {
-        rangeStack.append(.init(type: type, start: .now, message: message))
+    func range(type: NodeType = .normal, _ message: @autoclosure () -> String) -> EndRange {
+        rangeStack.append(.init(type: type, start: .now, message: message()))
         return .init(tracer: self)
     }
 
-    func range<Result>(_ message: String, type: Tracer.NodeType = .normal, _ work: () -> Result) -> Result {
-        let _r = range(message, type: type); defer { _r() }
+    func range<Result>(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
+        let _r = range(type: type, message()); defer { _r() }
         return work()
     }
 
@@ -188,19 +188,19 @@ struct SubTracer {
 
     var prefix: String { tags.map { "[\($0)]" }.joined(separator: " ") }
 
-    func instant(_ message: String, type: Tracer.NodeType = .normal) {
+    func instant(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String) {
         guard enabled, verbose || type != .verbose else { return }
-        tracer.instant("\(prefix) \(message)", type: type)
+        tracer.instant(type: type, "\(prefix) \(message())")
     }
 
-    func range(_ message: String, type: Tracer.NodeType = .normal) -> Tracer.EndRange {
+    func range(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String) -> Tracer.EndRange {
         guard enabled, verbose || type != .verbose else { return .init() }
-        return tracer.range("\(prefix) \(message)", type: type)
+        return tracer.range(type: type, "\(prefix) \(message())")
     }
 
-    func range<Result>(_ message: String, type: Tracer.NodeType = .normal, _ work: () -> Result) -> Result {
+    func range<Result>(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
         guard enabled, verbose || type != .verbose else { return work() }
-        return tracer.range("\(prefix) \(message)", type: type, work)
+        return tracer.range(type: type, "\(prefix) \(message())", work)
     }
 
     func tagged(_ tag: String, enabled: Bool = true, verbose: Bool = false) -> SubTracer {

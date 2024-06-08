@@ -73,6 +73,8 @@ private extension DocumentAction {
 
 struct HistoryPanel: View, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "HistoryPanel") }
+
         @Selected({ global.document.activeDocument }) var document
     }
 

@@ -30,11 +30,12 @@ extension ActivePathPanel {
 // MARK: - NodePanel
 
 extension ActivePathPanel {
-    struct NodePanel: View, EquatableBy, ReflectiveSelectorHolder {
+    struct NodePanel: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let nodeId: UUID }
         class Selector: SelectorBase {
             override var configs: Configs { .init(name: "NodePanel") }
 
-            @Selected("NodePanel focused", { global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
+            @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
         @StateObject var selector = Selector()
@@ -45,7 +46,7 @@ extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodePanel body") {
-            setupSelector {
+            setupSelector(.init(nodeId: nodeId)) {
                 content
                     .onChange(of: selector.focused) {
                         withAnimation { expanded = selector.focused }
@@ -101,9 +102,10 @@ extension ActivePathPanel {
 // MARK: - NodeMenu
 
 private extension ActivePathPanel {
-    struct NodeMenu<Content: View>: View, EquatableBy, ReflectiveSelectorHolder {
+    struct NodeMenu<Content: View>: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "NodePanel") }
+            override var configs: Configs { .init(name: "NodeMenu") }
 
             @Selected({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
@@ -119,7 +121,7 @@ private extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodeMenu body") {
-            setupSelector {
+            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 menu
             }
         } }
@@ -183,9 +185,10 @@ private extension ActivePathPanel {
 // MARK: - NodeDetailPanel
 
 private extension ActivePathPanel {
-    struct NodeDetailPanel: View, EquatableBy, ReflectiveSelectorHolder {
+    struct NodeDetailPanel: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "NodePanel") }
+            override var configs: Configs { .init(name: "NodeDetailPanel") }
 
             @Selected({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId) }) var node
@@ -201,7 +204,7 @@ private extension ActivePathPanel {
         var equatableBy: some Equatable { pathId; nodeId }
 
         var body: some View { tracer.range("ActivePathPanel NodeDetailPanel body") {
-            setupSelector {
+            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 content
                     .onChange(of: self) {}
             }

@@ -117,7 +117,7 @@ extension DocumentUpdater {
 
 extension DocumentUpdater {
     private func handle(_ action: DocumentAction, pending: Bool) {
-        let _r = subtracer.range("handle action, pending: \(pending)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "handle action, pending: \(pending)"); defer { _r() }
         var events: [SingleEvent] = []
 
         switch action {

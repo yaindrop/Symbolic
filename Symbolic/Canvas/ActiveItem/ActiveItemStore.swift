@@ -165,7 +165,7 @@ extension ActiveItemService {
 
 extension ActiveItemService {
     func focus(itemId: UUID) {
-        let _r = subtracer.range("focus \(itemId)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "focus \(itemId)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
         if ancestors.isEmpty {
             store.update(active: [itemId], focused: itemId)
@@ -180,7 +180,7 @@ extension ActiveItemService {
     }
 
     func blur() {
-        let _r = subtracer.range("blur", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "blur"); defer { _r() }
         guard let focusedItemId = store.focusedItemId else {
             store.update(active: .init())
             return
@@ -196,12 +196,12 @@ extension ActiveItemService {
 
 extension ActiveItemService {
     func select(itemIds: [UUID]) {
-        let _r = subtracer.range("select \(itemIds)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "select \(itemIds)"); defer { _r() }
         store.update(active: .init(itemIds))
     }
 
     func selectAdd(itemId: UUID) {
-        let _r = subtracer.range("select \(item)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "select \(item)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
         if ancestors.isEmpty {
             store.update(active: store.activeItemIds.with { $0.insert(itemId) })
@@ -218,7 +218,7 @@ extension ActiveItemService {
     }
 
     func selectRemove(itemIds: [UUID]) {
-        let _r = subtracer.range("deselect \(itemIds)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "deselect \(itemIds)"); defer { _r() }
         store.update(deselect: itemIds)
     }
 }
@@ -227,17 +227,17 @@ extension ActiveItemService {
 
 extension ActiveItemService {
     func setFocus(node id: UUID) {
-        let _r = subtracer.range("set focus", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "set focus"); defer { _r() }
         store.update(pathFocusedPart: .node(id))
     }
 
     func setFocus(edge fromNodeId: UUID) {
-        let _r = subtracer.range("set focus", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "set focus"); defer { _r() }
         store.update(pathFocusedPart: .edge(fromNodeId))
     }
 
     func clearFocus() {
-        let _r = subtracer.range("clear focus", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "clear focus"); defer { _r() }
         store.update(pathFocusedPart: nil)
     }
 

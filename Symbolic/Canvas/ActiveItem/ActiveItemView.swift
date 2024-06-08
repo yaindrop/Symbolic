@@ -4,6 +4,8 @@ import SwiftUI
 
 struct ActiveItemView: View, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "ActiveItemView") }
+
         @Selected({ global.activeItem.activePaths }) var activePaths
         @Selected({ global.activeItem.activeGroups }) var activeGroups
     }
@@ -29,7 +31,7 @@ extension ActiveItemView {
     struct GroupBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            override var configs: Configs { .init(syncUpdate: true) }
+            override var configs: Configs { .init(name: "GroupBounds", syncUpdate: true) }
 
             @Selected({ global.activeItem.focusedItemId == $0 }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
@@ -92,7 +94,7 @@ extension ActiveItemView {
     struct PathBounds: View, ComputedSelectorHolder {
         typealias SelectorProps = UUID
         class Selector: SelectorBase {
-            override var configs: Configs { .init(syncUpdate: true) }
+            override var configs: Configs { .init(name: "PathBounds", syncUpdate: true) }
 
             @Selected({ global.activeItem.focusedItemId == $0 }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
@@ -148,7 +150,7 @@ extension ActiveItemView {
 extension ActiveItemView {
     struct SelectionBounds: View, SelectorHolder {
         class Selector: SelectorBase {
-            override var configs: Configs { .init(syncUpdate: true) }
+            override var configs: Configs { .init(name: "SelectionBounds", syncUpdate: true) }
 
             @Selected({ global.activeItem.selectionBounds }) var bounds
         }

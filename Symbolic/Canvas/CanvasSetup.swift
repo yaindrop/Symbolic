@@ -68,7 +68,7 @@ struct CanvasSetup {
         }
         multipleTouchPress.onTap { info in
             let worldLocation = info.location.applying(toWorld)
-            let _r = tracer.range("On tap \(worldLocation)", type: .intent); defer { _r() }
+            let _r = tracer.range(type: .intent, "On tap \(worldLocation)"); defer { _r() }
             let pathId = global.path.hitTest(position: worldLocation)?.id
             if global.toolbar.multiSelect {
                 if let pathId {
@@ -88,7 +88,7 @@ struct CanvasSetup {
         }
         multipleTouchPress.onLongPress { info in
             let worldLocation = info.current.applying(toWorld)
-            let _r = tracer.range("On long press \(worldLocation)", type: .intent); defer { _r() }
+            let _r = tracer.range(type: .intent, "On long press \(worldLocation)"); defer { _r() }
 
             global.viewportUpdater.setBlocked(true)
             global.canvasAction.end(continuous: .panViewport)
@@ -105,7 +105,7 @@ struct CanvasSetup {
             }
         }
         multipleTouchPress.onLongPressEnd { _ in
-            let _r = tracer.range("On long press end", type: .intent); defer { _r() }
+            let _r = tracer.range(type: .intent, "On long press end"); defer { _r() }
             global.viewportUpdater.setBlocked(false)
 
             global.draggingSelection.onEnd()

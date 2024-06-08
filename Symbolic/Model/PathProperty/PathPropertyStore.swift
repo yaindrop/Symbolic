@@ -1,6 +1,6 @@
 import Foundation
 
-private let subtracer = tracer.tagged("PathService")
+private let subtracer = tracer.tagged("PathPropertyService")
 
 typealias PathPropertyMap = [UUID: PathProperty]
 
@@ -88,7 +88,7 @@ extension PathPropertyService {
 
 extension PathPropertyService {
     func loadDocument(_ document: Document) {
-        let _r = subtracer.range("load document, pending: \(pendingStore.active)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "load document, size=\(document.events.count)"); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
@@ -115,7 +115,7 @@ extension PathPropertyService {
 
 extension PathPropertyService {
     private func loadEvent(_ event: DocumentEvent) {
-        let _r = subtracer.range("load document event \(event.id)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
             event.events.forEach { loadEvent($0) }

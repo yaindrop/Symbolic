@@ -100,7 +100,7 @@ struct MultipleGestureModifier: ViewModifier {
     // MARK: stages
 
     private func onPressStart(_ v: DragGesture.Value) {
-        let _r = subtracer.range("press start", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "press start"); defer { _r() }
         context = .init(value: v)
         setupLongPress()
         gesture.onPress?()
@@ -108,7 +108,7 @@ struct MultipleGestureModifier: ViewModifier {
 
     private func onPressChange() {
         guard let context else { return }
-        let _r = subtracer.range("press change", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "press change"); defer { _r() }
         if !isPress {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
                 resetLongPress()
@@ -119,7 +119,7 @@ struct MultipleGestureModifier: ViewModifier {
 
     private func onPressEnd() {
         guard let context else { return }
-        let _r = subtracer.range("press end", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "press end"); defer { _r() }
         if isPress {
             resetLongPress()
             if !context.longPressStarted {
@@ -137,7 +137,7 @@ struct MultipleGestureModifier: ViewModifier {
 
     private func onPressCancel() {
         guard context != nil else { return }
-        let _r = subtracer.range("press cancel", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "press cancel"); defer { _r() }
         resetLongPress(cancel: true)
         gesture.onPressEnd?(true)
         context = nil

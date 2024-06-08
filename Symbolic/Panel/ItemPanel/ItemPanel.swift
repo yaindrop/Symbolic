@@ -5,6 +5,8 @@ import SwiftUI
 
 struct ItemPanel: View, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "ItemPanel") }
+
         @Selected({ global.item.rootIds }) var rootIds
     }
 
@@ -66,8 +68,11 @@ struct ItemPanel: View, SelectorHolder {
 // MARK: - ItemRow
 
 extension ItemPanel {
-    struct ItemRow: View, EquatableBy, ReflectiveSelectorHolder {
+    struct ItemRow: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "ItemRow") }
+
             @Selected({ global.item.item(id: $0.itemId) }) var item
         }
 
@@ -78,7 +83,7 @@ extension ItemPanel {
         var equatableBy: some Equatable { itemId }
 
         var body: some View { tracer.range("ItemRow body") {
-            setupSelector {
+            setupSelector(.init(itemId: itemId)) {
                 content
             }
         } }
@@ -98,9 +103,12 @@ extension ItemPanel {
 // MARK: - GroupRow
 
 extension ItemPanel {
-    struct GroupRow: View, EquatableBy, ReflectiveSelectorHolder {
+    struct GroupRow: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
-            @Selected({ global.item.depth(itemId: $0.group.id) }) var depth
+            override var configs: Configs { .init(name: "GroupRow") }
+
+            @Selected({ global.item.depth(itemId: $0.itemId) }) var depth
         }
 
         @StateObject var selector = Selector()
@@ -110,7 +118,7 @@ extension ItemPanel {
         var equatableBy: some Equatable { group }
 
         var body: some View { tracer.range("GroupRow body") {
-            setupSelector {
+            setupSelector(.init(itemId: group.id)) {
                 content
             }
         } }
@@ -186,8 +194,11 @@ extension ItemPanel {
 // MARK: - PathRow
 
 extension ItemPanel {
-    struct PathRow: View, EquatableBy, ReflectiveSelectorHolder {
+    struct PathRow: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "PathRow") }
+
             @Selected({ global.path.path(id: $0.pathId) }) var path
         }
 
@@ -198,7 +209,7 @@ extension ItemPanel {
         var equatableBy: some Equatable { pathId }
 
         var body: some View { tracer.range("PathRow body") {
-            setupSelector {
+            setupSelector(.init(pathId: pathId)) {
                 content
             }
         } }

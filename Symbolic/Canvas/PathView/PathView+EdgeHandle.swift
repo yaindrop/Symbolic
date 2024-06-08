@@ -6,30 +6,38 @@ private let subtracer = tracer.tagged("PathView")
 // MARK: - EdgeHandle
 
 extension PathView {
-    struct EdgeHandle: View, EquatableBy {
+    struct EdgeHandle: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "EdgeHandle", syncUpdate: true) }
+
+            @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
+        }
+
+        @StateObject var selector = Selector()
+
         @EnvironmentObject var viewModel: PathViewModel
 
-        let property: PathProperty
-        let focusedPart: PathFocusedPart?
+        let pathId: UUID
+        let fromNodeId: UUID
 
-        let fromId: UUID
-        let segment: PathSegment
-
-        var focused: Bool { focusedPart?.edgeId == fromId }
-
-        var equatableBy: some Equatable { fromId; segment; focused }
+        var equatableBy: some Equatable { pathId; fromNodeId }
 
         var body: some View { subtracer.range("EdgeHandle") {
-            outline
+            setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
+                outline
+            }
         }}
 
         @State private var edgeGestureContext = PathViewModel.EdgeGestureContext()
 
         @ViewBuilder private var outline: some View {
-            SUPath { p in segment.append(to: &p) }
-                .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
-                .fill(Color.invisibleSolid)
-                .multipleGesture(viewModel.edgeGesture(fromId: fromId, segment: segment, context: edgeGestureContext))
+            if let segment = selector.segment {
+                SUPath { p in segment.append(to: &p) }
+                    .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
+                    .fill(Color.invisibleSolid)
+                    .multipleGesture(viewModel.edgeGesture(fromId: fromNodeId, segment: segment, context: edgeGestureContext))
+            }
         }
 
         private static let circleSize: Scalar = 16
@@ -49,30 +57,38 @@ extension PathView {
 // MARK: - FocusedEdgeHandle
 
 extension PathView {
-    struct FocusedEdgeHandle: View, EquatableBy {
+    struct FocusedEdgeHandle: View, EquatableBy, ComputedSelectorHolder {
+        struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "FocusedEdgeHandle", syncUpdate: true) }
+
+            @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
+            @Selected({ global.activeItem.pathFocusedPart?.edgeId == $0.fromNodeId }) var focused
+        }
+
+        @StateObject var selector = Selector()
+
         @EnvironmentObject var viewModel: PathViewModel
 
-        let property: PathProperty
-        let focusedPart: PathFocusedPart?
+        let pathId: UUID
+        let fromNodeId: UUID
 
-        let fromId: UUID
-        let segment: PathSegment
+        var equatableBy: some Equatable { pathId; fromNodeId }
 
-        var focused: Bool { focusedPart?.edgeId == fromId }
-
-        var equatableBy: some Equatable { fromId; segment; focused }
-
-        var body: some View { subtracer.range("FocusedEdgeHandle") { build {
-            if let circlePosition, focused {
-                circle(at: circlePosition, color: .cyan)
+        var body: some View { subtracer.range("FocusedEdgeHandle") {
+            setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
+                if let circlePosition, selector.focused {
+                    circle(at: circlePosition, color: .cyan)
+                }
             }
-        }}}
+        }}
 
         private static let lineWidth: Scalar = 2
         private static let circleSize: Scalar = 16
         private static let touchablePadding: Scalar = 16
 
         private var circlePosition: Point2? {
+            guard let segment = selector.segment else { return nil }
             let tessellated = segment.tessellated()
             let t = tessellated.approxPathParamT(lineParamT: 0.5).t
             return segment.position(paramT: t)
@@ -90,19 +106,21 @@ extension PathView {
                 .padding(Self.touchablePadding)
                 .invisibleSoildOverlay()
                 .position(point)
-                .if(focused) { $0.overlay {
-                    SUPath { p in
-                        let tessellated = segment.tessellated()
-                        let fromT = tessellated.approxPathParamT(lineParamT: 0.1).t
-                        let toT = tessellated.approxPathParamT(lineParamT: 0.9).t
-                        segment.subsegment(fromT: fromT, toT: toT).append(to: &p)
+                .if(selector.focused) { $0.overlay {
+                    if let segment = selector.segment {
+                        SUPath { p in
+                            let tessellated = segment.tessellated()
+                            let fromT = tessellated.approxPathParamT(lineParamT: 0.1).t
+                            let toT = tessellated.approxPathParamT(lineParamT: 0.9).t
+                            segment.subsegment(fromT: fromT, toT: toT).append(to: &p)
+                        }
+                        .strokedPath(StrokeStyle(lineWidth: 2, lineCap: .round))
+                        .subtracting(subtractingCircle(at: point))
+                        .fill(color)
+                        .allowsHitTesting(false)
                     }
-                    .strokedPath(StrokeStyle(lineWidth: 2, lineCap: .round))
-                    .subtracting(subtractingCircle(at: point))
-                    .fill(color)
-                    .allowsHitTesting(false)
                 }}
-                .multipleGesture(viewModel.focusedEdgeGesture(fromId: fromId))
+                .multipleGesture(viewModel.focusedEdgeGesture(fromId: fromNodeId))
         }
     }
 }

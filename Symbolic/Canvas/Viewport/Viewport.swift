@@ -85,7 +85,7 @@ struct ViewportUpdater {
         guard !store.blocked, let pan else { onCommit(); return }
         global.canvasAction.start(continuous: .panViewport)
         global.canvasAction.end(continuous: .pinchViewport)
-        let _r = subtracer.range("pan \(pan)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "pan \(pan)"); defer { _r() }
         let previousInfo = store.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
@@ -96,7 +96,7 @@ struct ViewportUpdater {
         guard !store.blocked, let pinch else { onCommit(); return }
         global.canvasAction.start(continuous: .pinchViewport)
         global.canvasAction.end(continuous: .panViewport)
-        let _r = subtracer.range("pinch \(pinch)", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "pinch \(pinch)"); defer { _r() }
         let previousInfo = store.previousInfo
         let pinchTransform = CGAffineTransform(translation: pinch.center.offset).centered(at: pinch.center.origin) { $0.scaledBy(pinch.scale) }
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
@@ -111,7 +111,7 @@ struct ViewportUpdater {
         global.canvasAction.end(continuous: .panViewport)
         global.canvasAction.end(continuous: .pinchViewport)
         global.canvasAction.end(continuous: .pinchViewport)
-        let _r = subtracer.range("commit", type: .intent); defer { _r() }
+        let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
         store.update(previousInfo: viewport.info)
     }
 }

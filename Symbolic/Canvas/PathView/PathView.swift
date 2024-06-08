@@ -25,59 +25,57 @@ class PathViewModel: ObservableObject {
 
 // MARK: - PathView
 
-struct PathView: View, SelectorHolder {
-    class Selector: SelectorBase {
-        @Selected({ global.viewport.toView }) var toView
-    }
-
-    @StateObject var selector = Selector()
-
+struct PathView: View {
     let path: Path
     let property: PathProperty
     let focusedPart: PathFocusedPart?
 
     var body: some View { subtracer.range("body") {
-        setupSelector {
-            ZStack {
-                Stroke(path: path, toView: selector.toView)
-                handles(path: path)
-            }
+        ZStack {
+            Stroke(path: path)
+            handles(path: path)
         }
+
     }}
 
     // MARK: private
 
     @ViewBuilder private func handles(path: Path) -> some View {
         let nodes = path.nodes
-        let nodeData = nodes.compactMap { n -> (nodeId: UUID, positionInView: Point2)? in
-            (nodeId: n.id, positionInView: n.position.applying(selector.toView))
-        }
-        let segmentData = nodes.compactMap { n -> (fromId: UUID, toId: UUID, segmentInView: PathSegment)? in
-            guard let s = path.segment(from: n.id) else { return nil }
-            guard let toId = path.node(after: n.id)?.id else { return nil }
-            return (fromId: n.id, toId: toId, segmentInView: s.applying(selector.toView))
-        }
-
-        ForEach(segmentData, id: \.fromId) { fromId, _, segment in EdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
-        ForEach(nodeData, id: \.nodeId) { id, _ in NodeHandle(pathId: path.id, nodeId: id) }
-        ForEach(segmentData, id: \.fromId) { fromId, _, segment in FocusedEdgeHandle(property: property, focusedPart: focusedPart, fromId: fromId, segment: segment) }
-        ForEach(segmentData, id: \.fromId) { fromId, toId, segment in BezierHandle(property: property, focusedPart: focusedPart, fromId: fromId, toId: toId, segment: segment) }
+        let segmentFromIds = nodes.compactMap { n in path.segment(from: n.id).map { _ in n.id } }
+        ForEach(segmentFromIds) { EdgeHandle(pathId: path.id, fromNodeId: $0) }
+        ForEach(nodes) { NodeHandle(pathId: path.id, nodeId: $0.id) }
+        ForEach(segmentFromIds) { FocusedEdgeHandle(pathId: path.id, fromNodeId: $0) }
+        ForEach(segmentFromIds) { BezierHandle(pathId: path.id, fromNodeId: $0) }
     }
 }
 
 // MARK: - Stroke
 
 extension PathView {
-    struct Stroke: View {
+    struct Stroke: View, SelectorHolder {
+        class Selector: SelectorBase {
+            override var configs: Configs { .init(name: "Stroke", syncUpdate: true) }
+
+            @Selected({ global.viewport.toView }) var toView
+        }
+
+        @StateObject var selector = Selector()
+
         let path: Path
-        let toView: CGAffineTransform
 
         var body: some View { subtracer.range("Stroke") {
+            setupSelector {
+                content
+            }
+        }}
+
+        private var content: some View {
             SUPath { path.append(to: &$0) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
                 .id(path.id)
-                .transformEffect(toView)
-        }}
+                .transformEffect(selector.toView)
+        }
     }
 }

@@ -28,6 +28,8 @@ class ToolbarStore: Store {
 
 struct ToolbarModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "ToolbarModifier") }
+
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.toolbar.mode }) var toolbarMode
         @Selected({ global.document.undoable }) var undoable

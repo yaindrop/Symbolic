@@ -82,6 +82,8 @@ extension AddingPathService {
 
 struct AddingPathView: View, SelectorHolder {
     class Selector: SelectorBase {
+        override var configs: Configs { .init(name: "AddingPathView") }
+
         @Selected({ global.addingPath.addingPath }) var addingPath
     }
 

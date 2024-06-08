@@ -362,17 +362,18 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
 
 // MARK: - Selector
 
-class _Selector<Props: Equatable>: ObservableObject, CancellableHolder {
-    struct Configs {
-        var name: String?
-        var syncUpdate: Bool
+struct SelectorConfigs {
+    var name: String?
+    var syncUpdate: Bool
 
-        init(name: String? = nil, syncUpdate: Bool = false) {
-            self.name = name
-            self.syncUpdate = syncUpdate
-        }
+    init(name: String? = nil, syncUpdate: Bool = false) {
+        self.name = name
+        self.syncUpdate = syncUpdate
     }
+}
 
+class _Selector<Props>: ObservableObject, CancellableHolder {
+    typealias Configs = SelectorConfigs
     var configs: Configs { .init() }
 
     var props: Props?
@@ -388,6 +389,7 @@ class _Selector<Props: Equatable>: ObservableObject, CancellableHolder {
     }
 
     deinit {
+        print("dbg here!!!", configs.name)
         updateTask?.cancel()
     }
 }
@@ -395,7 +397,8 @@ class _Selector<Props: Equatable>: ObservableObject, CancellableHolder {
 // MARK: - SelectorProtocol
 
 protocol _SelectorProtocol: AnyObject {
-    associatedtype Props: Equatable
+    associatedtype Props
+    var configs: SelectorConfigs { get }
     var props: Props? { get }
 
     func onUpdate()
@@ -411,7 +414,8 @@ extension _Selector: _SelectorProtocol {
             return
         }
         guard updateTask == nil else { return }
-        updateTask = Task(priority: .high) { @MainActor in
+        updateTask = Task(priority: .high) { @MainActor [weak self] in
+            guard let self else { return }
             self.objectWillChange.send()
             self.updateTask = nil
         }
@@ -433,7 +437,7 @@ private extension _SelectorProtocol {
     @discardableResult
     func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
         @Ref(self, keyPath) var wrapper
-        let _r = selectedTracer.range(wrapper.name.map { "track \($0)" } ?? "track"); defer { _r() }
+        let _r = selectedTracer.range("track\(configs.name.map { " \($0)" } ?? "") \(keyPath)"); defer { _r() }
         if let subscriptionId = wrapper.subscriptionId {
             manager.expire(subscriptionId: subscriptionId)
         }
@@ -443,7 +447,7 @@ private extension _SelectorProtocol {
 
         if wrapper.value == nil {
             wrapper.value = newValue
-            onRetrack { self.track(keyPath: keyPath) }
+            onRetrack { [weak self] in self?.track(keyPath: keyPath) }
             selectedTracer.instant("setup")
         } else if wrapper.value != newValue {
             wrapper.value = newValue
@@ -460,7 +464,6 @@ private extension _SelectorProtocol {
 
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
-    let name: String?
     let selector: (Instance.Props) -> Value
     var value: Value?
     var subscriptionId: Int?
@@ -481,22 +484,10 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     }
 
     init(_ selector: @escaping (Instance.Props) -> Value) {
-        name = nil
         self.selector = selector
     }
 
     init(_ selector: @escaping () -> Value) {
-        name = nil
-        self.selector = { _ in selector() }
-    }
-
-    init(_ name: String? = nil, _ selector: @escaping (Instance.Props) -> Value) {
-        self.name = name
-        self.selector = selector
-    }
-
-    init(_ name: String? = nil, _ selector: @escaping () -> Value) {
-        self.name = name
         self.selector = { _ in selector() }
     }
 }
@@ -529,23 +520,6 @@ extension ComputedSelectorHolder {
         return content()
             .onChange(of: props) {
                 selector.props = props
-                selector.retrackSubject.send()
-            }
-    }
-}
-
-protocol ReflectiveSelectorHolder where Self: Equatable {
-    associatedtype Selector: _Selector<Self>
-    typealias SelectorBase = _Selector<Self>
-    var selector: Selector { get }
-}
-
-extension ReflectiveSelectorHolder {
-    func setupSelector<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
-        selector.setup(self)
-        return content()
-            .onChange(of: self) {
-                selector.props = self
                 selector.retrackSubject.send()
             }
     }

@@ -9,12 +9,12 @@ extension PathView {
     struct EdgeHandle: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "EdgeHandle", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         @EnvironmentObject var viewModel: PathViewModel
 
@@ -60,13 +60,13 @@ extension PathView {
     struct FocusedEdgeHandle: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "FocusedEdgeHandle", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
             @Selected({ global.activeItem.pathFocusedPart?.edgeId == $0.fromNodeId }) var focused
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         @EnvironmentObject var viewModel: PathViewModel
 

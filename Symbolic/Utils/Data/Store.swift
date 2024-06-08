@@ -2,10 +2,10 @@ import Combine
 import Foundation
 import SwiftUI
 
-private let storeTracer = tracer.tagged("store", enabled: false)
-private let managerTracer = storeTracer.tagged("manager", enabled: false)
-private let trackableTracer = storeTracer.tagged("trackable", enabled: false)
-private let selectedTracer = storeTracer.tagged("selected", enabled: false)
+private let storeTracer = tracer.tagged("store", enabled: true)
+private let managerTracer = storeTracer.tagged("manager", enabled: true)
+private let trackableTracer = storeTracer.tagged("trackable", enabled: true)
+private let selectedTracer = storeTracer.tagged("selected", enabled: true)
 
 private struct StoreSubscription {
     let id: Int
@@ -373,8 +373,8 @@ struct SelectorConfigs {
 }
 
 class _Selector<Props>: ObservableObject, CancellableHolder {
-    typealias Configs = SelectorConfigs
-    var configs: Configs { .init() }
+    var name: String? = nil
+    var syncUpdate: Bool { false }
 
     var props: Props?
     var cancellables = Set<AnyCancellable>()
@@ -383,14 +383,16 @@ class _Selector<Props>: ObservableObject, CancellableHolder {
     fileprivate let retrackSubject = PassthroughSubject<Void, Never>()
 
     func setup(_ props: Props) {
-        let _r = selectedTracer.range("setup selector\(configs.name.map { " \($0)" } ?? "")"); defer { _r() }
+        let _r = selectedTracer.range("setup selector\(name.map { " \($0)" } ?? "")"); defer { _r() }
         if self.props == nil {
             self.props = props
         }
     }
 
+    required init() {}
+
     deinit {
-        let _r = selectedTracer.range("deinit selector\(configs.name.map { " \($0)" } ?? "")"); defer { _r() }
+        let _r = selectedTracer.range("deinit selector\(name.map { " \($0)" } ?? "")"); defer { _r() }
         updateTask?.cancel()
     }
 }
@@ -399,7 +401,8 @@ class _Selector<Props>: ObservableObject, CancellableHolder {
 
 protocol _SelectorProtocol: AnyObject {
     associatedtype Props
-    var configs: SelectorConfigs { get }
+    var name: String? { get }
+    var syncUpdate: Bool { get }
     var props: Props? { get }
 
     func onUpdate()
@@ -410,7 +413,7 @@ protocol _SelectorProtocol: AnyObject {
 
 extension _Selector: _SelectorProtocol {
     func onUpdate() {
-        if configs.syncUpdate {
+        if syncUpdate {
             objectWillChange.send()
             return
         }
@@ -431,14 +434,14 @@ extension _Selector: _SelectorProtocol {
 
 private extension _SelectorProtocol {
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
-        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        let _r = trackableTracer.range("access\(name.map { " \($0)" } ?? "") \(keyPath)"); defer { _r() }
         return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
     }
 
     @discardableResult
     func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
         @Ref(self, keyPath) var wrapper
-        let _r = selectedTracer.range("track\(configs.name.map { " \($0)" } ?? "") \(keyPath)"); defer { _r() }
+        let _r = selectedTracer.range("track\(name.map { " \($0)" } ?? "") \(keyPath)"); defer { _r() }
         if let subscriptionId = wrapper.subscriptionId {
             manager.expire(subscriptionId: subscriptionId)
         }
@@ -495,14 +498,23 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
 
 // MARK: - SelectorHolder
 
+@propertyWrapper
+struct _SelectorWrapper<Props, Selector: _Selector<Props>>: DynamicProperty {
+    @StateObject fileprivate var selector = Selector()
+    var wrappedValue: Selector { selector }
+}
+
 protocol SelectorHolder {
-    associatedtype Selector: _Selector<Monostate>
+    associatedtype Selector: SelectorBase
     typealias SelectorBase = _Selector<Monostate>
+    typealias SelectorWrapper = _SelectorWrapper<Monostate, Selector>
+
     var selector: Selector { get }
 }
 
 extension SelectorHolder {
     func setupSelector<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
+        selector.name = String(describing: type(of: self))
         selector.setup(.value)
         return content()
     }
@@ -510,13 +522,16 @@ extension SelectorHolder {
 
 protocol ComputedSelectorHolder {
     associatedtype SelectorProps: Equatable
-    associatedtype Selector: _Selector<SelectorProps>
+    associatedtype Selector: SelectorBase
     typealias SelectorBase = _Selector<SelectorProps>
+    typealias SelectorWrapper = _SelectorWrapper<SelectorProps, Selector>
+
     var selector: Selector { get }
 }
 
 extension ComputedSelectorHolder {
     func setupSelector<Content: View>(_ props: SelectorProps, @ViewBuilder content: @escaping () -> Content) -> some View {
+        selector.name = String(describing: type(of: self))
         selector.setup(props)
         return content()
             .onChange(of: props) {

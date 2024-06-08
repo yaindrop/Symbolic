@@ -2,14 +2,12 @@ import SwiftUI
 
 struct CanvasActionPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "CanvasActionPanel") }
-
         @Selected({ Array(global.canvasAction.triggering).map { $0.hint } }) var triggeringHints
         @Selected({ Array(global.canvasAction.continuous).map { $0.hint } }) var continuousHints
         @Selected({ Array(global.canvasAction.instant).map { $0.hint } }) var instantHints
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     var body: some View { tracer.range("CanvasActionPanel body") {
         setupSelector {

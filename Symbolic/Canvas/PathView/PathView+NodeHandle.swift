@@ -9,14 +9,14 @@ extension PathView {
     struct NodeHandle: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "NodeHandle", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         @EnvironmentObject var viewModel: PathViewModel
 

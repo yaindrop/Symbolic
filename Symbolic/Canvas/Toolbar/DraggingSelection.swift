@@ -89,13 +89,11 @@ extension DraggingSelectionService {
 
 struct DraggingSelectionView: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "DraggingSelectionView") }
-
         @Selected({ global.draggingSelection.rect }) var rect
         @Selected({ global.viewport.toView }) var toView
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     var body: some View {
         setupSelector {

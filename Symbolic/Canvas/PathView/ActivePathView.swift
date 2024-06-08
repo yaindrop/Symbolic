@@ -172,14 +172,12 @@ class ActivePathViewModel: PathViewModel {
 
 struct ActivePathView: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ActivePathView") }
-
         @Selected({ global.activeItem.activePath }) var activePath
         @Selected({ global.activeItem.activePathProperty }) var activePathProperty
         @Selected({ global.activeItem.pathFocusedPart }) var focusedPart
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     var body: some View { tracer.range("ActivePathView body") {
         setupSelector {

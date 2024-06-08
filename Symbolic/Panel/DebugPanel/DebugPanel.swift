@@ -2,12 +2,10 @@ import SwiftUI
 
 struct DebugPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "DebugPanel") }
-
         @Selected({ global.viewport.info }) var viewportInfo
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     let panelId: UUID
 

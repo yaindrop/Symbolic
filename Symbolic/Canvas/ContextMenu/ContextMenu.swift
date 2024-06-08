@@ -36,12 +36,10 @@ class ContextMenuStore: Store {
 
 struct ContextMenuRoot: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ContextMenuRoot") }
-
         @Selected({ global.contextMenu.menus }) var menus
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     var body: some View {
         setupSelector {
@@ -55,15 +53,15 @@ struct ContextMenuRoot: View, SelectorHolder {
 // MARK: - ContextMenuView
 
 struct ContextMenuView: View, EquatableBy, ComputedSelectorHolder {
-    typealias SelectorProps = ContextMenuData
+    struct SelectorProps: Equatable { let data: ContextMenuData }
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ContextMenuView", syncUpdate: true) }
+        override var syncUpdate: Bool { true }
 
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.activeItem.activePath }) var focusedPath
         @Selected({ global.activeItem.focusedGroup }) var focusedGroup
         @Selected({
-            switch $0 {
+            switch $0.data {
             case .focusedPath: global.activeItem.activePath.map { global.activeItem.boundingRect(itemId: $0.id) }
             case .focusedGroup: global.activeItem.focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) }
             case .selection: global.activeItem.selectionBounds
@@ -72,14 +70,14 @@ struct ContextMenuView: View, EquatableBy, ComputedSelectorHolder {
         }) var bounds
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     let data: ContextMenuData
 
     var equatableBy: some Equatable { data }
 
     var body: some View {
-        setupSelector(data) {
+        setupSelector(.init(data: data)) {
             wrapper
                 .if(selector.bounds == nil) { $0.hidden() }
         }

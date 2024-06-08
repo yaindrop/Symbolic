@@ -9,7 +9,7 @@ extension PathView {
     struct BezierHandle: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "BezierHandle", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.fromNodeId }) var nodeFocused
@@ -17,7 +17,7 @@ extension PathView {
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == global.path.path(id: $0.pathId)?.node(after: $0.fromNodeId)?.id }) var nextFocused
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         @EnvironmentObject var viewModel: PathViewModel
 

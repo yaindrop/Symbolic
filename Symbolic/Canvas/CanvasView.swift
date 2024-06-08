@@ -106,14 +106,14 @@ struct CanvasView: View {
 
 struct ItemsView: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ItemsView", syncUpdate: true) }
+        override var syncUpdate: Bool { true }
 
         @Selected({ global.viewport.toView }) var toView
         @Selected({ global.item.allPaths }) var allPaths
         @Selected({ global.activeItem.focusedItemId }) var activePathId
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     var body: some View { tracer.range("ItemsView body") {
         setupSelector {

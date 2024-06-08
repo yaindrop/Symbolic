@@ -5,13 +5,11 @@ import SwiftUI
 
 struct ActivePathPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ActivePathPanel") }
-
         @Selected({ global.activeItem.activePath }) var path
         @Selected({ global.activeItem.store.pathFocusedPart }) var focusedPart
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     let panelId: UUID
 

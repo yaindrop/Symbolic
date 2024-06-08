@@ -5,12 +5,10 @@ import SwiftUI
 
 struct ItemPanel: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ItemPanel") }
-
         @Selected({ global.item.rootIds }) var rootIds
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     let panelId: UUID
 
@@ -71,12 +69,10 @@ extension ItemPanel {
     struct ItemRow: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "ItemRow") }
-
             @Selected({ global.item.item(id: $0.itemId) }) var item
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let itemId: UUID
 
@@ -106,12 +102,10 @@ extension ItemPanel {
     struct GroupRow: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "GroupRow") }
-
             @Selected({ global.item.depth(itemId: $0.itemId) }) var depth
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let group: ItemGroup
 
@@ -183,8 +177,8 @@ extension ItemPanel {
                             .id($0)
                     }
                 }
-                .if(selector.depth < 5) { $0.background(.secondary) }
-                .clipRounded(radius: 12, border: selector.depth < 5 ? Color.clear : Color.label)
+                .background(selector.depth % 2 == 0 ? Color.tertiarySystemBackground : Color.secondarySystemBackground)
+                .clipRounded(radius: 12)
                 .padding(.leading, 12)
             }
         }
@@ -197,12 +191,10 @@ extension ItemPanel {
     struct PathRow: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "PathRow") }
-
             @Selected({ global.path.path(id: $0.pathId) }) var path
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let pathId: UUID
 
@@ -227,7 +219,7 @@ extension ItemPanel {
                     .overlay {
                         SUPath { path.append(to: &$0) }
                             .transform(.init(fit: path.boundingRect, to: .init(Self.size)))
-                            .stroke(.primary, lineWidth: 0.5)
+                            .stroke(.primary.opacity(0.5), lineWidth: 0.5)
                             .fill(.primary.opacity(0.2))
                     }
                     .frame(size: Self.size)

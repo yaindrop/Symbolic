@@ -42,11 +42,11 @@ struct PathView: View {
 
     @ViewBuilder private func handles(path: Path) -> some View {
         let nodes = path.nodes
-        let segmentFromIds = nodes.compactMap { n in path.segment(from: n.id).map { _ in n.id } }
-        ForEach(segmentFromIds) { EdgeHandle(pathId: path.id, fromNodeId: $0) }
+        let segmentsNodes = nodes.filter { path.segment(from: $0.id) != nil }
+        ForEach(segmentsNodes) { EdgeHandle(pathId: path.id, fromNodeId: $0.id) }
         ForEach(nodes) { NodeHandle(pathId: path.id, nodeId: $0.id) }
-        ForEach(segmentFromIds) { FocusedEdgeHandle(pathId: path.id, fromNodeId: $0) }
-        ForEach(segmentFromIds) { BezierHandle(pathId: path.id, fromNodeId: $0) }
+        ForEach(segmentsNodes) { FocusedEdgeHandle(pathId: path.id, fromNodeId: $0.id) }
+        ForEach(segmentsNodes) { BezierHandle(pathId: path.id, fromNodeId: $0.id) }
     }
 }
 
@@ -55,12 +55,12 @@ struct PathView: View {
 extension PathView {
     struct Stroke: View, SelectorHolder {
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "Stroke", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
             @Selected({ global.viewport.toView }) var toView
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let path: Path
 

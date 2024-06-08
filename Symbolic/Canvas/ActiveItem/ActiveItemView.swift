@@ -4,13 +4,11 @@ import SwiftUI
 
 struct ActiveItemView: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: Configs { .init(name: "ActiveItemView") }
-
         @Selected({ global.activeItem.activePaths }) var activePaths
         @Selected({ global.activeItem.activeGroups }) var activeGroups
     }
 
-    @StateObject var selector = Selector()
+    @SelectorWrapper var selector
 
     var body: some View { tracer.range("ActiveItemView body") {
         setupSelector {
@@ -29,21 +27,21 @@ struct ActiveItemView: View, SelectorHolder {
 
 extension ActiveItemView {
     struct GroupBounds: View, ComputedSelectorHolder {
-        typealias SelectorProps = UUID
+        struct SelectorProps: Equatable { let groupId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "GroupBounds", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
-            @Selected({ global.activeItem.focusedItemId == $0 }) var focused
-            @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
-            @Selected({ global.activeItem.boundingRect(itemId: $0) }) var bounds
+            @Selected({ global.activeItem.focusedItemId == $0.groupId }) var focused
+            @Selected({ global.activeItem.selectedItemIds.contains($0.groupId) }) var selected
+            @Selected({ global.activeItem.boundingRect(itemId: $0.groupId) }) var bounds
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let group: ItemGroup
 
         var body: some View {
-            setupSelector(group.id) {
+            setupSelector(.init(groupId: group.id)) {
                 boundsRect
             }
         }
@@ -92,21 +90,21 @@ extension ActiveItemView {
 
 extension ActiveItemView {
     struct PathBounds: View, ComputedSelectorHolder {
-        typealias SelectorProps = UUID
+        struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "PathBounds", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
-            @Selected({ global.activeItem.focusedItemId == $0 }) var focused
-            @Selected({ global.activeItem.selectedItemIds.contains($0) }) var selected
-            @Selected({ global.activeItem.boundingRect(itemId: $0) }) var bounds
+            @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
+            @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
+            @Selected({ global.activeItem.boundingRect(itemId: $0.pathId) }) var bounds
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let path: Path
 
         var body: some View { tracer.range("PathBounds body") {
-            setupSelector(path.id) {
+            setupSelector(.init(pathId: path.id)) {
                 boundsRect
             }
         } }
@@ -150,12 +148,12 @@ extension ActiveItemView {
 extension ActiveItemView {
     struct SelectionBounds: View, SelectorHolder {
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "SelectionBounds", syncUpdate: true) }
+            override var syncUpdate: Bool { true }
 
             @Selected({ global.activeItem.selectionBounds }) var bounds
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         var body: some View {
             setupSelector {

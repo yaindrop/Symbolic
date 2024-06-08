@@ -33,12 +33,10 @@ extension ActivePathPanel {
     struct NodePanel: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "NodePanel") }
-
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let pathId: UUID
         let nodeId: UUID
@@ -105,14 +103,12 @@ private extension ActivePathPanel {
     struct NodeMenu<Content: View>: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "NodeMenu") }
-
             @Selected({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let pathId: UUID
         let nodeId: UUID
@@ -188,15 +184,13 @@ private extension ActivePathPanel {
     struct NodeDetailPanel: View, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: Configs { .init(name: "NodeDetailPanel") }
-
             @Selected({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId) }) var node
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.nodeId)?.edge }) var edge
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
         }
 
-        @StateObject var selector = Selector()
+        @SelectorWrapper var selector
 
         let pathId: UUID
         let nodeId: UUID

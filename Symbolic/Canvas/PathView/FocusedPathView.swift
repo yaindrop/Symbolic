@@ -137,6 +137,7 @@ class FocusedPathViewModel: PathViewModel {
                 if cancelled { global.documentUpdater.cancel() }
             },
 
+            onTap: { _ in self.toggleFocus(segment: fromId) },
             onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )

@@ -16,6 +16,13 @@
 		5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */; };
 		5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */; };
 		571B9B2A2C148B0800AAD516 /* FocusedPathStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B292C148B0800AAD516 /* FocusedPathStore.swift */; };
+		571B9B2C2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B2B2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift */; };
+		571B9B2E2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B2D2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift */; };
+		571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B2F2C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift */; };
+		571B9B322C14A71600AAD516 /* ContextMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B312C14A71600AAD516 /* ContextMenuView.swift */; };
+		571B9B342C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B332C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift */; };
+		571B9B362C14A77500AAD516 /* ActiveItemView+PathBounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B352C14A77500AAD516 /* ActiveItemView+PathBounds.swift */; };
+		571B9B382C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B9B372C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift */; };
 		5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF792BC39844002209F2 /* SymbolicApp.swift */; };
 		5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BF7B2BC39844002209F2 /* ContentView.swift */; };
 		5723BF802BC39846002209F2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5723BF7F2BC39846002209F2 /* Assets.xcassets */; };
@@ -58,7 +65,7 @@
 		574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */; };
 		574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E12BFA39BD0042FEE3 /* Animation.swift */; };
 		574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */; };
-		574CC7E82BFA3EAF0042FEE3 /* ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */; };
+		574CC7E82BFA3EAF0042FEE3 /* ContextMenuStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E72BFA3EAF0042FEE3 /* ContextMenuStore.swift */; };
 		574CC7EA2BFA53310042FEE3 /* PathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E92BFA53310042FEE3 /* PathView.swift */; };
 		574CC7EF2BFC42D10042FEE3 /* CanvasActionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */; };
 		574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */; };
@@ -122,6 +129,13 @@
 		5700C2D02BEF0F0A00481FA7 /* AddingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddingPath.swift; sourceTree = "<group>"; };
 		5700C2D22BEF1A1C00481FA7 /* CanvasAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasAction.swift; sourceTree = "<group>"; };
 		571B9B292C148B0800AAD516 /* FocusedPathStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusedPathStore.swift; sourceTree = "<group>"; };
+		571B9B2B2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+FocusedPathMenu.swift"; sourceTree = "<group>"; };
+		571B9B2D2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+FocusedGroupMenu.swift"; sourceTree = "<group>"; };
+		571B9B2F2C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+SelectionMenu.swift"; sourceTree = "<group>"; };
+		571B9B312C14A71600AAD516 /* ContextMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextMenuView.swift; sourceTree = "<group>"; };
+		571B9B332C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveItemView+GroupBounds.swift"; sourceTree = "<group>"; };
+		571B9B352C14A77500AAD516 /* ActiveItemView+PathBounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveItemView+PathBounds.swift"; sourceTree = "<group>"; };
+		571B9B372C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveItemView+SelectionBounds.swift"; sourceTree = "<group>"; };
 		5723BF762BC39844002209F2 /* Symbolic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Symbolic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5723BF792BC39844002209F2 /* SymbolicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolicApp.swift; sourceTree = "<group>"; };
 		5723BF7B2BC39844002209F2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -167,7 +181,7 @@
 		574CC7DC2BF9A6710042FEE3 /* Toolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toolbar.swift; sourceTree = "<group>"; };
 		574CC7E12BFA39BD0042FEE3 /* Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animation.swift; sourceTree = "<group>"; };
 		574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gesture+Extension.swift"; sourceTree = "<group>"; };
-		574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextMenu.swift; sourceTree = "<group>"; };
+		574CC7E72BFA3EAF0042FEE3 /* ContextMenuStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextMenuStore.swift; sourceTree = "<group>"; };
 		574CC7E92BFA53310042FEE3 /* PathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathView.swift; sourceTree = "<group>"; };
 		574CC7EE2BFC42D10042FEE3 /* CanvasActionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionPanel.swift; sourceTree = "<group>"; };
 		574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridStore.swift; sourceTree = "<group>"; };
@@ -328,6 +342,7 @@
 		572487812BDF82180096DDE4 /* PathView */ = {
 			isa = PBXGroup;
 			children = (
+				571B9B292C148B0800AAD516 /* FocusedPathStore.swift */,
 				575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */,
 				574CC7E92BFA53310042FEE3 /* PathView.swift */,
 				572487862BDF83620096DDE4 /* PathView+BezierHandle.swift */,
@@ -408,7 +423,9 @@
 			children = (
 				57B5F13F2BD4A3EF001E1B2E /* ActiveItemStore.swift */,
 				576BE2642C048F6900353912 /* ActiveItemView.swift */,
-				571B9B292C148B0800AAD516 /* FocusedPathStore.swift */,
+				571B9B332C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift */,
+				571B9B352C14A77500AAD516 /* ActiveItemView+PathBounds.swift */,
+				571B9B372C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift */,
 			);
 			path = ActiveItem;
 			sourceTree = "<group>";
@@ -547,7 +564,11 @@
 		57DD2A252C02DC440046931C /* ContextMenu */ = {
 			isa = PBXGroup;
 			children = (
-				574CC7E72BFA3EAF0042FEE3 /* ContextMenu.swift */,
+				574CC7E72BFA3EAF0042FEE3 /* ContextMenuStore.swift */,
+				571B9B312C14A71600AAD516 /* ContextMenuView.swift */,
+				571B9B2D2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift */,
+				571B9B2B2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift */,
+				571B9B2F2C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift */,
 			);
 			path = ContextMenu;
 			sourceTree = "<group>";
@@ -725,11 +746,13 @@
 				5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				5724877C2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift in Sources */,
+				571B9B322C14A71600AAD516 /* ContextMenuView.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57DD2A282C0321110046931C /* ItemPanel.swift in Sources */,
 				572552872BF0F563002147AE /* SimpleTracer.swift in Sources */,
 				575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
+				571B9B382C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift in Sources */,
 				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
@@ -740,16 +763,18 @@
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */,
 				57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */,
+				571B9B2E2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57DD2A162C0236E60046931C /* ItemStore.swift in Sources */,
 				5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */,
-				574CC7E82BFA3EAF0042FEE3 /* ContextMenu.swift in Sources */,
+				574CC7E82BFA3EAF0042FEE3 /* ContextMenuStore.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* ActiveItemStore.swift in Sources */,
 				57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */,
 				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
 				5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathStore.swift in Sources */,
+				571B9B342C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift in Sources */,
 				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,
 				5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */,
 				574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */,
@@ -757,12 +782,14 @@
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
+				571B9B2C2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */,
 				574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */,
 				574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
 				57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* Utils.swift in Sources */,
+				571B9B362C14A77500AAD516 /* ActiveItemView+PathBounds.swift in Sources */,
 				574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */,
 				574CC7EA2BFA53310042FEE3 /* PathView.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
@@ -781,6 +808,7 @@
 				571B9B2A2C148B0800AAD516 /* FocusedPathStore.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
+				571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
 				574CC7BE2BF44C7B0042FEE3 /* Observed.swift in Sources */,

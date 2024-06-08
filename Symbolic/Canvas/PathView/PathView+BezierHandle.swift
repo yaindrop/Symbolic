@@ -33,8 +33,8 @@ extension PathView {
         // MARK: private
 
         private static let lineWidth: Scalar = 1
-        private static let circleSize: Scalar = 12
-        private static let touchablePadding: Scalar = 12
+        private static let circleSize: Scalar = 8
+        private static let touchablePadding: Scalar = 16
 
         private var content: some View {
             ZStack {

@@ -2,10 +2,10 @@ import Combine
 import Foundation
 import SwiftUI
 
-private let storeTracer = tracer.tagged("store", enabled: true)
-private let managerTracer = storeTracer.tagged("manager", enabled: true)
-private let trackableTracer = storeTracer.tagged("trackable", enabled: true)
-private let selectedTracer = storeTracer.tagged("selected", enabled: true)
+private let storeTracer = tracer.tagged("store", enabled: false)
+private let managerTracer = storeTracer.tagged("manager", enabled: false)
+private let trackableTracer = storeTracer.tagged("trackable", enabled: false)
+private let selectedTracer = storeTracer.tagged("selected", enabled: false)
 
 private struct StoreSubscription {
     let id: Int

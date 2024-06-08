@@ -264,6 +264,7 @@ private extension PathPanel {
                             .baselineOffset(-8)
                     }
                     .if(selector.focused) { $0.foregroundStyle(.green.opacity(0.8)) }
+                    .background(.red.opacity(0.4))
                     Spacer(minLength: 12)
                     PositionPicker(position: Point2(edge.control0)) { updateEdge(position: $0, pending: true) } onDone: { updateEdge(position: $0) }
                 }

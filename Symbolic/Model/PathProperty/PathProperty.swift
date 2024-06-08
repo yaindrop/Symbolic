@@ -17,6 +17,7 @@ extension PathNodeType: CustomStringConvertible {
 }
 
 enum PathEdgeType: Encodable {
+    case auto
     case cubic
     case line
     case quadratic
@@ -25,6 +26,7 @@ enum PathEdgeType: Encodable {
 extension PathEdgeType: CustomStringConvertible {
     var description: String {
         switch self {
+        case .auto: "auto"
         case .cubic: "cubic"
         case .line: "line"
         case .quadratic: "quadratic"
@@ -46,6 +48,6 @@ extension PathProperty {
     }
 
     func edgeType(id: UUID) -> PathEdgeType {
-        edgeTypeMap[id] ?? .cubic
+        edgeTypeMap[id] ?? .auto
     }
 }

@@ -11,7 +11,7 @@ extension PathView {
 
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
-            @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
+            @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
         }
 
         @SelectorWrapper var selector
@@ -53,8 +53,8 @@ extension PathView {
             if selector.nodeType == .corner {
                 Rectangle()
                     .stroke(.blue, style: StrokeStyle(lineWidth: 1))
-                    .fill(.blue.opacity(0.5))
-                    .if(selector.focused) { $0.overlay {
+                    .fill(.blue.opacity(0.3))
+                    .if(selector.active) { $0.overlay {
                         Rectangle()
                             .fill(.blue)
                             .scaleEffect(0.5)
@@ -64,8 +64,8 @@ extension PathView {
             } else {
                 Circle()
                     .stroke(.blue, style: StrokeStyle(lineWidth: selector.nodeType == .mirrored ? 2 : 1))
-                    .fill(.blue.opacity(0.5))
-                    .if(selector.focused) { $0.overlay {
+                    .fill(.blue.opacity(0.3))
+                    .if(selector.active) { $0.overlay {
                         Circle()
                             .fill(.blue)
                             .scaleEffect(0.5)

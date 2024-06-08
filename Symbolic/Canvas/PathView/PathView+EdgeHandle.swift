@@ -81,9 +81,9 @@ extension PathView {
             }
         } }
 
-        private static let lineWidth: Scalar = 2
-        private static let circleSize: Scalar = 16
-        private static let touchablePadding: Scalar = 16
+        private static let lineWidth: Scalar = 1
+        private static let circleSize: Scalar = 12
+        private static let touchablePadding: Scalar = 24
 
         private var circlePosition: Point2? {
             guard let segment = selector.segment else { return nil }

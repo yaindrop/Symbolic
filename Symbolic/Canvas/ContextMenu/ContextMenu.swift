@@ -34,25 +34,25 @@ class ContextMenuStore: Store {
     }
 }
 
-struct ContextMenuRoot: View, SelectorHolder {
+struct ContextMenuRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.contextMenu.menus }) var menus
     }
 
     @SelectorWrapper var selector
 
-    var body: some View {
+    var body: some View { trace {
         setupSelector {
             ZStack {
                 ForEach(Array(selector.menus)) { ContextMenuView(data: $0) }
             }
         }
-    }
+    } }
 }
 
 // MARK: - ContextMenuView
 
-struct ContextMenuView: View, EquatableBy, ComputedSelectorHolder {
+struct ContextMenuView: View, TracedView, EquatableBy, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let data: ContextMenuData }
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
@@ -76,12 +76,12 @@ struct ContextMenuView: View, EquatableBy, ComputedSelectorHolder {
 
     var equatableBy: some Equatable { data }
 
-    var body: some View {
+    var body: some View { trace {
         setupSelector(.init(data: data)) {
             wrapper
                 .if(selector.bounds == nil) { $0.hidden() }
         }
-    }
+    } }
 
     // MARK: private
 

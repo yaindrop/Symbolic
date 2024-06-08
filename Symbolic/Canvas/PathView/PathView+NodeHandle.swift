@@ -1,12 +1,10 @@
 import Foundation
 import SwiftUI
 
-private let subtracer = tracer.tagged("PathView")
-
 // MARK: - NodeHandle
 
 extension PathView {
-    struct NodeHandle: View, EquatableBy, ComputedSelectorHolder {
+    struct NodeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -25,7 +23,7 @@ extension PathView {
 
         var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { subtracer.range("NodeHandle \(nodeId)") {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 handle
             }

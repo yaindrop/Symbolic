@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - ActivePathPanel
 
-struct ActivePathPanel: View, SelectorHolder {
+struct ActivePathPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.activeItem.activePath }) var path
         @Selected({ global.activeItem.store.pathFocusedPart }) var focusedPart
@@ -13,11 +13,11 @@ struct ActivePathPanel: View, SelectorHolder {
 
     let panelId: UUID
 
-    var body: some View { tracer.range("ActivePathPanel body") {
+    var body: some View { trace {
         setupSelector {
             panel.frame(width: 320)
         }
-    }}
+    } }
 
     // MARK: private
 

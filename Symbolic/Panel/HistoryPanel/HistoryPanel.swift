@@ -71,7 +71,7 @@ private extension DocumentAction {
 
 // MARK: - HistoryPanel
 
-struct HistoryPanel: View, SelectorHolder {
+struct HistoryPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.document.activeDocument }) var document
     }
@@ -80,11 +80,11 @@ struct HistoryPanel: View, SelectorHolder {
 
     let panelId: UUID
 
-    var body: some View {
+    var body: some View { trace {
         setupSelector {
             panel.frame(width: 320)
         }
-    }
+    } }
 
     // MARK: private
 

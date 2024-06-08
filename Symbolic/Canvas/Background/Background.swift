@@ -6,7 +6,7 @@ private enum GridLineType: CaseIterable {
     case axis
 }
 
-struct Background: View, SelectorHolder {
+struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
 
@@ -18,11 +18,11 @@ struct Background: View, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    var body: some View {
+    var body: some View { trace {
         setupSelector {
             linePaths
         }
-    }
+    } }
 
     // MARK: private
 

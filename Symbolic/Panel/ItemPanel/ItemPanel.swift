@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - ItemPanel
 
-struct ItemPanel: View, SelectorHolder {
+struct ItemPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.item.rootIds }) var rootIds
     }
@@ -12,7 +12,7 @@ struct ItemPanel: View, SelectorHolder {
 
     let panelId: UUID
 
-    var body: some View { tracer.range("ItemPanel body") {
+    var body: some View { trace {
         setupSelector {
             content
                 .frame(width: 320)
@@ -66,7 +66,7 @@ struct ItemPanel: View, SelectorHolder {
 // MARK: - ItemRow
 
 extension ItemPanel {
-    struct ItemRow: View, EquatableBy, ComputedSelectorHolder {
+    struct ItemRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.item.item(id: $0.itemId) }) var item
@@ -78,7 +78,7 @@ extension ItemPanel {
 
         var equatableBy: some Equatable { itemId }
 
-        var body: some View { tracer.range("ItemRow body") {
+        var body: some View { trace {
             setupSelector(.init(itemId: itemId)) {
                 content
             }
@@ -99,7 +99,7 @@ extension ItemPanel {
 // MARK: - GroupRow
 
 extension ItemPanel {
-    struct GroupRow: View, EquatableBy, ComputedSelectorHolder {
+    struct GroupRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.item.depth(itemId: $0.itemId) }) var depth
@@ -111,7 +111,7 @@ extension ItemPanel {
 
         var equatableBy: some Equatable { group }
 
-        var body: some View { tracer.range("GroupRow body") {
+        var body: some View { trace {
             setupSelector(.init(itemId: group.id)) {
                 content
             }
@@ -188,7 +188,7 @@ extension ItemPanel {
 // MARK: - PathRow
 
 extension ItemPanel {
-    struct PathRow: View, EquatableBy, ComputedSelectorHolder {
+    struct PathRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.path.path(id: $0.pathId) }) var path
@@ -200,7 +200,7 @@ extension ItemPanel {
 
         var equatableBy: some Equatable { pathId }
 
-        var body: some View { tracer.range("PathRow body") {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId)) {
                 content
             }
@@ -208,12 +208,12 @@ extension ItemPanel {
 
         // MARK: private
 
-        private struct PathThumbnail: View {
+        private struct PathThumbnail: View, TracedView {
             let path: Path
 
             static let size = CGSize(24, 24)
 
-            var body: some View { tracer.range("PathThumbnail body") {
+            var body: some View { trace {
                 Rectangle()
                     .opacity(.zero)
                     .overlay {

@@ -42,7 +42,7 @@ struct ToolbarModifier: ViewModifier, SelectorHolder {
         }
     }
 
-    @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("CanvasView toolbar") { build {
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("ToolbarModifier") { build {
         ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }
         ToolbarItem(placement: .principal) { principal.id(UUID()) }
         ToolbarItem(placement: .topBarTrailing) { trailing.id(UUID()) }

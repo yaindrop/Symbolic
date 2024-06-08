@@ -4,7 +4,7 @@ import SwiftUI
 extension ActivePathPanel {
     // MARK: - EdgePanel
 
-    struct EdgePanel: View, EquatableBy {
+    struct EdgePanel: View, TracedView, EquatableBy {
         let path: Path
         let property: PathProperty
         let focusedPart: PathFocusedPart?
@@ -16,7 +16,7 @@ extension ActivePathPanel {
 
         var equatableBy: some Equatable { fromNodeId; segment; focused }
 
-        var body: some View { tracer.range("ActivePathPanel EdgePanel body") {
+        var body: some View { trace {
             HStack {
                 Spacer(minLength: 24)
                 VStack(spacing: 0) {
@@ -30,7 +30,7 @@ extension ActivePathPanel {
                     withAnimation { expanded = focused }
                 }
             }
-        }}
+        } }
 
         @State private var expanded = false
 
@@ -38,7 +38,7 @@ extension ActivePathPanel {
             "Edge"
         }
 
-        @ViewBuilder private var header: some View { tracer.range("ActivePathPanel EdgePanel header") {
+        @ViewBuilder private var header: some View { trace("header") {
             HStack {
                 titleMenu
                 Spacer()
@@ -46,7 +46,7 @@ extension ActivePathPanel {
             }
         } }
 
-        @ViewBuilder private var title: some View { tracer.range("ActivePathPanel EdgePanel title") {
+        @ViewBuilder private var title: some View { trace("title") {
             HStack(spacing: 6) {
                 Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                 Text(name)
@@ -56,7 +56,7 @@ extension ActivePathPanel {
             .padding(6)
         }}
 
-        @ViewBuilder private var titleMenu: some View { tracer.range("ActivePathPanel EdgePanel titleMenu \(fromNodeId)") {
+        @ViewBuilder private var titleMenu: some View { trace("title menu") {
             Memo {
                 Menu {
                     Label("\(fromNodeId)", systemImage: "number")
@@ -82,7 +82,7 @@ extension ActivePathPanel {
             .tint(.label)
         }
 
-        @ViewBuilder private var edgeKindPanel: some View { tracer.range("ActivePathPanel EdgePanel edgeKindPanel") {
+        @ViewBuilder private var edgeKindPanel: some View { trace("edgeKindPanel") {
             Memo {
                 Group {
                     if let segment {
@@ -117,13 +117,13 @@ extension ActivePathPanel {
 
 // MARK: - BezierPanel
 
-private struct BezierPanel: View, EquatableBy {
+private struct BezierPanel: View, TracedView, EquatableBy {
     let fromNodeId: UUID
     let edge: PathEdge
 
     var equatableBy: some Equatable { fromNodeId; edge }
 
-    var body: some View { tracer.range("ActivePathPanel EdgePanel BezierPanel") {
+    var body: some View { trace {
         VStack(spacing: 12) {
             HStack {
                 Text("C₁")

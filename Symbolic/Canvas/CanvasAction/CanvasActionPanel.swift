@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct CanvasActionPanel: View, SelectorHolder {
+struct CanvasActionPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ Array(global.canvasAction.triggering).map { $0.hint } }) var triggeringHints
         @Selected({ Array(global.canvasAction.continuous).map { $0.hint } }) var continuousHints
@@ -9,7 +9,7 @@ struct CanvasActionPanel: View, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    var body: some View { tracer.range("CanvasActionPanel body") {
+    var body: some View { trace {
         setupSelector {
             VStack(alignment: .leading) {
                 if !selector.continuousHints.isEmpty {

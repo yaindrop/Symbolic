@@ -170,7 +170,7 @@ class ActivePathViewModel: PathViewModel {
 
 // MARK: - ActivePathView
 
-struct ActivePathView: View, SelectorHolder {
+struct ActivePathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.activeItem.activePath }) var activePath
         @Selected({ global.activeItem.activePathProperty }) var activePathProperty
@@ -179,7 +179,7 @@ struct ActivePathView: View, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    var body: some View { tracer.range("ActivePathView body") {
+    var body: some View { trace {
         setupSelector {
             if let path = selector.activePath, let property = selector.activePathProperty {
                 PathView(path: path, property: property, focusedPart: selector.focusedPart)

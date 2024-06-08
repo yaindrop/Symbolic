@@ -1,12 +1,10 @@
 import Foundation
 import SwiftUI
 
-private let subtracer = tracer.tagged("PathView")
-
 // MARK: - BezierHandle
 
 extension PathView {
-    struct BezierHandle: View, EquatableBy, ComputedSelectorHolder {
+    struct BezierHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -26,11 +24,11 @@ extension PathView {
 
         var equatableBy: some Equatable { pathId; fromNodeId }
 
-        var body: some View {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
                 content
             }
-        }
+        } }
 
         // MARK: private
 

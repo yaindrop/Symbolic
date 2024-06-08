@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - ActiveItemView
 
-struct ActiveItemView: View, SelectorHolder {
+struct ActiveItemView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.activeItem.activePaths }) var activePaths
         @Selected({ global.activeItem.activeGroups }) var activeGroups
@@ -10,7 +10,7 @@ struct ActiveItemView: View, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    var body: some View { tracer.range("ActiveItemView body") {
+    var body: some View { trace {
         setupSelector {
             ForEach(selector.activeGroups) {
                 GroupBounds(group: $0)
@@ -26,7 +26,7 @@ struct ActiveItemView: View, SelectorHolder {
 // MARK: - GroupBounds
 
 extension ActiveItemView {
-    struct GroupBounds: View, ComputedSelectorHolder {
+    struct GroupBounds: View, TracedView, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let groupId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -40,11 +40,11 @@ extension ActiveItemView {
 
         let group: ItemGroup
 
-        var body: some View {
+        var body: some View { trace {
             setupSelector(.init(groupId: group.id)) {
                 boundsRect
             }
-        }
+        } }
 
         // MARK: private
 
@@ -89,7 +89,7 @@ extension ActiveItemView {
 // MARK: - PathBounds
 
 extension ActiveItemView {
-    struct PathBounds: View, ComputedSelectorHolder {
+    struct PathBounds: View, TracedView, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -103,7 +103,7 @@ extension ActiveItemView {
 
         let path: Path
 
-        var body: some View { tracer.range("PathBounds body") {
+        var body: some View { trace {
             setupSelector(.init(pathId: path.id)) {
                 boundsRect
             }
@@ -146,7 +146,7 @@ extension ActiveItemView {
 // MARK: - SelectionBounds
 
 extension ActiveItemView {
-    struct SelectionBounds: View, SelectorHolder {
+    struct SelectionBounds: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
 
@@ -155,11 +155,11 @@ extension ActiveItemView {
 
         @SelectorWrapper var selector
 
-        var body: some View {
+        var body: some View { trace {
             setupSelector {
                 boundsRect
             }
-        }
+        } }
 
         // MARK: private
 

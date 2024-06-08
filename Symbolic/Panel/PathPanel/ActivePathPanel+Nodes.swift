@@ -4,10 +4,10 @@ import SwiftUI
 // MARK: - Nodes
 
 extension ActivePathPanel {
-    struct Nodes: View {
+    struct Nodes: View, TracedView {
         let path: Path
 
-        @ViewBuilder var body: some View { tracer.range("ActivePathPanel Nodes body") {
+        @ViewBuilder var body: some View { trace {
             VStack(spacing: 4) {
                 PanelSectionTitle(name: "Nodes")
                 VStack(spacing: 0) {
@@ -23,14 +23,14 @@ extension ActivePathPanel {
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 24)
-        }}
+        } }
     }
 }
 
 // MARK: - NodePanel
 
 extension ActivePathPanel {
-    struct NodePanel: View, EquatableBy, ComputedSelectorHolder {
+    struct NodePanel: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let nodeId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.activeItem.pathFocusedPart?.nodeId == $0.nodeId }) var focused
@@ -43,7 +43,7 @@ extension ActivePathPanel {
 
         var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { tracer.range("ActivePathPanel NodePanel body") {
+        var body: some View { trace {
             setupSelector(.init(nodeId: nodeId)) {
                 content
                     .onChange(of: selector.focused) {
@@ -100,7 +100,7 @@ extension ActivePathPanel {
 // MARK: - NodeMenu
 
 private extension ActivePathPanel {
-    struct NodeMenu<Content: View>: View, EquatableBy, ComputedSelectorHolder {
+    struct NodeMenu<Content: View>: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.path.path(id: $0.pathId)?.mergableNode(id: $0.nodeId) }) var mergableNode
@@ -116,7 +116,7 @@ private extension ActivePathPanel {
 
         var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { tracer.range("ActivePathPanel NodeMenu body") {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 menu
             }
@@ -181,7 +181,7 @@ private extension ActivePathPanel {
 // MARK: - NodeDetailPanel
 
 private extension ActivePathPanel {
-    struct NodeDetailPanel: View, EquatableBy, ComputedSelectorHolder {
+    struct NodeDetailPanel: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             @Selected({ global.path.path(id: $0.pathId)?.pair(before: $0.nodeId) }) var prevPair
@@ -197,7 +197,7 @@ private extension ActivePathPanel {
 
         var equatableBy: some Equatable { pathId; nodeId }
 
-        var body: some View { tracer.range("ActivePathPanel NodeDetailPanel body") {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
                 content
                     .onChange(of: self) {}

@@ -3,13 +3,13 @@ import SwiftUI
 
 // MARK: - CanvasView
 
-struct CanvasView: View {
+struct CanvasView: View, TracedView {
     @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
     // MARK: body
 
-    var body: some View { tracer.range("CanvasView body") {
+    var body: some View { trace {
         navigationView
             .onChange(of: global.activeItem.activePath) {
                 let _r = tracer.range("Active path change \(global.activeItem.activePath?.id.uuidString ?? "nil")"); defer { _r() }
@@ -66,29 +66,29 @@ struct CanvasView: View {
         }
     }
 
-    @ViewBuilder private var background: some View { tracer.range("CanvasView background") {
+    @ViewBuilder private var background: some View { trace("background") {
         Background()
     } }
 
-    @ViewBuilder var items: some View { tracer.range("CanvasView items") {
+    @ViewBuilder var items: some View { trace("items") {
         ItemsView()
     } }
 
-    @ViewBuilder private var foreground: some View { tracer.range("CanvasView foreground") {
+    @ViewBuilder private var foreground: some View { trace("foreground") {
         Color.white.opacity(0.1)
             .modifier(MultipleTouchModifier(model: multipleTouch))
     } }
 
-    @ViewBuilder private var canvas: some View { tracer.range("CanvasView canvas") {
+    @ViewBuilder private var canvas: some View { trace("canvas") {
         ZStack {
             background
             items
             foreground
         }
         .sizeReader { global.viewport.setViewSize($0) }
-    }}
+    } }
 
-    @ViewBuilder private var overlay: some View { tracer.range("CanvasView overlay") {
+    @ViewBuilder private var overlay: some View { trace("overlay") {
         ZStack {
             ActiveItemView()
             ActivePathView()
@@ -104,7 +104,7 @@ struct CanvasView: View {
     } }
 }
 
-struct ItemsView: View, SelectorHolder {
+struct ItemsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
 
@@ -115,7 +115,7 @@ struct ItemsView: View, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    var body: some View { tracer.range("ItemsView body") {
+    var body: some View { trace {
         setupSelector {
             ForEach(selector.allPaths.filter { $0.id != selector.activePathId }) { p in
                 SUPath { path in p.append(to: &path) }

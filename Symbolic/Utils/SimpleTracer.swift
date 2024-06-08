@@ -209,3 +209,11 @@ struct SubTracer {
 }
 
 let tracer = Tracer()
+
+protocol TracedView: View {}
+
+extension TracedView {
+    func trace<Content: View>(_ message: @autoclosure () -> String? = nil, @ViewBuilder _ work: () -> Content) -> Content {
+        tracer.range(type: .intent, "[\(String(describing: type(of: self)))] \(message() ?? "body")", work)
+    }
+}

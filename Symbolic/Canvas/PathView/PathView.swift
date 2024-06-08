@@ -1,8 +1,6 @@
 import Foundation
 import SwiftUI
 
-private let subtracer = tracer.tagged("PathView")
-
 // MARK: - PathViewModel
 
 class PathViewModel: ObservableObject {
@@ -25,18 +23,17 @@ class PathViewModel: ObservableObject {
 
 // MARK: - PathView
 
-struct PathView: View {
+struct PathView: View, TracedView {
     let path: Path
     let property: PathProperty
     let focusedPart: PathFocusedPart?
 
-    var body: some View { subtracer.range("body") {
+    var body: some View { trace {
         ZStack {
             Stroke(path: path)
             handles(path: path)
         }
-
-    }}
+    } }
 
     // MARK: private
 
@@ -53,7 +50,7 @@ struct PathView: View {
 // MARK: - Stroke
 
 extension PathView {
-    struct Stroke: View, SelectorHolder {
+    struct Stroke: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
 
@@ -64,11 +61,11 @@ extension PathView {
 
         let path: Path
 
-        var body: some View { subtracer.range("Stroke") {
+        var body: some View { trace {
             setupSelector {
                 content
             }
-        }}
+        } }
 
         private var content: some View {
             SUPath { path.append(to: &$0) }

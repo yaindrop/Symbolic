@@ -3,11 +3,11 @@ import SwiftUI
 
 // MARK: - Memo
 
-struct Memo<Value: Equatable, Content: View>: View, EquatableBy {
+struct Memo<Value: Equatable, Content: View>: View, TracedView, EquatableBy {
     let equatableBy: Value
     @ViewBuilder let content: () -> Content
 
-    var body: some View { tracer.range("Memo") {
+    var body: some View { trace {
         content()
     } }
 

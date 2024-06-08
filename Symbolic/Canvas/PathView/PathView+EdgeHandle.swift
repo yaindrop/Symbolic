@@ -1,12 +1,10 @@
 import Foundation
 import SwiftUI
 
-private let subtracer = tracer.tagged("PathView")
-
 // MARK: - EdgeHandle
 
 extension PathView {
-    struct EdgeHandle: View, EquatableBy, ComputedSelectorHolder {
+    struct EdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -23,11 +21,11 @@ extension PathView {
 
         var equatableBy: some Equatable { pathId; fromNodeId }
 
-        var body: some View { subtracer.range("EdgeHandle") {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
                 outline
             }
-        }}
+        } }
 
         @State private var edgeGestureContext = PathViewModel.EdgeGestureContext()
 
@@ -57,7 +55,7 @@ extension PathView {
 // MARK: - FocusedEdgeHandle
 
 extension PathView {
-    struct FocusedEdgeHandle: View, EquatableBy, ComputedSelectorHolder {
+    struct FocusedEdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -75,13 +73,13 @@ extension PathView {
 
         var equatableBy: some Equatable { pathId; fromNodeId }
 
-        var body: some View { subtracer.range("FocusedEdgeHandle") {
+        var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
                 if let circlePosition, selector.focused {
                     circle(at: circlePosition, color: .cyan)
                 }
             }
-        }}
+        } }
 
         private static let lineWidth: Scalar = 2
         private static let circleSize: Scalar = 16

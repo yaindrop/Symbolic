@@ -1,5 +1,70 @@
-import Foundation
 import SwiftUI
+
+// MARK: - conditional modifier
+
+extension View {
+    @ViewBuilder func `if`<Value, T: View>(
+        _ value: @autoclosure () -> Value?,
+        then content: (Self, Value) -> T
+    ) -> some View {
+        if let value = value() {
+            content(self, value)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder func `if`<Value, Content: View, NilContent: View>(
+        _ value: @autoclosure () -> Value?,
+        then content: (Self, Value) -> Content,
+        else nilContent: (Self) -> NilContent
+    ) -> some View {
+        if let value = value() {
+            content(self, value)
+        } else {
+            nilContent(self)
+        }
+    }
+
+    @ViewBuilder func `if`<T: View>(
+        _ condition: @autoclosure () -> Bool,
+        then content: (Self) -> T
+    ) -> some View {
+        if condition() {
+            content(self)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder func `if`<TrueContent: View, FalseContent: View>(
+        _ condition: @autoclosure () -> Bool,
+        then trueContent: (Self) -> TrueContent,
+        else falseContent: (Self) -> FalseContent
+    ) -> some View {
+        if condition() {
+            trueContent(self)
+        } else {
+            falseContent(self)
+        }
+    }
+
+    func modifier(_ modifier: (some ViewModifier)?) -> some View {
+        self.if(modifier != nil, then: { $0.modifier(modifier!) })
+    }
+}
+
+// MARK: - invisible solid
+
+extension Color {
+    static let invisibleSolid: Color = .white.opacity(1e-3)
+}
+
+extension View {
+    func invisibleSoildOverlay() -> some View {
+        overlay(Color.invisibleSolid)
+    }
+}
 
 // MARK: - geometryReader
 

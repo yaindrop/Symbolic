@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 // reference: https://www.w3.org/TR/SVG11/implnote.html#ArcParameterizationAlternatives

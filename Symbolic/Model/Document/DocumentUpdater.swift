@@ -1,5 +1,4 @@
 import Combine
-import Foundation
 import SwiftUI
 
 private let subtracer = tracer.tagged("DocumentUpdater")

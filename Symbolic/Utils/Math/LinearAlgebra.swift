@@ -1,5 +1,4 @@
 import CoreGraphics
-import Foundation
 import SwiftUI
 
 public typealias Scalar = CGFloat

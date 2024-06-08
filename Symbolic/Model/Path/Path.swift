@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 typealias SUPath = SwiftUI.Path

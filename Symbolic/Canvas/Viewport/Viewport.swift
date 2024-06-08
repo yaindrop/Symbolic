@@ -1,4 +1,3 @@
-import Combine
 import Foundation
 
 private let subtracer = tracer.tagged("viewport")

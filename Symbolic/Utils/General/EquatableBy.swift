@@ -54,7 +54,7 @@ extension EquatableTuple {
     var tuple: (T0, T1, T2, T3, T4, T5) { (v0, v1, v2, v3, v4, v5) }
 }
 
-// MARK: - EquatableTupleBuilder
+// MARK: - EquatableBuilder
 
 @resultBuilder
 struct EquatableBuilder {

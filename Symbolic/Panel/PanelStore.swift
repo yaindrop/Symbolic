@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 private let subtracer = tracer.tagged("PanelStore")

@@ -94,7 +94,7 @@ extension PathPanel {
         } }
 
         private func toggleFocus() {
-            focused ? global.focusedPath.clearFocus() : global.focusedPath.setFocus(segment: fromNodeId)
+            focused ? global.focusedPath.clear() : global.focusedPath.setFocus(segment: fromNodeId)
         }
 
         private func splitEdge() {

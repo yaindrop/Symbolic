@@ -7,10 +7,10 @@ extension PathView {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
             @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
             @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
+            @Selected(animation: .fast, { global.focusedPath.selectingNodes }) var selectingNodes
         }
 
         @SelectorWrapper var selector
@@ -59,7 +59,7 @@ extension PathView {
                             .scaleEffect(0.5)
                             .allowsHitTesting(false)
                     }}
-                    .frame(width: Self.rectSize, height: Self.rectSize)
+                    .frame(size: .init(squared: Self.rectSize * (selector.selectingNodes ? 1.5 : 1)))
             } else {
                 Circle()
                     .stroke(.blue, style: StrokeStyle(lineWidth: selector.nodeType == .mirrored ? 2 : 1))
@@ -70,7 +70,7 @@ extension PathView {
                             .scaleEffect(0.5)
                             .allowsHitTesting(false)
                     }}
-                    .frame(width: Self.circleSize, height: Self.circleSize)
+                    .frame(size: .init(squared: Self.circleSize * (selector.selectingNodes ? 1.5 : 1)))
             }
         }
     }

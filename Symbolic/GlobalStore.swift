@@ -54,7 +54,7 @@ extension GlobalStore {
 
     var activeItem: ActiveItemService { .init(viewport: viewport, toolbar: toolbar, item: item, path: path, pathProperty: pathProperty, store: activeItemStore) }
 
-    var focusedPath: FocusedPathService { .init(activeItem: activeItem, store: focusedPathStore) }
+    var focusedPath: FocusedPathService { .init(viewport: viewport, activeItem: activeItem, store: focusedPathStore) }
 
     var draggingSelection: DraggingSelectionService { .init(viewport: viewport, store: draggingSelectionStore) }
 

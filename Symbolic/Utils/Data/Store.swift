@@ -404,15 +404,15 @@ protocol _SelectorProtocol: AnyObject {
     var syncUpdate: Bool { get }
     var props: Props? { get }
 
-    func onUpdate()
+    func onUpdate(sync: Bool)
     func onRetrack(callback: @escaping () -> Void)
 
     typealias Selected<T: Equatable> = _Selected<Self, T>
 }
 
 extension _Selector: _SelectorProtocol {
-    func onUpdate() {
-        if syncUpdate {
+    func onUpdate(sync: Bool = false) {
+        if sync || syncUpdate {
             objectWillChange.send()
             return
         }
@@ -454,7 +454,11 @@ private extension _SelectorProtocol {
             selectedTracer.instant("setup")
         } else if wrapper.value != newValue {
             wrapper.value = newValue
-            onUpdate()
+            if let animation = wrapper.animation {
+                withAnimation(animation) { onUpdate(sync: true) }
+            } else {
+                onUpdate(sync: false)
+            }
             selectedTracer.instant("updated \(newValue)")
         } else {
             selectedTracer.instant("unchanged")
@@ -468,6 +472,7 @@ private extension _SelectorProtocol {
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     let selector: (Instance.Props) -> Value
+    var animation: Animation?
     var value: Value?
     var subscriptionId: Int?
 
@@ -486,11 +491,13 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         @available(*, unavailable) set {}
     }
 
-    init(_ selector: @escaping (Instance.Props) -> Value) {
+    init(animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
+        self.animation = animation
         self.selector = selector
     }
 
-    init(_ selector: @escaping () -> Value) {
+    init(animation: Animation? = nil, _ selector: @escaping () -> Value) {
+        self.animation = animation
         self.selector = { _ in selector() }
     }
 }

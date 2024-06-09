@@ -9,7 +9,6 @@ private enum GridLineType: CaseIterable {
 struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
-
         @Selected({ global.viewport.info }) var viewportInfo
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.viewport.worldRect }) var worldRect

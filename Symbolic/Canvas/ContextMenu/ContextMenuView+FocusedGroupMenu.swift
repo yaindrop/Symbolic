@@ -6,9 +6,7 @@ extension ContextMenuView {
     struct FocusedGroupMenu: View, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
-            @Selected({ global.activeItem.focusedGroup }) var focusedGroup
-            @Selected({ global.activeItem.focusedGroup.map { global.activeItem.boundingRect(itemId: $0.id) } }) var bounds
+            @Selected({ global.activeItem.focusedGroupBounds }) var bounds
         }
 
         @SelectorWrapper var selector
@@ -63,7 +61,7 @@ extension ContextMenuView {
         }
 
         private func onUngroup() {
-            if let group = selector.focusedGroup {
+            if let group = global.activeItem.focusedGroup {
                 global.documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
                 global.activeItem.select(itemIds: group.members)
             }

@@ -6,7 +6,6 @@ extension ActiveItemView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
             @Selected({ global.activeItem.selectionBounds }) var bounds
         }
 

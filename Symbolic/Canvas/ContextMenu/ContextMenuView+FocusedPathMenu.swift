@@ -1,21 +1,31 @@
 import SwiftUI
 
+private extension GlobalStore {
+    func toggleSelectingNodes() {
+        if focusedPath.selectingNodes {
+            focusedPath.clear()
+        } else {
+            focusedPath.setSelectingNodes(true)
+        }
+    }
+}
+
 // MARK: - FocusedPathMenu
 
 extension ContextMenuView {
     struct FocusedPathMenu: View, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
-            @Selected({ global.activeItem.focusedPath }) var focusedPath
-            @Selected({ global.activeItem.focusedPath.map { global.activeItem.boundingRect(itemId: $0.id) } }) var bounds
+            @Selected({ global.activeItem.focusedPathBounds }) var bounds
+            @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected({ global.focusedPath.activeNodeIds.isEmpty || global.focusedPath.selectingNodes }) var visible
         }
 
         @SelectorWrapper var selector
 
         var body: some View {
             setupSelector {
-                if let bounds = selector.bounds {
+                if let bounds = selector.bounds, selector.visible {
                     menu.contextMenu(bounds: bounds)
                 }
             }
@@ -28,6 +38,10 @@ extension ContextMenuView {
                 Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                     .frame(minWidth: 32)
                     .tint(.label)
+
+                Button { onToggleSelectingNodes() } label: { Image(systemName: "checklist") }
+                    .frame(minWidth: 32)
+                    .if(!selector.selectingNodes) { $0.tint(.label) }
 
                 Divider()
 
@@ -57,6 +71,10 @@ extension ContextMenuView {
                 Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
                     .frame(minWidth: 32)
             }
+        }
+
+        private func onToggleSelectingNodes() {
+            global.toggleSelectingNodes()
         }
 
         private func onUngroup() {}

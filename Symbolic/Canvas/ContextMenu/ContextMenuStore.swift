@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - ContextMenuData
 
 enum ContextMenuData: HashIdentifiable {
-    case pathNode
+    case pathFocusedPart
     case focusedPath
     case focusedGroup
     case selection

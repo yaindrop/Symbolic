@@ -132,5 +132,11 @@ struct CanvasSetup {
                 global.activeItem.select(itemIds: $0.map { $0.id })
             }
             .store(in: global.draggingSelection.store)
+
+        global.activeItem.store.$focusedItemId.willUpdate
+            .sink { _ in
+                global.focusedPath.clear()
+            }
+            .store(in: global.draggingSelection.store)
     }
 }

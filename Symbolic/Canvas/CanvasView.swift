@@ -11,10 +11,6 @@ struct CanvasView: View, TracedView {
 
     var body: some View { trace {
         navigationView
-            .onChange(of: global.activeItem.focusedPath) {
-                let _r = tracer.range("Focused path change \(global.activeItem.focusedPath?.id.uuidString ?? "nil")"); defer { _r() }
-                global.focusedPath.onFocusedPathChanged()
-            }
             .onAppear {
                 let setup = CanvasSetup()
                 setup.documentLoad()
@@ -32,7 +28,7 @@ struct CanvasView: View, TracedView {
                 global.panel.register(align: .topLeading) { _ in CanvasActionPanel() }
             }
             .onAppear {
-                global.contextMenu.register(.pathNode)
+                global.contextMenu.register(.pathFocusedPart)
                 global.contextMenu.register(.focusedPath)
                 global.contextMenu.register(.focusedGroup)
                 global.contextMenu.register(.selection)
@@ -107,7 +103,6 @@ struct CanvasView: View, TracedView {
 struct ItemsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
-
         @Selected({ global.viewport.toView }) var toView
         @Selected({ global.item.allPaths }) var allPaths
         @Selected({ global.activeItem.focusedItemId }) var focusedItemId

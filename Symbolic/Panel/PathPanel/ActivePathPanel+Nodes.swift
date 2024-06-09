@@ -164,7 +164,7 @@ private extension PathPanel {
         }
 
         private func toggleFocus() {
-            selector.focused ? global.focusedPath.clearFocus() : global.focusedPath.setFocus(node: nodeId)
+            selector.focused ? global.focusedPath.clear() : global.focusedPath.setFocus(node: nodeId)
         }
 
         private func mergeNode() {

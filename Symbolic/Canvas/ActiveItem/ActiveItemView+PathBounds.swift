@@ -6,10 +6,10 @@ private extension GlobalStore {
     func onTap(pathId: UUID) {
         if toolbar.multiSelect {
             activeItem.selectRemove(itemIds: [pathId])
-        } else if activeItem.focusedItemId == pathId {
-            focusedPath.clearFocus()
-        } else {
+        } else if activeItem.focusedItemId != pathId {
             activeItem.focus(itemId: pathId)
+        } else if !focusedPath.selectingNodes {
+            focusedPath.clear()
         }
     }
 }
@@ -21,7 +21,6 @@ extension ActiveItemView {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
             @Selected({ global.activeItem.boundingRect(itemId: $0.pathId) }) var bounds

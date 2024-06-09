@@ -1,5 +1,37 @@
 import SwiftUI
 
+private extension GlobalStore {
+    func onTap(node id: UUID) {
+        if focusedPath.selectingNodes {
+            if focusedPath.activeNodeIds.contains(id) {
+                focusedPath.selectRemove(node: [id])
+            } else {
+                focusedPath.selectAdd(node: [id])
+            }
+        } else {
+            let focused = focusedPath.focusedNodeId == id
+            focused ? focusedPath.clear() : focusedPath.setFocus(node: id)
+        }
+    }
+}
+
+private extension GlobalStore {
+    func onTap(segment fromId: UUID) {
+        if focusedPath.selectingNodes {
+            guard let path = activeItem.focusedPath, let toId = path.node(after: fromId)?.id else { return }
+            let nodeIds = [fromId, toId]
+            if focusedPath.activeNodeIds.isSuperset(of: nodeIds) {
+                focusedPath.selectRemove(node: nodeIds)
+            } else {
+                focusedPath.selectAdd(node: nodeIds)
+            }
+        } else {
+            let focused = focusedPath.focusedSegmentId == fromId
+            focused ? focusedPath.clear() : focusedPath.setFocus(segment: fromId)
+        }
+    }
+}
+
 // MARK: - FocusedPathViewModel
 
 class FocusedPathViewModel: PathViewModel {
@@ -48,7 +80,7 @@ class FocusedPathViewModel: PathViewModel {
 
             },
 
-            onTap: { _ in self.toggleFocus(nodeId: nodeId) },
+            onTap: { _ in global.onTap(node: nodeId) },
 
             onLongPress: { _ in
                 addEndingNode()
@@ -108,7 +140,7 @@ class FocusedPathViewModel: PathViewModel {
                 if cancelled { global.documentUpdater.cancel() }
 
             },
-            onTap: { _ in self.toggleFocus(segment: fromId) },
+            onTap: { _ in global.onTap(segment: fromId) },
             onLongPress: {
                 split(at: segment.paramT(closestTo: $0.location).t)
                 updateLongPress(segment: segment, pending: true)
@@ -136,7 +168,7 @@ class FocusedPathViewModel: PathViewModel {
                 if cancelled { global.documentUpdater.cancel() }
             },
 
-            onTap: { _ in self.toggleFocus(segment: fromId) },
+            onTap: { _ in global.onTap(segment: fromId) },
             onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )
@@ -155,16 +187,6 @@ class FocusedPathViewModel: PathViewModel {
             onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )
-    }
-
-    private func toggleFocus(nodeId: UUID) {
-        let focused = global.focusedPath.focusedNodeId == nodeId
-        focused ? global.focusedPath.clearFocus() : global.focusedPath.setFocus(node: nodeId)
-    }
-
-    private func toggleFocus(segment fromId: UUID) {
-        let focused = global.focusedPath.focusedSegmentId == fromId
-        focused ? global.focusedPath.clearFocus() : global.focusedPath.setFocus(segment: fromId)
     }
 }
 

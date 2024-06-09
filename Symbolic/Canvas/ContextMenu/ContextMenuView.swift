@@ -23,7 +23,6 @@ struct ContextMenuRoot: View, TracedView, SelectorHolder {
 struct ContextMenuModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
-
         @Selected({ global.viewport.store.viewSize }) var viewSize
     }
 
@@ -72,7 +71,8 @@ struct ContextMenuView: View, TracedView, EquatableBy {
 
     @ViewBuilder private var content: some View {
         switch data {
-        case .pathNode: EmptyView()
+        case .pathFocusedPart:
+            PathFocusedPartMenu()
         case .focusedPath:
             FocusedPathMenu()
         case .focusedGroup:

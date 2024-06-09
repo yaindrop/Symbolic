@@ -7,7 +7,6 @@ extension PathView {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
         }
 
@@ -58,7 +57,6 @@ extension PathView {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-
             @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
         }

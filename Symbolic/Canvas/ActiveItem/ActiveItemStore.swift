@@ -85,24 +85,28 @@ extension ActiveItemService {
     }
 
     var focusedPath: Path? {
-        if let focusedItemId {
-            return path.path(id: focusedItemId)
-        }
-        return nil
+        guard let focusedItemId else { return nil }
+        return path.path(id: focusedItemId)
     }
 
     var focusedPathProperty: PathProperty? {
-        if let focusedItemId {
-            return pathProperty.property(id: focusedItemId)
-        }
-        return nil
+        guard let focusedItemId else { return nil }
+        return pathProperty.property(id: focusedItemId)
+    }
+
+    var focusedPathBounds: CGRect? {
+        guard let focusedPath else { return nil }
+        return boundingRect(itemId: focusedPath.id)
     }
 
     var focusedGroup: ItemGroup? {
-        if let focusedItemId {
-            return item.group(id: focusedItemId)
-        }
-        return nil
+        guard let focusedItemId else { return nil }
+        return item.group(id: focusedItemId)
+    }
+
+    var focusedGroupBounds: CGRect? {
+        guard let focusedGroup else { return nil }
+        return boundingRect(itemId: focusedGroup.id)
     }
 
     func activeDescendants(groupId: UUID) -> [Item] {

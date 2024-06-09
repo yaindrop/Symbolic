@@ -1,12 +1,12 @@
 import SwiftUI
 
-// MARK: - SelectionMenu
+// MARK: - FocusedPathMenu
 
 extension ContextMenuView {
-    struct SelectionMenu: View, SelectorHolder {
+    struct PathFocusedPartMenu: View, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-            @Selected({ global.activeItem.selectionBounds }) var bounds
+            @Selected({ global.focusedPath.focusedNodeBounds }) var bounds
         }
 
         @SelectorWrapper var selector
@@ -21,7 +21,7 @@ extension ContextMenuView {
 
         // MARK: private
 
-        @ViewBuilder var menu: some View {
+        @ViewBuilder private var menu: some View {
             HStack {
                 Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                     .frame(minWidth: 32)
@@ -29,23 +29,20 @@ extension ContextMenuView {
 
                 Divider()
 
-                Button {} label: { Image(systemName: "lock") }
-                    .frame(minWidth: 32)
-                    .tint(.label)
-                Menu {
-                    Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
-                    Button("Move above") {}
-                    Button("Move below") {}
-                    Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
-                } label: { Image(systemName: "square.3.layers.3d") }
-                    .frame(minWidth: 32)
-                    .menuOrder(.fixed)
-                    .tint(.label)
-                Button { onGroup() } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
-                    .frame(minWidth: 32)
-                    .tint(.label)
-
-                Divider()
+//                Button {} label: { Image(systemName: "lock") }
+//                    .frame(minWidth: 32)
+//                    .tint(.label)
+//                Menu {
+//                    Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
+//                    Button("Move above") {}
+//                    Button("Move below") {}
+//                    Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
+//                } label: { Image(systemName: "square.3.layers.3d") }
+//                    .frame(minWidth: 32)
+//                    .menuOrder(.fixed)
+//                    .tint(.label)
+//
+//                Divider()
 
                 Menu {
                     Button("Copy", systemImage: "doc.on.doc") {}
@@ -60,12 +57,8 @@ extension ContextMenuView {
             }
         }
 
-        private func onGroup() {
-            global.documentUpdater.groupSelection()
-        }
+        private func onUngroup() {}
 
-        private func onDelete() {
-            global.documentUpdater.deleteSelection()
-        }
+        private func onDelete() {}
     }
 }

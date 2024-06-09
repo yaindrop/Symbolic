@@ -1,22 +1,25 @@
 import SwiftUI
 
-struct AnimatedValueModifier<Value: Equatable>: ViewModifier {
-    @Binding var value: Value
+struct AnimatedValue<Value: Equatable, Content: View>: View {
+    @State var value: Value
     let from: Value
     let to: Value
     let animation: Animation
+    let content: (Value) -> Content
 
-    func body(content: Content) -> some View {
-        content
+    var body: some View {
+        content(value)
             .animation(animation, value: value)
             .onAppear { value = to }
             .onDisappear { value = from }
     }
-}
 
-extension View {
-    func animatedValue<Value: Equatable>(_ value: Binding<Value>, from: Value, to: Value, _ animation: Animation) -> some View {
-        modifier(AnimatedValueModifier(value: value, from: from, to: to, animation: animation))
+    init(from: Value, to: Value, _ animation: Animation, content: @escaping (Value) -> Content) {
+        value = from
+        self.from = from
+        self.to = to
+        self.animation = animation
+        self.content = content
     }
 }
 

@@ -195,20 +195,31 @@ class FocusedPathViewModel: PathViewModel {
 struct FocusedPathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.activeItem.focusedPath }) var path
+        @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
     }
 
     @SelectorWrapper var selector
 
+    private var viewModel: PathViewModel = FocusedPathViewModel()
+
     var body: some View { trace {
         setupSelector {
-            if let path = selector.path {
-                PathView(path: path)
-                    .environmentObject(viewModel)
+            content
+        }
+    } }
+}
+
+// MARK: private
+
+private extension FocusedPathView {
+    @ViewBuilder var content: some View {
+        if let path = selector.path {
+            PathView(path: path)
+                .environmentObject(viewModel)
+            if selector.selectingNodes {
                 SelectionBounds()
                     .allowsHitTesting(false)
             }
         }
-    } }
-
-    private var viewModel: PathViewModel = FocusedPathViewModel()
+    }
 }

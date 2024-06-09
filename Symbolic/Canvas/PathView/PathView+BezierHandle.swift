@@ -4,6 +4,13 @@ import SwiftUI
 
 extension PathView {
     struct BezierHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        @EnvironmentObject var viewModel: PathViewModel
+
+        let pathId: UUID
+        let fromNodeId: UUID
+
+        var equatableBy: some Equatable { pathId; fromNodeId }
+
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -15,75 +22,72 @@ extension PathView {
 
         @SelectorWrapper var selector
 
-        @EnvironmentObject var viewModel: PathViewModel
-
-        let pathId: UUID
-        let fromNodeId: UUID
-
-        var equatableBy: some Equatable { pathId; fromNodeId }
-
         var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
                 content
             }
         } }
+    }
+}
 
-        // MARK: private
+// MARK: private
 
-        private static let lineWidth: Scalar = 1
-        private static let circleSize: Scalar = 8
-        private static let touchablePadding: Scalar = 16
+private extension PathView.BezierHandle {
+    var control0Color: Color { .green }
+    var control1Color: Color { .orange }
+    var lineWidth: Scalar { 1 }
+    var circleSize: Scalar { 8 }
+    var touchablePadding: Scalar { 16 }
 
-        private var content: some View {
-            ZStack {
-                control0
-                control1
+    var content: some View {
+        ZStack {
+            control0
+            control1
+        }
+    }
+
+    @ViewBuilder var control0: some View {
+        if let segment = selector.segment {
+            if selector.segmentFocused || selector.nodeFocused {
+                line(from: segment.from, to: segment.control0, color: control0Color)
+                circle(at: segment.control0, color: control0Color)
+                    .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: true))
             }
         }
+    }
 
-        @ViewBuilder private var control0: some View {
-            if let segment = selector.segment {
-                if selector.segmentFocused || selector.nodeFocused {
-                    line(from: segment.from, to: segment.control0, color: .green)
-                    circle(at: segment.control0, color: .green)
-                        .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: true))
-                }
+    @ViewBuilder var control1: some View {
+        if let segment = selector.segment {
+            if selector.segmentFocused || selector.nextFocused {
+                line(from: segment.to, to: segment.control1, color: control1Color)
+                circle(at: segment.control1, color: control1Color)
+                    .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: false))
             }
         }
+    }
 
-        @ViewBuilder private var control1: some View {
-            if let segment = selector.segment {
-                if selector.segmentFocused || selector.nextFocused {
-                    line(from: segment.to, to: segment.control1, color: .orange)
-                    circle(at: segment.control1, color: .orange)
-                        .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: false))
-                }
-            }
+    func subtractingCircle(at point: Point2) -> SUPath {
+        SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: circleSize))) }
+    }
+
+    @ViewBuilder func line(from: Point2, to: Point2, color: Color) -> some View {
+        SUPath { p in
+            p.move(to: from)
+            p.addLine(to: to)
+            p = p.strokedPath(StrokeStyle(lineWidth: lineWidth))
+            p = p.subtracting(subtractingCircle(at: to))
         }
+        .fill(color.opacity(0.5))
+        .allowsHitTesting(false)
+    }
 
-        private func subtractingCircle(at point: Point2) -> SUPath {
-            SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
-        }
-
-        @ViewBuilder private func line(from: Point2, to: Point2, color: Color) -> some View {
-            SUPath { p in
-                p.move(to: from)
-                p.addLine(to: to)
-                p = p.strokedPath(StrokeStyle(lineWidth: Self.lineWidth))
-                p = p.subtracting(subtractingCircle(at: to))
-            }
+    @ViewBuilder func circle(at point: Point2, color: Color) -> some View {
+        Circle()
+            .stroke(color, style: StrokeStyle(lineWidth: lineWidth))
             .fill(color.opacity(0.5))
-            .allowsHitTesting(false)
-        }
-
-        @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
-            Circle()
-                .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
-                .fill(color.opacity(0.5))
-                .frame(width: Self.circleSize, height: Self.circleSize)
-                .padding(Self.touchablePadding)
-                .invisibleSoildOverlay()
-                .position(point)
-        }
+            .frame(size: .init(squared: circleSize))
+            .padding(touchablePadding)
+            .invisibleSoildOverlay()
+            .position(point)
     }
 }

@@ -152,29 +152,18 @@ extension PathPropertyService {
         switch event {
         case let .update(event):
             let pathId = event.pathId
-            switch event.kind {
-            case let .setName(event): loadEvent(pathId, event)
-            case let .setNodeType(event): loadEvent(pathId, event)
-            case let .setEdgeType(event): loadEvent(pathId, event)
+            guard var property = property(id: pathId) else { return }
+            for kind in event.kinds {
+                switch kind {
+                case let .setName(event):
+                    property.name = event.name
+                case let .setNodeType(event):
+                    property.nodeTypeMap[event.nodeId] = event.nodeType
+                case let .setEdgeType(event):
+                    property.edgeTypeMap[event.fromNodeId] = event.edgeType
+                }
             }
+            update(property: property)
         }
-    }
-
-    private func loadEvent(_ pathId: UUID, _ event: PathPropertyEvent.Update.SetName) {
-        guard var property = property(id: pathId) else { return }
-        property.name = event.name
-        update(property: property)
-    }
-
-    private func loadEvent(_ pathId: UUID, _ event: PathPropertyEvent.Update.SetNodeType) {
-        guard var property = property(id: pathId) else { return }
-        property.nodeTypeMap[event.nodeId] = event.nodeType
-        update(property: property)
-    }
-
-    private func loadEvent(_ pathId: UUID, _ event: PathPropertyEvent.Update.SetEdgeType) {
-        guard var property = property(id: pathId) else { return }
-        property.edgeTypeMap[event.fromNodeId] = event.edgeType
-        update(property: property)
     }
 }

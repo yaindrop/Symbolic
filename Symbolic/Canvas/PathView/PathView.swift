@@ -28,10 +28,12 @@ struct PathView: View, TracedView {
     var body: some View { trace {
         content
     } }
+}
 
-    // MARK: private
+// MARK: private
 
-    @ViewBuilder private var content: some View {
+private extension PathView {
+    @ViewBuilder var content: some View {
         let nodeIds = path.nodes.map { $0.id }
         let segmentIds = path.nodes.filter { path.segment(from: $0.id) != nil }.map { $0.id }
         ZStack {
@@ -47,7 +49,11 @@ struct PathView: View, TracedView {
 // MARK: - Stroke
 
 extension PathView {
-    struct Stroke: View, TracedView, ComputedSelectorHolder {
+    struct Stroke: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        let pathId: UUID
+
+        var equatableBy: some Equatable { pathId }
+
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -57,22 +63,24 @@ extension PathView {
 
         @SelectorWrapper var selector
 
-        let pathId: UUID
-
         var body: some View { trace {
             setupSelector(.init(pathId: pathId)) {
                 content
             }
         } }
+    }
+}
 
-        @ViewBuilder private var content: some View {
-            if let path = selector.path {
-                SUPath { path.append(to: &$0) }
-                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                    .allowsHitTesting(false)
-                    .id(path.id)
-                    .transformEffect(selector.toView)
-            }
+// MARK: private
+
+private extension PathView.Stroke {
+    @ViewBuilder var content: some View {
+        if let path = selector.path {
+            SUPath { path.append(to: &$0) }
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                .allowsHitTesting(false)
+                .id(path.id)
+                .transformEffect(selector.toView)
         }
     }
 }

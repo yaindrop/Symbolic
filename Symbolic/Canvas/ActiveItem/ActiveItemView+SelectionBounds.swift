@@ -19,14 +19,13 @@ extension ActiveItemView {
 
         // MARK: private
 
-        @State private var dashPhase: Scalar = 0
-
         @ViewBuilder private var boundsRect: some View {
             if let bounds = selector.bounds {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
-                    .framePosition(rect: bounds)
-                    .animatedValue($dashPhase, from: 0, to: 16, .linear(duration: 0.4).repeatForever(autoreverses: false))
+                AnimatedValue(from: 0, to: 16, .linear(duration: 0.4).repeatForever(autoreverses: false)) { dashPhase in
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
+                        .framePosition(rect: bounds)
+                }
             }
         }
     }

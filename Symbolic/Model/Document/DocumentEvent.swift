@@ -15,7 +15,7 @@ enum PathEvent: Equatable, Encodable {
     struct Delete: Equatable, Encodable { let pathIds: [UUID] }
     struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
 
-    struct Update: Equatable, Encodable { let pathId: UUID, kind: Kind }
+    struct Update: Equatable, Encodable { let pathId: UUID, kinds: [Kind] }
 
     // multi update
     struct Merge: Equatable, Encodable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
@@ -52,7 +52,7 @@ extension PathEvent.Update {
 // MARK: - PathPropertyEvent
 
 enum PathPropertyEvent: Equatable, Encodable {
-    struct Update: Equatable, Encodable { let pathId: UUID, kind: Kind }
+    struct Update: Equatable, Encodable { let pathId: UUID, kinds: [Kind] }
 
     case update(Update)
 }
@@ -118,7 +118,11 @@ extension PathEvent {
     }
 
     init(in pathId: UUID, _ kind: PathEvent.Update.Kind) {
-        self = .update(.init(pathId: pathId, kind: kind))
+        self = .update(.init(pathId: pathId, kinds: [kind]))
+    }
+
+    init(in pathId: UUID, _ kinds: [PathEvent.Update.Kind]) {
+        self = .update(.init(pathId: pathId, kinds: kinds))
     }
 }
 

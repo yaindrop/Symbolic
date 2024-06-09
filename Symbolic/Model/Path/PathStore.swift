@@ -186,37 +186,19 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.Update) {
         let pathId = event.pathId
-        switch event.kind {
-        case let .nodeCreate(event): loadEvent(pathId, event)
-        case let .nodeDelete(event): loadEvent(pathId, event)
-        case let .nodeUpdate(event): loadEvent(pathId, event)
-        case let .edgeUpdate(event): loadEvent(pathId, event)
+        guard let path = path(id: pathId) else { return }
+        for kind in event.kinds {
+            switch kind {
+            case let .nodeCreate(event):
+                path.update(nodeCreate: event)
+            case let .nodeDelete(event):
+                path.update(nodeDelete: event)
+            case let .nodeUpdate(event):
+                path.update(nodeUpdate: event)
+            case let .edgeUpdate(event):
+                path.update(edgeUpdate: event)
+            }
         }
-    }
-
-    // MARK: path update
-
-    private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.NodeCreate) {
-        guard let path = path(id: pathId) else { return }
-        path.update(nodeCreate: event)
-        update(paths: [path])
-    }
-
-    private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.NodeDelete) {
-        guard let path = path(id: pathId) else { return }
-        path.update(nodeDelete: event)
-        update(paths: [path])
-    }
-
-    private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.NodeUpdate) {
-        guard let path = path(id: pathId) else { return }
-        path.update(nodeUpdate: event)
-        update(paths: [path])
-    }
-
-    private func loadEvent(_ pathId: UUID, _ event: PathEvent.Update.EdgeUpdate) {
-        guard let path = path(id: pathId) else { return }
-        path.update(edgeUpdate: event)
         update(paths: [path])
     }
 

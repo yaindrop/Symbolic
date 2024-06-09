@@ -319,9 +319,11 @@ extension DocumentUpdater {
         let (before, after) = segment.split(paramT: paramT)
         let snappedOffset = position.offset(to: grid.snap(position + offset))
 
-        events.append(.init(in: pathId, .nodeCreate(.init(prevNodeId: fromNodeId, node: .init(id: newNodeId, position: position + snappedOffset)))))
-        events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: fromNodeId, edge: before.edge))))
-        events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: newNodeId, edge: after.edge))))
+        events.append(.init(in: pathId, [
+            .nodeCreate(.init(prevNodeId: fromNodeId, node: .init(id: newNodeId, position: position + snappedOffset))),
+            .edgeUpdate(.init(fromNodeId: fromNodeId, edge: before.edge)),
+            .edgeUpdate(.init(fromNodeId: newNodeId, edge: after.edge)),
+        ]))
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveNode) {
@@ -341,10 +343,13 @@ extension DocumentUpdater {
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
 
-        events.append(.init(in: pathId, .nodeUpdate(.init(node: curr.node.with(offset: snappedOffset)))))
+        var kinds: [PathEvent.Update.Kind] = []
+        kinds.append(.nodeUpdate(.init(node: curr.node.with(offset: snappedOffset))))
         if let next = path.pair(after: fromNodeId) {
-            events.append(.init(in: pathId, .nodeUpdate(.init(node: next.node.with(offset: snappedOffset)))))
+            kinds.append(.nodeUpdate(.init(node: next.node.with(offset: snappedOffset))))
         }
+
+        events.append(.init(in: pathId, kinds))
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveEdgeControl) {
@@ -414,16 +419,16 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathPropertyEvent], _ pathId: UUID, _ action: PathPropertyAction.Update.SetName) {
         let name = action.name
-        events.append(.update(.init(pathId: pathId, kind: .setName(.init(name: name)))))
+        events.append(.update(.init(pathId: pathId, kinds: [.setName(.init(name: name))])))
     }
 
     private func collectEvents(to events: inout [PathPropertyEvent], _ pathId: UUID, _ action: PathPropertyAction.Update.SetNodeType) {
         let nodeId = action.nodeId, nodeType = action.nodeType
-        events.append(.update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: nodeType)))))
+        events.append(.update(.init(pathId: pathId, kinds: [.setNodeType(.init(nodeId: nodeId, nodeType: nodeType))])))
     }
 
     private func collectEvents(to events: inout [PathPropertyEvent], _ pathId: UUID, _ action: PathPropertyAction.Update.SetEdgeType) {
         let fromNodeId = action.fromNodeId, edgeType = action.edgeType
-        events.append(.update(.init(pathId: pathId, kind: .setEdgeType(.init(fromNodeId: fromNodeId, edgeType: edgeType)))))
+        events.append(.update(.init(pathId: pathId, kinds: [.setEdgeType(.init(fromNodeId: fromNodeId, edgeType: edgeType))])))
     }
 }

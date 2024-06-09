@@ -4,6 +4,13 @@ import SwiftUI
 
 extension PathView {
     struct EdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        @EnvironmentObject var viewModel: PathViewModel
+
+        let pathId: UUID
+        let fromNodeId: UUID
+
+        var equatableBy: some Equatable { pathId; fromNodeId }
+
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -12,41 +19,38 @@ extension PathView {
 
         @SelectorWrapper var selector
 
-        @EnvironmentObject var viewModel: PathViewModel
-
-        let pathId: UUID
-        let fromNodeId: UUID
-
-        var equatableBy: some Equatable { pathId; fromNodeId }
+        @State private var edgeGestureContext = PathViewModel.EdgeGestureContext()
 
         var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
-                outline
+                content
             }
         } }
+    }
+}
 
-        @State private var edgeGestureContext = PathViewModel.EdgeGestureContext()
+// MARK: private
 
-        @ViewBuilder private var outline: some View {
-            if let segment = selector.segment {
-                SUPath { p in segment.append(to: &p) }
-                    .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
-                    .fill(Color.invisibleSolid)
-                    .multipleGesture(viewModel.edgeGesture(fromId: fromNodeId, segment: segment, context: edgeGestureContext))
-            }
+private extension PathView.EdgeHandle {
+    @ViewBuilder var content: some View {
+        if let segment = selector.segment {
+            SUPath { p in segment.append(to: &p) }
+                .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
+                .fill(Color.invisibleSolid)
+                .multipleGesture(viewModel.edgeGesture(fromId: fromNodeId, segment: segment, context: edgeGestureContext))
         }
+    }
 
-        private static let circleSize: Scalar = 16
-        private static let lineWidth: Scalar = 2
+    var circleSize: Scalar { 16 }
+    var lineWidth: Scalar { 2 }
 
-        @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
-            Circle()
-                .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
-                .fill(color)
-                .frame(width: Self.circleSize, height: Self.circleSize)
-                .invisibleSoildOverlay()
-                .position(point)
-        }
+    @ViewBuilder func circle(at point: Point2, color: Color) -> some View {
+        Circle()
+            .stroke(color, style: StrokeStyle(lineWidth: lineWidth))
+            .fill(color)
+            .frame(size: .init(squared: circleSize))
+            .invisibleSoildOverlay()
+            .position(point)
     }
 }
 
@@ -54,6 +58,13 @@ extension PathView {
 
 extension PathView {
     struct FocusedEdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        @EnvironmentObject var viewModel: PathViewModel
+
+        let pathId: UUID
+        let fromNodeId: UUID
+
+        var equatableBy: some Equatable { pathId; fromNodeId }
+
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -63,44 +74,42 @@ extension PathView {
 
         @SelectorWrapper var selector
 
-        @EnvironmentObject var viewModel: PathViewModel
-
-        let pathId: UUID
-        let fromNodeId: UUID
-
-        var equatableBy: some Equatable { pathId; fromNodeId }
-
         var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
-                if let circlePosition, selector.focused {
-                    circle(at: circlePosition, color: .cyan)
-                }
+                content
             }
         } }
+    }
+}
 
-        private static let lineWidth: Scalar = 1
-        private static let circleSize: Scalar = 12
-        private static let touchablePadding: Scalar = 24
+// MARK: private
 
-        private var circlePosition: Point2? {
-            guard let segment = selector.segment else { return nil }
-            let tessellated = segment.tessellated()
-            let t = tessellated.approxPathParamT(lineParamT: 0.5).t
-            return segment.position(paramT: t)
-        }
+private extension PathView.FocusedEdgeHandle {
+    var color: Color { .cyan }
+    var lineWidth: Scalar { 1 }
+    var circleSize: Scalar { 12 }
+    var touchablePadding: Scalar { 24 }
 
-        private func subtractingCircle(at point: Point2) -> SUPath {
-            SUPath { $0.addEllipse(in: CGRect(center: point, size: CGSize(squared: Self.circleSize))) }
-        }
+    var circlePosition: Point2? {
+        guard let segment = selector.segment else { return nil }
+        let tessellated = segment.tessellated()
+        let t = tessellated.approxPathParamT(lineParamT: 0.5).t
+        return segment.position(paramT: t)
+    }
 
-        @ViewBuilder private func circle(at point: Point2, color: Color) -> some View {
+    func subtractingCircle(at point: Point2) -> SUPath {
+        SUPath { $0.addEllipse(in: .init(center: point, size: .init(squared: circleSize))) }
+    }
+
+    @ViewBuilder var content: some View {
+        if let circlePosition, selector.focused {
             Circle()
-                .stroke(color, style: StrokeStyle(lineWidth: Self.lineWidth))
+                .stroke(color, style: .init(lineWidth: lineWidth))
                 .fill(color.opacity(0.5))
-                .frame(width: Self.circleSize, height: Self.circleSize)
-                .padding(Self.touchablePadding)
+                .frame(size: .init(squared: circleSize))
+                .padding(touchablePadding)
                 .invisibleSoildOverlay()
-                .position(point)
+                .position(circlePosition)
                 .if(selector.focused) { $0.overlay {
                     if let segment = selector.segment {
                         SUPath { p in
@@ -110,7 +119,7 @@ extension PathView {
                             segment.subsegment(fromT: fromT, toT: toT).append(to: &p)
                         }
                         .strokedPath(StrokeStyle(lineWidth: 2, lineCap: .round))
-                        .subtracting(subtractingCircle(at: point))
+                        .subtracting(subtractingCircle(at: circlePosition))
                         .fill(color)
                         .allowsHitTesting(false)
                     }

@@ -81,10 +81,12 @@ extension FocusedPathService {
     func selectAdd(node ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selectAdd \(ids)"); defer { _r() }
         store.update(activeNodeIds: activeNodeIds.with { $0.formUnion(ids) })
+        print("dbg", global.activeItem.focusedPath?.continuousNodeIndices(nodeIds: .init(activeNodeIds)))
     }
 
     func selectRemove(node ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selectRemove \(ids)"); defer { _r() }
         store.update(activeNodeIds: activeNodeIds.with { $0.subtract(ids) })
+        print("dbg", global.activeItem.focusedPath?.continuousNodeIndices(nodeIds: .init(activeNodeIds)))
     }
 }

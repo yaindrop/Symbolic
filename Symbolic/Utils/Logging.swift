@@ -9,7 +9,7 @@ func logInfo(_ message: String) {
         return
     }
     let substrings = message.striding(size)
-    for i in 0 ..< substrings.count {
+    for i in substrings.indices {
         let tag = "(\(i + 1) of \(substrings.count)) "
         logger.info("\(tag)\(substrings[i])")
     }

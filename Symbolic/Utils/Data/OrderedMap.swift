@@ -2,27 +2,44 @@ import Foundation
 
 // MARK: - OrderedMap
 
-struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
-    typealias Element = (Key, Value)
-
+struct OrderedMap<Key: Hashable, Value> {
     private(set) var dict: [Key: Value] = [:]
     private(set) var keys: [Key] = []
     private(set) var indexOf: [Key: Int] = [:]
 
-    // MARK: common api
+    init(_ dict: [Key: Value]) {
+        self.dict = dict
+        keys = Array(dict.keys)
+        refreshIndexOf()
+    }
 
+    init(_ values: [Value], _ getKey: (Value) -> Key) {
+        for value in values {
+            let key = getKey(value)
+            dict[key] = value
+            keys.append(key)
+        }
+        refreshIndexOf()
+    }
+}
+
+extension OrderedMap {
     var count: Int { keys.count }
 
     var values: [Value] { keys.map { dict[$0]! } }
+
+    func value(key: Key) -> Value? { dict[key] }
 
     mutating func removeAll() {
         dict.removeAll()
         keys.removeAll()
         indexOf.removeAll()
     }
+}
 
-    // MARK: map-like api
+// MARK: map-like api
 
+extension OrderedMap {
     subscript(key: Key) -> Value? {
         get { value(key: key) }
         set { setValue(key: key, value: newValue) }
@@ -48,9 +65,11 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
         }
         return removed
     }
+}
 
-    // MARK: array-like api
+// MARK: array-like api
 
+extension OrderedMap {
     subscript(index: Int) -> Value? {
         get { value(index: index) }
         set { setValue(index: index, value: newValue) }
@@ -94,9 +113,11 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
         guard let removed = removeValue(forKey: key) else { return nil }
         return (key, removed)
     }
+}
 
-    // MARK: special api
+// MARK: special api
 
+extension OrderedMap {
     mutating func mutateKeys(_ mutator: (inout [Key]) -> Void) {
         let mutated = keys.with { mutator(&$0) }
         if let newKey = mutated.first(where: { dict[$0] == nil }) {
@@ -110,25 +131,11 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
         keys = mutated
         refreshIndexOf()
     }
+}
 
-    init(_ dict: [Key: Value]) {
-        self.dict = dict
-        keys = Array(dict.keys)
-        refreshIndexOf()
-    }
+// MARK: private
 
-    init(dictionaryLiteral elements: (Key, Value)...) {
-        for (key, value) in elements {
-            dict[key] = value
-            keys.append(key)
-        }
-        refreshIndexOf()
-    }
-
-    // MARK: private
-
-    func value(key: Key) -> Value? { dict[key] }
-
+private extension OrderedMap {
     mutating func setValue(key: Key, value: Value?) {
         if let value {
             updateValue(value, forKey: key)
@@ -137,17 +144,17 @@ struct OrderedMap<Key: Hashable, Value>: ExpressibleByDictionaryLiteral {
         }
     }
 
-    private func value(index: Int) -> Value? {
+    func value(index: Int) -> Value? {
         guard keys.indices.contains(index) else { return nil }
         return dict[keys[index]]
     }
 
-    private mutating func setValue(index: Int, value: Value?) {
+    mutating func setValue(index: Int, value: Value?) {
         guard keys.indices.contains(index) else { return }
         dict[keys[index]] = value
     }
 
-    private mutating func refreshIndexOf() {
+    mutating func refreshIndexOf() {
         indexOf = keys.enumerated().reduce(into: [Key: Int]()) { dict, pair in dict[pair.element] = pair.offset }
     }
 }
@@ -163,6 +170,18 @@ extension OrderedMap where Key == Int {
     subscript(index index: Int) -> Value? {
         get { value(index: index) }
         set { setValue(index: index, value: newValue) }
+    }
+}
+
+// MARK: - ExpressibleByDictionaryLiteral
+
+extension OrderedMap: ExpressibleByDictionaryLiteral {
+    init(dictionaryLiteral elements: (Key, Value)...) {
+        for (key, value) in elements {
+            dict[key] = value
+            keys.append(key)
+        }
+        refreshIndexOf()
     }
 }
 

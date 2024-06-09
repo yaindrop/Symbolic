@@ -13,13 +13,23 @@ extension Dictionary {
     }
 }
 
-extension Array where Element: Hashable {
-    func intersection(_ other: Self) -> Set<Element> {
+extension Array {
+    func shifted(by size: Int) -> [Element?] {
+        guard size < count else { return .init(repeating: nil, count: count) }
+        return suffix(count - size) + .init(repeating: nil, count: size)
+    }
+
+    func intersection(_ other: Self) -> Set<Element> where Element: Hashable {
         Set(self).intersection(other)
     }
 
-    func subtracting(_ other: Self) -> Self {
+    func subtracting(_ other: Self) -> Self where Element: Hashable {
         let intersection = self.intersection(other)
         return filter { intersection.contains($0) }
+    }
+
+    func allOrNone<T>() -> [T]? where Element == T? {
+        guard allSatisfy({ $0 != nil }) else { return nil }
+        return compactMap { $0 }
     }
 }

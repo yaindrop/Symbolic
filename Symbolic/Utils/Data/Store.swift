@@ -1,10 +1,7 @@
 import Combine
 import SwiftUI
 
-private let storeTracer = tracer.tagged("store", enabled: true)
-private let managerTracer = storeTracer.tagged("manager", enabled: true)
-private let trackableTracer = storeTracer.tagged("trackable", enabled: true)
-private let selectedTracer = storeTracer.tagged("selected", enabled: true)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private struct StoreSubscription {
     let id: Int
@@ -37,7 +34,7 @@ extension StoreManager {
             fatalError("Nested tracking of store properties is not supported.")
         }
         let id = subscriptionIdGen.generate()
-        let _r = managerTracer.range("tracking \(id)"); defer { _r() }
+        let _r = subtracer.range("tracking \(id)"); defer { _r() }
 
         let tracking = TrackingContext(subscriptionId: id)
         self.tracking = tracking
@@ -64,11 +61,11 @@ extension StoreManager {
 
     func withUpdating(_ apply: () -> Void) {
         if updating != nil {
-            let _r = managerTracer.range("reenter updating"); defer { _r() }
+            let _r = subtracer.range("reenter updating"); defer { _r() }
             apply()
             return
         }
-        let _r = managerTracer.range("updating"); defer { _r() }
+        let _r = subtracer.range("updating"); defer { _r() }
 
         let updating = UpdatingContext()
         self.updating = updating
@@ -83,24 +80,24 @@ extension StoreManager {
     }
 
     func notify(subscriptionIds: Set<Int>) {
-        let _r = managerTracer.range("notify"); defer { _r() }
+        let _r = subtracer.range("notify"); defer { _r() }
         let activeSubscriptions = subscriptionIds.compactMap { idToSubscription.removeValue(forKey: $0) }
         updating.forSome {
-            managerTracer.instant("append \(activeSubscriptions.map { $0.id })")
+            subtracer.instant("append \(activeSubscriptions.map { $0.id })")
             $0.subscriptions += activeSubscriptions
         } else: {
             for subscription in activeSubscriptions {
-                let _r = managerTracer.range("callback \(subscription.id)"); defer { _r() }
+                let _r = subtracer.range("callback \(subscription.id)"); defer { _r() }
                 subscription.callback()
             }
         }
     }
 
     private func notifyAll(_ context: UpdatingContext) {
-        let _r = managerTracer.range("notifying all \(context.subscriptions.map { $0.id })"); defer { _r() }
+        let _r = subtracer.range("notify all \(context.subscriptions.map { $0.id })"); defer { _r() }
         context.willUpdateSubject.send()
         for subscription in context.subscriptions {
-            let _r = managerTracer.range("notifying \(subscription.id)"); defer { _r() }
+            let _r = subtracer.range("callback \(subscription.id)"); defer { _r() }
             subscription.callback()
         }
     }
@@ -141,13 +138,13 @@ private extension Store {
         guard deriving == nil else {
             fatalError("Nested deriving of store properties is not supported.")
         }
-        let _r = storeTracer.range("deriving"); defer { _r() }
+        let _r = subtracer.range("deriving"); defer { _r() }
 
         let deriving = DerivingContext()
         self.deriving = deriving
         let result = apply()
         self.deriving = nil
-        storeTracer.instant("trackableIds \(deriving.trackableIds)")
+        subtracer.instant("trackableIds \(deriving.trackableIds)")
 
         return (result, deriving)
     }
@@ -157,7 +154,7 @@ private extension Store {
     func generateTrackableId() -> Int { trackableIdGen.generate() }
 
     func onTrack(of trackableId: Int, in subscriptionId: Int) {
-        let _r = storeTracer.range("on track of \(trackableId) in subscription \(subscriptionId)"); defer { _r() }
+        let _r = subtracer.range("on track of \(trackableId) in subscription \(subscriptionId)"); defer { _r() }
         var ids = trackableIdToSubscriptionIds[trackableId] ?? []
         ids.insert(subscriptionId)
         trackableIdToSubscriptionIds[trackableId] = ids
@@ -165,7 +162,7 @@ private extension Store {
 
     func onChange(of trackableId: Int) -> Set<Int> {
         let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: trackableId)
-        let _r = storeTracer.range("on change of \(trackableId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")"); defer { _r() }
+        let _r = subtracer.range("on change of \(trackableId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")"); defer { _r() }
         guard let subscriptionIds else { return [] }
         return subscriptionIds
     }
@@ -194,7 +191,7 @@ extension Store: _StoreProtocol {
 
 extension _StoreProtocol {
     fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
-        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        let _r = subtracer.range("access trackable \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
@@ -214,7 +211,7 @@ extension _StoreProtocol {
     }
 
     fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = trackableTracer.range("access \(keyPath)"); defer { _r() }
+        let _r = subtracer.range("access trackable \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let value = wrapper.value ?? update(keyPath: keyPath)
 
@@ -231,7 +228,7 @@ extension _StoreProtocol {
     }
 
     fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T, forced: Bool) {
-        let _r = trackableTracer.range("update \(keyPath) with \(newValue)"); defer { _r() }
+        let _r = subtracer.range("update trackable \(keyPath) with \(newValue)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
@@ -254,7 +251,7 @@ extension _StoreProtocol {
     }
 
     @discardableResult fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = trackableTracer.range("update derived"); defer { _r() }
+        let _r = subtracer.range("update derived \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let (value, context) = withDeriving { wrapper.derive(self) }
 
@@ -372,27 +369,30 @@ struct SelectorConfigs {
 }
 
 class _Selector<Props>: ObservableObject, CancellableHolder {
-    var name: String? = nil
+    var name: String?
     var syncUpdate: Bool { false }
 
     var props: Props?
     var cancellables = Set<AnyCancellable>()
 
-    private var updateTask: Task<Void, Never>?
     fileprivate let retrackSubject = PassthroughSubject<Void, Never>()
 
-    func setup(_ props: Props) {
-        let _r = selectedTracer.range("setup selector\(name.map { " \($0)" } ?? "")"); defer { _r() }
+    required init() {}
+}
+
+extension _Selector {
+    func setup(_ name: @autoclosure () -> String, _ props: Props) {
+        let name = name()
+        let _r = subtracer.range("setup selector \(name)"); defer { _r() }
+        self.name = name
         if self.props == nil {
             self.props = props
         }
     }
 
-    required init() {}
-
-    deinit {
-        let _r = selectedTracer.range("deinit selector\(name.map { " \($0)" } ?? "")"); defer { _r() }
-        updateTask?.cancel()
+    func retrack(_ props: Props) {
+        self.props = props
+        retrackSubject.send()
     }
 }
 
@@ -404,24 +404,15 @@ protocol _SelectorProtocol: AnyObject {
     var syncUpdate: Bool { get }
     var props: Props? { get }
 
-    func onUpdate(sync: Bool)
+    func update()
     func onRetrack(callback: @escaping () -> Void)
 
     typealias Selected<T: Equatable> = _Selected<Self, T>
 }
 
 extension _Selector: _SelectorProtocol {
-    func onUpdate(sync: Bool = false) {
-        if sync || syncUpdate {
-            objectWillChange.send()
-            return
-        }
-        guard updateTask == nil else { return }
-        updateTask = Task(priority: .high) { @MainActor [weak self] in
-            guard let self else { return }
-            self.objectWillChange.send()
-            self.updateTask = nil
-        }
+    func update() {
+        objectWillChange.send()
     }
 
     func onRetrack(callback: @escaping () -> Void) {
@@ -433,37 +424,56 @@ extension _Selector: _SelectorProtocol {
 
 private extension _SelectorProtocol {
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
-        let _r = trackableTracer.range("access\(name.map { " \($0)" } ?? "") \(keyPath)"); defer { _r() }
+        let _r = subtracer.range("access selector \(name!) \(keyPath)"); defer { _r() }
         return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
     }
 
     @discardableResult
     func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
+        let _r = subtracer.range("track selector \(name!) \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
-        let _r = selectedTracer.range("track\(name.map { " \($0)" } ?? "") \(keyPath)"); defer { _r() }
-        if let subscriptionId = wrapper.subscriptionId {
-            manager.expire(subscriptionId: subscriptionId)
-        }
-
-        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onUpdate: { [weak self] in self?.track(keyPath: keyPath) }
+        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onUpdate: { [weak self] in self?.update(keyPath: keyPath) }
         wrapper.subscriptionId = context.subscriptionId
 
         if wrapper.value == nil {
             wrapper.value = newValue
-            onRetrack { [weak self] in self?.track(keyPath: keyPath) }
-            selectedTracer.instant("setup \(newValue)")
+            onRetrack { [weak self] in self?.retrack(keyPath: keyPath) }
+            subtracer.instant("setup \(newValue)")
         } else if wrapper.value != newValue {
             wrapper.value = newValue
             if let animation = wrapper.animation {
-                withAnimation(animation) { onUpdate(sync: true) }
+                withAnimation(animation) { update() }
             } else {
-                onUpdate(sync: false)
+                update()
             }
-            selectedTracer.instant("updated \(newValue)")
+            subtracer.instant("updated \(newValue)")
         } else {
-            selectedTracer.instant("unchanged")
+            subtracer.instant("unchanged")
         }
         return newValue
+    }
+
+    func retrack<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
+        let _r = subtracer.range("retrack selector \(name!) \(keyPath)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
+        if let subscriptionId = wrapper.subscriptionId {
+            manager.expire(subscriptionId: subscriptionId)
+        }
+        track(keyPath: keyPath)
+    }
+
+    func update<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
+        let _r = subtracer.range("update selector \(name!) \(keyPath)"); defer { _r() }
+        @Ref(self, keyPath) var wrapper
+        if syncUpdate || wrapper.syncUpdate {
+            track(keyPath: keyPath)
+        } else if wrapper.updateTask == nil {
+            wrapper.updateTask = Task(priority: .high) { @MainActor [weak self] in
+                guard let self else { return }
+                self[keyPath: keyPath].updateTask = nil
+                self.track(keyPath: keyPath)
+            }
+        }
     }
 }
 
@@ -475,6 +485,9 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     var animation: Animation?
     var value: Value?
     var subscriptionId: Int?
+    var updateTask: Task<Void, Never>?
+
+    var syncUpdate: Bool { animation != nil }
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value {
@@ -520,8 +533,7 @@ protocol SelectorHolder {
 
 extension SelectorHolder {
     func setupSelector<Content: View>(@ViewBuilder content: @escaping () -> Content) -> some View {
-        selector.name = String(describing: type(of: self))
-        selector.setup(.value)
+        selector.setup(String(describing: type(of: self)), .value)
         return content()
     }
 }
@@ -537,12 +549,7 @@ protocol ComputedSelectorHolder {
 
 extension ComputedSelectorHolder {
     func setupSelector<Content: View>(_ props: SelectorProps, @ViewBuilder content: @escaping () -> Content) -> some View {
-        selector.name = String(describing: type(of: self))
-        selector.setup(props)
-        return content()
-            .onChange(of: props) {
-                selector.props = props
-                selector.retrackSubject.send()
-            }
+        selector.setup(String(describing: type(of: self)), props)
+        return content().onChange(of: props) { selector.retrack(props) }
     }
 }

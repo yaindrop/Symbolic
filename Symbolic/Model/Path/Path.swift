@@ -212,7 +212,7 @@ extension Path {
     func subpath(from i: Int, to j: Int) -> Self? {
         guard let pairs = indices(from: i, to: j).map({ pairs[$0] }).allOrNone() else { return nil }
         guard pairs.count > 1 else { return nil }
-        return .init(id: UUID(), pairs: .init(pairs) { $0.id }, isClosed: false)
+        return .init(id: UUID(), pairs: .init(pairs) { $0.id }, isClosed: pairs.count == self.pairs.count)
     }
 
     struct NodeIndexPair: Equatable { let from: Int, to: Int }
@@ -224,7 +224,6 @@ extension Path {
         var startIndex: Int?
 
         let indices = indices(from: initial)
-        print("dbg", zip(indices, indices.shifted(by: 1)))
         for (i, next) in zip(indices, indices.shifted(by: 1)) {
             guard let pair = pairs[i] else { return [] }
             if nodeIds.contains(pair.id) {
@@ -239,27 +238,6 @@ extension Path {
                 }
             }
         }
-//        var i = initial
-//        repeat {
-//            var nextIndex: Int? = i + 1
-//            if nextIndex == pairs.count {
-//                nextIndex = isClosed ? 0 : nil
-//            }
-//            guard let pair = pairs[i] else { return [] }
-//            if nodeIds.contains(pair.id) {
-//                let start = startIndex ?? i
-//                if startIndex == nil {
-//                    startIndex = i
-//                }
-//                let nextPair = nextIndex.map { pairs[$0] }
-//                if nextPair == nil || !nodeIds.contains(nextPair!.id) {
-//                    result.append(.init(from: start, to: i))
-//                    startIndex = nil
-//                }
-//            }
-//            guard let nextIndex else { break }
-//            i = nextIndex
-//        } while i != initial
         return result
     }
 }

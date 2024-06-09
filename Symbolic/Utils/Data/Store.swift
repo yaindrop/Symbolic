@@ -1,10 +1,10 @@
 import Combine
 import SwiftUI
 
-private let storeTracer = tracer.tagged("store", enabled: false)
-private let managerTracer = storeTracer.tagged("manager", enabled: false)
-private let trackableTracer = storeTracer.tagged("trackable", enabled: false)
-private let selectedTracer = storeTracer.tagged("selected", enabled: false)
+private let storeTracer = tracer.tagged("store", enabled: true)
+private let managerTracer = storeTracer.tagged("manager", enabled: true)
+private let trackableTracer = storeTracer.tagged("trackable", enabled: true)
+private let selectedTracer = storeTracer.tagged("selected", enabled: true)
 
 private struct StoreSubscription {
     let id: Int
@@ -451,7 +451,7 @@ private extension _SelectorProtocol {
         if wrapper.value == nil {
             wrapper.value = newValue
             onRetrack { [weak self] in self?.track(keyPath: keyPath) }
-            selectedTracer.instant("setup")
+            selectedTracer.instant("setup \(newValue)")
         } else if wrapper.value != newValue {
             wrapper.value = newValue
             if let animation = wrapper.animation {

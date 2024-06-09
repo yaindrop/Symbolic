@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct AnimatedValue<Value: Equatable>: ViewModifier {
+struct AnimatedValueModifier<Value: Equatable>: ViewModifier {
     @Binding var value: Value
     let from: Value
     let to: Value
@@ -11,6 +11,12 @@ struct AnimatedValue<Value: Equatable>: ViewModifier {
             .animation(animation, value: value)
             .onAppear { value = to }
             .onDisappear { value = from }
+    }
+}
+
+extension View {
+    func animatedValue<Value: Equatable>(_ value: Binding<Value>, from: Value, to: Value, _ animation: Animation) -> some View {
+        modifier(AnimatedValueModifier(value: value, from: from, to: to, animation: animation))
     }
 }
 

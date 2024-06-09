@@ -53,7 +53,7 @@ extension PathView {
                 Rectangle()
                     .stroke(.blue, style: StrokeStyle(lineWidth: 1))
                     .fill(.blue.opacity(0.3))
-                    .if(selector.active) { $0.overlay {
+                    .if(!selector.selectingNodes && selector.active) { $0.overlay {
                         Rectangle()
                             .fill(.blue)
                             .scaleEffect(0.5)
@@ -64,7 +64,7 @@ extension PathView {
                 Circle()
                     .stroke(.blue, style: StrokeStyle(lineWidth: selector.nodeType == .mirrored ? 2 : 1))
                     .fill(.blue.opacity(0.3))
-                    .if(selector.active) { $0.overlay {
+                    .if(!selector.selectingNodes && selector.active) { $0.overlay {
                         Circle()
                             .fill(.blue)
                             .scaleEffect(0.5)

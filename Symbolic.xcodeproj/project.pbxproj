@@ -53,6 +53,7 @@
 		572552852BF0F2F8002147AE /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552842BF0F2F8002147AE /* Logging.swift */; };
 		572552872BF0F563002147AE /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552862BF0F563002147AE /* Tracer.swift */; };
 		573204D62C15381C008E0DED /* ContextMenuView+PathFocusedPartMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D52C15381C008E0DED /* ContextMenuView+PathFocusedPartMenu.swift */; };
+		573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */; };
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
 		57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathSegment.swift */; };
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
@@ -175,6 +176,7 @@
 		572552842BF0F2F8002147AE /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		572552862BF0F563002147AE /* Tracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracer.swift; sourceTree = "<group>"; };
 		573204D52C15381C008E0DED /* ContextMenuView+PathFocusedPartMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+PathFocusedPartMenu.swift"; sourceTree = "<group>"; };
+		573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SelectionBounds.swift"; sourceTree = "<group>"; };
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		57416E3E2BE12A9500C73434 /* PathSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegment.swift; sourceTree = "<group>"; };
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
@@ -377,6 +379,7 @@
 			children = (
 				571B9B292C148B0800AAD516 /* FocusedPathStore.swift */,
 				575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */,
+				573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */,
 				574CC7E92BFA53310042FEE3 /* PathView.swift */,
 				572487862BDF83620096DDE4 /* PathView+BezierHandle.swift */,
 				572487842BDF832D0096DDE4 /* PathView+EdgeHandle.swift */,
@@ -781,6 +784,7 @@
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				5724877C2BDF80000096DDE4 /* ActivePathPanel+Nodes.swift in Sources */,
 				571B9B322C14A71600AAD516 /* ContextMenuView.swift in Sources */,
+				573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */,
 				571B9B452C14AA4500AAD516 /* String+Extension.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57DD2A282C0321110046931C /* ItemPanel.swift in Sources */,

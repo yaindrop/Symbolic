@@ -7,8 +7,10 @@ private let subtracer = tracer.tagged("ActiveItemService")
 class ActiveItemStore: Store {
     @Trackable var activeItemIds = Set<UUID>()
     @Trackable var focusedItemId: UUID?
+}
 
-    fileprivate func update(active: Set<UUID>, focused: UUID? = nil) {
+private extension ActiveItemStore {
+    func update(active: Set<UUID>, focused: UUID? = nil) {
         withFastAnimation {
             withStoreUpdating {
                 update { $0(\._activeItemIds, active) }
@@ -17,13 +19,13 @@ class ActiveItemStore: Store {
         }
     }
 
-    fileprivate func update(select itemId: UUID) {
+    func update(select itemId: UUID) {
         withFastAnimation {
             update(active: activeItemIds.with { $0.insert(itemId) })
         }
     }
 
-    fileprivate func update(deselect itemIds: [UUID]) {
+    func update(deselect itemIds: [UUID]) {
         withFastAnimation {
             update(active: activeItemIds.with { $0.subtract(itemIds) })
         }

@@ -34,7 +34,11 @@ private extension GlobalStore {
 // MARK: - GroupBounds
 
 extension ActiveItemView {
-    struct GroupBounds: View, TracedView, ComputedSelectorHolder {
+    struct GroupBounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        let group: ItemGroup
+
+        var equatableBy: some Equatable { group }
+
         struct SelectorProps: Equatable { let groupId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
@@ -45,48 +49,48 @@ extension ActiveItemView {
 
         @SelectorWrapper var selector
 
-        let group: ItemGroup
-
         var body: some View { trace {
             setupSelector(.init(groupId: group.id)) {
                 boundsRect
             }
         } }
+    }
+}
 
-        // MARK: private
+// MARK: private
 
-        @ViewBuilder private var boundsRect: some View {
-            if let bounds = selector.bounds {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
-                    .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
-                    .framePosition(rect: bounds)
-                    .multipleGesture(.init(
-                        onPress: {
-                            global.canvasAction.start(continuous: .moveSelection)
-                        },
-                        onPressEnd: { cancelled in
-                            global.canvasAction.end(continuous: .moveSelection)
-                            if cancelled {
-                                global.documentUpdater.cancel()
-                            }
-                        },
+private extension ActiveItemView.GroupBounds {
+    @ViewBuilder var boundsRect: some View {
+        if let bounds = selector.bounds {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
+                .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
+                .framePosition(rect: bounds)
+                .multipleGesture(.init(
+                    onPress: {
+                        global.canvasAction.start(continuous: .moveSelection)
+                    },
+                    onPressEnd: { cancelled in
+                        global.canvasAction.end(continuous: .moveSelection)
+                        if cancelled {
+                            global.documentUpdater.cancel()
+                        }
+                    },
 
-                        onTap: { global.onTap(group: group, position: $0.location) },
-                        onDrag: { updateDrag($0, pending: true) },
-                        onDragEnd: { updateDrag($0) }
-                    ))
-            }
+                    onTap: { global.onTap(group: group, position: $0.location) },
+                    onDrag: { updateDrag($0, pending: true) },
+                    onDragEnd: { updateDrag($0) }
+                ))
         }
+    }
 
-        private func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            if selector.selected {
-                let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
-                global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
-            } else {
-                let groupedPathIds = global.item.groupedPaths(groupId: group.id).map { $0.id }
-                global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPathIds, offset: v.offset)), pending: pending)
-            }
+    func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+        if selector.selected {
+            let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
+            global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+        } else {
+            let groupedPathIds = global.item.groupedPaths(groupId: group.id).map { $0.id }
+            global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPathIds, offset: v.offset)), pending: pending)
         }
     }
 }

@@ -4,6 +4,8 @@ private let subtracer = tracer.tagged("PathService")
 
 typealias PathMap = [UUID: Path]
 
+// MARK: - PathStoreProtocol
+
 protocol PathStoreProtocol {
     var map: PathMap { get }
 }
@@ -22,8 +24,10 @@ extension PathStoreProtocol {
 
 class PathStore: Store, PathStoreProtocol {
     @Trackable var map = PathMap()
+}
 
-    fileprivate func update(map: PathMap, forced: Bool = false) {
+private extension PathStore {
+    func update(map: PathMap, forced: Bool = false) {
         update { $0(\._map, map, forced: forced) }
     }
 }
@@ -32,8 +36,10 @@ class PathStore: Store, PathStoreProtocol {
 
 class PendingPathStore: PathStore {
     @Trackable fileprivate var active: Bool = false
+}
 
-    fileprivate func update(active: Bool) {
+private extension PendingPathStore {
+    func update(active: Bool) {
         update { $0(\._active, active) }
     }
 }

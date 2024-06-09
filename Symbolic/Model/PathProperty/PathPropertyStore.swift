@@ -22,8 +22,10 @@ extension PathPropertyStoreProtocol {
 
 class PathPropertyStore: Store, PathPropertyStoreProtocol {
     @Trackable var map = PathPropertyMap()
+}
 
-    fileprivate func update(map: PathPropertyMap) {
+private extension PathPropertyStore {
+    func update(map: PathPropertyMap) {
         update { $0(\._map, map) }
     }
 }
@@ -32,8 +34,10 @@ class PathPropertyStore: Store, PathPropertyStoreProtocol {
 
 class PendingPathPropertyStore: PathPropertyStore {
     @Trackable fileprivate var active: Bool = false
+}
 
-    fileprivate func update(active: Bool) {
+private extension PendingPathPropertyStore {
+    func update(active: Bool) {
         update { $0(\._active, active) }
     }
 }

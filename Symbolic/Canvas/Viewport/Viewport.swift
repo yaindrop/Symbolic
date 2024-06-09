@@ -8,12 +8,6 @@ struct ViewportInfo: Equatable {
     let origin: Point2 // world position of the view origin (top left corner)
     let scale: Scalar
 
-    var worldToView: CGAffineTransform { .init(scale: scale).translatedBy(-Vector2(origin)) }
-
-    var viewToWorld: CGAffineTransform { worldToView.inverted() }
-
-    func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
-
     init(origin: Point2, scale: Scalar) {
         self.origin = origin
         self.scale = scale
@@ -24,58 +18,86 @@ struct ViewportInfo: Equatable {
     init() { self.init(origin: .zero, scale: 1) }
 }
 
+extension ViewportInfo {
+    var worldToView: CGAffineTransform { .init(scale: scale).translatedBy(-Vector2(origin)) }
+
+    var viewToWorld: CGAffineTransform { worldToView.inverted() }
+
+    func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
+}
+
 extension ViewportInfo: CustomStringConvertible {
     public var description: String { "(\(origin.shortDescription), \(scale.shortDescription))" }
 }
 
-// MARK: - stores
+// MARK: - ViewportStore
 
 class ViewportStore: Store {
     @Trackable var info: ViewportInfo = .init()
     @Trackable var viewSize: CGSize = .zero
+}
 
-    fileprivate func update(info: ViewportInfo) {
+private extension ViewportStore {
+    func update(info: ViewportInfo) {
         update { $0(\._info, info) }
     }
 
-    fileprivate func update(viewSize: CGSize) {
+    func update(viewSize: CGSize) {
         update { $0(\._viewSize, viewSize) }
     }
 }
 
+// MARK: - ViewportUpdateStore
+
 class ViewportUpdateStore: Store {
     @Trackable var blocked: Bool = false
     @Trackable var previousInfo: ViewportInfo = .init()
+}
 
-    fileprivate func update(blocked: Bool) {
+private extension ViewportUpdateStore {
+    func update(blocked: Bool) {
         update { $0(\._blocked, blocked) }
     }
 
-    fileprivate func update(previousInfo: ViewportInfo) {
+    func update(previousInfo: ViewportInfo) {
         update { $0(\._previousInfo, previousInfo) }
     }
 }
 
-// MARK: - services
+// MARK: - ViewportService
 
 struct ViewportService {
     let store: ViewportStore
+}
 
+// MARK: selectors
+
+extension ViewportService {
     var info: ViewportInfo { store.info }
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
     var worldRect: CGRect { info.worldRect(viewSize: store.viewSize) }
+}
 
+// MARK: actions
+
+extension ViewportService {
     func setViewSize(_ viewSize: CGSize) {
         store.update(viewSize: viewSize)
     }
 }
 
+// MARK: - ViewportUpdater
+
 struct ViewportUpdater {
     let viewport: ViewportStore
     let store: ViewportUpdateStore
+}
 
+// MARK: actions
+
+extension ViewportUpdater {
     func setBlocked(_ blocked: Bool) {
         store.update(blocked: blocked)
     }
@@ -103,10 +125,12 @@ struct ViewportUpdater {
         let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
         viewport.update(info: .init(origin: origin, scale: scale))
     }
+}
 
-    // MARK: private
+// MARK: private
 
-    private func onCommit() {
+private extension ViewportUpdater {
+    func onCommit() {
         global.canvasAction.end(continuous: .panViewport)
         global.canvasAction.end(continuous: .pinchViewport)
         global.canvasAction.end(continuous: .pinchViewport)

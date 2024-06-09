@@ -13,7 +13,9 @@ enum ContextMenuData: HashIdentifiable {
 
 class ContextMenuStore: Store {
     @Trackable var menus = Set<ContextMenuData>()
+}
 
+extension ContextMenuStore {
     func register(_ data: ContextMenuData) {
         update { $0(\._menus, menus.with { $0.insert(data) }) }
     }

@@ -35,12 +35,14 @@ extension Document: EquatableBy {
 class DocumentStore: Store {
     @Trackable var activeDocument: Document = .init()
     @Trackable var pendingEvent: DocumentEvent?
+}
 
-    fileprivate func update(activeDocument: Document) {
+private extension DocumentStore {
+    func update(activeDocument: Document) {
         update { $0(\._activeDocument, activeDocument) }
     }
 
-    fileprivate func update(pendingEvent: DocumentEvent?) {
+    func update(pendingEvent: DocumentEvent?) {
         update { $0(\._pendingEvent, pendingEvent) }
     }
 }

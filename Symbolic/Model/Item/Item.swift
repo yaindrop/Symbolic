@@ -18,7 +18,9 @@ struct Item: TriviallyCloneable, Equatable, Encodable {
     }
 
     let kind: Kind
+}
 
+extension Item {
     var group: ItemGroup? {
         if case let .group(group) = kind { group } else { nil }
     }

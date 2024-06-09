@@ -1,10 +1,14 @@
 import Foundation
 
+// MARK: - CanvasActionStore
+
 class CanvasActionStore: Store {
     @Trackable var triggering = Set<CanvasAction.Triggering>()
     @Trackable var continuous = Set<CanvasAction.Continuous>()
     @Trackable var instant = Set<CanvasAction.Instant>()
+}
 
+extension CanvasActionStore {
     func start(triggering action: CanvasAction.Triggering) {
         update { $0(\._triggering, triggering.with { $0.insert(action) }) }
     }

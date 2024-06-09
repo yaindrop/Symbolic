@@ -10,22 +10,30 @@ class PanelStore: Store {
     @Trackable var panelMap = PanelMap()
     @Trackable var rootSize: CGSize = .zero
 
+    fileprivate var movingPanel: [UUID: PanelData] = [:]
+}
+
+private extension PanelStore {
+    func update(panelMap: PanelMap) {
+        update { $0(\._panelMap, panelMap) }
+    }
+
+    func update(rootSize: CGSize) {
+        update { $0(\._rootSize, rootSize) }
+    }
+}
+
+// MARK: selectors
+
+extension PanelStore {
     var panels: [PanelData] { panelMap.values }
     var rootRect: CGRect { .init(rootSize) }
 
     func panel(id: UUID) -> PanelData? { panelMap.value(key: id) }
     func moving(id: UUID) -> Bool { movingPanel.value(key: id) != nil }
-
-    fileprivate var movingPanel: [UUID: PanelData] = [:]
-
-    fileprivate func update(panelMap: PanelMap) {
-        update { $0(\._panelMap, panelMap) }
-    }
-
-    fileprivate func update(rootSize: CGSize) {
-        update { $0(\._rootSize, rootSize) }
-    }
 }
+
+// MARK: actions
 
 extension PanelStore {
     func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping (_ panelId: UUID) -> any View) {
@@ -45,6 +53,8 @@ extension PanelStore {
         update(panelMap: updated)
     }
 }
+
+// MARK: moving
 
 extension PanelStore {
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
@@ -131,6 +141,8 @@ extension PanelStore {
         )
     }
 }
+
+// MARK: resizing
 
 extension PanelStore {
     func onResized(panelId: UUID, size: CGSize) {

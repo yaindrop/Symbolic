@@ -21,6 +21,8 @@ struct ContextMenuRoot: View, TracedView, SelectorHolder {
 // MARK: - ContextMenuModifier
 
 struct ContextMenuModifier: ViewModifier, SelectorHolder {
+    let bounds: CGRect
+
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
         @Selected({ global.viewport.store.viewSize }) var viewSize
@@ -30,9 +32,7 @@ struct ContextMenuModifier: ViewModifier, SelectorHolder {
 
     @State private var size: CGSize = .zero
 
-    let bounds: CGRect
-
-    var menuBox: CGRect {
+    private var menuBox: CGRect {
         let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(selector.viewSize).midY ? .topCenter : .bottomCenter
         return bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(selector.viewSize).inset(by: 12))
     }

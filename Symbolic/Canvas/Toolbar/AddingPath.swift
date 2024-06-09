@@ -5,15 +5,17 @@ import SwiftUI
 class AddingPathStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
+}
 
-    fileprivate func update(from: Point2?) {
+private extension AddingPathStore {
+    func update(from: Point2?) {
         update {
             $0(\._from, from)
             $0(\._to, from ?? .zero)
         }
     }
 
-    fileprivate func update(to: Point2) {
+    func update(to: Point2) {
         update {
             $0(\._to, to)
         }
@@ -87,10 +89,16 @@ struct AddingPathView: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            if let addingPath = selector.addingPath {
-                PathView(path: addingPath)
-                    .environmentObject(PathViewModel())
-            }
+            content
         }
     } }
+}
+
+private extension AddingPathView {
+    @ViewBuilder var content: some View {
+        if let addingPath = selector.addingPath {
+            PathView(path: addingPath)
+                .environmentObject(PathViewModel())
+        }
+    }
 }

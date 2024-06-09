@@ -7,12 +7,14 @@ private let subtracer = tracer.tagged("FocusedPathService")
 class FocusedPathStore: Store {
     @Trackable var activeNodeIds = Set<UUID>()
     @Trackable var selectingNodes = false
+}
 
-    fileprivate func update(activeNodeIds: Set<UUID>) {
+private extension FocusedPathStore {
+    func update(activeNodeIds: Set<UUID>) {
         update { $0(\._activeNodeIds, activeNodeIds) }
     }
 
-    fileprivate func update(selectingNodes: Bool) {
+    func update(selectingNodes: Bool) {
         update { $0(\._selectingNodes, selectingNodes) }
     }
 }

@@ -4,11 +4,13 @@ import SwiftUI
 private let subtracer = tracer.tagged("DocumentUpdater")
 
 class DocumentUpdaterStore: Store {
-    var eventPublisher: AnyPublisher<DocumentEvent, Never> { eventSubject.eraseToAnyPublisher() }
-    var pendingEventPublisher: AnyPublisher<DocumentEvent?, Never> { pendingEventSubject.eraseToAnyPublisher() }
-
     fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
     fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
+}
+
+extension DocumentUpdaterStore {
+    var eventPublisher: AnyPublisher<DocumentEvent, Never> { eventSubject.eraseToAnyPublisher() }
+    var pendingEventPublisher: AnyPublisher<DocumentEvent?, Never> { pendingEventSubject.eraseToAnyPublisher() }
 }
 
 // MARK: - DocumentUpdater

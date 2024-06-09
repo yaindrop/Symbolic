@@ -13,21 +13,28 @@ extension ContextMenuView {
 
         var body: some View {
             setupSelector {
-                if let bounds = selector.bounds {
-                    menu.contextMenu(bounds: bounds)
-                }
+                content
             }
         }
+    }
+}
 
-        // MARK: private
+// MARK: private
 
-        @ViewBuilder private var menu: some View {
-            HStack {
-                Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
-                    .frame(minWidth: 32)
-                    .tint(.label)
+extension ContextMenuView.PathFocusedPartMenu {
+    @ViewBuilder var content: some View {
+        if let bounds = selector.bounds {
+            menu.contextMenu(bounds: bounds)
+        }
+    }
 
-                Divider()
+    @ViewBuilder var menu: some View {
+        HStack {
+            Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                .frame(minWidth: 32)
+                .tint(.label)
+
+            Divider()
 
 //                Button {} label: { Image(systemName: "lock") }
 //                    .frame(minWidth: 32)
@@ -44,21 +51,20 @@ extension ContextMenuView {
 //
 //                Divider()
 
-                Menu {
-                    Button("Copy", systemImage: "doc.on.doc") {}
-                    Button("Cut", systemImage: "scissors") {}
-                    Button("Duplicate", systemImage: "plus.square.on.square") {}
-                } label: { Image(systemName: "doc.on.doc") }
-                    .frame(minWidth: 32)
-                    .menuOrder(.fixed)
-                    .tint(.label)
-                Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
-                    .frame(minWidth: 32)
-            }
+            Menu {
+                Button("Copy", systemImage: "doc.on.doc") {}
+                Button("Cut", systemImage: "scissors") {}
+                Button("Duplicate", systemImage: "plus.square.on.square") {}
+            } label: { Image(systemName: "doc.on.doc") }
+                .frame(minWidth: 32)
+                .menuOrder(.fixed)
+                .tint(.label)
+            Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+                .frame(minWidth: 32)
         }
-
-        private func onUngroup() {}
-
-        private func onDelete() {}
     }
+
+    func onUngroup() {}
+
+    func onDelete() {}
 }

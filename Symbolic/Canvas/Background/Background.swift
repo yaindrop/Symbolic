@@ -1,10 +1,6 @@
 import SwiftUI
 
-private enum GridLineType: CaseIterable {
-    case normal
-    case principal
-    case axis
-}
+// MARK: - Background
 
 struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
@@ -22,29 +18,37 @@ struct Background: View, TracedView, SelectorHolder {
             linePaths
         }
     } }
+}
 
-    // MARK: private
+// MARK: private
 
-    private static let targetCellSize: Scalar = 24
-    private static let gridLineColor: Color = .red
+private enum GridLineType: CaseIterable {
+    case normal
+    case principal
+    case axis
+}
 
-    private var toView: CGAffineTransform { selector.viewportInfo.worldToView }
-    private var toWorld: CGAffineTransform { selector.viewportInfo.viewToWorld }
+private extension Background {
+    var targetCellSize: Scalar { 24 }
+    var gridLineColor: Color { .red }
 
-    private var adjustedCellSize: Scalar {
-        let targetSizeInWorld = (Vector2.unitX * Self.targetCellSize).applying(toWorld).dx
+    var toView: CGAffineTransform { selector.viewportInfo.worldToView }
+    var toWorld: CGAffineTransform { selector.viewportInfo.viewToWorld }
+
+    var adjustedCellSize: Scalar {
+        let targetSizeInWorld = (Vector2.unitX * targetCellSize).applying(toWorld).dx
         let adjustedRatio = pow(2, max(0, ceil(log2(targetSizeInWorld / selector.cellSize))))
         return selector.cellSize * adjustedRatio
     }
 
-    private var linePositions: (horizontal: [Scalar], vertical: [Scalar]) {
+    var linePositions: (horizontal: [Scalar], vertical: [Scalar]) {
         let cellSize = adjustedCellSize
         let horizontal = Array(stride(from: round(selector.worldRect.minX / cellSize) * cellSize, to: selector.worldRect.maxX, by: cellSize))
         let vertical = Array(stride(from: round(selector.worldRect.minY / cellSize) * cellSize, to: selector.worldRect.maxY, by: cellSize))
         return (horizontal, vertical)
     }
 
-    private var linePaths: some View {
+    var linePaths: some View {
         let cellSize = adjustedCellSize
         let (horizontal, vertical) = linePositions
         func gridLineType(_ position: Scalar) -> GridLineType {
@@ -74,9 +78,9 @@ struct Background: View, TracedView, SelectorHolder {
         }
         func styledPath(_ type: GridLineType) -> some View {
             switch type {
-            case .normal: path(type).stroke(Self.gridLineColor.opacity(0.3), style: .init(lineWidth: 0.5))
-            case .principal: path(type).stroke(Self.gridLineColor.opacity(0.5), style: .init(lineWidth: 1))
-            case .axis: path(type).stroke(Self.gridLineColor.opacity(0.8), style: .init(lineWidth: 2))
+            case .normal: path(type).stroke(gridLineColor.opacity(0.3), style: .init(lineWidth: 0.5))
+            case .principal: path(type).stroke(gridLineColor.opacity(0.5), style: .init(lineWidth: 1))
+            case .axis: path(type).stroke(gridLineColor.opacity(0.8), style: .init(lineWidth: 2))
             }
         }
         return ForEach(Array(zip(GridLineType.allCases.indices, GridLineType.allCases)), id: \.0) { _, type in styledPath(type) }

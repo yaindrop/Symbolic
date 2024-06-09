@@ -6,21 +6,21 @@ class DraggingSelectionStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
     @Trackable var intersectedItems: [Item] = []
+}
 
-    var active: Bool { from != nil }
-
-    fileprivate func update(from: Point2?) {
+private extension DraggingSelectionStore {
+    func update(from: Point2?) {
         update {
             $0(\._from, from)
             $0(\._to, from ?? .zero)
         }
     }
 
-    fileprivate func update(to: Point2) {
+    func update(to: Point2) {
         update { $0(\._to, to) }
     }
 
-    fileprivate func update(intersectedItems: [Item]) {
+    func update(intersectedItems: [Item]) {
         update { $0(\._intersectedItems, intersectedItems) }
     }
 }
@@ -35,7 +35,7 @@ struct DraggingSelectionService {
 // MARK: selectors
 
 extension DraggingSelectionService {
-    var active: Bool { store.active }
+    var active: Bool { store.from != nil }
 
     var rect: CGRect? {
         guard let from = store.from else { return nil }
@@ -95,13 +95,21 @@ struct DraggingSelectionView: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            if let rect = selector.rect {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(.gray.opacity(0.2))
-                    .stroke(.gray.opacity(0.5))
-                    .frame(width: rect.width, height: rect.height)
-                    .position(rect.center)
-            }
+            content
         }
     } }
+}
+
+// MARK: private
+
+private extension DraggingSelectionView {
+    @ViewBuilder var content: some View {
+        if let rect = selector.rect {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(.gray.opacity(0.2))
+                .stroke(.gray.opacity(0.5))
+                .frame(width: rect.width, height: rect.height)
+                .position(rect.center)
+        }
+    }
 }

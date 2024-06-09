@@ -5,6 +5,8 @@ private let subtracer = tracer.tagged("ItemService")
 typealias ItemMap = [UUID: Item]
 typealias AncestorMap = [UUID: [UUID]]
 
+// MARK: - ItemStoreProtocol
+
 protocol ItemStoreProtocol {
     var map: ItemMap { get }
     var rootIds: [UUID] { get }
@@ -119,12 +121,14 @@ class ItemStore: Store, ItemStoreProtocol {
     @Trackable var rootIds: [UUID] = []
 
     @Derived({ $0.idToAncestorIds }) var ancestorMap
+}
 
-    fileprivate func update(map: ItemMap) {
+private extension ItemStore {
+    func update(map: ItemMap) {
         update { $0(\._map, map) }
     }
 
-    fileprivate func update(rootIds: [UUID]) {
+    func update(rootIds: [UUID]) {
         update { $0(\._rootIds, rootIds) }
     }
 }
@@ -133,8 +137,10 @@ class ItemStore: Store, ItemStoreProtocol {
 
 class PendingItemStore: ItemStore {
     @Trackable fileprivate var active: Bool = false
+}
 
-    fileprivate func update(active: Bool) {
+private extension PendingItemStore {
+    func update(active: Bool) {
         update { $0(\._active, active) }
     }
 }

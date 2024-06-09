@@ -73,24 +73,26 @@ private extension DocumentAction {
 // MARK: - HistoryPanel
 
 struct HistoryPanel: View, TracedView, SelectorHolder {
+    let panelId: UUID
+
     class Selector: SelectorBase {
         @Selected({ global.document.activeDocument }) var document
     }
 
     @SelectorWrapper var selector
 
-    let panelId: UUID
+    @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     var body: some View { trace {
         setupSelector {
             panel.frame(width: 320)
         }
     } }
+}
 
-    // MARK: private
+// MARK: private
 
-    @StateObject private var scrollViewModel = ManagedScrollViewModel()
-
+extension HistoryPanel {
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
             PanelTitle(name: "History")

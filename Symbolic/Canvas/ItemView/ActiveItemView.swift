@@ -12,13 +12,19 @@ struct ActiveItemView: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            ForEach(selector.activeGroups) {
-                GroupBounds(group: $0)
-            }
-            ForEach(selector.activePaths) {
-                PathBounds(path: $0)
-            }
-            SelectionBounds()
+            content
         }
     } }
+}
+
+private extension ActiveItemView {
+    @ViewBuilder var content: some View {
+        ForEach(selector.activeGroups) {
+            GroupBounds(group: $0)
+        }
+        ForEach(selector.activePaths) {
+            PathBounds(pathId: $0.id)
+        }
+        SelectionBounds()
+    }
 }

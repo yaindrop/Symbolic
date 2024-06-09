@@ -7,10 +7,10 @@ struct CanvasView: View, TracedView {
     @State var multipleTouch = MultipleTouchModel()
     @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
-    // MARK: body
+    @State private var longPressPosition: Point2?
 
     var body: some View { trace {
-        navigationView
+        content
             .onAppear {
                 let setup = CanvasSetup()
                 setup.documentLoad()
@@ -37,16 +37,16 @@ struct CanvasView: View, TracedView {
                 global.document.setDocument(.init(from: fooSvg))
             }
     }}
+}
 
-    // MARK: private
+// MARK: private
 
-    private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
-
-    @State private var longPressPosition: Point2?
+private extension CanvasView {
+    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
     // MARK: view builders
 
-    @ViewBuilder private var navigationView: some View {
+    @ViewBuilder var content: some View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
             Text("sidebar")
                 .navigationTitle("Sidebar")
@@ -62,7 +62,7 @@ struct CanvasView: View, TracedView {
         }
     }
 
-    @ViewBuilder private var background: some View { trace("background") {
+    @ViewBuilder var background: some View { trace("background") {
         Background()
     } }
 
@@ -70,12 +70,12 @@ struct CanvasView: View, TracedView {
         ItemsView()
     } }
 
-    @ViewBuilder private var foreground: some View { trace("foreground") {
+    @ViewBuilder var foreground: some View { trace("foreground") {
         Color.white.opacity(0.1)
             .modifier(MultipleTouchModifier(model: multipleTouch))
     } }
 
-    @ViewBuilder private var canvas: some View { trace("canvas") {
+    @ViewBuilder var canvas: some View { trace("canvas") {
         ZStack {
             background
             items
@@ -84,7 +84,7 @@ struct CanvasView: View, TracedView {
         .sizeReader { global.viewport.setViewSize($0) }
     } }
 
-    @ViewBuilder private var overlay: some View { trace("overlay") {
+    @ViewBuilder var overlay: some View { trace("overlay") {
         ZStack {
             ActiveItemView()
             FocusedPathView()
@@ -97,28 +97,6 @@ struct CanvasView: View, TracedView {
             PanelRoot()
         }
         .allowsHitTesting(!multipleTouch.active)
-    } }
-}
-
-struct ItemsView: View, TracedView, SelectorHolder {
-    class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
-        @Selected({ global.viewport.toView }) var toView
-        @Selected({ global.item.allPaths }) var allPaths
-        @Selected({ global.activeItem.focusedItemId }) var focusedItemId
-    }
-
-    @SelectorWrapper var selector
-
-    var body: some View { trace {
-        setupSelector {
-            ForEach(selector.allPaths.filter { $0.id != selector.focusedItemId }) { p in
-                SUPath { path in p.append(to: &path) }
-                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-            }
-            .transformEffect(selector.toView)
-            .blur(radius: 1)
-        }
     } }
 }
 

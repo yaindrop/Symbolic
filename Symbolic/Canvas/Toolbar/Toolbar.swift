@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - ToolbarMode
+
 enum ToolbarMode: Equatable {
     struct Select: Equatable {
         var multiSelect = false
@@ -15,15 +17,21 @@ enum ToolbarMode: Equatable {
     var addPath: AddPath? { if case let .addPath(addPath) = self { addPath } else { nil }}
 }
 
+// MARK: - ToolbarStore
+
 class ToolbarStore: Store {
     @Trackable var mode: ToolbarMode = .select(.init())
+}
 
+extension ToolbarStore {
     var multiSelect: Bool { mode.select?.multiSelect == true }
 
     func setMode(_ mode: ToolbarMode) {
         update { $0(\._mode, mode) }
     }
 }
+
+// MARK: - ToolbarModifier
 
 struct ToolbarModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
@@ -40,14 +48,18 @@ struct ToolbarModifier: ViewModifier, SelectorHolder {
             content.toolbar { toolbar }
         }
     }
+}
 
-    @ToolbarContentBuilder private var toolbar: some ToolbarContent { tracer.range("ToolbarModifier") { build {
+// MARK: private
+
+private extension ToolbarModifier {
+    @ToolbarContentBuilder var toolbar: some ToolbarContent { tracer.range("ToolbarModifier") { build {
         ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }
         ToolbarItem(placement: .principal) { principal.id(UUID()) }
         ToolbarItem(placement: .topBarTrailing) { trailing.id(UUID()) }
     }}}
 
-    private var leading: some View {
+    var leading: some View {
         Menu {
             Text("Item 0")
             Divider()
@@ -65,7 +77,7 @@ struct ToolbarModifier: ViewModifier, SelectorHolder {
         }
     }
 
-    private var principal: some View {
+    var principal: some View {
         HStack {
             Button {
                 global.toolbar.setMode(.select(.init()))
@@ -98,7 +110,7 @@ struct ToolbarModifier: ViewModifier, SelectorHolder {
         }
     }
 
-    private var trailing: some View {
+    var trailing: some View {
         Button {
             global.document.undo()
         } label: {

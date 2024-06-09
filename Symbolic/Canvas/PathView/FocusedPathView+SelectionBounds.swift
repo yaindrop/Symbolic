@@ -52,6 +52,8 @@ private struct SubpathBounds: View, TracedView, EquatableBy, ComputedSelectorHol
 
     @SelectorWrapper var selector
 
+    @State private var dashPhase: Scalar = 0
+
     var body: some View { trace {
         setupSelector(.init(from: from, to: to)) {
             content
@@ -70,12 +72,11 @@ private extension SubpathBounds {
     @ViewBuilder var content: some View {
         if let subpath = selector.subpath {
             let width = (strokedWidth * Vector2.unitX).applying(selector.viewport.viewToWorld).dx
-            AnimatedValue(from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false)) { dashPhase in
-                SUPath { subpath.append(to: &$0) }
-                    .strokedPath(.init(lineWidth: width, lineCap: .round, lineJoin: .round))
-                    .transform(selector.viewport.worldToView)
-                    .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-            }
+            SUPath { subpath.append(to: &$0) }
+                .strokedPath(.init(lineWidth: width, lineCap: .round, lineJoin: .round))
+                .transform(selector.viewport.worldToView)
+                .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
         }
     }
 }
@@ -96,6 +97,8 @@ private struct NodeBounds: View, TracedView, EquatableBy, ComputedSelectorHolder
 
     @SelectorWrapper var selector
 
+    @State private var dashPhase: Scalar = 0
+
     var body: some View { trace {
         setupSelector(.init(index: index)) {
             content
@@ -113,11 +116,10 @@ private extension NodeBounds {
 
     @ViewBuilder var content: some View {
         if let node = selector.node {
-            AnimatedValue(from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false)) { dashPhase in
-                Circle()
-                    .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-                    .framePosition(rect: .init(center: node.position.applying(selector.viewport.worldToView), size: .init(squared: strokedWidth)))
-            }
+            Circle()
+                .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                .framePosition(rect: .init(center: node.position.applying(selector.viewport.worldToView), size: .init(squared: strokedWidth)))
+                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
         }
     }
 }

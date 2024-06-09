@@ -11,6 +11,8 @@ extension ActiveItemView {
 
         @SelectorWrapper var selector
 
+        @State private var dashPhase: Scalar = 0
+
         var body: some View { trace {
             setupSelector {
                 content
@@ -22,13 +24,15 @@ extension ActiveItemView {
 // MARK: private
 
 extension ActiveItemView.SelectionBounds {
+    var lineWidth: Scalar { 2 }
+    var dashSize: Scalar { 8 }
+
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            AnimatedValue(from: 0, to: 16, .linear(duration: 0.4).repeatForever(autoreverses: false)) { dashPhase in
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.blue.opacity(0.5), style: .init(lineWidth: 2, dash: [8], dashPhase: dashPhase))
-                    .framePosition(rect: bounds)
-            }
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                .framePosition(rect: bounds)
+                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
         }
     }
 }

@@ -48,8 +48,7 @@ private extension CanvasView {
 
     @ViewBuilder var content: some View {
         NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
-            Text("sidebar")
-                .navigationTitle("Sidebar")
+            SidebarView()
         } detail: {
             ZStack {
                 canvas
@@ -98,6 +97,55 @@ private extension CanvasView {
         }
         .allowsHitTesting(!multipleTouch.active)
     } }
+}
+
+struct SidebarView: View, TracedView, SelectorHolder {
+    class Selector: SelectorBase {
+        override var syncUpdate: Bool { true }
+        @Selected({ global.panel.movingPanel }) var movingPanel
+        @Selected({ global.panel.sidebarFrame }) var frame
+        @Selected({ global.panel.sidebarPanels }) var sidebarPanels
+    }
+
+    @SelectorWrapper var selector
+
+    var body: some View { trace {
+        setupSelector {
+            content
+        }
+    }}
+}
+
+private extension SidebarView {
+    var hovering: Bool { selector.movingPanel.contains { selector.frame.contains($0.value.globalPosition) } }
+
+    @ViewBuilder var content: some View {
+        let _ = print("dbg", selector.movingPanel)
+        ScrollView {
+            VStack {
+                ForEach(selector.sidebarPanels) {
+                    global.panel.panelMap.value(key: $0)?.view($0)
+                }
+                VStack {
+                    Spacer()
+                    if selector.movingPanel.isEmpty {
+                        Text("No panels")
+                    } else {
+                        Text("Move panel here")
+                    }
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .navigationTitle("Sidebar")
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .if(!selector.movingPanel.isEmpty) {
+            $0.clipRounded(radius: 12, border: hovering ? Color.blue : Color.label.opacity(0.2), stroke: .init(lineWidth: 2, dash: [8]))
+        }
+        .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }
+        .padding(12)
+    }
 }
 
 #Preview {

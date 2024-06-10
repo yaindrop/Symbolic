@@ -100,3 +100,9 @@ struct PanelData: Identifiable, UniqueEquatable {
 
     var rect: CGRect { .init(origin: origin, size: size) }
 }
+
+struct MovingPanelData: Equatable {
+    let data: PanelData
+
+    let globalPosition: Point2
+}

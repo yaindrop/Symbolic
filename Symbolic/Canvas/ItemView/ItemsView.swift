@@ -28,6 +28,6 @@ private extension ItemsView {
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
         .transformEffect(selector.toView)
-        .blur(radius: 1)
+//        .blur(radius: 1)
     }
 }

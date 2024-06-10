@@ -10,7 +10,10 @@ class PanelStore: Store {
     @Trackable var panelMap = PanelMap()
     @Trackable var rootSize: CGSize = .zero
 
-    fileprivate var movingPanel: [UUID: PanelData] = [:]
+    @Trackable var movingPanel: [UUID: MovingPanelData] = [:]
+
+    @Trackable var sidebarFrame: CGRect = .zero
+    @Trackable var sidebarPanels: [UUID] = []
 }
 
 private extension PanelStore {
@@ -20,6 +23,20 @@ private extension PanelStore {
 
     func update(rootSize: CGSize) {
         update { $0(\._rootSize, rootSize) }
+    }
+
+    func update(movingPanel: [UUID: MovingPanelData]) {
+        update { $0(\._movingPanel, movingPanel) }
+    }
+}
+
+extension PanelStore {
+    func update(sidebarFrame: CGRect) {
+        update { $0(\._sidebarFrame, sidebarFrame) }
+    }
+
+    func update(sidebarPanels: [UUID]) {
+        update { $0(\._sidebarPanels, sidebarPanels) }
     }
 }
 
@@ -58,7 +75,19 @@ extension PanelStore {
 
 extension PanelStore {
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
-        guard let origin = movingPanel[panelId]?.origin else { return }
+        let origin: Point2
+        if let panel = movingPanel.value(key: panelId) {
+            origin = panel.data.origin
+            var movingPanel = self.movingPanel
+            movingPanel[panelId] = .init(data: panel.data, globalPosition: v.location)
+            update(movingPanel: movingPanel)
+        } else {
+            guard let panel = self.panel(id: panelId) else { return }
+            origin = panel.origin
+            var movingPanel = self.movingPanel
+            movingPanel[panelId] = .init(data: panel, globalPosition: v.location)
+            update(movingPanel: movingPanel)
+        }
         let offset = v.offset
         let _r = subtracer.range(type: .intent, "moving \(panelId) from \(origin) by \(offset)"); defer { _r() }
         guard var panel = panel(id: panelId) else { return }
@@ -72,10 +101,16 @@ extension PanelStore {
     }
 
     func onMoved(panelId: UUID, _ v: DragGesture.Value) {
-        guard let origin = movingPanel[panelId]?.origin else { return }
+        guard let moving = movingPanel.value(key: panelId) else { return }
+        let origin = moving.data.origin
         let offset = v.offset, speed = v.speed
         let _r = subtracer.range(type: .intent, "moved \(panelId) from \(origin) by \(offset) with speed \(speed)"); defer { _r() }
         guard var panel = panel(id: panelId) else { return }
+        if sidebarFrame.contains(moving.globalPosition) {
+            update(sidebarPanels: sidebarPanels.with { $0.append(panelId) })
+            return
+        }
+
         panel.origin = origin + offset
 
         var updated = panelMap
@@ -125,12 +160,10 @@ extension PanelStore {
     func moveGesture(panelId: UUID) -> MultipleGesture {
         .init(
             configs: .init(coordinateSpace: .global),
-            onPress: {
-                guard let panel = self.panel(id: panelId) else { return }
-                self.movingPanel[panelId] = panel
-            },
             onPressEnd: { _ in
-                self.movingPanel[panelId] = nil
+                var movingPanel = self.movingPanel
+                movingPanel[panelId] = nil
+                self.update(movingPanel: movingPanel)
             },
             onDrag: {
                 self.onMoving(panelId: panelId, $0)

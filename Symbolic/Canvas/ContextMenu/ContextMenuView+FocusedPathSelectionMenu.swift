@@ -8,6 +8,9 @@ extension ContextMenuView {
             override var syncUpdate: Bool { true }
             @Selected({ global.focusedPath.activeNodesBounds?.applying(global.viewport.toView) }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected({ global.focusedPath.activeSegmentIds }) var activeSegmentIds
+            @Selected({ global.focusedPath.activeNodeIds.map { global.activeItem.focusedPathProperty?.nodeType(id: $0) }.allSame() }) var activeNodeType
+            @Selected({ global.focusedPath.activeSegmentIds.map { global.activeItem.focusedPathProperty?.edgeType(id: $0) }.allSame() }) var activeEdgeType
         }
 
         @SelectorWrapper var selector
@@ -41,36 +44,87 @@ extension ContextMenuView.FocusedPathSelectionMenu {
 
             Divider()
 
-//                Button {} label: { Image(systemName: "lock") }
-//                    .frame(minWidth: 32)
-//                    .tint(.label)
-//                Menu {
-//                    Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
-//                    Button("Move above") {}
-//                    Button("Move below") {}
-//                    Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
-//                } label: { Image(systemName: "square.3.layers.3d") }
-//                    .frame(minWidth: 32)
-//                    .menuOrder(.fixed)
-//                    .tint(.label)
-//
-//                Divider()
-
-            Menu {
-                Button("Copy", systemImage: "doc.on.doc") {}
-                Button("Cut", systemImage: "scissors") {}
-                Button("Duplicate", systemImage: "plus.square.on.square") {}
-            } label: { Image(systemName: "doc.on.doc") }
-                .frame(minWidth: 32)
+            Menu { nodeTypeMenu } label: { Image(systemName: "smallcircle.filled.circle") }
                 .menuOrder(.fixed)
+                .frame(minWidth: 32)
+                .tint(.label)
+
+            if !selector.activeSegmentIds.isEmpty {
+                Menu { edgeTypeMenu } label: { Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath") }
+                    .menuOrder(.fixed)
+                    .frame(minWidth: 32)
+                    .tint(.label)
+            }
+
+            Divider()
+
+            Menu { copyMenu } label: { Image(systemName: "doc.on.doc") }
+                .menuOrder(.fixed)
+                .frame(minWidth: 32)
                 .tint(.label)
             Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)
         }
     }
 
+    @ViewBuilder var nodeTypeMenu: some View {
+        nodeTypeButton(.corner)
+        nodeTypeButton(.locked)
+        nodeTypeButton(.mirrored)
+    }
+
+    @ViewBuilder func nodeTypeButton(_ nodeType: PathNodeType) -> some View {
+        let name = {
+            switch nodeType {
+            case .corner: "Corner"
+            case .locked: "Locked"
+            case .mirrored: "Mirrored"
+            }
+        }()
+        let selected = selector.activeNodeType == nodeType
+        Button(name, systemImage: selected ? "checkmark" : "") { setNodeType(nodeType) }
+            .disabled(selected)
+    }
+
+    @ViewBuilder var edgeTypeMenu: some View {
+        edgeTypeButton(.line)
+        edgeTypeButton(.cubic)
+        edgeTypeButton(.quadratic)
+    }
+
+    @ViewBuilder func edgeTypeButton(_ edgeType: PathEdgeType) -> some View {
+        let name = {
+            switch edgeType {
+            case .line: "Line"
+            case .cubic: "Cubic Bezier"
+            case .quadratic: "Quadratic Bezier"
+            case .auto: ""
+            }
+        }()
+        let selected = selector.activeEdgeType == edgeType
+        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setEdgeType(.auto) : setEdgeType(edgeType) }
+    }
+
+    @ViewBuilder var copyMenu: some View {
+        Button("Copy", systemImage: "doc.on.doc") {}
+        Button("Cut", systemImage: "scissors") {}
+        Button("Duplicate", systemImage: "plus.square.on.square") {}
+    }
+
     func onToggleSelectingNodes() {
         global.focusedPath.toggleSelectingNodes()
+    }
+
+    func setNodeType(_ nodeType: PathNodeType) {
+        guard let pathId = global.activeItem.focusedPath?.id else { return }
+        let nodeIds = Array(global.focusedPath.activeNodeIds)
+        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
+    }
+
+    func setEdgeType(_ edgeType: PathEdgeType) {
+        guard let pathId = global.activeItem.focusedPath?.id else { return }
+        let fromNodeIds = Array(global.focusedPath.activeSegmentIds)
+        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setEdgeType(.init(fromNodeIds: fromNodeIds, edgeType: edgeType)))))
     }
 
     func onUngroup() {}

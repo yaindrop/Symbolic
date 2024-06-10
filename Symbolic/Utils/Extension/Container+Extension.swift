@@ -33,4 +33,8 @@ extension Array {
         guard mapped.count == count else { return nil }
         return mapped
     }
+
+    func allSame() -> Element? where Element: Equatable {
+        allSatisfy { $0 == first } ? first : nil
+    }
 }

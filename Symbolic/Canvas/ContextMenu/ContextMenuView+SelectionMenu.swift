@@ -41,8 +41,8 @@ extension ContextMenuView.SelectionMenu {
                 Button("Move below") {}
                 Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
             } label: { Image(systemName: "square.3.layers.3d") }
-                .frame(minWidth: 32)
                 .menuOrder(.fixed)
+                .frame(minWidth: 32)
                 .tint(.label)
             Button { onGroup() } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
                 .frame(minWidth: 32)
@@ -55,8 +55,8 @@ extension ContextMenuView.SelectionMenu {
                 Button("Cut", systemImage: "scissors") {}
                 Button("Duplicate", systemImage: "plus.square.on.square") {}
             } label: { Image(systemName: "doc.on.doc") }
-                .frame(minWidth: 32)
                 .menuOrder(.fixed)
+                .frame(minWidth: 32)
                 .tint(.label)
             Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)

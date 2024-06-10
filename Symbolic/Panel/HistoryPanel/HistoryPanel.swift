@@ -61,9 +61,9 @@ private extension DocumentAction {
                 case let .setName(action):
                     "Set path \(update.pathId.shortDescription) name \(action.name ?? "nil")"
                 case let .setNodeType(action):
-                    "Set path \(update.pathId.shortDescription) node \(action.nodeId.shortDescription) type \(action.nodeType?.description ?? "nil")"
+                    "Set path \(update.pathId.shortDescription) node \(action.nodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.nodeType?.description ?? "nil")"
                 case let .setEdgeType(action):
-                    "Set path \(update.pathId.shortDescription) edge from \(action.fromNodeId.shortDescription) type \(action.edgeType?.description ?? "nil")"
+                    "Set path \(update.pathId.shortDescription) edge from \(action.fromNodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.edgeType?.description ?? "nil")"
                 }
             }
         }

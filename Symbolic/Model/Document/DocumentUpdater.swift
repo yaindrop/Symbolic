@@ -425,12 +425,12 @@ extension DocumentUpdater {
     }
 
     private func collectEvents(to events: inout [PathPropertyEvent], _ pathId: UUID, _ action: PathPropertyAction.Update.SetNodeType) {
-        let nodeId = action.nodeId, nodeType = action.nodeType
-        events.append(.update(.init(pathId: pathId, kinds: [.setNodeType(.init(nodeId: nodeId, nodeType: nodeType))])))
+        let nodeIds = action.nodeIds, nodeType = action.nodeType
+        events.append(.update(.init(pathId: pathId, kinds: [.setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType))])))
     }
 
     private func collectEvents(to events: inout [PathPropertyEvent], _ pathId: UUID, _ action: PathPropertyAction.Update.SetEdgeType) {
-        let fromNodeId = action.fromNodeId, edgeType = action.edgeType
-        events.append(.update(.init(pathId: pathId, kinds: [.setEdgeType(.init(fromNodeId: fromNodeId, edgeType: edgeType))])))
+        let fromNodeIds = action.fromNodeIds, edgeType = action.edgeType
+        events.append(.update(.init(pathId: pathId, kinds: [.setEdgeType(.init(fromNodeIds: fromNodeIds, edgeType: edgeType))])))
     }
 }

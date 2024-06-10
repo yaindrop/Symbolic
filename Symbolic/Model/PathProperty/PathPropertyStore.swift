@@ -162,9 +162,13 @@ extension PathPropertyService {
                 case let .setName(event):
                     property.name = event.name
                 case let .setNodeType(event):
-                    property.nodeTypeMap[event.nodeId] = event.nodeType
+                    for nodeId in event.nodeIds {
+                        property.nodeTypeMap[nodeId] = event.nodeType
+                    }
                 case let .setEdgeType(event):
-                    property.edgeTypeMap[event.fromNodeId] = event.edgeType
+                    for fromNodeId in event.fromNodeIds {
+                        property.edgeTypeMap[fromNodeId] = event.edgeType
+                    }
                 }
             }
             update(property: property)

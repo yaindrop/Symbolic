@@ -67,9 +67,10 @@ extension FocusedPathService {
     }
 
     var activeNodesBounds: CGRect? {
-        activeNodeIndexPairs
-            .completeMap { nodesBounds(from: $0.first, to: $0.second) }
-            .map { .init(union: $0) }
+        guard let nodeBounds = activeNodeIndexPairs.completeMap({ nodesBounds(from: $0.first, to: $0.second) }) else { return nil }
+        guard let unioned = CGRect(union: nodeBounds) else { return nil }
+        guard let pathBounds = activeItem.focusedPath?.boundingRect else { return nil }
+        return .init(origin: .init(unioned.origin.x, pathBounds.minY), size: .init(unioned.size.width, pathBounds.height))
     }
 }
 

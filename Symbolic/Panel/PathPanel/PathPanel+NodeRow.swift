@@ -34,7 +34,9 @@ private extension PathPanel.NodeRow {
     var content: some View {
         VStack(spacing: 0) {
             HStack {
-                NodeMenu(pathId: pathId, nodeId: nodeId) { name }
+                Menu { NodeMenu(pathId: pathId, nodeId: nodeId) } label: { name }
+                    .menuOrder(.fixed)
+                    .tint(.label)
                 Spacer()
                 expandButton { expandIcon }
             }
@@ -79,10 +81,10 @@ private extension PathPanel.NodeRow {
 
 // MARK: - NodeMenu
 
-private struct NodeMenu<Content: View>: View, TracedView, ComputedSelectorHolder {
-    let pathId: UUID
-    let nodeId: UUID
-    @ViewBuilder let content: () -> Content
+private struct NodeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
+    let pathId: UUID, nodeId: UUID
+
+    var equatableBy: some Equatable { pathId; nodeId }
 
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
     class Selector: SelectorBase {
@@ -95,7 +97,7 @@ private struct NodeMenu<Content: View>: View, TracedView, ComputedSelectorHolder
 
     var body: some View { trace {
         setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
-            menu
+            content
         }
     } }
 }
@@ -103,38 +105,31 @@ private struct NodeMenu<Content: View>: View, TracedView, ComputedSelectorHolder
 // MARK: private
 
 private extension NodeMenu {
-    var menu: some View {
-        Menu {
-            Label("\(nodeId)", systemImage: "number")
+    @ViewBuilder var content: some View {
+        Label("\(nodeId)", systemImage: "number")
 
-            Button(selector.focused ? "Unfocus" : "Focus", systemImage: selector.focused ? "circle.slash" : "scope") { toggleFocus() }
-            if selector.mergableNode != nil {
-                Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
-            }
-            Divider()
-            ControlGroup {
-                Button("Corner") {
-                    global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .corner)))))
-                }
-                .disabled(selector.nodeType == .corner)
-                Button("Locked") {
-                    global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .locked)))))
-                }
-                .disabled(selector.nodeType == .locked)
-                Button("Mirrored") {
-                    global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeId: nodeId, nodeType: .mirrored)))))
-                }
-                .disabled(selector.nodeType == .mirrored)
-            } label: {
-                Text("Node Type")
-            }
-            Divider()
-            Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
-            Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-        } label: {
-            content()
+        Button(selector.focused ? "Unfocus" : "Focus", systemImage: selector.focused ? "circle.slash" : "scope") { toggleFocus() }
+        if selector.mergableNode != nil {
+            Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
         }
-        .tint(.label)
+
+        Divider()
+
+        ControlGroup { nodeTypeButtons } label: { Text("Node Type") }
+
+        Divider()
+
+        Button("Break", systemImage: "trash.fill", role: .destructive) { breakNode() }
+        Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
+    }
+
+    @ViewBuilder var nodeTypeButtons: some View {
+        Button("Corner") { setNodeType(.corner) }
+            .disabled(selector.nodeType == .corner)
+        Button("Locked") { setNodeType(.locked) }
+            .disabled(selector.nodeType == .locked)
+        Button("Mirrored") { setNodeType(.mirrored) }
+            .disabled(selector.nodeType == .mirrored)
     }
 
     func toggleFocus() {
@@ -145,6 +140,10 @@ private extension NodeMenu {
         if let mergableNode = selector.mergableNode {
             global.documentUpdater.update(path: .merge(.init(pathId: pathId, endingNodeId: nodeId, mergedPathId: pathId, mergedEndingNodeId: mergableNode.id)))
         }
+    }
+
+    func setNodeType(_ nodeType: PathNodeType) {
+        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: [nodeId], nodeType: nodeType)))))
     }
 
     func breakNode() {

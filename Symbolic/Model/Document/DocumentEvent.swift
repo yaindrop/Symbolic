@@ -59,8 +59,8 @@ enum PathPropertyEvent: Equatable, Encodable {
 
 extension PathPropertyEvent.Update {
     struct SetName: Equatable, Encodable { let name: String? }
-    struct SetNodeType: Equatable, Encodable { let nodeId: UUID, nodeType: PathNodeType? }
-    struct SetEdgeType: Equatable, Encodable { let fromNodeId: UUID, edgeType: PathEdgeType? }
+    struct SetNodeType: Equatable, Encodable { let nodeIds: [UUID], nodeType: PathNodeType? }
+    struct SetEdgeType: Equatable, Encodable { let fromNodeIds: [UUID], edgeType: PathEdgeType? }
 
     enum Kind: Equatable, Encodable {
         case setName(SetName)

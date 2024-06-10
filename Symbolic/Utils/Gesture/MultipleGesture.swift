@@ -176,4 +176,8 @@ extension View {
     func multipleGesture(_ gesture: MultipleGesture) -> some View {
         modifier(MultipleGestureModifier(gesture: gesture))
     }
+
+    func multipleGesture(_ gesture: MultipleGesture?) -> some View {
+        self.if(gesture) { $0.modifier(MultipleGestureModifier(gesture: $1)) }
+    }
 }

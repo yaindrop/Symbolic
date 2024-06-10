@@ -157,8 +157,11 @@ extension PanelStore {
         return newPanel
     }
 
-    func moveGesture(panelId: UUID) -> MultipleGesture {
-        .init(
+    func moveGesture(panelId: UUID) -> MultipleGesture? {
+        if sidebarPanels.contains(where: { $0 == panelId }) {
+            return nil
+        }
+        return .init(
             configs: .init(coordinateSpace: .global),
             onPressEnd: { _ in
                 var movingPanel = self.movingPanel

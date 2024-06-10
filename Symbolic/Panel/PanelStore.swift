@@ -38,6 +38,18 @@ extension PanelStore {
     func update(sidebarPanels: [UUID]) {
         update { $0(\._sidebarPanels, sidebarPanels) }
     }
+
+    func drop(panelId: UUID, location: Point2) {
+        guard var panel = panel(id: panelId) else { return }
+        withStoreUpdating {
+            update(sidebarPanels: sidebarPanels.with { $0.removeAll { $0 == panelId }})
+            panel.origin = location - .init(panel.size.width / 2, 0)
+            panel = moveEndOffset(panel: panel, offset: .zero, speed: .zero)
+            var panelMap = panelMap
+            panelMap[panelId] = panel
+            update(panelMap: panelMap)
+        }
+    }
 }
 
 // MARK: selectors
@@ -117,7 +129,7 @@ extension PanelStore {
         updated[panelId] = panel
         update(panelMap: updated)
 
-        let newPanel = moveEndOffset(panel: panel, v)
+        let newPanel = moveEndOffset(panel: panel, offset: v.offset, speed: v.speed)
         if panel.origin == newPanel.origin, panel.affinities == newPanel.affinities {
             return
         }
@@ -129,9 +141,7 @@ extension PanelStore {
         }
     }
 
-    private func moveEndOffset(panel: PanelData, _ v: DragGesture.Value) -> PanelData {
-        let offset = v.offset, speed = v.speed
-
+    private func moveEndOffset(panel: PanelData, offset: Vector2, speed: Vector2) -> PanelData {
         var inertiaOffset = Vector2.zero
         if speed.length > 500 {
             inertiaOffset = speed * 0.2

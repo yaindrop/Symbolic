@@ -95,9 +95,8 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
 extension HistoryPanel {
     @ViewBuilder private var panel: some View {
         VStack(spacing: 0) {
-            PanelTitle(name: "History")
+            PanelTitle(panelId: panelId, name: "History")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
-                .invisibleSoildOverlay()
                 .multipleGesture(global.panel.moveGesture(panelId: panelId))
             scrollView
         }

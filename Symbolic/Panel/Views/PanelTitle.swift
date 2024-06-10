@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PanelTitle: View {
-    let name: String
+    let panelId: UUID, name: String
 
     var body: some View {
         HStack {
@@ -13,5 +13,7 @@ struct PanelTitle: View {
             Spacer()
         }
         .padding(12)
+        .invisibleSoildOverlay()
+        .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
     }
 }

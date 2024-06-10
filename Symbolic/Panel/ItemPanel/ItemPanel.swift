@@ -25,9 +25,8 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 extension ItemPanel {
     @ViewBuilder private var content: some View {
         VStack(spacing: 0) {
-            PanelTitle(name: "Items")
+            PanelTitle(panelId: panelId, name: "Items")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
-                .invisibleSoildOverlay()
                 .multipleGesture(global.panel.moveGesture(panelId: panelId))
             scrollView
         }

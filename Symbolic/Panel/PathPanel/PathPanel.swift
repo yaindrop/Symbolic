@@ -27,9 +27,8 @@ struct PathPanel: View, TracedView, SelectorHolder {
 private extension PathPanel {
     @ViewBuilder var panel: some View {
         VStack(spacing: 0) {
-            PanelTitle(name: "Path")
+            PanelTitle(panelId: panelId, name: "Path")
                 .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
-                .invisibleSoildOverlay()
                 .multipleGesture(global.panel.moveGesture(panelId: panelId))
             scrollView
         }

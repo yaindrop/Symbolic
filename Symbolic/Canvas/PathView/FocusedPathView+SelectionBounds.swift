@@ -6,7 +6,7 @@ extension FocusedPathView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-            @Selected({ global.activeItem.focusedPath?.continuousNodeIndices(nodeIds: global.focusedPath.activeNodeIds) }) var nodeIndices
+            @Selected({ global.focusedPath.activeNodeIndexPairs }) var nodeIndexPairs
         }
 
         @SelectorWrapper var selector
@@ -23,13 +23,11 @@ extension FocusedPathView {
 
 private extension FocusedPathView.SelectionBounds {
     @ViewBuilder var content: some View {
-        if let nodeIndices = selector.nodeIndices {
-            ForEach(nodeIndices, id: \.from) {
-                if $0.from == $0.to {
-                    NodeBounds(index: $0.from)
-                } else {
-                    SubpathBounds(from: $0.from, to: $0.to)
-                }
+        ForEach(selector.nodeIndexPairs, id: \.first) {
+            if $0.first == $0.second {
+                NodeBounds(index: $0.first)
+            } else {
+                SubpathBounds(from: $0.first, to: $0.second)
             }
         }
     }
@@ -38,15 +36,14 @@ private extension FocusedPathView.SelectionBounds {
 // MARK: - SubpathBounds
 
 private struct SubpathBounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
-    let from: Int
-    let to: Int
+    let from: Int, to: Int
 
     var equatableBy: some Equatable { from; to }
 
     struct SelectorProps: Equatable { let from: Int, to: Int }
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
-        @Selected({ global.activeItem.focusedPath?.subpath(from: $0.from, to: $0.to) }) var subpath
+        @Selected({ global.focusedPath.subpath(from: $0.from, to: $0.to) }) var subpath
         @Selected({ global.viewport.info }) var viewport
     }
 

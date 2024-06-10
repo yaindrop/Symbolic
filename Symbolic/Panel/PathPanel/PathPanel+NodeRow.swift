@@ -4,8 +4,7 @@ import SwiftUI
 
 extension PathPanel {
     struct NodeRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        let pathId: UUID
-        let nodeId: UUID
+        let pathId: UUID, nodeId: UUID
 
         var equatableBy: some Equatable { pathId; nodeId }
 
@@ -160,8 +159,7 @@ private extension NodeMenu {
 // MARK: - NodeDetailPanel
 
 private struct NodeDetailView: View, TracedView, EquatableBy, ComputedSelectorHolder {
-    let pathId: UUID
-    let nodeId: UUID
+    let pathId: UUID, nodeId: UUID
 
     var equatableBy: some Equatable { pathId; nodeId }
 

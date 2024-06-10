@@ -1,17 +1,5 @@
 import SwiftUI
 
-// MARK: - global actions
-
-private extension GlobalStore {
-    func toggleSelectingNodes() {
-        if focusedPath.selectingNodes {
-            focusedPath.clear()
-        } else {
-            focusedPath.setSelectingNodes(true)
-        }
-    }
-}
-
 // MARK: - FocusedPathMenu
 
 extension ContextMenuView {
@@ -20,7 +8,7 @@ extension ContextMenuView {
             override var syncUpdate: Bool { true }
             @Selected({ global.activeItem.focusedPathBounds }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ global.focusedPath.activeNodeIds.isEmpty || global.focusedPath.selectingNodes }) var visible
+            @Selected({ global.focusedPath.activeNodeIds.isEmpty }) var visible
         }
 
         @SelectorWrapper var selector
@@ -83,7 +71,7 @@ extension ContextMenuView.FocusedPathMenu {
     }
 
     func onToggleSelectingNodes() {
-        global.toggleSelectingNodes()
+        global.focusedPath.toggleSelectingNodes()
     }
 
     func onUngroup() {}

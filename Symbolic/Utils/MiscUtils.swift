@@ -1,5 +1,13 @@
 import SwiftUI
 
+// MARK: - pair
+
+struct Pair<T0, T1> { let first: T0, second: T1 }
+
+extension Pair: Equatable, EquatableBy where T0: Equatable, T1: Equatable {
+    var equatableBy: some Equatable { first; second }
+}
+
 // MARK: - readable time
 
 extension TimeInterval {

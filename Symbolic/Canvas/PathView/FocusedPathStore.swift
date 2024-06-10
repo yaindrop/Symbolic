@@ -41,15 +41,46 @@ extension FocusedPathService {
         }
     }
 
+    // focused node & segment
+
     var focusedNodeId: UUID? { !selectingNodes && activeNodeIds.count == 1 ? activeNodeIds.first : nil }
 
     var focusedSegmentId: UUID? { !selectingNodes && activeNodeIds.count == 2 ? activeSegmentIds.first : nil }
+//
+//    var focusedNodeBounds: CGRect? {
+//        guard let focusedNodeId else { return nil }
+//        guard let node = activeItem.focusedPath?.node(id: focusedNodeId) else { return nil }
+//        guard !store.selectingNodes else { return nil }
+//        return .init(center: node.position.applying(viewport.toView), size: .init(10, 10))
+//    }
 
-    var focusedNodeBounds: CGRect? {
-        guard let focusedNodeId else { return nil }
-        guard let node = activeItem.focusedPath?.node(id: focusedNodeId) else { return nil }
-        guard !store.selectingNodes else { return nil }
-        return .init(center: node.position.applying(viewport.toView), size: .init(10, 10))
+    // active nodes
+
+    var activeNodeIndexPairs: [Pair<Int, Int>] {
+        guard let path = activeItem.focusedPath else { return [] }
+        return path.continuousNodeIndexPairs(nodeIds: activeNodeIds)
+    }
+
+    func subpath(from: Int, to: Int) -> Path? {
+        guard let path = activeItem.focusedPath else { return nil }
+        return path.subpath(from: from, to: to)
+    }
+
+    func nodesBounds(from: Int, to: Int) -> CGRect? {
+        guard let path = activeItem.focusedPath else { return nil }
+        if from == to {
+            guard let node = path.node(at: from) else { return nil }
+            return CGRect(center: node.position, size: .zero)
+        } else {
+            guard let subpath = subpath(from: from, to: to) else { return nil }
+            return subpath.boundingRect
+        }
+    }
+
+    var activeNodesBounds: CGRect? {
+        guard let bounds = activeNodeIndexPairs.map({ nodesBounds(from: $0.first, to: $0.second) }).allOrNone() else { return nil }
+        print("dbg", bounds)
+        return .init(union: bounds)
     }
 }
 
@@ -75,11 +106,6 @@ extension FocusedPathService {
         }
     }
 
-    func setSelectingNodes(_ selectingNodes: Bool) {
-        let _r = subtracer.range(type: .intent, "setSelectingNodes \(selectingNodes)"); defer { _r() }
-        store.update(selectingNodes: selectingNodes)
-    }
-
     func selectAdd(node ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selectAdd \(ids)"); defer { _r() }
         store.update(activeNodeIds: activeNodeIds.with { $0.formUnion(ids) })
@@ -88,5 +114,14 @@ extension FocusedPathService {
     func selectRemove(node ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selectRemove \(ids)"); defer { _r() }
         store.update(activeNodeIds: activeNodeIds.with { $0.subtract(ids) })
+    }
+
+    func toggleSelectingNodes() {
+        let _r = subtracer.range(type: .intent, "toggleSelectingNodes from \(selectingNodes)"); defer { _r() }
+        if selectingNodes {
+            clear()
+        } else {
+            store.update(selectingNodes: true)
+        }
     }
 }

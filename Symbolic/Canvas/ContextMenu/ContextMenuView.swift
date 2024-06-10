@@ -72,7 +72,7 @@ struct ContextMenuView: View, TracedView, EquatableBy {
     @ViewBuilder private var content: some View {
         switch data {
         case .pathFocusedPart:
-            PathFocusedPartMenu()
+            FocusedPathSelectionMenu()
         case .focusedPath:
             FocusedPathMenu()
         case .focusedGroup:

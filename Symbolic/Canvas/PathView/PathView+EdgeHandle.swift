@@ -6,8 +6,7 @@ extension PathView {
     struct EdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         @EnvironmentObject var viewModel: PathViewModel
 
-        let pathId: UUID
-        let fromNodeId: UUID
+        let pathId: UUID, fromNodeId: UUID
 
         var equatableBy: some Equatable { pathId; fromNodeId }
 
@@ -60,8 +59,7 @@ extension PathView {
     struct FocusedEdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         @EnvironmentObject var viewModel: PathViewModel
 
-        let pathId: UUID
-        let fromNodeId: UUID
+        let pathId: UUID, fromNodeId: UUID
 
         var equatableBy: some Equatable { pathId; fromNodeId }
 

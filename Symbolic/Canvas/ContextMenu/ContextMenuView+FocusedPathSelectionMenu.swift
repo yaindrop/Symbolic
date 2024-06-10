@@ -1,12 +1,13 @@
 import SwiftUI
 
-// MARK: - FocusedPathMenu
+// MARK: - FocusedPathSelectionMenu
 
 extension ContextMenuView {
-    struct PathFocusedPartMenu: View, SelectorHolder {
+    struct FocusedPathSelectionMenu: View, SelectorHolder {
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-            @Selected({ global.focusedPath.focusedNodeBounds }) var bounds
+            @Selected({ global.focusedPath.activeNodesBounds?.applying(global.viewport.toView) }) var bounds
+            @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
         }
 
         @SelectorWrapper var selector
@@ -21,7 +22,7 @@ extension ContextMenuView {
 
 // MARK: private
 
-extension ContextMenuView.PathFocusedPartMenu {
+extension ContextMenuView.FocusedPathSelectionMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             menu.contextMenu(bounds: bounds)
@@ -33,6 +34,10 @@ extension ContextMenuView.PathFocusedPartMenu {
             Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
+
+            Button { onToggleSelectingNodes() } label: { Image(systemName: "checklist") }
+                .frame(minWidth: 32)
+                .if(!selector.selectingNodes) { $0.tint(.label) }
 
             Divider()
 
@@ -62,6 +67,10 @@ extension ContextMenuView.PathFocusedPartMenu {
             Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)
         }
+    }
+
+    func onToggleSelectingNodes() {
+        global.focusedPath.toggleSelectingNodes()
     }
 
     func onUngroup() {}

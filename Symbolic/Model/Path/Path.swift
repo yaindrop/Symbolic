@@ -215,12 +215,11 @@ extension Path {
         return .init(id: UUID(), pairs: .init(pairs) { $0.id }, isClosed: pairs.count == self.pairs.count)
     }
 
-    struct NodeIndexPair: Equatable { let from: Int, to: Int }
-    func continuousNodeIndices(nodeIds: Set<UUID>) -> [NodeIndexPair] {
+    func continuousNodeIndexPairs(nodeIds: Set<UUID>) -> [Pair<Int, Int>] {
         guard !nodeIds.isEmpty else { return [] }
         let initial = isClosed ? pairs.values.firstIndex { !nodeIds.contains($0.id) } : 0
-        guard let initial else { return [.init(from: 0, to: count - 1)] }
-        var result: [NodeIndexPair] = []
+        guard let initial else { return [.init(first: 0, second: count - 1)] }
+        var result: [Pair<Int, Int>] = []
         var startIndex: Int?
 
         let indices = indices(from: initial)
@@ -233,7 +232,7 @@ extension Path {
                 }
                 let nextPair = next.map { pairs[$0] }
                 if nextPair == nil || !nodeIds.contains(nextPair!.id) {
-                    result.append(.init(from: start, to: i))
+                    result.append(.init(first: start, second: i))
                     startIndex = nil
                 }
             }

@@ -41,20 +41,9 @@ extension FocusedPathService {
         }
     }
 
-    // focused node & segment
-
     var focusedNodeId: UUID? { !selectingNodes && activeNodeIds.count == 1 ? activeNodeIds.first : nil }
 
     var focusedSegmentId: UUID? { !selectingNodes && activeNodeIds.count == 2 ? activeSegmentIds.first : nil }
-//
-//    var focusedNodeBounds: CGRect? {
-//        guard let focusedNodeId else { return nil }
-//        guard let node = activeItem.focusedPath?.node(id: focusedNodeId) else { return nil }
-//        guard !store.selectingNodes else { return nil }
-//        return .init(center: node.position.applying(viewport.toView), size: .init(10, 10))
-//    }
-
-    // active nodes
 
     var activeNodeIndexPairs: [Pair<Int, Int>] {
         guard let path = activeItem.focusedPath else { return [] }
@@ -78,9 +67,9 @@ extension FocusedPathService {
     }
 
     var activeNodesBounds: CGRect? {
-        guard let bounds = activeNodeIndexPairs.map({ nodesBounds(from: $0.first, to: $0.second) }).allOrNone() else { return nil }
-        print("dbg", bounds)
-        return .init(union: bounds)
+        activeNodeIndexPairs
+            .completeMap { nodesBounds(from: $0.first, to: $0.second) }
+            .map { .init(union: $0) }
     }
 }
 

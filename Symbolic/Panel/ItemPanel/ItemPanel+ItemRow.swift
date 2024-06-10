@@ -62,7 +62,7 @@ private struct GroupRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
 
 private extension GroupRow {
     var content: some View {
-        VStack {
+        VStack(spacing: 0) {
             row
             if expanded {
                 members

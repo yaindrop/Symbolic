@@ -28,8 +28,9 @@ extension Array {
         return filter { intersection.contains($0) }
     }
 
-    func allOrNone<T>() -> [T]? where Element == T? {
-        guard allSatisfy({ $0 != nil }) else { return nil }
-        return compactMap { $0 }
+    func completeMap<T>(_ transform: (Element) throws -> T?) rethrows -> [T]? {
+        let mapped = try compactMap(transform)
+        guard mapped.count == count else { return nil }
+        return mapped
     }
 }

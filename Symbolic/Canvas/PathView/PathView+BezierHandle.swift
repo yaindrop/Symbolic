@@ -17,6 +17,7 @@ extension PathView {
             @Selected({ global.focusedPath.focusedNodeId == $0.fromNodeId }) var nodeFocused
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var segmentFocused
             @Selected({ global.focusedPath.focusedNodeId == global.path.path(id: $0.pathId)?.node(after: $0.fromNodeId)?.id }) var nextFocused
+            @Selected({ global.activeItem.focusedPathProperty?.edgeType(id: $0.fromNodeId) }) var edgeType
         }
 
         @SelectorWrapper var selector
@@ -45,23 +46,33 @@ private extension PathView.BezierHandle {
         }
     }
 
+    var showControl0: Bool {
+        guard let segment = selector.segment else { return false }
+        let focused = selector.segmentFocused || selector.nodeFocused
+        let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control0 != .zero)
+        return focused && valid
+    }
+
     @ViewBuilder var control0: some View {
-        if let segment = selector.segment {
-            if selector.segmentFocused || selector.nodeFocused {
-                line(from: segment.from, to: segment.control0, color: control0Color)
-                circle(at: segment.control0, color: control0Color)
-                    .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: true))
-            }
+        if let segment = selector.segment, showControl0 {
+            line(from: segment.from, to: segment.control0, color: control0Color)
+            circle(at: segment.control0, color: control0Color)
+                .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: true))
         }
     }
 
+    var showControl1: Bool {
+        guard let segment = selector.segment else { return false }
+        let focused = selector.segmentFocused || selector.nextFocused
+        let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control1 != .zero)
+        return focused && valid
+    }
+
     @ViewBuilder var control1: some View {
-        if let segment = selector.segment {
-            if selector.segmentFocused || selector.nextFocused {
-                line(from: segment.to, to: segment.control1, color: control1Color)
-                circle(at: segment.control1, color: control1Color)
-                    .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: false))
-            }
+        if let segment = selector.segment, showControl1 {
+            line(from: segment.to, to: segment.control1, color: control1Color)
+            circle(at: segment.control1, color: control1Color)
+                .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: false))
         }
     }
 

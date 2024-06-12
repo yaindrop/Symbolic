@@ -74,7 +74,7 @@ extension PanelAffinity.Root: CustomStringConvertible {
 }
 
 extension PanelAffinity.Peer: CustomStringConvertible {
-    var description: String { "(\(axis), \(selfAlign) to \(peerAlign) of \(peerId)" }
+    var description: String { "(\(axis), \(selfAlign) to \(peerAlign) of \(peerId))" }
 }
 
 extension PanelAffinity: CustomStringConvertible {

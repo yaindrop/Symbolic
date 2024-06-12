@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private struct StoreSubscription {
     let id: Int

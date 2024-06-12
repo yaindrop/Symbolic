@@ -133,15 +133,20 @@ extension PanelStore {
         updated[panelId] = panel
         update(panelMap: updated)
 
-        let newPanel = moveEndOffset(panel: panel, offset: v.offset, speed: v.speed)
-        if panel.origin == newPanel.origin, panel.affinities == newPanel.affinities {
-            return
-        }
+        let movePanel = panel
+        Task { @MainActor in
+            let newPanel = moveEndOffset(panel: movePanel, offset: v.offset, speed: v.speed)
+            if movePanel.origin == newPanel.origin, movePanel.affinities == newPanel.affinities {
+                return
+            }
 
-        withAnimation(.easeOut(duration: 0.1)) {
-            var updated = panelMap
-            updated[panelId] = newPanel
-            update(panelMap: updated)
+            withAnimation(.easeOut(duration: 0.1)) {
+                let _r = subtracer.range(type: .intent, "withAnimation easeOut"); defer { _r() }
+
+                var updated = panelMap
+                updated[panelId] = newPanel
+                update(panelMap: updated)
+            }
         }
     }
 

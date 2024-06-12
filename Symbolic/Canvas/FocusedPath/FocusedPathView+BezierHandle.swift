@@ -3,7 +3,9 @@ import SwiftUI
 private extension GlobalStore {
     func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            documentUpdater.updateInView(focusedPath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending)
+            let offset0 = isControl0 ? v.offset : .zero
+            let offset1 = isControl0 ? .zero : v.offset
+            documentUpdater.updateInView(focusedPath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: offset0, offset1: offset1)), pending: pending)
         }
         return .init(
             onPress: { canvasAction.start(continuous: .movePathBezierControl) },

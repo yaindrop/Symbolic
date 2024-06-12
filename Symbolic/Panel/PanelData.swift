@@ -88,7 +88,7 @@ extension PanelAffinity: CustomStringConvertible {
 
 // MARK: - PanelData
 
-struct PanelData: Identifiable, UniqueEquatable {
+struct PanelData: Identifiable {
     let id: UUID = .init()
 
     let view: (_ panelId: UUID) -> AnyView
@@ -99,6 +99,12 @@ struct PanelData: Identifiable, UniqueEquatable {
     var affinities = PanelAffinityPair()
 
     var rect: CGRect { .init(origin: origin, size: size) }
+}
+
+extension PanelData: EquatableBy {
+    var equatableBy: some Equatable {
+        id; origin; size; affinities
+    }
 }
 
 struct MovingPanelData: Equatable {

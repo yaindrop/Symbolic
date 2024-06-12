@@ -50,8 +50,7 @@ extension PathAction.Update {
     struct AddEndingNode: Equatable, Encodable { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
     struct SplitSegment: Equatable, Encodable { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
-    struct MoveNode: Equatable, Encodable { let nodeId: UUID, offset: Vector2 }
-    struct MoveEdge: Equatable, Encodable { let fromNodeId: UUID, offset: Vector2 }
+    struct MoveNodes: Equatable, Encodable { let nodeIds: [UUID], offset: Vector2 }
     struct MoveEdgeControl: Equatable, Encodable { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
 
     enum Kind: Equatable, Encodable {
@@ -64,8 +63,7 @@ extension PathAction.Update {
         case addEndingNode(AddEndingNode)
         case splitSegment(SplitSegment)
 
-        case moveNode(MoveNode)
-        case moveEdge(MoveEdge)
+        case moveNodes(MoveNodes)
         case moveEdgeControl(MoveEdgeControl)
     }
 }

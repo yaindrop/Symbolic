@@ -42,10 +42,8 @@ extension DocumentUpdater {
             case let .splitSegment(kind):
                 .splitSegment(.init(fromNodeId: kind.fromNodeId, paramT: kind.paramT, newNodeId: kind.newNodeId, offset: kind.offset.applying(toWorld)))
 
-            case let .moveNode(kind):
-                .moveNode(.init(nodeId: kind.nodeId, offset: kind.offset.applying(toWorld)))
-            case let .moveEdge(kind):
-                .moveEdge(.init(fromNodeId: kind.fromNodeId, offset: kind.offset.applying(toWorld)))
+            case let .moveNodes(kind):
+                .moveNodes(.init(nodeIds: kind.nodeIds, offset: kind.offset.applying(toWorld)))
             case let .moveEdgeControl(kind):
                 .moveEdgeControl(.init(fromNodeId: kind.fromNodeId, offset0: kind.offset0.applying(toWorld), offset1: kind.offset1.applying(toWorld)))
 
@@ -277,8 +275,7 @@ extension DocumentUpdater {
         case let .addEndingNode(action): collectEvents(to: &events, pathId: pathId, action)
         case let .splitSegment(action): collectEvents(to: &events, pathId: pathId, action)
 
-        case let .moveNode(action): collectEvents(to: &events, pathId: pathId, action)
-        case let .moveEdge(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .moveNodes(action): collectEvents(to: &events, pathId: pathId, action)
         case let .moveEdgeControl(action): collectEvents(to: &events, pathId: pathId, action)
 
         case let .setNodePosition(action): collectEvents(to: &events, pathId: pathId, action)
@@ -329,30 +326,21 @@ extension DocumentUpdater {
         ]))
     }
 
-    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveNode) {
-        let nodeId = action.nodeId, offset = action.offset
+    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveNodes) {
+        let nodeIds = action.nodeIds, offset = action.offset
         guard let path = pathStore.get(id: pathId),
-              let curr = path.pair(id: nodeId) else { return }
-        let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
-        guard !snappedOffset.isZero else { return }
-
-        events.append(.init(in: pathId, .nodeUpdate(.init(node: curr.node.with(offset: snappedOffset)))))
-    }
-
-    private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveEdge) {
-        let fromNodeId = action.fromNodeId, offset = action.offset
-        guard let path = pathStore.get(id: pathId),
-              let curr = path.pair(id: fromNodeId) else { return }
+              let firstId = nodeIds.first,
+              let curr = path.pair(id: firstId) else { return }
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
 
         var kinds: [PathEvent.Update.Kind] = []
-        kinds.append(.nodeUpdate(.init(node: curr.node.with(offset: snappedOffset))))
-        if let next = path.pair(after: fromNodeId) {
-            kinds.append(.nodeUpdate(.init(node: next.node.with(offset: snappedOffset))))
-        }
+        defer { events.append(.init(in: pathId, kinds)) }
 
-        events.append(.init(in: pathId, kinds))
+        for nodeId in nodeIds {
+            guard let node = path.pair(id: nodeId) else { continue }
+            kinds.append(.nodeUpdate(.init(node: node.node.with(offset: snappedOffset))))
+        }
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveEdgeControl) {

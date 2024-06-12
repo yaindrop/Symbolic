@@ -79,7 +79,8 @@ private extension GlobalStore {
 
     func focusedEdgeGesture(fromId: UUID) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            documentUpdater.updateInView(focusedPath: .moveEdge(.init(fromNodeId: fromId, offset: v.offset)), pending: pending)
+            guard let toId = activeItem.focusedPath?.node(after: fromId)?.id else { return }
+            documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: v.offset)), pending: pending)
         }
         return .init(
             onPress: { canvasAction.start(continuous: .movePathEdge) },

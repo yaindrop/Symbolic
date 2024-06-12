@@ -38,10 +38,8 @@ private extension DocumentAction {
                 case let .splitSegment(action):
                     "In path \(update.pathId.shortDescription) split segment from \(action.fromNodeId.shortDescription) at \(action.paramT) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
 
-                case let .moveNode(action):
-                    "In path \(update.pathId.shortDescription) move node \(action.nodeId.shortDescription) by \(action.offset.shortDescription)"
-                case let .moveEdge(action):
-                    "In path \(update.pathId.shortDescription) move edge from \(action.fromNodeId.shortDescription) by \(action.offset.shortDescription)"
+                case let .moveNodes(action):
+                    "In path \(update.pathId.shortDescription) move node \(action.nodeIds.map { $0.id.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
                 case let .moveEdgeControl(action):
                     "In path \(update.pathId.shortDescription) move edge control from \(action.fromNodeId.shortDescription) by \(action.offset0.shortDescription) and \(action.offset1.shortDescription)"
                 }

@@ -1,11 +1,26 @@
 import SwiftUI
 
+private extension GlobalStore {
+    func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGesture {
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            documentUpdater.updateInView(focusedPath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: isControl0 ? v.offset : .zero, offset1: isControl0 ? .zero : v.offset)), pending: pending)
+        }
+        return .init(
+            onPress: { canvasAction.start(continuous: .movePathBezierControl) },
+            onPressEnd: { cancelled in
+                canvasAction.end(continuous: .movePathBezierControl)
+                if cancelled { documentUpdater.cancel() }
+            },
+            onDrag: { updateDrag($0, pending: true) },
+            onDragEnd: { updateDrag($0) }
+        )
+    }
+}
+
 // MARK: - BezierHandle
 
-extension PathView {
+extension FocusedPathView {
     struct BezierHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        @EnvironmentObject var viewModel: PathViewModel
-
         let pathId: UUID, fromNodeId: UUID
 
         var equatableBy: some Equatable { pathId; fromNodeId }
@@ -32,7 +47,7 @@ extension PathView {
 
 // MARK: private
 
-private extension PathView.BezierHandle {
+private extension FocusedPathView.BezierHandle {
     var control0Color: Color { .green }
     var control1Color: Color { .orange }
     var lineWidth: Scalar { 1 }
@@ -57,7 +72,7 @@ private extension PathView.BezierHandle {
         if let segment = selector.segment, showControl0 {
             line(from: segment.from, to: segment.control0, color: control0Color)
             circle(at: segment.control0, color: control0Color)
-                .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: true))
+                .multipleGesture(global.bezierGesture(fromId: fromNodeId, isControl0: true))
         }
     }
 
@@ -72,7 +87,7 @@ private extension PathView.BezierHandle {
         if let segment = selector.segment, showControl1 {
             line(from: segment.to, to: segment.control1, color: control1Color)
             circle(at: segment.control1, color: control1Color)
-                .multipleGesture(viewModel.bezierGesture(fromId: fromNodeId, isControl0: false))
+                .multipleGesture(global.bezierGesture(fromId: fromNodeId, isControl0: false))
         }
     }
 

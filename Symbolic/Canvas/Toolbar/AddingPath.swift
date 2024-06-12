@@ -83,6 +83,7 @@ extension AddingPathService {
 struct AddingPathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.addingPath.addingPath }) var addingPath
+        @Selected({ global.viewport.toView }) var toView
     }
 
     @SelectorWrapper var selector
@@ -96,9 +97,12 @@ struct AddingPathView: View, TracedView, SelectorHolder {
 
 private extension AddingPathView {
     @ViewBuilder var content: some View {
-        if let addingPath = selector.addingPath {
-            PathView(path: addingPath)
-                .environmentObject(PathViewModel())
+        if let path = selector.addingPath {
+            SUPath { path.append(to: &$0) }
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                .allowsHitTesting(false)
+                .transformEffect(selector.toView)
+                .id(path.id)
         }
     }
 }

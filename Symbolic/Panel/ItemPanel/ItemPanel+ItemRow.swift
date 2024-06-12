@@ -10,7 +10,7 @@ extension ItemPanel {
 
         struct SelectorProps: Equatable { let itemId: UUID }
         class Selector: SelectorBase {
-            @Selected({ global.item.item(id: $0.itemId) }) var item
+            @Selected({ global.item.get(id: $0.itemId) }) var item
         }
 
         @SelectorWrapper var selector
@@ -133,7 +133,7 @@ private struct PathRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
 
     struct SelectorProps: Equatable { let pathId: UUID }
     class Selector: SelectorBase {
-        @Selected({ global.path.path(id: $0.pathId) }) var path
+        @Selected({ global.path.get(id: $0.pathId) }) var path
     }
 
     @SelectorWrapper var selector

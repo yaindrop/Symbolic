@@ -14,12 +14,12 @@ protocol ItemStoreProtocol {
 }
 
 extension ItemStoreProtocol {
-    func item(id: UUID) -> Item? {
+    func get(id: UUID) -> Item? {
         map.value(key: id)
     }
 
     func exists(id: UUID) -> Bool {
-        item(id: id) != nil
+        get(id: id) != nil
     }
 
     func ancestorIds(of itemId: UUID) -> [UUID] {
@@ -40,15 +40,15 @@ extension ItemStoreProtocol {
     }
 
     func group(id: UUID) -> ItemGroup? {
-        item(id: id).map { $0.group }
+        get(id: id).map { $0.group }
     }
 
     var rootItems: [Item] {
-        rootIds.compactMap { item(id: $0) }
+        rootIds.compactMap { get(id: $0) }
     }
 
     func height(itemId: UUID) -> Int {
-        guard let item = item(id: itemId) else { return 0 }
+        guard let item = get(id: itemId) else { return 0 }
         guard let group = item.group else { return 0 }
         return 1 + group.members.map { height(itemId: $0) }.max()!
     }
@@ -58,19 +58,19 @@ extension ItemStoreProtocol {
     }
 
     func expandedItems(rootItemId: UUID) -> [Item] {
-        guard let item = item(id: rootItemId) else { return [] }
+        guard let item = get(id: rootItemId) else { return [] }
         guard let group = item.group else { return [item] }
         return [item] + group.members.flatMap { expandedItems(rootItemId: $0) }
     }
 
     func groupItems(rootItemId: UUID) -> [Item] {
-        guard let item = item(id: rootItemId) else { return [] }
+        guard let item = get(id: rootItemId) else { return [] }
         guard let group = item.group else { return [] }
         return [item] + group.members.flatMap { groupItems(rootItemId: $0) }
     }
 
     func leafItems(rootItemId: UUID) -> [Item] {
-        guard let item = item(id: rootItemId) else { return [] }
+        guard let item = get(id: rootItemId) else { return [] }
         guard let group = item.group else { return [item] }
         return group.members.flatMap { leafItems(rootItemId: $0) }
     }
@@ -160,21 +160,21 @@ extension ItemService: ItemStoreProtocol {
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
     var ancestorMap: AncestorMap { pendingStore.active ? pendingStore.ancestorMap : store.ancestorMap }
 
-    var allPaths: [Path] { allPathIds.compactMap { path.path(id: $0) } }
+    var allPaths: [Path] { allPathIds.compactMap { path.get(id: $0) } }
 
     func groupedPaths(groupId: UUID) -> [Path] {
         leafItems(rootItemId: groupId)
-            .compactMap { $0.pathId.map { path.path(id: $0) } }
+            .compactMap { $0.pathId.map { path.get(id: $0) } }
     }
 
     func boundingRect(itemId: UUID) -> CGRect? {
-        guard let item = item(id: itemId) else { return nil }
+        guard let item = get(id: itemId) else { return nil }
         if let pathId = item.pathId {
-            return path.path(id: pathId)?.boundingRect
+            return path.get(id: pathId)?.boundingRect
         }
         if let group = item.group {
             let rects = group.members
-                .compactMap { self.item(id: $0) }
+                .compactMap { self.get(id: $0) }
                 .compactMap { self.boundingRect(itemId: $0.id) }
             return .init(union: rects)
         }
@@ -198,7 +198,7 @@ extension ItemService {
 
     private func remove(itemId: UUID) {
         let _r = subtracer.range("remove"); defer { _r() }
-        guard let item = item(id: itemId) else { return }
+        guard let item = get(id: itemId) else { return }
         if case let .path(path) = item.kind {
             guard !self.path.exists(id: path.id) else { return }
         }
@@ -283,7 +283,7 @@ extension ItemService {
         if let inGroupId {
             if members.isEmpty {
                 remove(itemId: inGroupId)
-            } else if item(id: inGroupId) == nil {
+            } else if get(id: inGroupId) == nil {
                 add(item: .init(kind: .group(.init(id: inGroupId, members: members))))
             } else {
                 update(item: .init(kind: .group(.init(id: inGroupId, members: members))))
@@ -297,8 +297,8 @@ extension ItemService {
 
     private func loadEvent(_ event: PathEvent) {
         for pathId in event.affectedPathIds {
-            let item = item(id: pathId)
-            let path = path.path(id: pathId)
+            let item = get(id: pathId)
+            let path = path.get(id: pathId)
             if path == nil {
                 guard item?.pathId != nil else { continue }
                 remove(itemId: pathId)

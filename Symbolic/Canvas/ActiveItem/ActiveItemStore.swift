@@ -67,7 +67,7 @@ extension ActiveItemService {
     }
 
     var selectedItems: [Item] {
-        selectedItemIds.compactMap { item.item(id: $0) }
+        selectedItemIds.compactMap { item.get(id: $0) }
     }
 
     var selectionBounds: CGRect? {
@@ -79,7 +79,7 @@ extension ActiveItemService {
     var selectedPaths: [Path] {
         selectedItemIds
             .flatMap { item.leafItems(rootItemId: $0) }
-            .compactMap { path.path(id: $0.id) }
+            .compactMap { path.get(id: $0.id) }
     }
 
     func selected(itemId: UUID) -> Bool {
@@ -88,12 +88,12 @@ extension ActiveItemService {
 
     var focusedPath: Path? {
         guard let focusedItemId else { return nil }
-        return path.path(id: focusedItemId)
+        return path.get(id: focusedItemId)
     }
 
     var focusedPathProperty: PathProperty? {
         guard let focusedItemId else { return nil }
-        return pathProperty.property(id: focusedItemId)
+        return pathProperty.get(id: focusedItemId)
     }
 
     var focusedPathBounds: CGRect? {
@@ -117,9 +117,9 @@ extension ActiveItemService {
     }
 
     func boundingRect(itemId: UUID) -> CGRect? {
-        guard let item = item.item(id: itemId) else { return nil }
+        guard let item = item.get(id: itemId) else { return nil }
         if let pathId = item.pathId {
-            guard let path = path.path(id: pathId) else { return nil }
+            guard let path = path.get(id: pathId) else { return nil }
             return path.boundingRect.applying(viewport.toView)
         }
         guard let group = item.group else { return nil }

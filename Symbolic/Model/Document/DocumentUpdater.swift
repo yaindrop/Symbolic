@@ -165,7 +165,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [ItemEvent], _ action: ItemAction.Group) {
         let group = action.group, inGroupId = action.inGroupId
-        guard itemStore.item(id: group.id) == nil else { return } // grouping with existing id
+        guard itemStore.get(id: group.id) == nil else { return } // grouping with existing id
 
         if let inGroupId {
             let ancestors = itemStore.ancestorIds(of: inGroupId)
@@ -288,7 +288,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.DeleteNode) {
         let nodeId = action.nodeId
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               path.node(id: nodeId) != nil else { return }
         if path.nodes.count - 1 < 2 {
             events.append(.delete(.init(pathIds: [pathId])))
@@ -299,7 +299,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.AddEndingNode) {
         let endingNodeId = action.endingNodeId, newNodeId = action.newNodeId, offset = action.offset
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               let endingNode = path.node(id: endingNodeId) else { return }
         let prevNodeId: UUID?
         if path.isFirstEndingNode(id: endingNodeId) {
@@ -316,7 +316,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.SplitSegment) {
         let fromNodeId = action.fromNodeId, paramT = action.paramT, newNodeId = action.newNodeId, offset = action.offset
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               let segment = path.segment(from: fromNodeId) else { return }
         let position = segment.position(paramT: paramT)
         let (before, after) = segment.split(paramT: paramT)
@@ -331,7 +331,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveNode) {
         let nodeId = action.nodeId, offset = action.offset
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               let curr = path.pair(id: nodeId) else { return }
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
@@ -341,7 +341,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveEdge) {
         let fromNodeId = action.fromNodeId, offset = action.offset
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               let curr = path.pair(id: fromNodeId) else { return }
         let snappedOffset = curr.node.position.offset(to: grid.snap(curr.node.position + offset))
         guard !snappedOffset.isZero else { return }
@@ -357,7 +357,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.MoveEdgeControl) {
         let fromNodeId = action.fromNodeId, offset0 = action.offset0, offset1 = action.offset1
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               let curr = path.segment(from: fromNodeId) else { return }
 
         let snappedOffset0 = offset0 == .zero ? .zero : curr.control0.offset(to: grid.snap(curr.control0 + offset0))
@@ -372,7 +372,7 @@ extension DocumentUpdater {
         let newControl0 = curr.edge.control0 + snappedOffset0, newControl1 = curr.edge.control1 + snappedOffset1
         kinds.append(.edgeUpdate(.init(fromNodeId: fromNodeId, edge: .init(control0: newControl0, control1: newControl1))))
 
-        guard let property = pathPropertyStore.property(id: pathId) else { return }
+        guard let property = pathPropertyStore.get(id: pathId) else { return }
         if dragged0 {
             guard let prevNode = path.node(before: fromNodeId),
                   let prev = path.segment(from: prevNode.id),
@@ -408,7 +408,7 @@ extension DocumentUpdater {
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.SetNodePosition) {
         let nodeId = action.nodeId, position = action.position
-        guard let path = pathStore.path(id: pathId),
+        guard let path = pathStore.get(id: pathId),
               let node = path.node(id: nodeId) else { return }
         events.append(.init(in: pathId, .nodeUpdate(.init(node: node.with(position: position)))))
     }

@@ -11,7 +11,7 @@ extension FocusedPathView {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-            @Selected({ global.path.path(id: $0.pathId) }) var path
+            @Selected({ global.path.get(id: $0.pathId) }) var path
             @Selected({ global.viewport.toView }) var toView
         }
 

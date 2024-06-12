@@ -9,12 +9,12 @@ protocol PathPropertyStoreProtocol {
 }
 
 extension PathPropertyStoreProtocol {
-    func property(id: UUID) -> PathProperty? {
+    func get(id: UUID) -> PathProperty? {
         map.value(key: id)
     }
 
     func exists(id: UUID) -> Bool {
-        property(id: id) != nil
+        get(id: id) != nil
     }
 }
 
@@ -140,8 +140,8 @@ extension PathPropertyService {
 
     private func loadEvent(_ event: PathEvent) {
         for pathId in event.affectedPathIds {
-            let property = self.property(id: pathId)
-            let path = path.path(id: pathId)
+            let property = get(id: pathId)
+            let path = path.get(id: pathId)
             if path == nil {
                 remove(pathId: pathId)
             } else if property == nil {
@@ -156,7 +156,7 @@ extension PathPropertyService {
         switch event {
         case let .update(event):
             let pathId = event.pathId
-            guard var property = property(id: pathId) else { return }
+            guard var property = get(id: pathId) else { return }
             for kind in event.kinds {
                 switch kind {
                 case let .setName(event):

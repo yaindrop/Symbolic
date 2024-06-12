@@ -88,8 +88,8 @@ private struct NodeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
 
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
     class Selector: SelectorBase {
-        @Formula({ global.path.path(id: $0.pathId) }) static var path
-        @Formula({ global.pathProperty.property(id: $0.pathId) }) static var property
+        @Formula({ global.path.get(id: $0.pathId) }) static var path
+        @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
         @Selected({ path($0)?.mergableNode(id: $0.nodeId) }) var mergableNode
         @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
         @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
@@ -166,7 +166,7 @@ private struct NodeDetailView: View, TracedView, EquatableBy, ComputedSelectorHo
 
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
     class Selector: SelectorBase {
-        @Formula({ global.path.path(id: $0.pathId) }) static var path
+        @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Selected({ path($0)?.pair(before: $0.nodeId) }) var prevPair
         @Selected({ path($0)?.node(id: $0.nodeId) }) var node
         @Selected({ path($0)?.segment(from: $0.nodeId)?.edge }) var edge

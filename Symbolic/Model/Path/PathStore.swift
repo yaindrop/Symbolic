@@ -11,12 +11,12 @@ protocol PathStoreProtocol {
 }
 
 extension PathStoreProtocol {
-    func path(id: UUID) -> Path? {
+    func get(id: UUID) -> Path? {
         map.value(key: id)
     }
 
     func exists(id: UUID) -> Bool {
-        path(id: id) != nil
+        get(id: id) != nil
     }
 }
 
@@ -183,7 +183,7 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.Move) {
         let paths = event.pathIds.compactMap { pathId -> Path? in
-            guard let path = path(id: pathId) else { return nil }
+            guard let path = get(id: pathId) else { return nil }
             path.update(moveOffset: event.offset)
             return path
         }
@@ -192,7 +192,7 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.Update) {
         let pathId = event.pathId
-        guard let path = path(id: pathId) else { return }
+        guard let path = get(id: pathId) else { return }
         for kind in event.kinds {
             switch kind {
             case let .nodeCreate(event):
@@ -212,8 +212,8 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.Merge) {
         let pathId = event.pathId, mergedPathId = event.mergedPathId
-        guard let path = path(id: pathId),
-              let mergedPath = self.path(id: mergedPathId) else { return }
+        guard let path = get(id: pathId),
+              let mergedPath = get(id: mergedPathId) else { return }
         if mergedPath != path {
             remove(pathIds: [mergedPathId])
         }
@@ -223,7 +223,7 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.NodeBreak) {
         let pathId = event.pathId
-        guard let path = path(id: pathId) else { return }
+        guard let path = get(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
         update(paths: [path])
         if let newPath {
@@ -233,7 +233,7 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.EdgeBreak) {
         let pathId = event.pathId
-        guard let path = path(id: pathId) else { return }
+        guard let path = get(id: pathId) else { return }
         let newPath = path.update(edgeBreak: event)
         update(paths: [path])
         if let newPath {

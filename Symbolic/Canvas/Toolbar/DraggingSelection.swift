@@ -47,7 +47,7 @@ extension DraggingSelectionService {
     func intersects(item: Item) -> Bool {
         guard let rectInWorld else { return false }
         guard let pathId = item.pathId else { return false }
-        guard let path = global.path.path(id: pathId) else { return false }
+        guard let path = global.path.get(id: pathId) else { return false }
         return path.boundingRect.intersects(rectInWorld)
     }
 

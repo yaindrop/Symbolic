@@ -292,10 +292,7 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var willUpdateCancellable: AnyCancellable?
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
-    var wrappedValue: Value {
-        get { fatalError() }
-        set { fatalError() }
-    }
+    var wrappedValue: Value { get { fatalError() } set { fatalError() } }
 
     struct Projected {
         let didSet: AnyPublisher<Value, Never>
@@ -331,10 +328,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var cancellables = Set<AnyCancellable>()
 
     @available(*, unavailable, message: "@Derived can only be applied to Store")
-    var wrappedValue: Value {
-        get { fatalError() }
-        set { fatalError() }
-    }
+    var wrappedValue: Value { get { fatalError() } set { fatalError() } }
 
     struct Projected {
         let willUpdate: AnyPublisher<Value, Never>
@@ -408,6 +402,7 @@ protocol _SelectorProtocol: AnyObject {
     func onRetrack(callback: @escaping () -> Void)
 
     typealias Selected<T: Equatable> = _Selected<Self, T>
+    typealias Formula<T> = _Formula<Self, T>
 }
 
 extension _Selector: _SelectorProtocol {
@@ -491,10 +486,7 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     var syncUpdate: Bool { _syncUpdate || animation != nil }
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
-    var wrappedValue: Value {
-        get { fatalError() }
-        set { fatalError() }
-    }
+    var wrappedValue: Value { get { fatalError() } set { fatalError() } }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -515,6 +507,15 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         _syncUpdate = syncUpdate
         self.animation = animation
         self.selector = { _ in selector() }
+    }
+}
+
+@propertyWrapper
+struct _Formula<Instance: _SelectorProtocol, Value> {
+    let wrappedValue: (Instance.Props) -> Value
+
+    init(_ formula: @escaping (Instance.Props) -> Value) {
+        wrappedValue = formula
     }
 }
 

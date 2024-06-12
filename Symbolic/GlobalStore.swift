@@ -44,7 +44,7 @@ extension GlobalStore {
     var viewportUpdater: ViewportUpdater { .init(viewport: viewportStore, store: viewportUpdateStore) }
 
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, itemStore: itemStore, activeItem: activeItem, viewport: viewport, grid: grid, store: documentUpdaterStore) }
+    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, itemStore: itemStore, pathPropertyStore: pathPropertyStore, activeItem: activeItem, viewport: viewport, grid: grid, store: documentUpdaterStore) }
 
     var path: PathService { .init(viewport: viewport, store: pathStore, pendingStore: pendingPathStore) }
 

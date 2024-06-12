@@ -18,6 +18,7 @@ extension DocumentUpdaterStore {
 struct DocumentUpdater {
     let pathStore: PathStore
     let itemStore: ItemStore
+    let pathPropertyStore: PathPropertyStore
     let activeItem: ActiveItemService
     let viewport: ViewportService
     let grid: GridStore
@@ -361,10 +362,48 @@ extension DocumentUpdater {
 
         let snappedOffset0 = offset0 == .zero ? .zero : curr.control0.offset(to: grid.snap(curr.control0 + offset0))
         let snappedOffset1 = offset1 == .zero ? .zero : curr.control1.offset(to: grid.snap(curr.control1 + offset1))
-        guard !snappedOffset0.isZero || !snappedOffset1.isZero else { return }
 
-        let edge = curr.edge
-        events.append(.init(in: pathId, .edgeUpdate(.init(fromNodeId: fromNodeId, edge: .init(control0: edge.control0 + snappedOffset0, control1: edge.control1 + snappedOffset1)))))
+        let dragged0 = !snappedOffset0.isZero, dragged1 = !snappedOffset1.isZero
+        guard dragged0 || dragged1 else { return }
+
+        var kinds: [PathEvent.Update.Kind] = []
+        defer { events.append(.init(in: pathId, kinds)) }
+
+        let newControl0 = curr.edge.control0 + snappedOffset0, newControl1 = curr.edge.control1 + snappedOffset1
+        kinds.append(.edgeUpdate(.init(fromNodeId: fromNodeId, edge: .init(control0: newControl0, control1: newControl1))))
+
+        guard let property = pathPropertyStore.property(id: pathId) else { return }
+        if dragged0 {
+            guard let prevNode = path.node(before: fromNodeId),
+                  let prev = path.segment(from: prevNode.id),
+                  !prev.edge.control1.isZero else { return }
+            let nodeType = property.nodeType(id: fromNodeId)
+            var newPrevControl1: Vector2? {
+                switch nodeType {
+                case .corner: nil
+                case .locked: newControl0.with(length: -prev.edge.control1.length)
+                case .mirrored: -newControl0
+                }
+            }
+            if let newPrevControl1 {
+                kinds.append(.edgeUpdate(.init(fromNodeId: prevNode.id, edge: prev.edge.with(control1: newPrevControl1))))
+            }
+        } else if dragged1 {
+            guard let nextNode = path.node(after: fromNodeId),
+                  let next = path.segment(from: nextNode.id),
+                  !next.edge.control0.isZero else { return }
+            let nodeType = property.nodeType(id: nextNode.id)
+            var newNextControl0: Vector2? {
+                switch nodeType {
+                case .corner: nil
+                case .locked: newControl1.with(length: -next.edge.control0.length)
+                case .mirrored: -newControl1
+                }
+            }
+            if let newNextControl0 {
+                kinds.append(.edgeUpdate(.init(fromNodeId: nextNode.id, edge: next.edge.with(control0: newNextControl0))))
+            }
+        }
     }
 
     private func collectEvents(to events: inout [PathEvent], pathId: UUID, _ action: PathAction.Update.SetNodePosition) {

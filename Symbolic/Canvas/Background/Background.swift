@@ -15,7 +15,7 @@ struct Background: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            linePaths
+            content
         }
     } }
 }
@@ -48,7 +48,7 @@ private extension Background {
         return (horizontal, vertical)
     }
 
-    var linePaths: some View {
+    var content: some View {
         let cellSize = adjustedCellSize
         let (horizontal, vertical) = linePositions
         func gridLineType(_ position: Scalar) -> GridLineType {

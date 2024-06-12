@@ -28,11 +28,14 @@ extension FocusedPathView {
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-            @Selected({ global.path.path(id: $0.pathId)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
-            @Selected({ global.focusedPath.focusedNodeId == $0.fromNodeId }) var nodeFocused
+            @Formula({ global.path.path(id: $0.pathId) }) static var path
+            @Formula({ global.pathProperty.property(id: $0.pathId) }) static var property
+            @Formula({ path($0)?.node(after: $0.fromNodeId)?.id }) static var nextNodeId
+            @Selected({ path($0)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var segmentFocused
-            @Selected({ global.focusedPath.focusedNodeId == global.path.path(id: $0.pathId)?.node(after: $0.fromNodeId)?.id }) var nextFocused
-            @Selected({ global.activeItem.focusedPathProperty?.edgeType(id: $0.fromNodeId) }) var edgeType
+            @Selected({ global.focusedPath.focusedNodeId == $0.fromNodeId }) var nodeFocused
+            @Selected({ global.focusedPath.focusedNodeId == nextNodeId($0) }) var nextFocused
+            @Selected({ property($0)?.edgeType(id: $0.fromNodeId) }) var edgeType
         }
 
         @SelectorWrapper var selector

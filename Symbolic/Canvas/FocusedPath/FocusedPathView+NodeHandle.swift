@@ -97,8 +97,10 @@ extension FocusedPathView {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             override var syncUpdate: Bool { true }
-            @Selected({ global.path.path(id: $0.pathId)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
-            @Selected({ global.pathProperty.property(id: $0.pathId)?.nodeType(id: $0.nodeId) }) var nodeType
+            @Formula({ global.path.path(id: $0.pathId) }) static var path
+            @Formula({ global.pathProperty.property(id: $0.pathId) }) static var property
+            @Selected({ path($0)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
+            @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
             @Selected(animation: .fast, { global.focusedPath.selectingNodes }) var selectingNodes
         }
@@ -109,7 +111,7 @@ extension FocusedPathView {
 
         var body: some View { trace {
             setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
-                handle
+                content
             }
         } }
     }
@@ -122,7 +124,7 @@ extension FocusedPathView.NodeHandle {
     var rectSize: Scalar { circleSize / 2 * 1.7725 } // sqrt of pi
     var touchablePadding: Scalar { 20 }
 
-    @ViewBuilder var handle: some View {
+    @ViewBuilder var content: some View {
         if let position = selector.position {
             nodeShape
                 .padding(touchablePadding)

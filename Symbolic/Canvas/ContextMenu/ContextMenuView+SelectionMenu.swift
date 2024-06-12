@@ -13,9 +13,7 @@ extension ContextMenuView {
 
         var body: some View {
             setupSelector {
-                if let bounds = selector.bounds {
-                    menu.contextMenu(bounds: bounds)
-                }
+                content
             }
         }
     }
@@ -24,6 +22,12 @@ extension ContextMenuView {
 // MARK: private
 
 extension ContextMenuView.SelectionMenu {
+    @ViewBuilder var content: some View {
+        if let bounds = selector.bounds {
+            menu.contextMenu(bounds: bounds)
+        }
+    }
+
     @ViewBuilder var menu: some View {
         HStack {
             Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }

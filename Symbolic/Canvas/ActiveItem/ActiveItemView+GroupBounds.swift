@@ -51,7 +51,7 @@ extension ActiveItemView {
 
         var body: some View { trace {
             setupSelector(.init(groupId: group.id)) {
-                boundsRect
+                content
             }
         } }
     }
@@ -60,7 +60,7 @@ extension ActiveItemView {
 // MARK: private
 
 private extension ActiveItemView.GroupBounds {
-    @ViewBuilder var boundsRect: some View {
+    @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))

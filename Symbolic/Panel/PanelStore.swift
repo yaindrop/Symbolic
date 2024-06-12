@@ -58,7 +58,11 @@ extension PanelStore {
     var panels: [PanelData] { panelMap.values }
     var rootRect: CGRect { .init(rootSize) }
 
+    var panelIds: [UUID] { panelMap.keys }
+    var floatingPanelIds: [UUID] { panelIds.filter { id in !sidebarPanels.contains { $0 == id }}}
+
     func panel(id: UUID) -> PanelData? { panelMap.value(key: id) }
+
     func moving(id: UUID) -> Bool { movingPanel.value(key: id) != nil }
 }
 
@@ -211,7 +215,7 @@ extension PanelStore {
             }
         }
 
-        withFastAnimation {
+        withAnimation(.fast) {
             update(panelMap: updated)
         }
     }
@@ -219,7 +223,7 @@ extension PanelStore {
     func onRootResized(size: CGSize) {
         let _r = subtracer.range("resize root \(size)"); defer { _r() }
 
-        withFastAnimation {
+        withAnimation(.fast) {
             withStoreUpdating {
                 update(rootSize: size)
 

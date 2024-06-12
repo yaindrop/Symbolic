@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private struct StoreSubscription {
     let id: Int
@@ -482,12 +482,13 @@ private extension _SelectorProtocol {
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     let selector: (Instance.Props) -> Value
+    var _syncUpdate: Bool
     var animation: Animation?
     var value: Value?
     var subscriptionId: Int?
     var updateTask: Task<Void, Never>?
 
-    var syncUpdate: Bool { animation != nil }
+    var syncUpdate: Bool { _syncUpdate || animation != nil }
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value {
@@ -504,12 +505,14 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         @available(*, unavailable) set {}
     }
 
-    init(animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
+    init(syncUpdate: Bool = false, animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
+        _syncUpdate = syncUpdate
         self.animation = animation
         self.selector = selector
     }
 
-    init(animation: Animation? = nil, _ selector: @escaping () -> Value) {
+    init(syncUpdate: Bool = false, animation: Animation? = nil, _ selector: @escaping () -> Value) {
+        _syncUpdate = syncUpdate
         self.animation = animation
         self.selector = { _ in selector() }
     }

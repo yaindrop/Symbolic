@@ -32,7 +32,3 @@ extension Animation {
 
     static let fast: Animation = .default.fast
 }
-
-public func withFastAnimation<Result>(_ animation: Animation? = .default, _ body: () throws -> Result) rethrows -> Result {
-    try withAnimation(animation?.fast, body)
-}

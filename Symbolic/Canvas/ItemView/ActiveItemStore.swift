@@ -11,7 +11,7 @@ class ActiveItemStore: Store {
 
 private extension ActiveItemStore {
     func update(active: Set<UUID>, focused: UUID? = nil) {
-        withFastAnimation {
+        withAnimation(.fast) {
             withStoreUpdating {
                 update { $0(\._activeItemIds, active) }
                 update { $0(\._focusedItemId, focused) }
@@ -20,13 +20,13 @@ private extension ActiveItemStore {
     }
 
     func update(select itemId: UUID) {
-        withFastAnimation {
+        withAnimation(.fast) {
             update(active: activeItemIds.with { $0.insert(itemId) })
         }
     }
 
     func update(deselect itemIds: [UUID]) {
-        withFastAnimation {
+        withAnimation(.fast) {
             update(active: activeItemIds.with { $0.subtract(itemIds) })
         }
     }

@@ -40,7 +40,8 @@ private extension GlobalStore {
             if let newNodeId = context.longPressAddedNodeId {
                 moveAddedNode(newNodeId: newNodeId, offset: v.offset, pending: pending)
             } else {
-                documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: .init(global.focusedPath.activeNodeIds), offset: v.offset)), pending: pending)
+                let nodeIds = global.focusedPath.activeNodeIds.contains(nodeId) ? .init(global.focusedPath.activeNodeIds) : [nodeId]
+                documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: nodeIds, offset: v.offset)), pending: pending)
             }
         }
         func updateLongPress(pending: Bool = false) {

@@ -2,9 +2,9 @@ import SwiftUI
 
 struct CanvasActionPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ Array(global.canvasAction.triggering).map { $0.hint } }) var triggeringHints
-        @Selected({ Array(global.canvasAction.continuous).map { $0.hint } }) var continuousHints
-        @Selected({ Array(global.canvasAction.instant).map { $0.hint } }) var instantHints
+        @Selected({ global.canvasAction.triggering.map { $0.hint } }) var triggeringHints
+        @Selected({ global.canvasAction.continuous.map { $0.hint } }) var continuousHints
+        @Selected({ global.canvasAction.instant.map { $0.hint } }) var instantHints
     }
 
     @SelectorWrapper var selector

@@ -352,10 +352,14 @@ extension DocumentUpdater {
         let snappedOffset1 = offset1 == .zero ? .zero : curr.control1.offset(to: grid.snap(curr.control1 + offset1))
 
         let dragged0 = !snappedOffset0.isZero, dragged1 = !snappedOffset1.isZero
+        print("dbg", dragged0, dragged1)
         guard dragged0 || dragged1 else { return }
 
         var kinds: [PathEvent.Update.Kind] = []
-        defer { events.append(.init(in: pathId, kinds)) }
+        defer {
+            print("dbg kinds", kinds)
+            events.append(.init(in: pathId, kinds))
+        }
 
         let newControl0 = curr.edge.control0 + snappedOffset0, newControl1 = curr.edge.control1 + snappedOffset1
         kinds.append(.edgeUpdate(.init(fromNodeId: fromNodeId, edge: .init(control0: newControl0, control1: newControl1))))

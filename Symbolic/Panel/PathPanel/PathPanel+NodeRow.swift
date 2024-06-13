@@ -167,10 +167,13 @@ private struct NodeDetailView: View, TracedView, EquatableBy, ComputedSelectorHo
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
     class Selector: SelectorBase {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
+        @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
         @Selected({ path($0)?.pair(before: $0.nodeId) }) var prevPair
         @Selected({ path($0)?.node(id: $0.nodeId) }) var node
         @Selected({ path($0)?.segment(from: $0.nodeId)?.edge }) var edge
         @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
+        @Selected({ property($0)?.edgeType(id: $0.nodeId) }) var edgeType
+        @Selected({ props in path(props)?.node(before: props.nodeId).map { property(props)?.edgeType(id: $0.id) } }) var prevEdgeType
     }
 
     @SelectorWrapper var selector
@@ -208,7 +211,7 @@ private extension NodeDetailView {
     }
 
     @ViewBuilder var cBeforeRow: some View {
-        if let prevPair = selector.prevPair {
+        if let prevEdge = selector.prevPair?.edge, selector.prevEdgeType == .cubic || (selector.prevEdgeType == .auto && prevEdge.control1 != .zero) {
             Divider()
             HStack {
                 HStack(spacing: 0) {
@@ -220,13 +223,13 @@ private extension NodeDetailView {
                 }
                 .if(selector.focused) { $0.foregroundStyle(.orange.opacity(0.8)) }
                 Spacer(minLength: 12)
-                PositionPicker(position: Point2(prevPair.edge.control1)) { updatePrevEdge(position: $0, pending: true) } onDone: { updatePrevEdge(position: $0) }
+                PositionPicker(position: Point2(prevEdge.control1)) { updatePrevEdge(position: $0, pending: true) } onDone: { updatePrevEdge(position: $0) }
             }
         }
     }
 
     @ViewBuilder var cAfterRow: some View {
-        if let edge = selector.edge {
+        if let edge = selector.edge, selector.edgeType == .cubic || (selector.edgeType == .auto && edge.control0 != .zero) {
             Divider()
             HStack {
                 HStack(spacing: 0) {

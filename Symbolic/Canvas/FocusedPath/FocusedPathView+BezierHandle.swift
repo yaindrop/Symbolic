@@ -1,24 +1,5 @@
 import SwiftUI
 
-private extension GlobalStore {
-    func bezierGesture(fromId: UUID, isControl0: Bool) -> MultipleGesture {
-        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            let offset0 = isControl0 ? v.offset : .zero
-            let offset1 = isControl0 ? .zero : v.offset
-            documentUpdater.updateInView(focusedPath: .moveEdgeControl(.init(fromNodeId: fromId, offset0: offset0, offset1: offset1)), pending: pending)
-        }
-        return .init(
-            onPress: { canvasAction.start(continuous: .movePathBezierControl) },
-            onPressEnd: { cancelled in
-                canvasAction.end(continuous: .movePathBezierControl)
-                if cancelled { documentUpdater.cancel() }
-            },
-            onDrag: { updateDrag($0, pending: true) },
-            onDragEnd: { updateDrag($0) }
-        )
-    }
-}
-
 // MARK: - BezierHandle
 
 extension FocusedPathView {
@@ -41,6 +22,8 @@ extension FocusedPathView {
         }
 
         @SelectorWrapper var selector
+
+        @State private var dragging = false
 
         var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
@@ -70,14 +53,14 @@ private extension FocusedPathView.BezierHandle {
         guard let segment = selector.segment else { return false }
         let focused = selector.segmentFocused || selector.nodeFocused
         let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control0 != .zero)
-        return focused && valid
+        return dragging || focused && valid
     }
 
     @ViewBuilder var control0: some View {
         if let segment = selector.segment, showControl0 {
             line(from: segment.from, to: segment.control0, color: control0Color)
             circle(at: segment.control0, color: control0Color)
-                .multipleGesture(global.bezierGesture(fromId: fromNodeId, isControl0: true))
+                .multipleGesture(bezierGesture(isControl0: true))
         }
     }
 
@@ -85,15 +68,33 @@ private extension FocusedPathView.BezierHandle {
         guard let segment = selector.segment else { return false }
         let focused = selector.segmentFocused || selector.nextFocused
         let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control1 != .zero)
-        return focused && valid
+        return dragging || focused && valid
     }
 
     @ViewBuilder var control1: some View {
         if let segment = selector.segment, showControl1 {
             line(from: segment.to, to: segment.control1, color: control1Color)
             circle(at: segment.control1, color: control1Color)
-                .multipleGesture(global.bezierGesture(fromId: fromNodeId, isControl0: false))
+                .multipleGesture(bezierGesture(isControl0: false))
         }
+    }
+
+    func bezierGesture(isControl0: Bool) -> MultipleGesture {
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            let offset0 = isControl0 ? v.offset : .zero
+            let offset1 = isControl0 ? .zero : v.offset
+            dragging = pending
+            global.documentUpdater.updateInView(focusedPath: .moveEdgeControl(.init(fromNodeId: fromNodeId, offset0: offset0, offset1: offset1)), pending: pending)
+        }
+        return .init(
+            onPress: { global.canvasAction.start(continuous: .movePathBezierControl) },
+            onPressEnd: { cancelled in
+                global.canvasAction.end(continuous: .movePathBezierControl)
+                if cancelled { global.documentUpdater.cancel() }
+            },
+            onDrag: { updateDrag($0, pending: true) },
+            onDragEnd: { updateDrag($0) }
+        )
     }
 
     func subtractingCircle(at point: Point2) -> SUPath {

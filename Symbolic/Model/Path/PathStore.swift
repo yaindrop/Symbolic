@@ -154,7 +154,7 @@ extension PathService {
         switch event {
         case .item: break
         case let .path(event): loadEvent(event)
-        case .pathProperty: break
+        case let .pathProperty(event): loadEvent(event)
         }
     }
 
@@ -239,5 +239,28 @@ extension PathService {
         if let newPath {
             add(paths: [newPath])
         }
+    }
+
+    // MARK: path property event
+
+    private func loadEvent(_ event: PathPropertyEvent) {
+        switch event {
+        case let .update(event): loadEvent(event)
+        }
+    }
+
+    private func loadEvent(_ event: PathPropertyEvent.Update) {
+        let pathId = event.pathId
+        guard let path = get(id: pathId) else { return }
+        for kind in event.kinds {
+            switch kind {
+            case let .setName(event): break
+            case let .setNodeType(event):
+                path.update(setNodeType: event)
+            case let .setEdgeType(event):
+                path.update(setEdgeType: event)
+            }
+        }
+        update(paths: [path])
     }
 }

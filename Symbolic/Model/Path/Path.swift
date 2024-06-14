@@ -285,7 +285,7 @@ extension Path: Encodable {
     }
 }
 
-// MARK: - clone with path update event
+// MARK: - handle events
 
 extension Path {
     func with(pairs: PairMap, isClosed: Bool? = nil) -> Self {
@@ -390,6 +390,29 @@ extension Path {
             pairs.mutateKeys { $0 = Array($0[...i]) }
             newPathPairs.mutateKeys { $0 = Array($0[(i + 1)...]) }
             return .init(id: newPathId, pairs: newPathPairs, isClosed: false)
+        }
+    }
+
+    func update(setNodeType: PathPropertyEvent.Update.SetNodeType) {
+        for nodeId in setNodeType.nodeIds {
+            guard let prev = pair(before: nodeId), let curr = pair(id: nodeId) else { continue }
+            switch setNodeType.nodeType {
+            case .locked:
+                pairs[nodeId]?.edge = curr.edge.with(control0: prev.edge.control1.with(length: -curr.edge.control0.length))
+            case .mirrored:
+                pairs[nodeId]?.edge = curr.edge.with(control0: -prev.edge.control1)
+            default: break
+            }
+        }
+    }
+
+    func update(setEdgeType: PathPropertyEvent.Update.SetEdgeType) {
+        for fromNodeId in setEdgeType.fromNodeIds {
+            switch setEdgeType.edgeType {
+            case .line:
+                pairs[fromNodeId]?.edge = .init(control0: .zero, control1: .zero)
+            default: break
+            }
         }
     }
 }

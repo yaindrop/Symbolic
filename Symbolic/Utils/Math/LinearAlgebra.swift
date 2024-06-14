@@ -39,7 +39,7 @@ extension Vector2 {
 
     func with(dy: Scalar) -> Self { .init(dx: dx, dy: dy) }
 
-    func with(length: Scalar) -> Self { (length / self.length) * self }
+    func with(length: Scalar) -> Self { self.length > 0 ? self / self.length * length : .zero }
 
     // MARK: geometric operation
 

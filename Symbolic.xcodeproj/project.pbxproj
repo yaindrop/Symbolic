@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5700C2C42BEB5AAF00481FA7 /* PanelTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */; };
-		5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */; };
+		5700C2C42BEB5AAF00481FA7 /* PanelBody.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelBody.swift */; };
+		5700C2C62BEB5B0A00481FA7 /* PanelSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */; };
 		5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */; };
 		5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelStore.swift */; };
 		5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CC2BED169D00481FA7 /* PanelData.swift */; };
@@ -127,8 +127,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelTitle.swift; sourceTree = "<group>"; };
-		5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSectionTitle.swift; sourceTree = "<group>"; };
+		5700C2C32BEB5AAF00481FA7 /* PanelBody.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelBody.swift; sourceTree = "<group>"; };
+		5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSection.swift; sourceTree = "<group>"; };
 		5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRoot.swift; sourceTree = "<group>"; };
 		5700C2C92BED162000481FA7 /* PanelStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelStore.swift; sourceTree = "<group>"; };
 		5700C2CC2BED169D00481FA7 /* PanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelData.swift; sourceTree = "<group>"; };
@@ -276,8 +276,8 @@
 		5700C2CB2BED165000481FA7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				5700C2C52BEB5B0A00481FA7 /* PanelSectionTitle.swift */,
-				5700C2C32BEB5AAF00481FA7 /* PanelTitle.swift */,
+				5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */,
+				5700C2C32BEB5AAF00481FA7 /* PanelBody.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -773,7 +773,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5723BF7C2BC39844002209F2 /* ContentView.swift in Sources */,
-				5700C2C42BEB5AAF00481FA7 /* PanelTitle.swift in Sources */,
+				5700C2C42BEB5AAF00481FA7 /* PanelBody.swift in Sources */,
 				57DD2A212C02DB850046931C /* Item.swift in Sources */,
 				5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */,
 				574CC7BA2BF3B2950042FEE3 /* GlobalStore.swift in Sources */,
@@ -807,7 +807,7 @@
 				571B9B2E2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57DD2A162C0236E60046931C /* ItemStore.swift in Sources */,
-				5700C2C62BEB5B0A00481FA7 /* PanelSectionTitle.swift in Sources */,
+				5700C2C62BEB5B0A00481FA7 /* PanelSection.swift in Sources */,
 				574CC7E82BFA3EAF0042FEE3 /* ContextMenuStore.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* ActiveItemStore.swift in Sources */,
 				57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */,

@@ -83,7 +83,7 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            panel.frame(width: 320)
+            content
         }
     } }
 }
@@ -91,46 +91,36 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
 // MARK: private
 
 extension HistoryPanel {
-    @ViewBuilder private var panel: some View {
-        VStack(spacing: 0) {
-            PanelTitle(panelId: panelId, name: "History")
-                .if(scrollViewModel.scrolled) { $0.background(.regularMaterial) }
-                .multipleGesture(global.panel.moveGesture(panelId: panelId))
-            scrollView
-        }
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-    }
-
-    @ViewBuilder private var scrollView: some View {
-        ManagedScrollView(model: scrollViewModel) { _ in
-            content
-        }
-        .frame(maxHeight: 400)
-        .fixedSize(horizontal: false, vertical: true)
-        .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-    }
-
     @ViewBuilder private var content: some View {
-        VStack(spacing: 4) {
-            PanelSectionTitle(name: "Events")
-            VStack(spacing: 0) {
-                ForEach(selector.document.events) { e in
-                    HStack {
-                        Text("\(e.action.readable)")
-                            .font(.footnote)
-                        Spacer()
-                    }
-                    .padding(12)
-                    .background(.ultraThinMaterial)
-                    if e != selector.document.events.last {
-                        Divider().padding(.leading, 12)
-                    }
+        PanelBody(panelId: panelId, name: "History", maxHeight: 400) { _ in
+            events
+        }
+        .frame(width: 320)
+    }
+
+    @ViewBuilder private var events: some View {
+        PanelSection(name: "Events") {
+            ForEach(selector.document.events) {
+                EventRow(event: $0)
+                if $0 != selector.document.events.last {
+                    Divider().padding(.leading, 12)
                 }
             }
-            .clipRounded(radius: 12)
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 24)
+    }
+}
+
+private struct EventRow: View, EquatableBy {
+    let event: DocumentEvent
+
+    var equatableBy: some Equatable { event }
+
+    var body: some View {
+        HStack {
+            Text("\(event.action.readable)")
+                .font(.footnote)
+            Spacer()
+        }
+        .padding(12)
     }
 }

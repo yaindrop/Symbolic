@@ -40,7 +40,6 @@
 		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
 		572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* DocumentUpdater.swift */; };
 		5724877C2BDF80000096DDE4 /* PathPanel+NodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */; };
-		572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */; };
 		572487832BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */; };
 		572487852BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift */; };
 		572487872BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */; };
@@ -165,7 +164,6 @@
 		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		572487752BDBAF860096DDE4 /* DocumentUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentUpdater.swift; sourceTree = "<group>"; };
 		5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+NodeRow.swift"; sourceTree = "<group>"; };
-		5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivePathPanel+EdgePanel.swift"; sourceTree = "<group>"; };
 		572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+NodeHandle.swift"; sourceTree = "<group>"; };
 		572487842BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+EdgeHandle.swift"; sourceTree = "<group>"; };
 		572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+BezierHandle.swift"; sourceTree = "<group>"; };
@@ -373,7 +371,6 @@
 			children = (
 				575C3CF52BD60C200035B758 /* PathPanel.swift */,
 				5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */,
-				5724877F2BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift */,
 			);
 			path = PathPanel;
 			sourceTree = "<group>";
@@ -800,7 +797,6 @@
 				575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				571B9B382C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift in Sources */,
-				572487802BDF80E50096DDE4 /* ActivePathPanel+EdgePanel.swift in Sources */,
 				571B9B432C14AA1200AAD516 /* ClosedRange+Extension.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,

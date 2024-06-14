@@ -74,13 +74,13 @@ extension ContextMenuView.FocusedPathSelectionMenu {
     }
 
     @ViewBuilder func nodeTypeButton(_ nodeType: PathNodeType) -> some View {
-        let name = {
+        var name: String {
             switch nodeType {
             case .corner: "Corner"
             case .locked: "Locked"
             case .mirrored: "Mirrored"
             }
-        }()
+        }
         let selected = selector.activeNodeType == nodeType
         Button(name, systemImage: selected ? "checkmark" : "") { setNodeType(nodeType) }
             .disabled(selected)
@@ -93,14 +93,14 @@ extension ContextMenuView.FocusedPathSelectionMenu {
     }
 
     @ViewBuilder func edgeTypeButton(_ edgeType: PathEdgeType) -> some View {
-        let name = {
+        var name: String {
             switch edgeType {
             case .line: "Line"
             case .cubic: "Cubic Bezier"
             case .quadratic: "Quadratic Bezier"
             case .auto: ""
             }
-        }()
+        }
         let selected = selector.activeEdgeType == edgeType
         Button(name, systemImage: selected ? "checkmark" : "") { selected ? setEdgeType(.auto) : setEdgeType(edgeType) }
     }

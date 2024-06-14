@@ -23,7 +23,8 @@ extension FocusedPathView {
 
         @SelectorWrapper var selector
 
-        @State private var dragging = false
+        @State private var dragging0 = false
+        @State private var dragging1 = false
 
         var body: some View { trace {
             setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
@@ -53,7 +54,7 @@ private extension FocusedPathView.BezierHandle {
         guard let segment = selector.segment else { return false }
         let focused = selector.segmentFocused || selector.nodeFocused
         let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control0 != .zero)
-        return dragging || focused && valid
+        return dragging0 || focused && valid
     }
 
     @ViewBuilder var control0: some View {
@@ -68,7 +69,7 @@ private extension FocusedPathView.BezierHandle {
         guard let segment = selector.segment else { return false }
         let focused = selector.segmentFocused || selector.nextFocused
         let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control1 != .zero)
-        return dragging || focused && valid
+        return dragging1 || focused && valid
     }
 
     @ViewBuilder var control1: some View {
@@ -83,7 +84,7 @@ private extension FocusedPathView.BezierHandle {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             let offset0 = isControl0 ? v.offset : .zero
             let offset1 = isControl0 ? .zero : v.offset
-            dragging = pending
+            if isControl0 { dragging0 = pending } else { dragging1 = pending }
             global.documentUpdater.updateInView(focusedPath: .moveEdgeControl(.init(fromNodeId: fromNodeId, offset0: offset0, offset1: offset1)), pending: pending)
         }
         return .init(

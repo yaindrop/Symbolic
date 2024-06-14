@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 // MARK: - CanvasActionStore
 
@@ -33,5 +33,49 @@ extension CanvasActionStore {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.update { $0(\._instant, self.instant.with { $0.remove(action) }) }
         }
+    }
+}
+
+struct CanvasActionView: View, TracedView, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected({ global.canvasAction.triggering.map { $0.hint } }) var triggeringHints
+        @Selected({ global.canvasAction.continuous.map { $0.hint } }) var continuousHints
+        @Selected({ global.canvasAction.instant.map { $0.hint } }) var instantHints
+    }
+
+    @SelectorWrapper var selector
+
+    var body: some View { trace {
+        setupSelector {
+            content
+        }
+    } }
+}
+
+private extension CanvasActionView {
+    var content: some View {
+        VStack(alignment: .leading) {
+            if !selector.continuousHints.isEmpty {
+                Text(selector.continuousHints.joined(separator: " "))
+                    .padding(8)
+                    .background(.green.opacity(0.5))
+                    .clipRounded(radius: 12)
+            }
+            if !selector.triggeringHints.isEmpty {
+                Text(selector.triggeringHints.joined(separator: " "))
+                    .padding(8)
+                    .background(.orange.opacity(0.5))
+                    .clipRounded(radius: 12)
+            }
+            if !selector.instantHints.isEmpty {
+                Text(selector.instantHints.joined(separator: " "))
+                    .padding(8)
+                    .background(.blue.opacity(0.5))
+                    .clipRounded(radius: 12)
+            }
+        }
+        .font(.footnote)
+        .innerAligned(.topLeading)
+        .padding(12)
     }
 }

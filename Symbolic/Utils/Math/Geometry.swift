@@ -13,6 +13,8 @@ extension CGSize {
         .init(lhs.width * rhs, lhs.height * rhs)
     }
 
+    init(_ vector: Vector2) { self.init(vector.dx, vector.dy) }
+
     init(_ width: Scalar, _ height: Scalar) { self.init(width: width, height: height) }
 
     init(squared size: Scalar) { self.init(size, size) }

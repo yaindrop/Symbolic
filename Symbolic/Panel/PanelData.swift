@@ -90,25 +90,20 @@ extension PanelAffinity: CustomStringConvertible {
 
 struct PanelData: Identifiable {
     let id: UUID = .init()
-
     let view: (_ panelId: UUID) -> AnyView
 
-    var origin: Point2 = .zero
     var size: CGSize = .zero
-
-    var affinities = PanelAffinityPair()
-
-    var rect: CGRect { .init(origin: origin, size: size) }
+    var align: PlaneInnerAlign = .topLeading
 }
 
 extension PanelData: EquatableBy {
     var equatableBy: some Equatable {
-        id; origin; size; affinities
+        id; size; align
     }
 }
 
 struct MovingPanelData: Equatable {
     let data: PanelData
-
-    let globalPosition: Point2
+    var globalPosition: Point2
+    var offset: Vector2
 }

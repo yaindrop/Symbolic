@@ -9,7 +9,8 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected(syncUpdate: true, { global.panel.panel(id: $0.panelId) }) var panel
+        @Selected(syncUpdate: true, { global.panel.get(id: $0.panelId) }) var panel
+        @Selected(syncUpdate: true, { global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
     }
 
     @SelectorWrapper var selector
@@ -27,8 +28,8 @@ private extension FloatingPanelView {
             panel.view(panel.id)
                 .id(panel.id)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
-                .offset(x: panel.origin.x, y: panel.origin.y)
-                .innerAligned(.topLeading)
+                .offset(.init(selector.offset))
+                .innerAligned(panel.align)
         }
     }
 }
@@ -47,7 +48,7 @@ struct PanelRoot: View, TracedView, SelectorHolder {
             ZStack {
                 ForEach(selector.floatingPanelIds) { FloatingPanelView(panelId: $0) }
             }
-            .sizeReader { global.panel.onRootResized(size: $0) }
+            .geometryReader { global.panel.setRootRect($0.frame(in: .global)) }
         }
     } }
 }

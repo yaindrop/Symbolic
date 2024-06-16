@@ -131,7 +131,7 @@ private extension SidebarView {
         ScrollView {
             VStack {
                 ForEach(selector.sidebarPanels) {
-                    global.panel.panelMap.value(key: $0)?.view($0)
+                    $0.view($0.id)
                 }
                 Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
                     .padding(12)

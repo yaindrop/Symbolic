@@ -13,7 +13,7 @@ class PanelStore: Store {
     @Trackable var movingPanelMap: [UUID: MovingPanelData] = [:]
 
     @Trackable var sidebarFrame: CGRect = .zero
-    @Trackable var sidebarPanels: [UUID] = []
+    @Trackable var sidebarPanelIds: Set<UUID> = []
 }
 
 private extension PanelStore {
@@ -35,14 +35,14 @@ extension PanelStore {
         update { $0(\._sidebarFrame, sidebarFrame) }
     }
 
-    func update(sidebarPanels: [UUID]) {
-        update { $0(\._sidebarPanels, sidebarPanels) }
+    func update(sidebarPanelIds: Set<UUID>) {
+        update { $0(\._sidebarPanelIds, sidebarPanelIds) }
     }
 
     func drop(panelId: UUID, location: Point2) {
         guard var panel = get(id: panelId) else { return }
         withStoreUpdating {
-            update(sidebarPanels: sidebarPanels.cloned { $0.removeAll { $0 == panelId }})
+            update(sidebarPanelIds: sidebarPanelIds.cloned { $0.remove(panelId) })
 
             let offset = Vector2(location) - .init(panel.size.width / 2, 0)
             let moveTarget = moveTarget(moving: .init(data: panel, globalPosition: location, offset: offset), speed: .zero)
@@ -58,18 +58,21 @@ extension PanelStore {
 // MARK: selectors
 
 extension PanelStore {
+    func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
+    func moving(id: UUID) -> MovingPanelData? { movingPanelMap.value(key: id) }
+
     var panels: [PanelData] { panelMap.values }
 
     var panelIds: [UUID] { panelMap.keys }
-    var floatingPanelIds: [UUID] { panelIds.filter { id in !sidebarPanels.contains { $0 == id }}}
 
-    func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
+    var floatingPanelIds: [UUID] { panelIds.filter { !sidebarPanelIds.contains($0) } }
+    var floatingPanels: [PanelData] { floatingPanelIds.compactMap { get(id: $0) } }
 
-    func moving(id: UUID) -> MovingPanelData? { movingPanelMap.value(key: id) }
+    var sidebarPanels: [PanelData] { panels.filter { sidebarPanelIds.contains($0.id) } }
 
     func floatingState(id: UUID) -> PanelFloatingState {
         guard let panel = get(id: id) else { return .hidden }
-        let peers = panelMap.values.filter { $0.align == panel.align }
+        let peers = floatingPanels.filter { $0.align == panel.align }
         if peers.last?.id == id {
             return .primary
         } else if peers.dropLast().last?.id == id {
@@ -139,7 +142,10 @@ extension PanelStore {
 
         let _r = subtracer.range(type: .intent, "moved \(panelId) by \(v.offset) with speed \(v.speed)"); defer { _r() }
         if sidebarFrame.contains(moving.globalPosition) {
-            update(sidebarPanels: sidebarPanels.cloned { $0.append(panelId) })
+            withStoreUpdating {
+                update(sidebarPanelIds: sidebarPanelIds.cloned { $0.insert(panelId) })
+                update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
+            }
             return
         }
 
@@ -156,9 +162,7 @@ extension PanelStore {
         target.endTask = Task { @MainActor in
             try await Task.sleep(for: .seconds(0.5))
             withAnimation(.fast) {
-                withStoreUpdating {
-                    self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
-                }
+                self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
             }
         }
 
@@ -202,7 +206,7 @@ extension PanelStore {
     }
 
     func moveGesture(panelId: UUID) -> MultipleGesture? {
-        if sidebarPanels.contains(where: { $0 == panelId }) {
+        if sidebarPanelIds.contains(panelId) {
             return nil
         }
         return .init(

@@ -95,6 +95,17 @@ extension PanelStore {
 // MARK: moving
 
 extension PanelStore {
+    func spin(on panelId: UUID) {
+        guard let panel = get(id: panelId) else { return }
+        guard floatingState(id: panelId) == .secondary else { return }
+        let peers = panelMap.values.filter { $0.align == panel.align }
+        guard let primary = peers.last else { return }
+        update(panelMap: panelMap.cloned {
+            $0.removeValue(forKey: primary.id)
+            $0.insert((primary.id, primary), at: 0)
+        })
+    }
+
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
         let _r = subtracer.range(type: .intent, "moving \(panelId) by \(v.offset)"); defer { _r() }
         var moving: MovingPanelData
@@ -159,7 +170,7 @@ extension PanelStore {
     }
 
     func rect(of panel: PanelData) -> CGRect {
-        rootRect.alignedBox(at: panel.align, size: panel.size, gap: .init(squared: 12))
+        rootRect.alignedBox(at: panel.align, size: panel.size, gap: .init(12, 24))
     }
 
     func rect(of moving: MovingPanelData) -> CGRect {
@@ -200,6 +211,9 @@ extension PanelStore {
                 if cancelled {
                     self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
                 }
+            },
+            onTap: { _ in
+                self.spin(on: panelId)
             },
             onDrag: {
                 self.onMoving(panelId: panelId, $0)

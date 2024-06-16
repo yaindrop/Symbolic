@@ -28,18 +28,13 @@ private extension FloatingPanelView {
     var offset: CGSize {
         guard let panel = selector.panel else { return .zero }
         switch selector.floatingState {
-        case .primary:
-            switch panel.align {
-            case .topLeading: return .init(24, 24)
-            case .topTrailing: return .init(0, 24)
-            case .bottomLeading: return .init(24, -24)
-            case .bottomTrailing: return .init(0, -24)
-            default: return .zero
-            }
+        case .primary: return .zero
         case .secondary, .hidden:
             switch panel.align {
-            case .topLeading, .bottomLeading: return .zero
-            case .topTrailing, .bottomTrailing: return .init(-24, 0)
+            case .topLeading: return .init(24, -24)
+            case .topTrailing: return .init(-24, -24)
+            case .bottomLeading: return .init(24, 24)
+            case .bottomTrailing: return .init(-24, 24)
             default: return .zero
             }
         }
@@ -64,8 +59,10 @@ private extension FloatingPanelView {
     var anchor: UnitPoint {
         guard let panel = selector.panel else { return .zero }
         switch panel.align {
-        case .topLeading, .topTrailing: return .topLeading
-        case .bottomLeading, .bottomTrailing: return .bottomLeading
+        case .topLeading: return .topTrailing
+        case .topTrailing: return .topLeading
+        case .bottomLeading: return .bottomTrailing
+        case .bottomTrailing: return .bottomLeading
         default: return .topLeading
         }
     }
@@ -84,9 +81,14 @@ private extension FloatingPanelView {
                 .id(panel.id)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))
+                .if(selector.floatingState == .secondary) {
+                    $0.invisibleSoildOverlay()
+                        .multipleGesture(global.panel.moveGesture(panelId: panelId))
+                }
                 .scaleEffect(scale, anchor: anchor)
                 .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: anchor)
-                .padding(12)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 24)
                 .offset(offset)
                 .innerAligned(panel.align)
                 .opacity(selector.floatingState == .hidden ? 0 : 1)

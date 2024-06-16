@@ -108,7 +108,7 @@ private extension CanvasView {
 struct SidebarView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
-        @Selected({ global.panel.movingPanel }) var movingPanel
+        @Selected({ global.panel.movingPanelMap }) var movingPanelMap
         @Selected({ global.panel.sidebarFrame }) var frame
         @Selected({ global.panel.sidebarPanels }) var sidebarPanels
     }
@@ -123,7 +123,7 @@ struct SidebarView: View, TracedView, SelectorHolder {
 }
 
 private extension SidebarView {
-    var hovering: Bool { selector.movingPanel.contains { selector.frame.contains($0.value.globalPosition) } }
+    var hovering: Bool { selector.movingPanelMap.contains { selector.frame.contains($0.value.globalPosition) } }
 
     var borderColor: Color { hovering ? .blue : .label.opacity(0.2) }
 
@@ -133,13 +133,13 @@ private extension SidebarView {
                 ForEach(selector.sidebarPanels) {
                     global.panel.panelMap.value(key: $0)?.view($0)
                 }
-                Text(selector.movingPanel.isEmpty ? "No panels" : "Move panel here")
+                Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
                     .padding(12)
             }
         }
         .navigationTitle("Sidebar")
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .if(!selector.movingPanel.isEmpty) {
+        .if(!selector.movingPanelMap.isEmpty) {
             $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
         }
         .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }

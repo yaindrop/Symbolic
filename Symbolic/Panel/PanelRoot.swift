@@ -25,16 +25,69 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 }
 
 private extension FloatingPanelView {
+    var offset: CGSize {
+        guard let panel = selector.panel else { return .zero }
+        switch selector.floatingState {
+        case .primary:
+            switch panel.align {
+            case .topLeading: return .init(24, 24)
+            case .topTrailing: return .init(0, 24)
+            case .bottomLeading: return .init(24, -24)
+            case .bottomTrailing: return .init(0, -24)
+            default: return .zero
+            }
+        case .secondary, .hidden:
+            switch panel.align {
+            case .topLeading, .bottomLeading: return .zero
+            case .topTrailing, .bottomTrailing: return .init(-24, 0)
+            default: return .zero
+            }
+        }
+    }
+
+    var rotation: Angle {
+        switch selector.floatingState {
+        case .primary: return .zero
+        case .secondary: return .degrees(30)
+        case .hidden: return .degrees(45)
+        }
+    }
+
+    var scale: Scalar {
+        switch selector.floatingState {
+        case .primary: return 1
+        case .secondary: return 0.5
+        case .hidden: return 0.3
+        }
+    }
+
+    var anchor: UnitPoint {
+        guard let panel = selector.panel else { return .zero }
+        switch panel.align {
+        case .topLeading, .topTrailing: return .topLeading
+        case .bottomLeading, .bottomTrailing: return .bottomLeading
+        default: return .topLeading
+        }
+    }
+
+    var opacity: Scalar {
+        switch selector.floatingState {
+        case .primary: return 1
+        case .secondary: return 0.8
+        case .hidden: return 0
+        }
+    }
+
     @ViewBuilder var content: some View {
         if let panel = selector.panel {
             panel.view(panel.id)
                 .id(panel.id)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))
-                .scaleEffect(selector.floatingState == .secondary ? 0.3 : 1, anchor: .leading)
-                .rotation3DEffect(selector.floatingState == .secondary ? .degrees(60) : .zero, axis: (x: 0, y: 1, z: 0))
+                .scaleEffect(scale, anchor: anchor)
+                .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: anchor)
                 .padding(12)
-                .padding(.horizontal, selector.floatingState == .secondary ? 60 : 0)
+                .offset(offset)
                 .innerAligned(panel.align)
                 .opacity(selector.floatingState == .hidden ? 0 : 1)
         }

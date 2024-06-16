@@ -88,6 +88,12 @@ extension PanelAffinity: CustomStringConvertible {
 
 // MARK: - PanelData
 
+enum PanelFloatingState: Equatable {
+    case primary
+    case secondary
+    case hidden
+}
+
 struct PanelData: Identifiable {
     let id: UUID = .init()
     let view: (_ panelId: UUID) -> AnyView

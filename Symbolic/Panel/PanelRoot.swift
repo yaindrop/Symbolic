@@ -9,8 +9,10 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected(syncUpdate: true, { global.panel.get(id: $0.panelId) }) var panel
-        @Selected(syncUpdate: true, { global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
+        override var syncUpdate: Bool { true }
+        @Selected({ global.panel.get(id: $0.panelId) }) var panel
+        @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
+        @Selected(animation: .default, { global.panel.floatingState(id: $0.panelId) }) var floatingState
     }
 
     @SelectorWrapper var selector
@@ -29,8 +31,12 @@ private extension FloatingPanelView {
                 .id(panel.id)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))
-                .innerAligned(panel.align)
+                .scaleEffect(selector.floatingState == .secondary ? 0.3 : 1, anchor: .leading)
+                .rotation3DEffect(selector.floatingState == .secondary ? .degrees(60) : .zero, axis: (x: 0, y: 1, z: 0))
                 .padding(12)
+                .padding(.horizontal, selector.floatingState == .secondary ? 60 : 0)
+                .innerAligned(panel.align)
+                .opacity(selector.floatingState == .hidden ? 0 : 1)
         }
     }
 }

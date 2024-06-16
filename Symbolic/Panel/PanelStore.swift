@@ -59,7 +59,6 @@ extension PanelStore {
 
 extension PanelStore {
     var panels: [PanelData] { panelMap.values }
-//    var rootRect: CGRect { .init(rootSize) }
 
     var panelIds: [UUID] { panelMap.keys }
     var floatingPanelIds: [UUID] { panelIds.filter { id in !sidebarPanels.contains { $0 == id }}}
@@ -67,6 +66,17 @@ extension PanelStore {
     func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
 
     func moving(id: UUID) -> MovingPanelData? { movingPanel.value(key: id) }
+
+    func floatingState(id: UUID) -> PanelFloatingState {
+        guard let panel = get(id: id) else { return .hidden }
+        let peers = panelMap.values.filter { $0.align == panel.align }
+        if peers.last?.id == id {
+            return .primary
+        } else if peers.dropLast().last?.id == id {
+            return .secondary
+        }
+        return .hidden
+    }
 }
 
 // MARK: actions
@@ -119,18 +129,21 @@ extension PanelStore {
             return
         }
 
-        update(movingPanel: movingPanel.cloned { $0[panelId] = moved })
+        let moveTarget = moveTarget(moving: moved, speed: v.speed)
+        withStoreUpdating {
+            update(movingPanel: movingPanel.cloned { $0[panelId] = moved.cloned { $0.offset = moveTarget.offset } })
+            update(panelMap: panelMap.cloned { $0[panelId] = moved.data.cloned { $0.align = moveTarget.align } })
+        }
 
         Task { @MainActor in
-            let moveTarget = moveTarget(moving: moved, speed: v.speed)
             var target = moved
-            target.offset = moveTarget.offset
-            target.targetAlign = moveTarget.align
+            target.offset = .zero
             target.targetTask = Task { @MainActor in
                 try await Task.sleep(for: .seconds(0.5))
-                withStoreUpdating {
-                    self.update(movingPanel: self.movingPanel.cloned { $0[panelId] = nil })
-                    self.update(panelMap: self.panelMap.cloned { $0[panelId] = moved.data.cloned { $0.align = moveTarget.align } })
+                withAnimation(.fast) {
+                    withStoreUpdating {
+                        self.update(movingPanel: self.movingPanel.cloned { $0[panelId] = nil })
+                    }
                 }
             }
             withAnimation(.spring(duration: 0.5)) {
@@ -149,8 +162,8 @@ extension PanelStore {
 
     private func moveTarget(moving: MovingPanelData, speed: Vector2) -> (offset: Vector2, align: PlaneInnerAlign) {
         var inertiaOffset = Vector2.zero
-        if speed.length > 500 {
-            inertiaOffset = speed * 0.2
+        if speed.length > 400 {
+            inertiaOffset = speed / 4
         }
         if inertiaOffset.length > moving.offset.length * 2 {
             inertiaOffset = inertiaOffset.with(length: moving.offset.length)
@@ -166,11 +179,10 @@ extension PanelStore {
         var aligned = moving.data
         aligned.align = align
 
-        let alignOffset = clamped.origin.offset(to: rect(of: aligned).origin)
+        let alignOffset = rect(of: moving).origin.offset(to: rect(of: aligned).origin)
         subtracer.instant("alignOffset \(alignOffset)")
 
-        let offset = moving.offset + inertiaOffset + clampingOffset + alignOffset
-        return (offset, align)
+        return (-alignOffset, align)
     }
 
     func moveGesture(panelId: UUID) -> MultipleGesture? {

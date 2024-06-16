@@ -193,7 +193,7 @@ extension ItemService {
         if case let .path(path) = item.kind {
             guard self.path.exists(id: path.id) else { return }
         }
-        targetStore.update(map: map.with { $0[item.id] = item })
+        targetStore.update(map: map.cloned { $0[item.id] = item })
     }
 
     private func remove(itemId: UUID) {
@@ -202,7 +202,7 @@ extension ItemService {
         if case let .path(path) = item.kind {
             guard !self.path.exists(id: path.id) else { return }
         }
-        targetStore.update(map: map.with { $0.removeValue(forKey: itemId) })
+        targetStore.update(map: map.cloned { $0.removeValue(forKey: itemId) })
     }
 
     private func update(item: Item) {
@@ -211,7 +211,7 @@ extension ItemService {
         if case let .path(path) = item.kind {
             guard self.path.exists(id: path.id) else { remove(itemId: item.id); return }
         }
-        targetStore.update(map: map.with { $0[item.id] = item })
+        targetStore.update(map: map.cloned { $0[item.id] = item })
     }
 
     private func clear() {

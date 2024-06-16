@@ -21,13 +21,13 @@ private extension ActiveItemStore {
 
     func update(select itemId: UUID) {
         withAnimation(.fast) {
-            update(active: activeItemIds.with { $0.insert(itemId) })
+            update(active: activeItemIds.cloned { $0.insert(itemId) })
         }
     }
 
     func update(deselect itemIds: [UUID]) {
         withAnimation(.fast) {
-            update(active: activeItemIds.with { $0.subtract(itemIds) })
+            update(active: activeItemIds.cloned { $0.subtract(itemIds) })
         }
     }
 }
@@ -160,7 +160,7 @@ extension ActiveItemService {
             return
         }
 
-        let activeItemIds = store.activeItemIds.with { $0.remove(focusedItemId) }
+        let activeItemIds = store.activeItemIds.cloned { $0.remove(focusedItemId) }
         let parentId = item.parentId(of: focusedItemId)
         store.update(active: activeItemIds, focused: parentId)
     }
@@ -178,7 +178,7 @@ extension ActiveItemService {
         let _r = subtracer.range(type: .intent, "select \(item)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
         if ancestors.isEmpty {
-            store.update(active: store.activeItemIds.with { $0.insert(itemId) })
+            store.update(active: store.activeItemIds.cloned { $0.insert(itemId) })
             return
         }
         let lastInactiveIndex = ancestors.lastIndex { !store.activeItemIds.contains($0) }

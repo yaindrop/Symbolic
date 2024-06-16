@@ -17,11 +17,11 @@ class ContextMenuStore: Store {
 
 extension ContextMenuStore {
     func register(_ data: ContextMenuData) {
-        update { $0(\._menus, menus.with { $0.insert(data) }) }
+        update { $0(\._menus, menus.cloned { $0.insert(data) }) }
     }
 
     func deregister(_ data: ContextMenuData) {
-        update { $0(\._menus, menus.with { $0.remove(data) }) }
+        update { $0(\._menus, menus.cloned { $0.remove(data) }) }
     }
 
     @ViewBuilder func representative(_ data: ContextMenuData) -> some View {

@@ -65,21 +65,21 @@ extension PathPropertyService {
         let _r = subtracer.range("add"); defer { _r() }
         guard !exists(id: property.id) else { return }
         guard path.exists(id: property.id) else { return }
-        targetStore.update(map: map.with { $0[property.id] = property })
+        targetStore.update(map: map.cloned { $0[property.id] = property })
     }
 
     private func remove(pathId: UUID) {
         let _r = subtracer.range("remove"); defer { _r() }
         guard exists(id: pathId) else { return }
         guard !path.exists(id: pathId) else { return }
-        targetStore.update(map: map.with { $0.removeValue(forKey: pathId) })
+        targetStore.update(map: map.cloned { $0.removeValue(forKey: pathId) })
     }
 
     private func update(property: PathProperty) {
         let _r = subtracer.range("update"); defer { _r() }
         guard exists(id: property.id) else { return }
         guard path.exists(id: property.id) else { remove(pathId: property.id); return }
-        targetStore.update(map: map.with { $0[property.id] = property })
+        targetStore.update(map: map.cloned { $0[property.id] = property })
     }
 
     private func clear() {

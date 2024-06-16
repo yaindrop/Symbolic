@@ -39,15 +39,18 @@ extension PanelStore {
         update { $0(\._sidebarPanels, sidebarPanels) }
     }
 
-    func drop(panelId: UUID, location _: Point2) {
+    func drop(panelId: UUID, location: Point2) {
         guard var panel = get(id: panelId) else { return }
         withStoreUpdating {
-            update(sidebarPanels: sidebarPanels.with { $0.removeAll { $0 == panelId }})
-//            panel.origin = location - .init(panel.size.width / 2, 0)
-//            panel = moveEndOffset(panel: panel, offset: .zero, speed: .zero)
-            var panelMap = panelMap
-            panelMap[panelId] = panel
-            update(panelMap: panelMap)
+            update(sidebarPanels: sidebarPanels.cloned { $0.removeAll { $0 == panelId }})
+
+            let offset = Vector2(location) - .init(panel.size.width / 2, 0)
+            let moveTarget = moveTarget(moving: .init(data: panel, globalPosition: location, offset: offset), speed: .zero)
+            panel.align = moveTarget.align
+            update(panelMap: panelMap.cloned {
+                $0.removeValue(forKey: panelId)
+                $0[panelId] = panel
+            })
         }
     }
 }
@@ -70,20 +73,12 @@ extension PanelStore {
 
 extension PanelStore {
     func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping (_ panelId: UUID) -> any View) {
-        var panelData = PanelData(view: { AnyView(panel($0)) })
-//        for axis in Axis.allCases {
-//            panelData.affinities[axis] = .root(.init(axis: axis, align: align[axis]))
-//        }
-
-        var updated = panelMap
-        updated[panelData.id] = panelData
-        update(panelMap: updated)
+        let panel = PanelData(view: { AnyView(panel($0)) })
+        update(panelMap: panelMap.cloned { $0[panel.id] = panel })
     }
 
     func deregister(panelId: UUID) {
-        var updated = panelMap
-        updated.removeValue(forKey: panelId)
-        update(panelMap: updated)
+        update(panelMap: panelMap.cloned { $0.removeValue(forKey: panelId) })
     }
 }
 
@@ -92,57 +87,55 @@ extension PanelStore {
 extension PanelStore {
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
         let _r = subtracer.range(type: .intent, "moving \(panelId) by \(v.offset)"); defer { _r() }
+        var panel: PanelData
         if let moving = movingPanel.value(key: panelId) {
-            var movingPanel = self.movingPanel
-            movingPanel[panelId] = .init(data: moving.data, globalPosition: v.location, offset: v.offset)
-            update(movingPanel: movingPanel)
+            panel = moving.data
+            if let targetTask = moving.targetTask {
+                targetTask.cancel()
+            }
+            if let align = moving.targetAlign {
+                panel.align = align
+            }
         } else {
-            guard let panel = get(id: panelId) else { return }
-            var movingPanel = self.movingPanel
-            movingPanel[panelId] = .init(data: panel, globalPosition: v.location, offset: v.offset)
-            update(movingPanel: movingPanel)
+            guard let data = get(id: panelId) else { return }
+            panel = data
+        }
+        withStoreUpdating {
+            update(panelMap: self.panelMap.cloned {
+                $0.removeValue(forKey: panelId)
+                $0[panelId] = panel
+            })
+            update(movingPanel: movingPanel.cloned { $0[panelId] = .init(data: panel, globalPosition: v.location, offset: v.offset) })
         }
     }
 
     func onMoved(panelId: UUID, _ v: DragGesture.Value) {
-        guard var moving = movingPanel.value(key: panelId) else { return }
-        moving.offset = v.offset
+        guard let moving = movingPanel.value(key: panelId) else { return }
+        let moved = MovingPanelData(data: moving.data, globalPosition: v.location, offset: v.offset)
 
         let _r = subtracer.range(type: .intent, "moved \(panelId) by \(v.offset) with speed \(v.speed)"); defer { _r() }
-        if sidebarFrame.contains(moving.globalPosition) {
-            update(sidebarPanels: sidebarPanels.with { $0.append(panelId) })
+        if sidebarFrame.contains(moved.globalPosition) {
+            update(sidebarPanels: sidebarPanels.cloned { $0.append(panelId) })
             return
         }
 
-        var movingPanel = self.movingPanel
-        movingPanel[panelId] = moving
-        update(movingPanel: movingPanel)
+        update(movingPanel: movingPanel.cloned { $0[panelId] = moved })
 
-        let moveEndOffset = moveEndOffset(moving: moving, speed: v.speed)
-
-//        let movePanel = panel
         Task { @MainActor in
-            withAnimation {
-                var movingPanel = self.movingPanel
-                movingPanel[panelId]?.offset = moveEndOffset
-                update(movingPanel: movingPanel)
-            } completion: {
-                var movingPanel = self.movingPanel
-                movingPanel[panelId] = nil
-                self.update(movingPanel: movingPanel)
+            let moveTarget = moveTarget(moving: moved, speed: v.speed)
+            var target = moved
+            target.offset = moveTarget.offset
+            target.targetAlign = moveTarget.align
+            target.targetTask = Task { @MainActor in
+                try await Task.sleep(for: .seconds(0.5))
+                withStoreUpdating {
+                    self.update(movingPanel: self.movingPanel.cloned { $0[panelId] = nil })
+                    self.update(panelMap: self.panelMap.cloned { $0[panelId] = moved.data.cloned { $0.align = moveTarget.align } })
+                }
             }
-//            let newPanel = moveEndOffset(panel: movePanel, offset: v.offset, speed: v.speed)
-//            if movePanel.origin == newPanel.origin, movePanel.affinities == newPanel.affinities {
-//                return
-//            }
-//
-//            withAnimation(.easeOut(duration: 0.1)) {
-//                let _r = subtracer.range(type: .intent, "withAnimation easeOut"); defer { _r() }
-//
-//                var updated = panelMap
-//                updated[panelId] = newPanel
-//                update(panelMap: updated)
-//            } completion: {}
+            withAnimation(.spring(duration: 0.5)) {
+                update(movingPanel: movingPanel.cloned { $0[panelId] = target })
+            }
         }
     }
 
@@ -154,7 +147,7 @@ extension PanelStore {
         rect(of: moving.data) + moving.offset
     }
 
-    private func moveEndOffset(moving: MovingPanelData, speed: Vector2) -> Vector2 {
+    private func moveTarget(moving: MovingPanelData, speed: Vector2) -> (offset: Vector2, align: PlaneInnerAlign) {
         var inertiaOffset = Vector2.zero
         if speed.length > 500 {
             inertiaOffset = speed * 0.2
@@ -167,7 +160,17 @@ extension PanelStore {
         let clampingOffset = (rect(of: moving) + inertiaOffset).clampingOffset(by: rootRect)
         subtracer.instant("clampingOffset \(clampingOffset)")
 
-        return moving.offset + inertiaOffset + clampingOffset
+        let clamped = rect(of: moving) + inertiaOffset + clampingOffset
+        let align = rootRect.nearestInnerAlign(of: clamped.center, isCorner: true)
+
+        var aligned = moving.data
+        aligned.align = align
+
+        let alignOffset = clamped.origin.offset(to: rect(of: aligned).origin)
+        subtracer.instant("alignOffset \(alignOffset)")
+
+        let offset = moving.offset + inertiaOffset + clampingOffset + alignOffset
+        return (offset, align)
     }
 
     func moveGesture(panelId: UUID) -> MultipleGesture? {
@@ -176,10 +179,10 @@ extension PanelStore {
         }
         return .init(
             configs: .init(coordinateSpace: .global),
-            onPressEnd: { _ in
-//                var movingPanel = self.movingPanel
-//                movingPanel[panelId] = nil
-//                self.update(movingPanel: movingPanel)
+            onPressEnd: { cancelled in
+                if cancelled {
+                    self.update(movingPanel: self.movingPanel.cloned { $0[panelId] = nil })
+                }
             },
             onDrag: {
                 self.onMoving(panelId: panelId, $0)

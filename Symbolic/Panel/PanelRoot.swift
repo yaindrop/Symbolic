@@ -30,6 +30,7 @@ private extension FloatingPanelView {
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))
                 .innerAligned(panel.align)
+                .padding(12)
         }
     }
 }

@@ -119,7 +119,7 @@ extension OrderedMap {
 
 extension OrderedMap {
     mutating func mutateKeys(_ mutator: (inout [Key]) -> Void) {
-        let mutated = keys.with { mutator(&$0) }
+        let mutated = keys.cloned { mutator(&$0) }
         if let newKey = mutated.first(where: { dict[$0] == nil }) {
             logError("Cannot introduce new key \(newKey) in mutateKeys")
             fatalError()

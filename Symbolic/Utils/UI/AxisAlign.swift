@@ -202,6 +202,18 @@ extension CGRect {
     func alignedBox(at align: PlaneOuterAlign, size: CGSize, gap: CGSize) -> CGRect {
         alignedBox(at: align, size: size) + align.direction.elementWiseProduct(.init(gap))
     }
+
+    func nearestInnerAlign(of point: Point2, isCorner: Bool = false) -> PlaneInnerAlign {
+        if isCorner {
+            let xAlign: AxisAlign = point.x < midX ? .start : .end
+            let yAlign: AxisAlign = point.y < midY ? .start : .end
+            return .init(horizontal: xAlign, vertical: yAlign)
+        } else {
+            let xAlign: AxisAlign = point.x < (minX + midX) / 2 ? .start : point.x < (midX + maxX) / 2 ? .center : .end
+            let yAlign: AxisAlign = point.y < (minY + midY) / 2 ? .start : point.y < (midY + maxY) / 2 ? .center : .end
+            return .init(horizontal: xAlign, vertical: yAlign)
+        }
+    }
 }
 
 // MARK: - InnerAlignModifier

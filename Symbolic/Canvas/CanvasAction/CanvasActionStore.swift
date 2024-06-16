@@ -10,28 +10,28 @@ class CanvasActionStore: Store {
 
 extension CanvasActionStore {
     func start(triggering action: CanvasAction.Triggering) {
-        update { $0(\._triggering, triggering.with { $0.insert(action) }) }
+        update { $0(\._triggering, triggering.cloned { $0.insert(action) }) }
     }
 
     func end(triggering action: CanvasAction.Triggering) {
-        update { $0(\._triggering, triggering.with { $0.remove(action) }) }
+        update { $0(\._triggering, triggering.cloned { $0.remove(action) }) }
     }
 
     func start(continuous action: CanvasAction.Continuous) {
-        update { $0(\._continuous, continuous.with { $0.insert(action) }) }
+        update { $0(\._continuous, continuous.cloned { $0.insert(action) }) }
     }
 
     func end(continuous action: CanvasAction.Continuous) {
-        update { $0(\._continuous, continuous.with { $0.remove(action) }) }
+        update { $0(\._continuous, continuous.cloned { $0.remove(action) }) }
     }
 
     func on(instant action: CanvasAction.Instant) {
         if instant.contains(action) {
             return
         }
-        update { $0(\._instant, instant.with { $0.insert(action) }) }
+        update { $0(\._instant, instant.cloned { $0.insert(action) }) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.update { $0(\._instant, self.instant.with { $0.remove(action) }) }
+            self.update { $0(\._instant, self.instant.cloned { $0.remove(action) }) }
         }
     }
 }

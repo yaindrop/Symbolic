@@ -102,8 +102,15 @@ extension PanelData: EquatableBy {
     }
 }
 
+extension PanelData: TriviallyCloneable {}
+
 struct MovingPanelData: Equatable {
     let data: PanelData
     var globalPosition: Point2
     var offset: Vector2
+
+    var targetAlign: PlaneInnerAlign?
+    var targetTask: Task<Void, any Error>?
 }
+
+extension MovingPanelData: TriviallyCloneable {}

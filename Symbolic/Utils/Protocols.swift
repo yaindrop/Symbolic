@@ -20,7 +20,7 @@ protocol Cloneable {
 extension Cloneable {
     var cloned: Self { Self(self) }
 
-    func with(_ transform: (inout Self) -> Void) -> Self {
+    func cloned(_ transform: (inout Self) -> Void) -> Self {
         var cloned = cloned
         transform(&cloned)
         return cloned

@@ -36,6 +36,9 @@ private extension PathPanel {
                     guard let id = selector.focusedSegmentId else { return }
                     withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
                 }
+            if selector.path == nil {
+                placeholder
+            }
         }
     }
 
@@ -50,5 +53,14 @@ private extension PathPanel {
                 }
             }
         }
+    }
+
+    @ViewBuilder var placeholder: some View {
+        Text("No path is focused")
+            .font(.callout)
+            .foregroundStyle(Color.label.opacity(0.5))
+            .frame(maxWidth: .infinity, idealHeight: 72)
+            .background(.ultraThickMaterial)
+            .clipRounded(radius: 12)
     }
 }

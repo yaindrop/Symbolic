@@ -44,7 +44,8 @@ extension PanelStore {
         withStoreUpdating {
             update(sidebarPanelIds: sidebarPanelIds.cloned { $0.remove(panelId) })
 
-            let offset = Vector2(location) - .init(panel.size.width / 2, 0)
+            panel.align = .topLeading
+            let offset = Vector2(location) - .init(panel.size) / 2
             let moveTarget = moveTarget(moving: .init(data: panel, globalPosition: location, offset: offset), speed: .zero)
             panel.align = moveTarget.align
             update(panelMap: panelMap.cloned {

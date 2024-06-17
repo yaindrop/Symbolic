@@ -41,18 +41,19 @@ private extension FloatingPanelView {
     }
 
     var rotation: Angle {
+        guard let panel = selector.panel else { return .zero }
         switch selector.floatingState {
         case .primary: return .zero
-        case .secondary: return .degrees(30)
-        case .hidden: return .degrees(45)
+        case .secondary: return .degrees(panel.align.isLeading ? -30 : 30)
+        case .hidden: return .degrees(panel.align.isLeading ? -45 : 45)
         }
     }
 
     var scale: Scalar {
         switch selector.floatingState {
         case .primary: return 1
-        case .secondary: return 0.5
-        case .hidden: return 0.3
+        case .secondary: return 0.4
+        case .hidden: return 0.2
         }
     }
 
@@ -70,7 +71,7 @@ private extension FloatingPanelView {
     var opacity: Scalar {
         switch selector.floatingState {
         case .primary: return 1
-        case .secondary: return 0.8
+        case .secondary: return 0.6
         case .hidden: return 0
         }
     }

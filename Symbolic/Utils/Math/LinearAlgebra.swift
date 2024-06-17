@@ -29,6 +29,10 @@ extension Vector2 {
 
     var vectorY: Vector2 { .init(0, dy) }
 
+    var flipX: Vector2 { .init(-dx, dy) }
+
+    var flipY: Vector2 { .init(dx, -dy) }
+
     var normalLeft: Vector2 { .init(-dy, dx) }
 
     var normalRight: Vector2 { .init(dy, -dx) }

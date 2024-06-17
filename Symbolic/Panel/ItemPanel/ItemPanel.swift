@@ -30,7 +30,7 @@ extension ItemPanel {
     }
 
     @ViewBuilder private var items: some View {
-        PanelSection(name: "Items") {
+        PanelSection(panelId: panelId, name: "Items") {
             ForEach(selector.rootIds) {
                 ItemRow(itemId: $0)
                 if $0 != selector.rootIds.last {

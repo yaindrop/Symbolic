@@ -31,7 +31,7 @@ private extension DebugPanel {
     }
 
     @ViewBuilder var touch: some View {
-        PanelSection(name: "Multiple Touch") {
+        PanelSection(panelId: panelId, name: "Multiple Touch") {
             Row(name: "Pan", value: multipleTouch.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
@@ -39,7 +39,7 @@ private extension DebugPanel {
     }
 
     @ViewBuilder var viewport: some View {
-        PanelSection(name: "Viewport") {
+        PanelSection(panelId: panelId, name: "Viewport") {
             Row(name: "Origin", value: selector.viewportInfo.origin.shortDescription)
             Row(name: "Scale", value: selector.viewportInfo.scale.shortDescription)
         }

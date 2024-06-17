@@ -25,35 +25,43 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 }
 
 private extension FloatingPanelView {
-    var offset: CGSize {
+    var gap: Vector2 { .init(10, 20) }
+
+    var secondaryOffset: Vector2 { .init(24, 18) }
+
+    var offset: Vector2 {
         guard let panel = selector.panel else { return .zero }
         switch selector.floatingState {
         case .primary: return .zero
         case .secondary, .hidden:
             switch panel.align {
-            case .topLeading: return .init(24, -24)
-            case .topTrailing: return .init(-24, -24)
-            case .bottomLeading: return .init(24, 24)
-            case .bottomTrailing: return .init(-24, 24)
+            case .topLeading: return secondaryOffset.flipY
+            case .topTrailing: return -secondaryOffset
+            case .bottomLeading: return secondaryOffset
+            case .bottomTrailing: return secondaryOffset.flipX
             default: return .zero
             }
         }
     }
 
+    var secondaryAngle: Scalar { 30 }
+
+    var hiddenAngle: Scalar { 45 }
+
     var rotation: Angle {
         guard let panel = selector.panel else { return .zero }
         switch selector.floatingState {
         case .primary: return .zero
-        case .secondary: return .degrees(panel.align.isLeading ? -30 : 30)
-        case .hidden: return .degrees(panel.align.isLeading ? -45 : 45)
+        case .secondary: return .degrees((panel.align.isLeading ? -1 : 1) * secondaryAngle)
+        case .hidden: return .degrees((panel.align.isLeading ? -1 : 1) * hiddenAngle)
         }
     }
 
     var scale: Scalar {
         switch selector.floatingState {
-        case .primary: return 1
-        case .secondary: return 0.4
-        case .hidden: return 0.2
+        case .primary: 1
+        case .secondary: 0.4
+        case .hidden: 0.2
         }
     }
 
@@ -70,9 +78,9 @@ private extension FloatingPanelView {
 
     var opacity: Scalar {
         switch selector.floatingState {
-        case .primary: return 1
-        case .secondary: return 0.6
-        case .hidden: return 0
+        case .primary: 1
+        case .secondary: 0.6
+        case .hidden: 0
         }
     }
 
@@ -88,9 +96,9 @@ private extension FloatingPanelView {
                 }
                 .scaleEffect(scale, anchor: anchor)
                 .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: anchor)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 24)
-                .offset(offset)
+                .padding(.horizontal, gap.dx)
+                .padding(.vertical, gap.dy)
+                .offset(.init(offset))
                 .innerAligned(panel.align)
                 .opacity(selector.floatingState == .hidden ? 0 : 1)
         }

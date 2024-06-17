@@ -99,7 +99,7 @@ extension HistoryPanel {
     }
 
     @ViewBuilder private var events: some View {
-        PanelSection(name: "Events") {
+        PanelSection(panelId: panelId, name: "Events") {
             ForEach(selector.document.events) {
                 EventRow(event: $0)
                 if $0 != selector.document.events.last {

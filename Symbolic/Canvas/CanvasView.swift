@@ -134,33 +134,54 @@ private extension SidebarView {
     var borderColor: Color { hovering ? .blue : .label.opacity(0.2) }
 
     @ViewBuilder var content: some View {
-//        Picker("", selection: $sidebarType) {
-//            ForEach(SidebarType.allCases) {
-//                Text("\($0)").tag($0)
-//            }
-//        }
-//        .pickerStyle(.segmented)
-//        .padding()
         ScrollView {
-            VStack(spacing: 0) {
-                ForEach(selector.sidebarPanels) {
-                    $0.view
-                        .environment(\.panelId, $0.id)
-                }
-                Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
-                    .frame(maxWidth: .infinity, minHeight: 120)
-                    .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }
-                    .if(!selector.movingPanelMap.isEmpty) {
-                        $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
-                    }
-                    .padding(12)
+            if sidebarType == .document {
+                documents
+            } else {
+                panels
             }
         }
-        .navigationTitle("Sidebar")
+    }
+
+    var documents: some View {
+        VStack(spacing: 0) {
+            Text("No documents")
+                .frame(maxWidth: .infinity, minHeight: 120)
+                .padding(12)
+        }
+        .navigationTitle("Documents")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {} label: {
-                    Image(systemName: "list.bullet.rectangle")
+                Button {
+                    sidebarType = .panel
+                } label: {
+                    Image(systemName: "list.dash.header.rectangle")
+                }
+            }
+        }
+    }
+
+    var panels: some View {
+        VStack(spacing: 0) {
+            ForEach(selector.sidebarPanels) {
+                $0.view
+                    .environment(\.panelId, $0.id)
+            }
+            Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
+                .frame(maxWidth: .infinity, minHeight: 120)
+                .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }
+                .if(!selector.movingPanelMap.isEmpty) {
+                    $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
+                }
+                .padding(12)
+        }
+        .navigationTitle("Panels")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    sidebarType = .document
+                } label: {
+                    Image(systemName: "doc.text")
                 }
             }
         }

@@ -3,8 +3,6 @@ import SwiftUI
 // MARK: - ItemPanel
 
 struct ItemPanel: View, TracedView, SelectorHolder {
-    let panelId: UUID
-
     class Selector: SelectorBase {
         @Selected({ global.item.rootIds }) var rootIds
     }
@@ -24,13 +22,13 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 
 extension ItemPanel {
     @ViewBuilder private var content: some View {
-        PanelBody(panelId: panelId, name: "Items", maxHeight: 400) { _ in
+        PanelBody(name: "Items", maxHeight: 400) { _ in
             items
         }
     }
 
     @ViewBuilder private var items: some View {
-        PanelSection(panelId: panelId, name: "Items") {
+        PanelSection(name: "Items") {
             ForEach(selector.rootIds) {
                 ItemRow(itemId: $0)
                 if $0 != selector.rootIds.last {

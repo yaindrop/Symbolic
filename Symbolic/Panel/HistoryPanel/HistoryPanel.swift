@@ -71,8 +71,6 @@ private extension DocumentAction {
 // MARK: - HistoryPanel
 
 struct HistoryPanel: View, TracedView, SelectorHolder {
-    let panelId: UUID
-
     class Selector: SelectorBase {
         @Selected({ global.document.activeDocument }) var document
     }
@@ -92,14 +90,14 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
 
 extension HistoryPanel {
     @ViewBuilder private var content: some View {
-        PanelBody(panelId: panelId, name: "History", maxHeight: 400) { _ in
+        PanelBody(name: "History", maxHeight: 400) { _ in
             events
         }
         .frame(width: 320)
     }
 
     @ViewBuilder private var events: some View {
-        PanelSection(panelId: panelId, name: "Events") {
+        PanelSection(name: "Events") {
             ForEach(selector.document.events) {
                 EventRow(event: $0)
                 if $0 != selector.document.events.last {

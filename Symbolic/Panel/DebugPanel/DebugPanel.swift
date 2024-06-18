@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct DebugPanel: View, SelectorHolder {
-    let panelId: UUID
-
     @ObservedObject var multipleTouch: MultipleTouchModel
     var multipleTouchPress: MultipleTouchPressModel
 
@@ -23,7 +21,7 @@ private extension DebugPanel {
     var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
     @ViewBuilder var content: some View {
-        PanelBody(panelId: panelId, name: "Debug", maxHeight: 400) { _ in
+        PanelBody(name: "Debug", maxHeight: 400) { _ in
             touch
             viewport
         }
@@ -31,7 +29,7 @@ private extension DebugPanel {
     }
 
     @ViewBuilder var touch: some View {
-        PanelSection(panelId: panelId, name: "Multiple Touch") {
+        PanelSection(name: "Multiple Touch") {
             Row(name: "Pan", value: multipleTouch.panInfo?.description ?? "nil")
             Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
             Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
@@ -39,7 +37,7 @@ private extension DebugPanel {
     }
 
     @ViewBuilder var viewport: some View {
-        PanelSection(panelId: panelId, name: "Viewport") {
+        PanelSection(name: "Viewport") {
             Row(name: "Origin", value: selector.viewportInfo.origin.shortDescription)
             Row(name: "Scale", value: selector.viewportInfo.scale.shortDescription)
         }

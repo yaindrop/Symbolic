@@ -73,10 +73,10 @@ extension AnyCancellable {
     }
 }
 
-protocol HashIdentifiable: Hashable, Identifiable {}
+protocol SelfIdentifiable: Identifiable {}
 
-extension HashIdentifiable {
-    var id: Int { hashValue }
+extension SelfIdentifiable {
+    var id: Self { self }
 }
 
 protocol UniqueEquatable: Equatable {}

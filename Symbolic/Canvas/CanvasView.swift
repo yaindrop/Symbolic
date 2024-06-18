@@ -21,10 +21,10 @@ struct CanvasView: View, TracedView {
                 setup.multipleTouchPress(multipleTouchPress: multipleTouchPress)
             }
             .onAppear {
-                global.panel.register(align: .bottomTrailing) { PathPanel(panelId: $0) }
-                global.panel.register(align: .bottomLeading) { HistoryPanel(panelId: $0) }
-                global.panel.register(align: .bottomLeading) { ItemPanel(panelId: $0) }
-                global.panel.register(align: .topTrailing) { DebugPanel(panelId: $0, multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
+                global.panel.register(align: .bottomTrailing) { PathPanel() }
+                global.panel.register(align: .bottomLeading) { HistoryPanel() }
+                global.panel.register(align: .bottomLeading) { ItemPanel() }
+                global.panel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
             }
             .onAppear {
                 global.contextMenu.register(.pathFocusedPart)
@@ -105,6 +105,10 @@ private extension CanvasView {
     } }
 }
 
+enum SidebarType: CaseIterable, SelfIdentifiable {
+    case document, panel
+}
+
 struct SidebarView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
@@ -114,6 +118,8 @@ struct SidebarView: View, TracedView, SelectorHolder {
     }
 
     @SelectorWrapper var selector
+
+    @State private var sidebarType: SidebarType = .document
 
     var body: some View { trace {
         setupSelector {
@@ -128,22 +134,36 @@ private extension SidebarView {
     var borderColor: Color { hovering ? .blue : .label.opacity(0.2) }
 
     @ViewBuilder var content: some View {
+        Picker("", selection: $sidebarType) {
+            ForEach(SidebarType.allCases) {
+                Text("\($0)").tag($0)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding()
+
         ScrollView {
             VStack {
                 ForEach(selector.sidebarPanels) {
-                    $0.view($0.id)
+                    $0.view
                 }
                 Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
-                    .padding(12)
+                    .frame(maxWidth: .infinity, minHeight: 120)
+                    .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }
+                    .if(!selector.movingPanelMap.isEmpty) {
+                        $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
+                    }
             }
+            .padding(12)
         }
         .navigationTitle("Sidebar")
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .if(!selector.movingPanelMap.isEmpty) {
-            $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {} label: {
+                    Image(systemName: "list.bullet.rectangle")
+                }
+            }
         }
-        .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }
-        .padding(12)
     }
 }
 

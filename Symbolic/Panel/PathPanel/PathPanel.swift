@@ -3,8 +3,6 @@ import SwiftUI
 // MARK: - PathPanel
 
 struct PathPanel: View, TracedView, SelectorHolder {
-    let panelId: UUID
-
     class Selector: SelectorBase {
         @Selected({ global.activeItem.focusedPath }) var path
         @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
@@ -26,7 +24,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
 
 private extension PathPanel {
     @ViewBuilder var panel: some View {
-        PanelBody(panelId: panelId, name: "Path", maxHeight: 400) { proxy in
+        PanelBody(name: "Path", maxHeight: 400) { proxy in
             nodes
                 .onChange(of: selector.focusedNodeId) {
                     guard let id = selector.focusedNodeId else { return }
@@ -44,7 +42,7 @@ private extension PathPanel {
 
     @ViewBuilder var nodes: some View {
         if let path = selector.path {
-            PanelSection(panelId: panelId, name: "Nodes") {
+            PanelSection(name: "Nodes") {
                 ForEach(path.nodes) { node in
                     NodeRow(pathId: path.id, nodeId: node.id)
                     if node.id != path.nodes.last?.id {

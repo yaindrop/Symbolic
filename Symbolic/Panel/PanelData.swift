@@ -10,7 +10,7 @@ enum PanelFloatingState: Equatable {
 
 struct PanelData: Identifiable {
     let id: UUID = .init()
-    let view: (_ panelId: UUID) -> AnyView
+    let view: AnyView
 
     var size: CGSize = .zero
     var align: PlaneInnerAlign = .topLeading
@@ -33,3 +33,14 @@ struct MovingPanelData: Equatable {
 }
 
 extension MovingPanelData: TriviallyCloneable {}
+
+private struct PanelIdKey: EnvironmentKey {
+    static let defaultValue: UUID = .init()
+}
+
+extension EnvironmentValues {
+    var panelId: UUID {
+        get { self[PanelIdKey.self] }
+        set { self[PanelIdKey.self] = newValue }
+    }
+}

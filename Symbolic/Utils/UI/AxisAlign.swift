@@ -18,7 +18,7 @@ extension AxisAlign: CustomStringConvertible {
 
 // MARK: - PlaneInnerAlign
 
-enum PlaneInnerAlign: CaseIterable, HashIdentifiable {
+enum PlaneInnerAlign: CaseIterable, SelfIdentifiable {
     case topLeading, topCenter, topTrailing
     case centerLeading, center, centerTrailing
     case bottomLeading, bottomCenter, bottomTrailing
@@ -83,7 +83,7 @@ extension PlaneInnerAlign {
 
 // MARK: - PlaneOuterAlign
 
-enum PlaneOuterAlign: CaseIterable, HashIdentifiable {
+enum PlaneOuterAlign: CaseIterable, SelfIdentifiable {
     case topLeading, topInnerLeading, topCenter, topInnerTrailing, topTrailing
     case innerTopLeading, innerTopTrailing
     case centerLeading, centerTrailing

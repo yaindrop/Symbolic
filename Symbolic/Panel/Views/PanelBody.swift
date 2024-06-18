@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
-    let panelId: UUID, name: String, maxHeight: Scalar
+    @Environment(\.panelId) var panelId
+
+    let name: String, maxHeight: Scalar
     @ViewBuilder let bodyContent: (ScrollViewProxy) -> Content
 
     struct SelectorProps: Equatable { let panelId: UUID }

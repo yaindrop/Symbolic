@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct PanelSection<Content: View>: View, TracedView, ComputedSelectorHolder {
-    let panelId: UUID, name: String
+    @Environment(\.panelId) var panelId
+
+    let name: String
     @ViewBuilder let sectionContent: () -> Content
 
     struct SelectorProps: Equatable { let panelId: UUID }

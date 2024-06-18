@@ -86,8 +86,8 @@ extension PanelStore {
 // MARK: actions
 
 extension PanelStore {
-    func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping (_ panelId: UUID) -> any View) {
-        let panel = PanelData(view: { AnyView(panel($0)) })
+    func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
+        let panel = PanelData(view: AnyView(panel()))
         update(panelMap: panelMap.cloned { $0[panel.id] = panel })
     }
 

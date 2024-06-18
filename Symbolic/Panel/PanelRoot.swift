@@ -86,7 +86,8 @@ private extension FloatingPanelView {
 
     @ViewBuilder var content: some View {
         if let panel = selector.panel {
-            panel.view(panel.id)
+            panel.view
+                .environment(\.panelId, panelId)
                 .id(panel.id)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))

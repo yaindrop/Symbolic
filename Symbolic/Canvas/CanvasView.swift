@@ -134,18 +134,18 @@ private extension SidebarView {
     var borderColor: Color { hovering ? .blue : .label.opacity(0.2) }
 
     @ViewBuilder var content: some View {
-        Picker("", selection: $sidebarType) {
-            ForEach(SidebarType.allCases) {
-                Text("\($0)").tag($0)
-            }
-        }
-        .pickerStyle(.segmented)
-        .padding()
-
+//        Picker("", selection: $sidebarType) {
+//            ForEach(SidebarType.allCases) {
+//                Text("\($0)").tag($0)
+//            }
+//        }
+//        .pickerStyle(.segmented)
+//        .padding()
         ScrollView {
-            VStack {
+            VStack(spacing: 0) {
                 ForEach(selector.sidebarPanels) {
                     $0.view
+                        .environment(\.panelId, $0.id)
                 }
                 Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
                     .frame(maxWidth: .infinity, minHeight: 120)
@@ -153,8 +153,8 @@ private extension SidebarView {
                     .if(!selector.movingPanelMap.isEmpty) {
                         $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
                     }
+                    .padding(12)
             }
-            .padding(12)
         }
         .navigationTitle("Sidebar")
         .toolbar {

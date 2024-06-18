@@ -8,7 +8,7 @@ struct PanelSection<Content: View>: View, TracedView, ComputedSelectorHolder {
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected(animation: .default, { global.panel.floatingState(id: $0.panelId) }) var floatingState
+        @Selected(animation: .default, { global.panel.appearance(id: $0.panelId) }) var appearance
     }
 
     @SelectorWrapper var selector
@@ -27,7 +27,7 @@ private extension PanelSection {
             VStack(spacing: 0) {
                 sectionContent()
             }
-            .if(selector.floatingState == .primary) {
+            .if(selector.appearance == .floatingPrimary) {
                 $0.background(.ultraThickMaterial)
             } else: {
                 $0.background(.background.secondary)

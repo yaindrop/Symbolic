@@ -25,7 +25,6 @@ private extension DebugPanel {
             touch
             viewport
         }
-        .frame(width: 320)
     }
 
     @ViewBuilder var touch: some View {

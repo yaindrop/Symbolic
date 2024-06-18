@@ -93,7 +93,6 @@ extension HistoryPanel {
         PanelBody(name: "History", maxHeight: 400) { _ in
             events
         }
-        .frame(width: 320)
     }
 
     @ViewBuilder private var events: some View {

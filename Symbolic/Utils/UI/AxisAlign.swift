@@ -216,26 +216,53 @@ extension CGRect {
     }
 }
 
+// MARK: - AxisAlignModifier
+
+struct AxisAlignModifier: ViewModifier {
+    let axis: Axis, align: AxisAlign
+
+    func body(content: Content) -> some View {
+        switch axis {
+        case .horizontal:
+            HStack(spacing: 0) { wrapper(content) }
+        case .vertical:
+            VStack(spacing: 0) { wrapper(content) }
+        }
+    }
+
+    @ViewBuilder func wrapper(_ content: Content) -> some View {
+        if align != .start { Spacer(minLength: 0) }
+        content
+        if align != .end { Spacer(minLength: 0) }
+    }
+}
+
+extension View {
+    func aligned(axis: Axis, _ align: AxisAlign) -> some View {
+        modifier(AxisAlignModifier(axis: axis, align: align))
+    }
+}
+
 // MARK: - InnerAlignModifier
 
 struct InnerAlignModifier: ViewModifier {
-    let position: PlaneInnerAlign
+    let align: PlaneInnerAlign
 
     func body(content: Content) -> some View {
         HStack(spacing: 0) {
-            if !position.isLeading { Spacer(minLength: 0) }
+            if !align.isLeading { Spacer(minLength: 0) }
             VStack(spacing: 0) {
-                if !position.isTop { Spacer(minLength: 0) }
+                if !align.isTop { Spacer(minLength: 0) }
                 content
-                if !position.isBottom { Spacer(minLength: 0) }
+                if !align.isBottom { Spacer(minLength: 0) }
             }
-            if !position.isTrailing { Spacer(minLength: 0) }
+            if !align.isTrailing { Spacer(minLength: 0) }
         }
     }
 }
 
 extension View {
-    func innerAligned(_ position: PlaneInnerAlign) -> some View {
-        modifier(InnerAlignModifier(position: position))
+    func innerAligned(_ align: PlaneInnerAlign) -> some View {
+        modifier(InnerAlignModifier(align: align))
     }
 }

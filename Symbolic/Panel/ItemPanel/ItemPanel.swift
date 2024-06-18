@@ -13,7 +13,7 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            content.frame(width: 320)
+            content
         }
     } }
 }

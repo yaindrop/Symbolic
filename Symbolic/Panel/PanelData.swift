@@ -1,9 +1,10 @@
 import SwiftUI
 
-enum PanelFloatingState: Equatable {
-    case primary
-    case secondary
-    case hidden
+enum PanelAppearance: Equatable {
+    case floatingPrimary
+    case floatingSecondary
+    case floatingHidden
+    case sidebarSection
 }
 
 // MARK: - PanelData

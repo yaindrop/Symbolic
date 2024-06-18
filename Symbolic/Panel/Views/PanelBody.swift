@@ -8,7 +8,7 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected(animation: .default, { global.panel.floatingState(id: $0.panelId) }) var floatingState
+        @Selected(animation: .default, { global.panel.appearance(id: $0.panelId) }) var appearance
     }
 
     @SelectorWrapper var selector
@@ -24,39 +24,38 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
 
 private extension PanelBody {
     var content: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 12) {
             title
             ManagedScrollView(model: scrollViewModel) { proxy in
                 VStack(spacing: 12) {
                     bodyContent(proxy)
                 }
-                .padding(.all.subtracting(.top), 12)
             }
             .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
             .frame(maxHeight: maxHeight)
             .fixedSize(horizontal: false, vertical: true)
         }
-        .if(selector.floatingState == .primary) {
-            $0.background(.ultraThinMaterial)
+        .if(selector.appearance == .sidebarSection) {
+            $0.padding()
         } else: {
-            $0.background(.background.secondary)
+            $0.padding(12)
+                .if(selector.appearance == .floatingPrimary) {
+                    $0.background(.ultraThinMaterial)
+                } else: {
+                    $0.background(.background.secondary)
+                }
+                .clipRounded(radius: 18)
         }
-        .clipRounded(radius: 18)
     }
 
     var title: some View {
-        HStack {
-            Spacer()
-            Text(name)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.vertical, 8)
-            Spacer()
-        }
-        .padding(12)
-        .invisibleSoildOverlay()
-        .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
-        .multipleGesture(global.panel.moveGesture(panelId: panelId))
-        .if(selector.floatingState == .primary && scrollViewModel.scrolled) { $0.background(.regularMaterial) }
+        Text(name)
+            .font(selector.appearance == .sidebarSection ? .title : .headline)
+            .padding(.vertical, 8)
+            .aligned(axis: .horizontal, selector.appearance == .sidebarSection ? .start : .center)
+            .invisibleSoildOverlay()
+            .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
+            .multipleGesture(global.panel.moveGesture(panelId: panelId))
+            .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) { $0.background(.regularMaterial) }
     }
 }

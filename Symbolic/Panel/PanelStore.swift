@@ -71,15 +71,16 @@ extension PanelStore {
 
     var sidebarPanels: [PanelData] { panels.filter { sidebarPanelIds.contains($0.id) } }
 
-    func floatingState(id: UUID) -> PanelFloatingState {
-        guard let panel = get(id: id) else { return .hidden }
+    func appearance(id: UUID) -> PanelAppearance {
+        guard let panel = get(id: id) else { return .floatingHidden }
+        guard floatingPanelIds.contains(id) else { return .sidebarSection }
         let peers = floatingPanels.filter { $0.align == panel.align }
         if peers.last?.id == id {
-            return .primary
+            return .floatingPrimary
         } else if peers.dropLast().last?.id == id {
-            return .secondary
+            return .floatingSecondary
         }
-        return .hidden
+        return .floatingHidden
     }
 }
 
@@ -101,7 +102,7 @@ extension PanelStore {
 extension PanelStore {
     func spin(on panelId: UUID) {
         guard let panel = get(id: panelId) else { return }
-        guard floatingState(id: panelId) == .secondary else { return }
+        guard appearance(id: panelId) == .floatingSecondary else { return }
         let peers = panelMap.values.filter { $0.align == panel.align }
         guard let primary = peers.last else { return }
         update(panelMap: panelMap.cloned {

@@ -15,7 +15,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            panel.frame(width: 320)
+            content
         }
     } }
 }
@@ -23,7 +23,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
 // MARK: private
 
 private extension PathPanel {
-    @ViewBuilder var panel: some View {
+    @ViewBuilder var content: some View {
         PanelBody(name: "Path", maxHeight: 400) { proxy in
             nodes
                 .onChange(of: selector.focusedNodeId) {

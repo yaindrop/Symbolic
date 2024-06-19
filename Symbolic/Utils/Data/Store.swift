@@ -14,7 +14,7 @@ private class StoreManager {
     private var subscriptionIdGen = IncrementalIdGenerator()
     private var idToSubscription: [Int: StoreSubscription] = [:]
 
-    private(set) var tracking: TrackingContext?
+    private var tracking: TrackingContext?
     private var updating: UpdatingContext?
 }
 
@@ -28,6 +28,8 @@ extension StoreManager {
             self.subscriptionId = subscriptionId
         }
     }
+
+    var trackingId: Int? { tracking?.subscriptionId }
 
     func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> (value: T, TrackingContext) {
         guard tracking == nil else {
@@ -200,10 +202,10 @@ extension _StoreProtocol {
             id = generateTrackableId()
             wrapper.id = id
         }
-        if let tracking = manager.tracking {
-            onTrack(of: id, in: tracking.subscriptionId)
+        if let trackingId = manager.trackingId {
+            onTrack(of: id, in: trackingId)
         }
-        if let deriving = deriving, !deriving.trackableIds.contains(id) {
+        if let deriving, !deriving.trackableIds.contains(id) {
             deriving.trackableIds.insert(id)
             deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
         }
@@ -215,12 +217,12 @@ extension _StoreProtocol {
         @Ref(self, keyPath) var wrapper
         let value = wrapper.value ?? update(keyPath: keyPath)
 
-        if let tracking = manager.tracking {
+        if let trackingId = manager.trackingId {
             for id in wrapper.trackableIds {
-                onTrack(of: id, in: tracking.subscriptionId)
+                onTrack(of: id, in: trackingId)
             }
         }
-        if let deriving = deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
+        if let deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
             deriving.trackableIds.formUnion(wrapper.trackableIds)
             deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
         }
@@ -352,16 +354,6 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
 
 // MARK: - Selector
 
-struct SelectorConfigs {
-    var name: String?
-    var syncUpdate: Bool
-
-    init(name: String? = nil, syncUpdate: Bool = false) {
-        self.name = name
-        self.syncUpdate = syncUpdate
-    }
-}
-
 class _Selector<Props>: ObservableObject, CancellableHolder {
     var name: String?
     var syncUpdate: Bool { false }
@@ -374,7 +366,7 @@ class _Selector<Props>: ObservableObject, CancellableHolder {
     required init() {}
 }
 
-extension _Selector {
+private extension _Selector {
     func setup(_ name: @autoclosure () -> String, _ props: Props) {
         let name = name()
         let _r = subtracer.range("setup selector \(name)"); defer { _r() }
@@ -384,7 +376,7 @@ extension _Selector {
         }
     }
 
-    func retrack(_ props: Props) {
+    func update(_ props: Props) {
         self.props = props
         retrackSubject.send()
     }
@@ -398,19 +390,19 @@ protocol _SelectorProtocol: AnyObject {
     var syncUpdate: Bool { get }
     var props: Props? { get }
 
-    func update()
-    func onRetrack(callback: @escaping () -> Void)
+    func notify()
+    func setupRetrack(callback: @escaping () -> Void)
 
     typealias Selected<T: Equatable> = _Selected<Self, T>
     typealias Formula<T> = _Formula<Self, T>
 }
 
 extension _Selector: _SelectorProtocol {
-    func update() {
+    func notify() {
         objectWillChange.send()
     }
 
-    func onRetrack(callback: @escaping () -> Void) {
+    func setupRetrack(callback: @escaping () -> Void) {
         retrackSubject
             .sink(receiveValue: callback)
             .store(in: self)
@@ -432,14 +424,14 @@ private extension _SelectorProtocol {
 
         if wrapper.value == nil {
             wrapper.value = newValue
-            onRetrack { [weak self] in self?.retrack(keyPath: keyPath) }
+            setupRetrack { [weak self] in self?.retrack(keyPath: keyPath) }
             subtracer.instant("setup \(newValue)")
         } else if wrapper.value != newValue {
             wrapper.value = newValue
             if let animation = wrapper.animation {
-                withAnimation(animation) { update() }
+                withAnimation(animation) { notify() }
             } else {
-                update()
+                notify()
             }
             subtracer.instant("updated \(newValue)")
         } else {
@@ -462,10 +454,10 @@ private extension _SelectorProtocol {
         @Ref(self, keyPath) var wrapper
         if syncUpdate || wrapper.syncUpdate {
             track(keyPath: keyPath)
-        } else if wrapper.updateTask == nil {
-            wrapper.updateTask = Task(priority: .high) { @MainActor [weak self] in
+        } else if wrapper.trackingTask == nil {
+            wrapper.trackingTask = Task(priority: .high) { @MainActor [weak self] in
                 guard let self else { return }
-                self[keyPath: keyPath].updateTask = nil
+                self[keyPath: keyPath].trackingTask = nil
                 self.track(keyPath: keyPath)
             }
         }
@@ -476,12 +468,13 @@ private extension _SelectorProtocol {
 
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
-    let selector: (Instance.Props) -> Value
     var syncUpdate: Bool
     var animation: Animation?
+    let selector: (Instance.Props) -> Value
+
     var value: Value?
     var subscriptionId: Int?
-    var updateTask: Task<Void, Never>?
+    var trackingTask: Task<Void, Never>?
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }
@@ -552,6 +545,6 @@ protocol ComputedSelectorHolder {
 extension ComputedSelectorHolder {
     func setupSelector<Content: View>(_ props: SelectorProps, @ViewBuilder content: @escaping () -> Content) -> some View {
         selector.setup(String(describing: type(of: self)), props)
-        return content().onChange(of: props) { selector.retrack(props) }
+        return content().onChange(of: props) { selector.update(props) }
     }
 }

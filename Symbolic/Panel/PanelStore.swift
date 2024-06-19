@@ -12,6 +12,7 @@ class PanelStore: Store {
 
     @Trackable var movingPanelMap: [UUID: MovingPanelData] = [:]
 
+    @Trackable var showPopover: Bool = false
     @Trackable var sidebarFrame: CGRect = .zero
     @Trackable var sidebarPanelIds: Set<UUID> = []
 }
@@ -31,6 +32,10 @@ private extension PanelStore {
 }
 
 extension PanelStore {
+    func update(showPopover: Bool) {
+        update { $0(\._showPopover, showPopover) }
+    }
+
     func update(sidebarFrame: CGRect) {
         update { $0(\._sidebarFrame, sidebarFrame) }
     }

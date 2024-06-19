@@ -28,11 +28,11 @@ private extension PathPanel {
             nodes
                 .onChange(of: selector.focusedNodeId) {
                     guard let id = selector.focusedNodeId else { return }
-                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy?.scrollTo(id, anchor: .center) }
                 }
                 .onChange(of: selector.focusedSegmentId) {
                     guard let id = selector.focusedSegmentId else { return }
-                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy?.scrollTo(id, anchor: .center) }
                 }
             if selector.path == nil {
                 placeholder

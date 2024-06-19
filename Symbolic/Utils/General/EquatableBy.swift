@@ -6,6 +6,8 @@ enum Monostate { case value }
 
 extension Monostate: Equatable {}
 
+extension Monostate: SelfIdentifiable {}
+
 extension Monostate: CustomStringConvertible {
     var description: String { "_" }
 }

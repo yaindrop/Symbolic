@@ -4,7 +4,7 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
     @Environment(\.panelId) var panelId
 
     let name: String, maxHeight: Scalar
-    @ViewBuilder let bodyContent: (ScrollViewProxy) -> Content
+    @ViewBuilder let bodyContent: (ScrollViewProxy?) -> Content
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
@@ -22,39 +22,60 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
     } }
 }
 
+struct VisualEffectView: UIViewRepresentable {
+    let effect: UIVisualEffect
+    func makeUIView(context _: Context) -> UIVisualEffectView { .init(effect: effect) }
+    func updateUIView(_: UIViewType, context _: Context) {}
+}
+
 private extension PanelBody {
-    var content: some View {
-        VStack(spacing: 12) {
-            title
-            ManagedScrollView(model: scrollViewModel) { proxy in
+    @ViewBuilder var content: some View {
+        if selector.appearance == .sidebarSection {
+            Section(header: sectionTitle) {
                 VStack(spacing: 12) {
-                    bodyContent(proxy)
+                    bodyContent(nil)
                 }
+                .padding(.leading, 24)
+                .padding(.trailing.union(.bottom), 12)
             }
-            .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-            .frame(maxHeight: maxHeight)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-        .if(selector.appearance == .sidebarSection) {
-            $0.padding()
-        } else: {
-            $0.padding(12)
-                .if(selector.appearance == .floatingPrimary) {
-                    $0.background(.ultraThinMaterial)
-                } else: {
-                    $0.background(.background.secondary)
+        } else {
+            VStack(spacing: 12) {
+                floatingTitle
+                ManagedScrollView(model: scrollViewModel) { proxy in
+                    VStack(spacing: 12) {
+                        bodyContent(proxy)
+                    }
                 }
-                .clipRounded(radius: 18)
+                .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+                .frame(maxHeight: maxHeight)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(12)
+            .if(selector.appearance == .floatingPrimary) {
+                $0.background(.ultraThinMaterial)
+            } else: {
+                $0.background(.background.secondary)
+            }
         }
     }
 
-    var title: some View {
+    var sectionTitle: some View {
         Text(name)
-            .font(selector.appearance == .sidebarSection ? .title : .headline)
-            .padding(.vertical, 8)
-            .aligned(axis: .horizontal, selector.appearance == .sidebarSection ? .start : .center)
-            .invisibleSoildOverlay()
+            .font(.title2)
+            .aligned(axis: .horizontal, .start)
+            .padding(12)
+            .background(.ultraThinMaterial)
+            .clipRounded(radius: 12)
             .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
+            .padding(12)
+    }
+
+    var floatingTitle: some View {
+        Text(name)
+            .font(.headline)
+            .padding(.vertical, 8)
+            .aligned(axis: .horizontal, .center)
+            .invisibleSoildOverlay()
             .multipleGesture(global.panel.moveGesture(panelId: panelId))
             .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) { $0.background(.regularMaterial) }
     }

@@ -100,6 +100,7 @@ private extension CanvasView {
             CanvasActionView()
 
             PanelRoot()
+            PanelPopover()
         }
         .allowsHitTesting(!multipleTouch.active)
     } }

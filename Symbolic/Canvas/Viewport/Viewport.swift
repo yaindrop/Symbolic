@@ -74,10 +74,11 @@ struct ViewportService {
 
 extension ViewportService {
     var info: ViewportInfo { store.info }
+    var viewSize: CGSize { store.viewSize }
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
-    var worldRect: CGRect { info.worldRect(viewSize: store.viewSize) }
+    var worldRect: CGRect { info.worldRect(viewSize: viewSize) }
 }
 
 // MARK: actions

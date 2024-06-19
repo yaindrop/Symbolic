@@ -93,7 +93,7 @@ private extension CanvasView {
             ContextMenuRoot()
             CanvasActionView()
 
-            PanelRoot()
+            FloatingPanelRoot()
             PanelPopover()
         }
         .allowsHitTesting(!multipleTouch.active)

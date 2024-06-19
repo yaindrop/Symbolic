@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - PanelSection
+
 struct PanelSection<Content: View>: View, TracedView, ComputedSelectorHolder {
     @Environment(\.panelId) var panelId
 
@@ -19,6 +21,8 @@ struct PanelSection<Content: View>: View, TracedView, ComputedSelectorHolder {
         }
     } }
 }
+
+// MARK: private
 
 private extension PanelSection {
     var content: some View {

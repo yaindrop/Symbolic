@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - PanelPopoverButton
+
 struct PanelPopoverButton: View, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.panel.popoverActive }) var active
@@ -17,6 +19,8 @@ struct PanelPopoverButton: View, SelectorHolder {
         }
     }
 }
+
+// MARK: private
 
 private extension PanelPopoverButton {
     var content: some View {
@@ -42,6 +46,8 @@ private extension PanelPopoverButton {
     }
 }
 
+// MARK: - PanelPopover
+
 struct PanelPopover: View, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
@@ -59,7 +65,11 @@ struct PanelPopover: View, SelectorHolder {
             content
         }
     }
+}
 
+// MARK: private
+
+private extension PanelPopover {
     @ViewBuilder var content: some View {
         if selector.visible {
             ScrollView {

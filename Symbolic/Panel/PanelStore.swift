@@ -104,22 +104,6 @@ extension PanelStore {
             update(popoverActive: false)
         }
     }
-
-    func drop(panelId: UUID, location: Point2) {
-        guard var panel = get(id: panelId) else { return }
-        withStoreUpdating {
-            update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(panelId) })
-
-            panel.align = .topLeading
-            let offset = Vector2(location) - .init(panel.size) / 2
-            let moveTarget = moveTarget(moving: .init(data: panel, globalPosition: location, offset: offset), speed: .zero)
-            panel.align = moveTarget.align
-            update(panelMap: panelMap.cloned {
-                $0.removeValue(forKey: panelId)
-                $0[panelId] = panel
-            })
-        }
-    }
 }
 
 // MARK: moving
@@ -154,6 +138,7 @@ extension PanelStore {
         moving.align = moveTarget.align
         moving.offset = moveTarget.offset
         withStoreUpdating {
+            update(popoverActive: false)
             update(panelMap: panelMap.cloned {
                 $0.removeValue(forKey: panelId)
                 $0[panelId] = moving.data.cloned { $0.align = moveTarget.align }

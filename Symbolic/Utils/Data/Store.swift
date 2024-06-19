@@ -477,13 +477,11 @@ private extension _SelectorProtocol {
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     let selector: (Instance.Props) -> Value
-    var _syncUpdate: Bool
+    var syncUpdate: Bool
     var animation: Animation?
     var value: Value?
     var subscriptionId: Int?
     var updateTask: Task<Void, Never>?
-
-    var syncUpdate: Bool { _syncUpdate || animation != nil }
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }
@@ -498,13 +496,13 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     }
 
     init(syncUpdate: Bool = false, animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
-        _syncUpdate = syncUpdate
+        self.syncUpdate = syncUpdate
         self.animation = animation
         self.selector = selector
     }
 
     init(syncUpdate: Bool = false, animation: Animation? = nil, _ selector: @escaping () -> Value) {
-        _syncUpdate = syncUpdate
+        self.syncUpdate = syncUpdate
         self.animation = animation
         self.selector = { _ in selector() }
     }

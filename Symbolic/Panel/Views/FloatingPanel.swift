@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - PanelView
+// MARK: - FloatingPanelView
 
 struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder {
     let panelId: UUID
@@ -23,6 +23,8 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
         }
     } }
 }
+
+// MARK: private
 
 private extension FloatingPanelView {
     var width: Scalar { 320 }
@@ -105,9 +107,9 @@ private extension FloatingPanelView {
     }
 }
 
-// MARK: - PanelRoot
+// MARK: - FloatingPanelRoot
 
-struct PanelRoot: View, TracedView, SelectorHolder {
+struct FloatingPanelRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.panel.floatingPanelIds }) var floatingPanelIds
     }
@@ -116,16 +118,18 @@ struct PanelRoot: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            ZStack {
-                ForEach(selector.floatingPanelIds) { FloatingPanelView(panelId: $0) }
-            }
-            .geometryReader { global.panel.setRootRect($0.frame(in: .global)) }
-            .dropDestination(for: Data.self) { items, location in
-                guard let item = items.first else { return false }
-                guard let id = UUID(uuidString: String(decoding: item, as: UTF8.self)) else { return false }
-                global.panel.drop(panelId: id, location: location)
-                return true
-            }
+            content
         }
     } }
+}
+
+// MARK: private
+
+private extension FloatingPanelRoot {
+    var content: some View {
+        ZStack {
+            ForEach(selector.floatingPanelIds) { FloatingPanelView(panelId: $0) }
+        }
+        .geometryReader { global.panel.setRootRect($0.frame(in: .global)) }
+    }
 }

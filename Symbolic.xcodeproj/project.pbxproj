@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		5700C2C42BEB5AAF00481FA7 /* PanelBody.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelBody.swift */; };
 		5700C2C62BEB5B0A00481FA7 /* PanelSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */; };
-		5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */; };
+		5700C2C82BEBC4A800481FA7 /* FloatingPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* FloatingPanel.swift */; };
 		5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelStore.swift */; };
 		5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CC2BED169D00481FA7 /* PanelData.swift */; };
 		5700C2CF2BEDB6EB00481FA7 /* DraggingSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2CE2BEDB6EB00481FA7 /* DraggingSelection.swift */; };
@@ -130,7 +130,7 @@
 /* Begin PBXFileReference section */
 		5700C2C32BEB5AAF00481FA7 /* PanelBody.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelBody.swift; sourceTree = "<group>"; };
 		5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSection.swift; sourceTree = "<group>"; };
-		5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRoot.swift; sourceTree = "<group>"; };
+		5700C2C72BEBC4A800481FA7 /* FloatingPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanel.swift; sourceTree = "<group>"; };
 		5700C2C92BED162000481FA7 /* PanelStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelStore.swift; sourceTree = "<group>"; };
 		5700C2CC2BED169D00481FA7 /* PanelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelData.swift; sourceTree = "<group>"; };
 		5700C2CE2BEDB6EB00481FA7 /* DraggingSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingSelection.swift; sourceTree = "<group>"; };
@@ -263,7 +263,6 @@
 			isa = PBXGroup;
 			children = (
 				5700C2CC2BED169D00481FA7 /* PanelData.swift */,
-				5700C2C72BEBC4A800481FA7 /* PanelRoot.swift */,
 				5700C2C92BED162000481FA7 /* PanelStore.swift */,
 				572487882BDF83D90096DDE4 /* DataInput */,
 				57DD2A2D2C0435190046931C /* DebugPanel */,
@@ -271,7 +270,6 @@
 				57DD2A2C2C0434AA0046931C /* ItemPanel */,
 				5724877A2BDF7F5F0096DDE4 /* PathPanel */,
 				5700C2CB2BED165000481FA7 /* Views */,
-				57241FA22C228A3400FB0E29 /* PanelPopover.swift */,
 			);
 			path = Panel;
 			sourceTree = "<group>";
@@ -279,8 +277,10 @@
 		5700C2CB2BED165000481FA7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */,
+				5700C2C72BEBC4A800481FA7 /* FloatingPanel.swift */,
 				5700C2C32BEB5AAF00481FA7 /* PanelBody.swift */,
+				57241FA22C228A3400FB0E29 /* PanelPopover.swift */,
+				5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -863,7 +863,7 @@
 				5700C2D32BEF1A1C00481FA7 /* CanvasAction.swift in Sources */,
 				576BE2672C0828A000353912 /* View+Modifiers.swift in Sources */,
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
-				5700C2C82BEBC4A800481FA7 /* PanelRoot.swift in Sources */,
+				5700C2C82BEBC4A800481FA7 /* FloatingPanel.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelection.swift in Sources */,

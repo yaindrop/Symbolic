@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - PanelBody
+
 struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
     @Environment(\.panelId) var panelId
 
@@ -22,43 +24,24 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
     } }
 }
 
-struct VisualEffectView: UIViewRepresentable {
-    let effect: UIVisualEffect
-    func makeUIView(context _: Context) -> UIVisualEffectView { .init(effect: effect) }
-    func updateUIView(_: UIViewType, context _: Context) {}
-}
+// MARK: private
 
 private extension PanelBody {
     @ViewBuilder var content: some View {
         if selector.appearance == .popoverSection {
-            Section(header: sectionTitle) {
-                VStack(spacing: 12) {
-                    bodyContent(nil)
-                }
-                .padding(.leading, 24)
-                .padding(.trailing.union(.bottom), 12)
-            }
+            sectionBody
         } else {
+            floatingBody
+        }
+    }
+
+    var sectionBody: some View {
+        Section(header: sectionTitle) {
             VStack(spacing: 12) {
-                floatingTitle
-                ManagedScrollView(model: scrollViewModel) { proxy in
-                    VStack(spacing: 12) {
-                        bodyContent(proxy)
-                    }
-                }
-                .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-                .frame(maxHeight: maxHeight)
-                .fixedSize(horizontal: false, vertical: true)
+                bodyContent(nil)
             }
-            .padding(12)
-            .if(selector.appearance == .floatingSecondary) {
-                $0.background(.background.secondary)
-                    .invisibleSoildOverlay()
-                    .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
-            } else: {
-                $0.background(.ultraThinMaterial)
-            }
-            .clipRounded(radius: 18)
+            .padding(.leading, 24)
+            .padding(.trailing.union(.bottom), 12)
         }
     }
 
@@ -77,8 +60,30 @@ private extension PanelBody {
         .padding(12)
         .background(.ultraThinMaterial)
         .clipRounded(radius: 12)
-        .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
         .padding(12)
+    }
+
+    var floatingBody: some View {
+        VStack(spacing: 12) {
+            floatingTitle
+            ManagedScrollView(model: scrollViewModel) { proxy in
+                VStack(spacing: 12) {
+                    bodyContent(proxy)
+                }
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+            .frame(maxHeight: maxHeight)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .if(selector.appearance == .floatingSecondary) {
+            $0.background(.background.secondary)
+                .invisibleSoildOverlay()
+                .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
+        } else: {
+            $0.background(.ultraThinMaterial)
+        }
+        .clipRounded(radius: 18)
     }
 
     var floatingTitle: some View {

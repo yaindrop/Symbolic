@@ -72,25 +72,27 @@ struct PanelPopover: View, SelectorHolder {
 private extension PanelPopover {
     @ViewBuilder var content: some View {
         if selector.visible {
-            ScrollView {
+            VStack(spacing: 0) {
                 Picker("", selection: $isSettings.animation()) {
                     Text("Panels").tag(false)
                     Text("Settings").tag(true)
                 }
                 .pickerStyle(.segmented)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding()
-                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    if isSettings {
-                        settings
-                    } else {
-                        panels
+                .padding(12)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        if isSettings {
+                            settings
+                        } else {
+                            panels
+                        }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+                .frame(maxWidth: .infinity, maxHeight: selector.viewSize.height - 120)
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-            .frame(maxHeight: selector.viewSize.height - 64)
-            .fixedSize(horizontal: false, vertical: true)
             .frame(width: 320)
             .background(.ultraThinMaterial)
             .clipRounded(radius: 12)

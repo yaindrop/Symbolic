@@ -72,7 +72,7 @@ private extension PanelBody {
                 }
             }
             .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-            .frame(maxHeight: maxHeight)
+            .frame(maxWidth: .infinity, maxHeight: maxHeight)
             .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)

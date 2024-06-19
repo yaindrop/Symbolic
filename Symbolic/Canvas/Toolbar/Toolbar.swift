@@ -38,7 +38,6 @@ struct ToolbarModifier: ViewModifier, SelectorHolder {
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.toolbar.mode }) var toolbarMode
         @Selected({ global.document.undoable }) var undoable
-        @Selected({ global.panel.showPopover }) var showPanelPopover
     }
 
     @SelectorWrapper var selector
@@ -113,18 +112,7 @@ private extension ToolbarModifier {
 
     @ViewBuilder var trailing: some View {
         HStack {
-            Button {
-                global.panel.update(showPopover: !global.panel.showPopover)
-            } label: {
-                Image(systemName: "list.dash.header.rectangle")
-                    .padding(6)
-                    .if(selector.showPanelPopover) {
-                        $0
-                            .tint(.systemBackground)
-                            .background(.blue)
-                            .clipRounded(radius: 6)
-                    }
-            }
+            PanelPopoverButton()
 
             Button {
                 global.document.undo()
@@ -133,70 +121,5 @@ private extension ToolbarModifier {
             }
             .disabled(!selector.undoable)
         }
-    }
-}
-
-struct PanelPopover: View, SelectorHolder {
-    class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
-        @Selected(animation: .fast, { global.panel.showPopover }) var showPopover
-        @Selected({ global.viewport.viewSize }) var viewSize
-        @Selected({ global.panel.sidebarPanels }) var sidebarPanels
-    }
-
-    @SelectorWrapper var selector
-
-    @State private var isSettings = false
-
-    var body: some View {
-        setupSelector {
-            content
-        }
-    }
-
-    @ViewBuilder var content: some View {
-        if selector.showPopover {
-            ScrollView {
-                Picker("", selection: $isSettings.animation()) {
-                    Text("Panels").tag(false)
-                    Text("Settings").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding()
-                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    if isSettings {
-                        settings
-                    } else {
-                        panels
-                    }
-                }
-            }
-            .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-            .frame(maxHeight: selector.viewSize.height - 64)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(width: 320)
-            .background(.background)
-            .clipRounded(radius: 12)
-            .shadow(color: .init(.sRGBLinear, white: 0, opacity: 0.1), radius: 6, x: -3, y: 3)
-            .padding(12)
-            .innerAligned(.topTrailing)
-        }
-    }
-
-    @ViewBuilder var panels: some View {
-        if selector.sidebarPanels.isEmpty {
-            Text("No panels")
-                .frame(maxWidth: .infinity, minHeight: 120)
-                .padding()
-        }
-        ForEach(selector.sidebarPanels) {
-            $0.view
-                .environment(\.panelId, $0.id)
-        }
-    }
-
-    @ViewBuilder var settings: some View {
-        EmptyView()
     }
 }

@@ -30,7 +30,7 @@ struct VisualEffectView: UIViewRepresentable {
 
 private extension PanelBody {
     @ViewBuilder var content: some View {
-        if selector.appearance == .sidebarSection {
+        if selector.appearance == .popoverSection {
             Section(header: sectionTitle) {
                 VStack(spacing: 12) {
                     bodyContent(nil)
@@ -56,6 +56,7 @@ private extension PanelBody {
             } else: {
                 $0.background(.background.secondary)
             }
+            .clipRounded(radius: 18)
         }
     }
 

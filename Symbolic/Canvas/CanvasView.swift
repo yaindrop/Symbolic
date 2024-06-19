@@ -114,8 +114,6 @@ struct SidebarView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var syncUpdate: Bool { true }
         @Selected({ global.panel.movingPanelMap }) var movingPanelMap
-        @Selected({ global.panel.sidebarFrame }) var frame
-        @Selected({ global.panel.sidebarPanels }) var sidebarPanels
     }
 
     @SelectorWrapper var selector
@@ -130,16 +128,10 @@ struct SidebarView: View, TracedView, SelectorHolder {
 }
 
 private extension SidebarView {
-    var hovering: Bool { selector.movingPanelMap.contains { selector.frame.contains($0.value.globalPosition) } }
-
-    var borderColor: Color { hovering ? .blue : .label.opacity(0.2) }
-
     @ViewBuilder var content: some View {
         ScrollView {
             if sidebarType == .document {
                 documents
-            } else {
-                panels
             }
         }
     }
@@ -157,32 +149,6 @@ private extension SidebarView {
                     sidebarType = .panel
                 } label: {
                     Image(systemName: "list.dash.header.rectangle")
-                }
-            }
-        }
-    }
-
-    var panels: some View {
-        VStack(spacing: 0) {
-            ForEach(selector.sidebarPanels) {
-                $0.view
-                    .environment(\.panelId, $0.id)
-            }
-            Text(selector.movingPanelMap.isEmpty ? "No panels" : "Move panel here")
-                .frame(maxWidth: .infinity, minHeight: 120)
-                .geometryReader { global.panel.update(sidebarFrame: $0.frame(in: .global)) }
-                .if(!selector.movingPanelMap.isEmpty) {
-                    $0.clipRounded(radius: 12, border: borderColor, stroke: .init(lineWidth: 2, dash: [8]))
-                }
-                .padding(12)
-        }
-        .navigationTitle("Panels")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    sidebarType = .document
-                } label: {
-                    Image(systemName: "doc.text")
                 }
             }
         }

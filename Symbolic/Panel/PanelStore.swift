@@ -12,9 +12,9 @@ class PanelStore: Store {
 
     @Trackable var movingPanelMap: [UUID: MovingPanelData] = [:]
 
-    @Trackable var showPopover: Bool = false
-    @Trackable var sidebarFrame: CGRect = .zero
-    @Trackable var sidebarPanelIds: Set<UUID> = []
+    @Trackable var popoverActive: Bool = false
+    @Trackable var popoverButtonFrame: CGRect = .zero
+    @Trackable var popoverPanelIds: Set<UUID> = []
 }
 
 private extension PanelStore {
@@ -32,22 +32,26 @@ private extension PanelStore {
 }
 
 extension PanelStore {
-    func update(showPopover: Bool) {
-        update { $0(\._showPopover, showPopover) }
+    var popoverButtonHovering: Bool {
+        movingPanelMap.contains { popoverButtonFrame.contains($0.value.globalPosition) }
     }
 
-    func update(sidebarFrame: CGRect) {
-        update { $0(\._sidebarFrame, sidebarFrame) }
+    func update(popoverActive: Bool) {
+        update { $0(\._popoverActive, popoverActive) }
     }
 
-    func update(sidebarPanelIds: Set<UUID>) {
-        update { $0(\._sidebarPanelIds, sidebarPanelIds) }
+    func update(popoverButtonFrame: CGRect) {
+        update { $0(\._popoverButtonFrame, popoverButtonFrame) }
+    }
+
+    func update(popoverPanelIds: Set<UUID>) {
+        update { $0(\._popoverPanelIds, popoverPanelIds) }
     }
 
     func drop(panelId: UUID, location: Point2) {
         guard var panel = get(id: panelId) else { return }
         withStoreUpdating {
-            update(sidebarPanelIds: sidebarPanelIds.cloned { $0.remove(panelId) })
+            update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(panelId) })
 
             panel.align = .topLeading
             let offset = Vector2(location) - .init(panel.size) / 2
@@ -71,14 +75,14 @@ extension PanelStore {
 
     var panelIds: [UUID] { panelMap.keys }
 
-    var floatingPanelIds: [UUID] { panelIds.filter { !sidebarPanelIds.contains($0) } }
+    var floatingPanelIds: [UUID] { panelIds.filter { !popoverPanelIds.contains($0) } }
     var floatingPanels: [PanelData] { floatingPanelIds.compactMap { get(id: $0) } }
 
-    var sidebarPanels: [PanelData] { panels.filter { sidebarPanelIds.contains($0.id) } }
+    var popoverPanels: [PanelData] { panels.filter { popoverPanelIds.contains($0.id) } }
 
     func appearance(id: UUID) -> PanelAppearance {
         guard let panel = get(id: id) else { return .floatingHidden }
-        guard floatingPanelIds.contains(id) else { return .sidebarSection }
+        guard floatingPanelIds.contains(id) else { return .popoverSection }
         let peers = floatingPanels.filter { $0.align == panel.align }
         if peers.last?.id == id {
             return .floatingPrimary
@@ -148,9 +152,9 @@ extension PanelStore {
         moving.offset = v.offset
 
         let _r = subtracer.range(type: .intent, "moved \(panelId) by \(v.offset) with speed \(v.speed)"); defer { _r() }
-        if sidebarFrame.contains(moving.globalPosition) {
+        if popoverButtonFrame.contains(moving.globalPosition) {
             withStoreUpdating {
-                update(sidebarPanelIds: sidebarPanelIds.cloned { $0.insert(panelId) })
+                update(popoverPanelIds: popoverPanelIds.cloned { $0.insert(panelId) })
                 update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
             }
             return
@@ -213,7 +217,7 @@ extension PanelStore {
     }
 
     func moveGesture(panelId: UUID) -> MultipleGesture? {
-        if sidebarPanelIds.contains(panelId) {
+        if popoverPanelIds.contains(panelId) {
             return nil
         }
         return .init(

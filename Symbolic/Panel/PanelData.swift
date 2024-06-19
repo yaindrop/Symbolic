@@ -4,7 +4,7 @@ enum PanelAppearance: Equatable {
     case floatingPrimary
     case floatingSecondary
     case floatingHidden
-    case sidebarSection
+    case popoverSection
 }
 
 // MARK: - PanelData

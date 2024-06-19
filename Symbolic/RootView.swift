@@ -12,7 +12,7 @@ struct RootView: View, TracedView {
 
 struct DocumentsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
+        override var syncNotify: Bool { true }
         @Selected({ global.panel.movingPanelMap }) var movingPanelMap
     }
 
@@ -63,7 +63,7 @@ enum SidebarType: CaseIterable, SelfIdentifiable {
 
 struct SidebarView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
+        override var syncNotify: Bool { true }
         @Selected({ global.panel.movingPanelMap }) var movingPanelMap
     }
 

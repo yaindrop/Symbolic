@@ -11,22 +11,20 @@ class ActiveItemStore: Store {
 
 private extension ActiveItemStore {
     func update(active: Set<UUID>, focused: UUID? = nil) {
-        withAnimation(.fast) {
-            withStoreUpdating {
-                update { $0(\._activeItemIds, active) }
-                update { $0(\._focusedItemId, focused) }
-            }
+        withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
+            update { $0(\._activeItemIds, active) }
+            update { $0(\._focusedItemId, focused) }
         }
     }
 
     func update(select itemId: UUID) {
-        withAnimation(.fast) {
+        withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
             update(active: activeItemIds.cloned { $0.insert(itemId) })
         }
     }
 
     func update(deselect itemIds: [UUID]) {
-        withAnimation(.fast) {
+        withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
             update(active: activeItemIds.cloned { $0.subtract(itemIds) })
         }
     }

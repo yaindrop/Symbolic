@@ -164,7 +164,7 @@ extension PanelStore {
         let moveTarget = moveTarget(moving: moving, speed: v.speed)
         moving.align = moveTarget.align
         moving.offset = moveTarget.offset
-        withStoreUpdating {
+        withStoreUpdating(configs: .init(syncNotify: true)) {
             update(panelMap: panelMap.cloned { $0[panelId] = moving.data.cloned { $0.align = moveTarget.align } })
             update(movingPanelMap: movingPanelMap.cloned { $0[panelId] = moving })
         }
@@ -173,15 +173,11 @@ extension PanelStore {
         target.offset = .zero
         target.endTask = Task { @MainActor in
             try await Task.sleep(for: .seconds(0.5))
-            withAnimation(.fast) {
-                self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
-            }
+            self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
         }
 
-        Task { @MainActor [target] in
-            withAnimation(.spring(duration: 0.5)) {
-                update(movingPanelMap: movingPanelMap.cloned { $0[panelId] = target })
-            }
+        withStoreUpdating(configs: .init(animation: .overridden(.spring(duration: 0.5)))) {
+            update(movingPanelMap: movingPanelMap.cloned { $0[panelId] = target })
         }
     }
 
@@ -247,7 +243,7 @@ extension PanelStore {
     func onResized(panelId: UUID, size: CGSize) {
         let _r = subtracer.range("resize \(panelId) to \(size)"); defer { _r() }
         guard let panel = get(id: panelId) else { return }
-        withAnimation(.fast) {
+        withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
             update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.size = size } })
         }
     }
@@ -255,7 +251,7 @@ extension PanelStore {
     func setRootRect(_ rect: CGRect) {
         let _r = subtracer.range("set root rect \(rect)"); defer { _r() }
 
-        withAnimation(.fast) {
+        withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
             update(rootRect: rect)
         }
     }

@@ -4,7 +4,7 @@ import SwiftUI
 
 struct ItemsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
+        override var syncNotify: Bool { true }
         @Selected({ global.viewport.toView }) var toView
         @Selected({ global.item.allPaths }) var allPaths
         @Selected({ global.activeItem.focusedItemId }) var focusedItemId

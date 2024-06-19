@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private struct StoreSubscription {
     let id: Int
@@ -16,6 +16,7 @@ private class StoreManager {
 
     private var tracking: TrackingContext?
     private var updating: UpdatingContext?
+    private var notifying: [NotifyingContext] = []
 }
 
 // MARK: tracking
@@ -31,7 +32,7 @@ extension StoreManager {
 
     var trackingId: Int? { tracking?.subscriptionId }
 
-    func withTracking<T>(_ apply: () -> T, onUpdate: @escaping () -> Void) -> (value: T, TrackingContext) {
+    func withTracking<T>(_ apply: () -> T, onNotify: @escaping () -> Void) -> (value: T, TrackingContext) {
         guard tracking == nil else {
             fatalError("Nested tracking of store properties is not supported.")
         }
@@ -43,7 +44,7 @@ extension StoreManager {
         let result = apply()
         self.tracking = nil
 
-        idToSubscription[id] = .init(id: id, callback: onUpdate)
+        idToSubscription[id] = .init(id: id, callback: onNotify)
         return (result, tracking)
     }
 
@@ -54,22 +55,37 @@ extension StoreManager {
 
 // MARK: updating
 
+struct StoreUpdateConfigs {
+    enum AnimationOverride {
+        case overridden(Animation)
+        case noAnimation
+    }
+
+    var syncNotify: Bool = false
+    var animation: AnimationOverride?
+}
+
 extension StoreManager {
     class UpdatingContext: CancellableHolder {
+        let configs: StoreUpdateConfigs
         var cancellables = Set<AnyCancellable>()
         var subscriptions: [StoreSubscription] = []
         var willUpdateSubject = PassthroughSubject<Void, Never>()
+
+        init(configs: StoreUpdateConfigs) {
+            self.configs = configs
+        }
     }
 
-    func withUpdating(_ apply: () -> Void) {
+    func withUpdating(configs: StoreUpdateConfigs = .init(), _ apply: () -> Void) {
         if updating != nil {
             let _r = subtracer.range("reenter updating"); defer { _r() }
             apply()
             return
         }
-        let _r = subtracer.range("updating"); defer { _r() }
+        let _r = subtracer.range("updating, configs=\(configs)"); defer { _r() }
 
-        let updating = UpdatingContext()
+        let updating = UpdatingContext(configs: configs)
         self.updating = updating
         apply()
         self.updating = nil
@@ -80,6 +96,20 @@ extension StoreManager {
     var willUpdate: AnyPublisher<Void, Never>? {
         updating.map { $0.willUpdateSubject.eraseToAnyPublisher() }
     }
+}
+
+// MARK: notifying
+
+extension StoreManager {
+    class NotifyingContext {
+        let configs: StoreUpdateConfigs
+
+        init(configs: StoreUpdateConfigs) {
+            self.configs = configs
+        }
+    }
+
+    var notifyingConfigs: StoreUpdateConfigs? { notifying.last?.configs }
 
     func notify(subscriptionIds: Set<Int>) {
         let _r = subtracer.range("notify"); defer { _r() }
@@ -97,11 +127,13 @@ extension StoreManager {
 
     private func notifyAll(_ context: UpdatingContext) {
         let _r = subtracer.range("notify all \(context.subscriptions.map { $0.id })"); defer { _r() }
+        notifying.append(.init(configs: context.configs))
         context.willUpdateSubject.send()
         for subscription in context.subscriptions {
             let _r = subtracer.range("callback \(subscription.id)"); defer { _r() }
             subscription.callback()
         }
+        notifying.removeLast()
     }
 }
 
@@ -277,8 +309,8 @@ extension _StoreProtocol {
     }
 }
 
-func withStoreUpdating(_ apply: () -> Void) {
-    manager.withUpdating(apply)
+func withStoreUpdating(configs: StoreUpdateConfigs = .init(), _ apply: () -> Void) {
+    manager.withUpdating(configs: configs, apply)
 }
 
 // MARK: - Trackable
@@ -356,7 +388,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
 
 class _Selector<Props>: ObservableObject, CancellableHolder {
     var name: String?
-    var syncUpdate: Bool { false }
+    var syncNotify: Bool { false }
 
     var props: Props?
     var cancellables = Set<AnyCancellable>()
@@ -387,7 +419,7 @@ private extension _Selector {
 protocol _SelectorProtocol: AnyObject {
     associatedtype Props
     var name: String? { get }
-    var syncUpdate: Bool { get }
+    var syncNotify: Bool { get }
     var props: Props? { get }
 
     func notify()
@@ -416,10 +448,10 @@ private extension _SelectorProtocol {
     }
 
     @discardableResult
-    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
+    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>, configs: StoreUpdateConfigs = .init()) -> T {
         let _r = subtracer.range("track selector \(name!) \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
-        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onUpdate: { [weak self] in self?.update(keyPath: keyPath) }
+        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onNotify: { [weak self] in self?.notify(keyPath: keyPath) }
         wrapper.subscriptionId = context.subscriptionId
 
         if wrapper.value == nil {
@@ -427,13 +459,14 @@ private extension _SelectorProtocol {
             setupRetrack { [weak self] in self?.retrack(keyPath: keyPath) }
             subtracer.instant("setup \(newValue)")
         } else if wrapper.value != newValue {
+            let animation = wrapper.animation(with: configs)
             wrapper.value = newValue
-            if let animation = wrapper.animation {
+            if let animation {
                 withAnimation(animation) { notify() }
             } else {
                 notify()
             }
-            subtracer.instant("updated \(newValue)")
+            subtracer.instant("updated \(newValue), animation=\(animation?.description ?? "nil")")
         } else {
             subtracer.instant("unchanged")
         }
@@ -449,16 +482,19 @@ private extension _SelectorProtocol {
         track(keyPath: keyPath)
     }
 
-    func update<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
-        let _r = subtracer.range("update selector \(name!) \(keyPath)"); defer { _r() }
+    func notify<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
         @Ref(self, keyPath) var wrapper
-        if syncUpdate || wrapper.syncUpdate {
-            track(keyPath: keyPath)
-        } else if wrapper.trackingTask == nil {
-            wrapper.trackingTask = Task(priority: .high) { @MainActor [weak self] in
+        let configs = manager.notifyingConfigs ?? .init()
+        let syncNotify = syncNotify || wrapper.syncNotify || configs.syncNotify
+        let _r = subtracer.range("update selector \(name!) \(keyPath), syncNotify=\(syncNotify), configs=\(configs)"); defer { _r() }
+        wrapper.asyncNotifyTask?.cancel()
+        if syncNotify {
+            track(keyPath: keyPath, configs: configs)
+        } else {
+            wrapper.asyncNotifyTask = Task(priority: .high) { @MainActor [weak self] in
                 guard let self else { return }
-                self[keyPath: keyPath].trackingTask = nil
-                self.track(keyPath: keyPath)
+                self[keyPath: keyPath].asyncNotifyTask = nil
+                self.track(keyPath: keyPath, configs: configs)
             }
         }
     }
@@ -468,13 +504,25 @@ private extension _SelectorProtocol {
 
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
-    var syncUpdate: Bool
+    var syncNotify: Bool
     var animation: Animation?
     let selector: (Instance.Props) -> Value
 
     var value: Value?
     var subscriptionId: Int?
-    var trackingTask: Task<Void, Never>?
+    var asyncNotifyTask: Task<Void, Never>?
+
+    func animation(with configs: StoreUpdateConfigs) -> Animation? {
+        if let override = configs.animation {
+            if case let .overridden(animation) = override {
+                animation
+            } else {
+                nil
+            }
+        } else {
+            animation
+        }
+    }
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }
@@ -488,14 +536,14 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         @available(*, unavailable) set {}
     }
 
-    init(syncUpdate: Bool = false, animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
-        self.syncUpdate = syncUpdate
+    init(syncNotify: Bool = false, animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
+        self.syncNotify = syncNotify
         self.animation = animation
         self.selector = selector
     }
 
-    init(syncUpdate: Bool = false, animation: Animation? = nil, _ selector: @escaping () -> Value) {
-        self.syncUpdate = syncUpdate
+    init(syncNotify: Bool = false, animation: Animation? = nil, _ selector: @escaping () -> Value) {
+        self.syncNotify = syncNotify
         self.animation = animation
         self.selector = { _ in selector() }
     }

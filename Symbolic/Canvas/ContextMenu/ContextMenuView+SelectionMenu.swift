@@ -5,7 +5,7 @@ import SwiftUI
 extension ContextMenuView {
     struct SelectionMenu: View, SelectorHolder {
         class Selector: SelectorBase {
-            override var syncUpdate: Bool { true }
+            override var syncNotify: Bool { true }
             @Selected({ global.activeItem.selectionBounds }) var bounds
         }
 

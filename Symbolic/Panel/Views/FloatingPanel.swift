@@ -9,7 +9,7 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
+//        override var syncNotify: Bool { true }
         @Selected({ global.panel.get(id: $0.panelId) }) var panel
         @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
         @Selected(animation: .default, { global.panel.appearance(id: $0.panelId) }) var appearance

@@ -24,7 +24,7 @@ extension ActiveItemView {
 
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
-            override var syncUpdate: Bool { true }
+            override var syncNotify: Bool { true }
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
             @Selected({ global.activeItem.boundingRect(itemId: $0.pathId) }) var bounds

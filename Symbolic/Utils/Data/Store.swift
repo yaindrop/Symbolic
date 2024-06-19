@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-private let subtracer = tracer.tagged("store", enabled: true)
+private let subtracer = tracer.tagged("store", enabled: false)
 
 private struct StoreSubscription {
     let id: Int
@@ -32,12 +32,12 @@ extension StoreManager {
 
     var trackingId: Int? { tracking?.subscriptionId }
 
-    func withTracking<T>(_ apply: () -> T, onNotify: @escaping () -> Void) -> (value: T, TrackingContext) {
+    func withTracking<T>(_ apply: () -> T, onNotify: @escaping () -> Void) -> (value: T, subscriptionId: Int) {
         guard tracking == nil else {
             fatalError("Nested tracking of store properties is not supported.")
         }
         let id = subscriptionIdGen.generate()
-        let _r = subtracer.range("tracking \(id)"); defer { _r() }
+        let _r = subtracer.range("tracking, id=\(id)"); defer { _r() }
 
         let tracking = TrackingContext(subscriptionId: id)
         self.tracking = tracking
@@ -45,7 +45,7 @@ extension StoreManager {
         self.tracking = nil
 
         idToSubscription[id] = .init(id: id, callback: onNotify)
-        return (result, tracking)
+        return (result, tracking.subscriptionId)
     }
 
     func expire(subscriptionId: Int) {
@@ -57,7 +57,7 @@ extension StoreManager {
 
 struct StoreUpdateConfigs {
     enum AnimationOverride {
-        case overridden(Animation)
+        case override(Animation)
         case noAnimation
     }
 
@@ -70,12 +70,14 @@ extension StoreManager {
         let configs: StoreUpdateConfigs
         var cancellables = Set<AnyCancellable>()
         var subscriptions: [StoreSubscription] = []
-        var willUpdateSubject = PassthroughSubject<Void, Never>()
+        var willNotifySubject = PassthroughSubject<Void, Never>()
 
         init(configs: StoreUpdateConfigs) {
             self.configs = configs
         }
     }
+
+    var updatingWillNotify: AnyPublisher<Void, Never>? { updating?.willNotifySubject.eraseToAnyPublisher() }
 
     func withUpdating(configs: StoreUpdateConfigs = .init(), _ apply: () -> Void) {
         if updating != nil {
@@ -88,13 +90,10 @@ extension StoreManager {
         let updating = UpdatingContext(configs: configs)
         self.updating = updating
         apply()
+        updating.willNotifySubject.send()
         self.updating = nil
 
         notifyAll(updating)
-    }
-
-    var willUpdate: AnyPublisher<Void, Never>? {
-        updating.map { $0.willUpdateSubject.eraseToAnyPublisher() }
     }
 }
 
@@ -128,7 +127,6 @@ extension StoreManager {
     private func notifyAll(_ context: UpdatingContext) {
         let _r = subtracer.range("notify all \(context.subscriptions.map { $0.id })"); defer { _r() }
         notifying.append(.init(configs: context.configs))
-        context.willUpdateSubject.send()
         for subscription in context.subscriptions {
             let _r = subtracer.range("callback \(subscription.id)"); defer { _r() }
             subscription.callback()
@@ -194,11 +192,11 @@ private extension Store {
         trackableIdToSubscriptionIds[trackableId] = ids
     }
 
-    func onChange(of trackableId: Int) -> Set<Int> {
+    func onChange(of trackableId: Int) {
         let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: trackableId)
         let _r = subtracer.range("on change of \(trackableId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")"); defer { _r() }
-        guard let subscriptionIds else { return [] }
-        return subscriptionIds
+        guard let subscriptionIds else { return }
+        manager.notify(subscriptionIds: subscriptionIds)
     }
 }
 
@@ -209,22 +207,12 @@ protocol _StoreProtocol: Store {
     typealias Derived<T: Equatable> = _Derived<Self, T>
 }
 
-extension Store: _StoreProtocol {
-    struct Updater<S: _StoreProtocol> {
-        let store: S
+extension Store: _StoreProtocol {}
 
-        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T, forced: Bool = false) {
-            store.update(keyPath: keyPath, value, forced: forced)
-        }
+private extension _StoreProtocol {
+    // MARK: access trackable
 
-        fileprivate init(_ store: S) {
-            self.store = store
-        }
-    }
-}
-
-extension _StoreProtocol {
-    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
+    func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
         let _r = subtracer.range("access trackable \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
@@ -239,12 +227,14 @@ extension _StoreProtocol {
         }
         if let deriving, !deriving.trackableIds.contains(id) {
             deriving.trackableIds.insert(id)
-            deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
+            deriving.publishers.append(wrapper.willNotifySubject.map { _ in () }.eraseToAnyPublisher())
         }
         return wrapper.value
     }
 
-    fileprivate func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
+    // MARK: access derived
+
+    func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
         let _r = subtracer.range("access trackable \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let value = wrapper.value ?? update(keyPath: keyPath)
@@ -256,12 +246,14 @@ extension _StoreProtocol {
         }
         if let deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
             deriving.trackableIds.formUnion(wrapper.trackableIds)
-            deriving.publishers.append(wrapper.willUpdateSubject.map { _ in () }.eraseToAnyPublisher())
+            deriving.publishers.append(wrapper.willNotifySubject.map { _ in () }.eraseToAnyPublisher())
         }
         return value
     }
 
-    fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T, forced: Bool) {
+    // MARK: update trackable
+
+    func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T, forced: Bool) {
         let _r = subtracer.range("update trackable \(keyPath) with \(newValue)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
@@ -275,22 +267,24 @@ extension _StoreProtocol {
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
 
-        manager.notify(subscriptionIds: onChange(of: id))
-        if wrapper.willUpdateCancellable == nil {
-            wrapper.willUpdateCancellable = manager.willUpdate?.sink {
-                wrapper.willUpdateSubject.send(wrapper.value)
-                wrapper.willUpdateCancellable = nil
+        onChange(of: id)
+        if wrapper.willNotifyCancellable == nil {
+            wrapper.willNotifyCancellable = manager.updatingWillNotify?.sink {
+                wrapper.willNotifySubject.send(wrapper.value)
+                wrapper.willNotifyCancellable = nil
             }
         }
     }
 
-    @discardableResult fileprivate func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
+    // MARK: update derived
+
+    @discardableResult func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
         let _r = subtracer.range("update derived \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let (value, context) = withDeriving { wrapper.derive(self) }
 
         wrapper.value = value
-        wrapper.willUpdateSubject.send(value)
+        wrapper.willNotifySubject.send(value)
 
         wrapper.trackableIds = context.trackableIds
         wrapper.cancellables.removeAll()
@@ -301,7 +295,23 @@ extension _StoreProtocol {
         }
         return value
     }
+}
 
+extension Store {
+    struct Updater<S: _StoreProtocol> {
+        let store: S
+
+        func callAsFunction<T: Equatable>(_ keyPath: ReferenceWritableKeyPath<S, S.Trackable<T>>, _ value: T, forced: Bool = false) {
+            store.update(keyPath: keyPath, value, forced: forced)
+        }
+
+        fileprivate init(_ store: S) {
+            self.store = store
+        }
+    }
+}
+
+extension _StoreProtocol {
     func update(_ callback: (Updater<Self>) -> Void) {
         manager.withUpdating {
             callback(Updater(self))
@@ -321,19 +331,19 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var value: Value
 
     fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
-    fileprivate let willUpdateSubject = PassthroughSubject<Value, Never>()
+    fileprivate let willNotifySubject = PassthroughSubject<Value, Never>()
 
-    fileprivate var willUpdateCancellable: AnyCancellable?
+    fileprivate var willNotifyCancellable: AnyCancellable?
 
     @available(*, unavailable, message: "@Trackable can only be applied to Store")
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }
 
     struct Projected {
         let didSet: AnyPublisher<Value, Never>
-        let willUpdate: AnyPublisher<Value, Never>
+        let willNotify: AnyPublisher<Value, Never>
     }
 
-    var projectedValue: Projected { .init(didSet: didSetSubject.eraseToAnyPublisher(), willUpdate: willUpdateSubject.eraseToAnyPublisher()) }
+    var projectedValue: Projected { .init(didSet: didSetSubject.eraseToAnyPublisher(), willNotify: willNotifySubject.eraseToAnyPublisher()) }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -357,7 +367,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var value: Value?
 
     fileprivate var trackableIds: Set<Int> = []
-    fileprivate let willUpdateSubject = PassthroughSubject<Value, Never>()
+    fileprivate let willNotifySubject = PassthroughSubject<Value, Never>()
 
     fileprivate var cancellables = Set<AnyCancellable>()
 
@@ -365,10 +375,10 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }
 
     struct Projected {
-        let willUpdate: AnyPublisher<Value, Never>
+        let willNotify: AnyPublisher<Value, Never>
     }
 
-    var projectedValue: Projected { .init(willUpdate: willUpdateSubject.eraseToAnyPublisher()) }
+    var projectedValue: Projected { .init(willNotify: willNotifySubject.eraseToAnyPublisher()) }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -442,17 +452,21 @@ extension _Selector: _SelectorProtocol {
 }
 
 private extension _SelectorProtocol {
+    // MARK: access selected
+
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
         let _r = subtracer.range("access selector \(name!) \(keyPath)"); defer { _r() }
         return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
     }
 
+    // MARK: track selected
+
     @discardableResult
     func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>, configs: StoreUpdateConfigs = .init()) -> T {
         let _r = subtracer.range("track selector \(name!) \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
-        let (newValue, context) = manager.withTracking { wrapper.selector(self.props!) } onNotify: { [weak self] in self?.notify(keyPath: keyPath) }
-        wrapper.subscriptionId = context.subscriptionId
+        let (newValue, subscriptionId) = manager.withTracking { wrapper.selector(self.props!) } onNotify: { [weak self] in self?.notify(keyPath: keyPath) }
+        wrapper.subscriptionId = subscriptionId
 
         if wrapper.value == nil {
             wrapper.value = newValue
@@ -473,6 +487,8 @@ private extension _SelectorProtocol {
         return newValue
     }
 
+    // MARK: retrack selected
+
     func retrack<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
         let _r = subtracer.range("retrack selector \(name!) \(keyPath)"); defer { _r() }
         @Ref(self, keyPath) var wrapper
@@ -481,6 +497,8 @@ private extension _SelectorProtocol {
         }
         track(keyPath: keyPath)
     }
+
+    // MARK: notify selected
 
     func notify<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
         @Ref(self, keyPath) var wrapper
@@ -512,18 +530,6 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     var subscriptionId: Int?
     var asyncNotifyTask: Task<Void, Never>?
 
-    func animation(with configs: StoreUpdateConfigs) -> Animation? {
-        if let override = configs.animation {
-            if case let .overridden(animation) = override {
-                animation
-            } else {
-                nil
-            }
-        } else {
-            animation
-        }
-    }
-
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }
 
@@ -546,6 +552,20 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         self.syncNotify = syncNotify
         self.animation = animation
         self.selector = { _ in selector() }
+    }
+}
+
+private extension _Selected {
+    func animation(with configs: StoreUpdateConfigs) -> Animation? {
+        if let override = configs.animation {
+            if case let .override(animation) = override {
+                animation
+            } else {
+                nil
+            }
+        } else {
+            animation
+        }
     }
 }
 

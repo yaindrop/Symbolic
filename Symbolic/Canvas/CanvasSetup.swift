@@ -127,13 +127,13 @@ struct CanvasSetup {
             global.addingPath.onDrag($0)
         }
 
-        global.draggingSelection.store.$intersectedItems.willUpdate
+        global.draggingSelection.store.$intersectedItems.willNotify
             .sink {
                 global.activeItem.select(itemIds: $0.map { $0.id })
             }
             .store(in: global.draggingSelection.store)
 
-        global.activeItem.store.$focusedItemId.willUpdate
+        global.activeItem.store.$focusedItemId.willNotify
             .sink { _ in
                 global.focusedPath.clear()
             }

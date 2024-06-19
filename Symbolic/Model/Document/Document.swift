@@ -83,11 +83,11 @@ extension DocumentService {
     func sendEvent(_ event: DocumentEvent) {
         let _r = tracer.range("Document send event"); defer { _r() }
         if store.pendingEvent == nil {
-            withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
+            withStoreUpdating(configs: .init(animation: .override(.fast))) {
                 store.update(activeDocument: .init(events: activeDocument.events + [event]))
             }
         } else {
-            withStoreUpdating(configs: .init(animation: .overridden(.fast))) {
+            withStoreUpdating(configs: .init(animation: .override(.fast))) {
                 store.update(pendingEvent: nil)
                 store.update(activeDocument: .init(events: activeDocument.events + [event]))
             }

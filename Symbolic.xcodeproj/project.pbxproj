@@ -108,6 +108,7 @@
 		57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1C2C02DB5A0046931C /* Grid.swift */; };
 		57DD2A212C02DB850046931C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A202C02DB850046931C /* Item.swift */; };
 		57DD2A282C0321110046931C /* ItemPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* ItemPanel.swift */; };
+		57E082062C230526008CC67B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082052C230526008CC67B /* RootView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -232,6 +233,7 @@
 		57DD2A1C2C02DB5A0046931C /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
 		57DD2A202C02DB850046931C /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		57DD2A272C0321110046931C /* ItemPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPanel.swift; sourceTree = "<group>"; };
+		57E082052C230526008CC67B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -338,6 +340,7 @@
 				5700C2C22BEB5A6800481FA7 /* Panel */,
 				5723BF812BC39846002209F2 /* Preview Content */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
+				57E082052C230526008CC67B /* RootView.swift */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -811,6 +814,7 @@
 				571B9B2E2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57DD2A162C0236E60046931C /* ItemStore.swift in Sources */,
+				57E082062C230526008CC67B /* RootView.swift in Sources */,
 				5700C2C62BEB5B0A00481FA7 /* PanelSection.swift in Sources */,
 				574CC7E82BFA3EAF0042FEE3 /* ContextMenuStore.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* ActiveItemStore.swift in Sources */,

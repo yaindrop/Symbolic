@@ -34,6 +34,8 @@ extension ToolbarStore {
 // MARK: - ToolbarModifier
 
 struct ToolbarModifier: ViewModifier, SelectorHolder {
+    @Environment(\.dismiss) var dismiss
+
     class Selector: SelectorBase {
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.toolbar.mode }) var toolbarMode
@@ -60,20 +62,28 @@ private extension ToolbarModifier {
     }}}
 
     var leading: some View {
-        Menu {
-            Text("Item 0")
-            Divider()
-            Text("Item 1")
-        } label: {
-            HStack {
-                Text("未命名2").font(.headline)
-                Image(systemName: "chevron.down.circle.fill")
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(Color.label.opacity(0.5))
-                    .font(.footnote)
-                    .fontWeight(.black)
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
             }
-            .tint(.label)
+
+            Menu {
+                Text("Item 0")
+                Divider()
+                Text("Item 1")
+            } label: {
+                HStack {
+                    Text("未命名2").font(.headline)
+                    Image(systemName: "chevron.down.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(Color.label.opacity(0.5))
+                        .font(.footnote)
+                        .fontWeight(.black)
+                }
+                .tint(.label)
+            }
         }
     }
 

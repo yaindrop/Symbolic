@@ -37,7 +37,7 @@ private extension PanelPopoverButton {
                 }
                 .if(selector.moving && !selector.hovering) {
                     $0.overlay { RoundedRectangle(cornerRadius: 6).stroke(Color.invisibleSolid).shadow(color: .blue, radius: glowingRadius) }
-                        .animatedValue($glowingRadius, from: 2, to: 12, .linear(duration: 0.5).repeatForever())
+                        .animatedValue($glowingRadius, from: 1, to: 6, .linear(duration: 0.5).repeatForever())
                 }
                 .if(selector.hovering) {
                     $0.clipRounded(radius: 6, border: .blue, stroke: .init(lineWidth: 2))

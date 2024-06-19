@@ -18,7 +18,7 @@ struct SymbolicApp: App {
 
     var body: some Scene {
         WindowGroup {
-            CanvasView()
+            RootView()
         }
         .modelContainer(sharedModelContainer)
     }

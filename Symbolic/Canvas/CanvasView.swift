@@ -46,18 +46,14 @@ private extension CanvasView {
     // MARK: view builders
 
     @ViewBuilder var content: some View {
-        NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
-            SidebarView()
-        } detail: {
-            ZStack {
-                canvas
-                overlay
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .clipped()
-            .edgesIgnoringSafeArea(.bottom)
-            .modifier(ToolbarModifier())
+        ZStack {
+            canvas
+            overlay
         }
+        .navigationBarTitleDisplayMode(.inline)
+        .clipped()
+        .edgesIgnoringSafeArea(.bottom)
+        .modifier(ToolbarModifier())
     }
 
     @ViewBuilder var background: some View { trace("background") {
@@ -98,44 +94,6 @@ private extension CanvasView {
         }
         .allowsHitTesting(!multipleTouch.active)
     } }
-}
-
-enum SidebarType: CaseIterable, SelfIdentifiable {
-    case document, panel
-}
-
-struct SidebarView: View, TracedView, SelectorHolder {
-    class Selector: SelectorBase {
-        override var syncUpdate: Bool { true }
-        @Selected({ global.panel.movingPanelMap }) var movingPanelMap
-    }
-
-    @SelectorWrapper var selector
-
-    @State private var sidebarType: SidebarType = .document
-
-    var body: some View { trace {
-        setupSelector {
-            content
-        }
-    } }
-}
-
-private extension SidebarView {
-    @ViewBuilder var content: some View {
-        ScrollView {
-            documents
-        }
-    }
-
-    var documents: some View {
-        VStack(spacing: 0) {
-            Text("No documents")
-                .frame(maxWidth: .infinity, minHeight: 120)
-                .padding(12)
-        }
-        .navigationTitle("Documents")
-    }
 }
 
 #Preview {

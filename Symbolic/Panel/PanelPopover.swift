@@ -21,11 +21,11 @@ struct PanelPopoverButton: View, SelectorHolder {
 private extension PanelPopoverButton {
     var content: some View {
         Button {
-            global.panel.update(popoverActive: !selector.active)
+            global.panel.togglePopover()
         } label: {
             Image(systemName: "list.dash.header.rectangle")
                 .padding(6)
-                .geometryReader { global.panel.update(popoverButtonFrame: $0.frame(in: .global)) }
+                .geometryReader { global.panel.setPopoverButtonFrame($0.frame(in: .global)) }
                 .if(selector.active && !selector.moving) {
                     $0.tint(.systemBackground)
                         .background(.blue)
@@ -82,7 +82,7 @@ struct PanelPopover: View, SelectorHolder {
             .frame(maxHeight: selector.viewSize.height - 64)
             .fixedSize(horizontal: false, vertical: true)
             .frame(width: 320)
-            .background(.background)
+            .background(.ultraThinMaterial)
             .clipRounded(radius: 12)
             .shadow(color: .init(.sRGBLinear, white: 0, opacity: 0.1), radius: 6, x: -3, y: 3)
             .padding(12)

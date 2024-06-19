@@ -94,10 +94,6 @@ private extension FloatingPanelView {
                 .id(panel.id)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))
-                .if(selector.appearance == .floatingSecondary) {
-                    $0.invisibleSoildOverlay()
-                        .multipleGesture(global.panel.moveGesture(panelId: panelId))
-                }
                 .scaleEffect(scale, anchor: anchor)
                 .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: anchor)
                 .padding(.horizontal, gap.dx)
@@ -124,6 +120,12 @@ struct PanelRoot: View, TracedView, SelectorHolder {
                 ForEach(selector.floatingPanelIds) { FloatingPanelView(panelId: $0) }
             }
             .geometryReader { global.panel.setRootRect($0.frame(in: .global)) }
+            .dropDestination(for: Data.self) { items, location in
+                guard let item = items.first else { return false }
+                guard let id = UUID(uuidString: String(decoding: item, as: UTF8.self)) else { return false }
+                global.panel.drop(panelId: id, location: location)
+                return true
+            }
         }
     } }
 }

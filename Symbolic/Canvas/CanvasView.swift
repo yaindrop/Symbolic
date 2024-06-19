@@ -57,12 +57,6 @@ private extension CanvasView {
             .clipped()
             .edgesIgnoringSafeArea(.bottom)
             .modifier(ToolbarModifier())
-            .dropDestination(for: Data.self) { items, location in
-                guard let item = items.first else { return false }
-                guard let id = UUID(uuidString: String(decoding: item, as: UTF8.self)) else { return false }
-                global.panel.drop(panelId: id, location: location)
-                return true
-            }
         }
     }
 
@@ -130,9 +124,7 @@ struct SidebarView: View, TracedView, SelectorHolder {
 private extension SidebarView {
     @ViewBuilder var content: some View {
         ScrollView {
-            if sidebarType == .document {
-                documents
-            }
+            documents
         }
     }
 
@@ -143,15 +135,6 @@ private extension SidebarView {
                 .padding(12)
         }
         .navigationTitle("Documents")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    sidebarType = .panel
-                } label: {
-                    Image(systemName: "list.dash.header.rectangle")
-                }
-            }
-        }
     }
 }
 

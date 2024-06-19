@@ -51,24 +51,34 @@ private extension PanelBody {
                 .fixedSize(horizontal: false, vertical: true)
             }
             .padding(12)
-            .if(selector.appearance == .floatingPrimary) {
-                $0.background(.ultraThinMaterial)
-            } else: {
+            .if(selector.appearance == .floatingSecondary) {
                 $0.background(.background.secondary)
+                    .invisibleSoildOverlay()
+                    .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
+            } else: {
+                $0.background(.ultraThinMaterial)
             }
             .clipRounded(radius: 18)
         }
     }
 
     var sectionTitle: some View {
-        Text(name)
-            .font(.title2)
-            .aligned(axis: .horizontal, .start)
-            .padding(12)
-            .background(.ultraThinMaterial)
-            .clipRounded(radius: 12)
-            .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
-            .padding(12)
+        HStack {
+            Text(name)
+                .font(.title2)
+            Spacer()
+            Button {
+                global.panel.setFloating(panelId: panelId)
+            } label: {
+                Image(systemName: "rectangle.inset.topright.filled")
+                    .tint(.label)
+            }
+        }
+        .padding(12)
+        .background(.ultraThinMaterial)
+        .clipRounded(radius: 12)
+        .draggable(panelId.uuidString.data(using: .utf8) ?? .init())
+        .padding(12)
     }
 
     var floatingTitle: some View {
@@ -77,7 +87,7 @@ private extension PanelBody {
             .padding(.vertical, 8)
             .aligned(axis: .horizontal, .center)
             .invisibleSoildOverlay()
-            .multipleGesture(global.panel.moveGesture(panelId: panelId))
-            .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) { $0.background(.regularMaterial) }
+            .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
+            .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) { $0.background(.ultraThinMaterial) }
     }
 }

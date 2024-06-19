@@ -27,10 +27,10 @@ private extension PanelSection {
             VStack(spacing: 0) {
                 sectionContent()
             }
-            .if(selector.appearance == .floatingPrimary) {
-                $0.background(.ultraThickMaterial)
-            } else: {
+            .if(selector.appearance == .floatingSecondary) {
                 $0.background(.background.secondary)
+            } else: {
+                $0.background(.ultraThickMaterial)
             }
             .clipRounded(radius: 12)
         }

@@ -29,12 +29,6 @@ private extension PanelStore {
     func update(movingPanelMap: [UUID: MovingPanelData]) {
         update { $0(\._movingPanelMap, movingPanelMap) }
     }
-}
-
-extension PanelStore {
-    var popoverButtonHovering: Bool {
-        movingPanelMap.contains { popoverButtonFrame.contains($0.value.globalPosition) }
-    }
 
     func update(popoverActive: Bool) {
         update { $0(\._popoverActive, popoverActive) }
@@ -46,22 +40,6 @@ extension PanelStore {
 
     func update(popoverPanelIds: Set<UUID>) {
         update { $0(\._popoverPanelIds, popoverPanelIds) }
-    }
-
-    func drop(panelId: UUID, location: Point2) {
-        guard var panel = get(id: panelId) else { return }
-        withStoreUpdating {
-            update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(panelId) })
-
-            panel.align = .topLeading
-            let offset = Vector2(location) - .init(panel.size) / 2
-            let moveTarget = moveTarget(moving: .init(data: panel, globalPosition: location, offset: offset), speed: .zero)
-            panel.align = moveTarget.align
-            update(panelMap: panelMap.cloned {
-                $0.removeValue(forKey: panelId)
-                $0[panelId] = panel
-            })
-        }
     }
 }
 
@@ -79,6 +57,10 @@ extension PanelStore {
     var floatingPanels: [PanelData] { floatingPanelIds.compactMap { get(id: $0) } }
 
     var popoverPanels: [PanelData] { panels.filter { popoverPanelIds.contains($0.id) } }
+
+    var popoverButtonHovering: Bool {
+        movingPanelMap.contains { popoverButtonFrame.contains($0.value.globalPosition) }
+    }
 
     func appearance(id: UUID) -> PanelAppearance {
         guard let panel = get(id: id) else { return .floatingHidden }
@@ -103,6 +85,40 @@ extension PanelStore {
 
     func deregister(panelId: UUID) {
         update(panelMap: panelMap.cloned { $0.removeValue(forKey: panelId) })
+    }
+}
+
+extension PanelStore {
+    func togglePopover() {
+        update(popoverActive: !popoverActive)
+    }
+
+    func setPopoverButtonFrame(_ frame: CGRect) {
+        update(popoverButtonFrame: frame)
+    }
+
+    func setFloating(panelId: UUID) {
+        withStoreUpdating {
+            update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(panelId) })
+            update(panelMap: panelMap.cloned { $0[panelId]?.align = .topTrailing })
+            update(popoverActive: false)
+        }
+    }
+
+    func drop(panelId: UUID, location: Point2) {
+        guard var panel = get(id: panelId) else { return }
+        withStoreUpdating {
+            update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(panelId) })
+
+            panel.align = .topLeading
+            let offset = Vector2(location) - .init(panel.size) / 2
+            let moveTarget = moveTarget(moving: .init(data: panel, globalPosition: location, offset: offset), speed: .zero)
+            panel.align = moveTarget.align
+            update(panelMap: panelMap.cloned {
+                $0.removeValue(forKey: panelId)
+                $0[panelId] = panel
+            })
+        }
     }
 }
 
@@ -216,7 +232,7 @@ extension PanelStore {
         return (alignOffset, align)
     }
 
-    func moveGesture(panelId: UUID) -> MultipleGesture? {
+    func floatingPanelDrag(panelId: UUID) -> MultipleGesture? {
         if popoverPanelIds.contains(panelId) {
             return nil
         }

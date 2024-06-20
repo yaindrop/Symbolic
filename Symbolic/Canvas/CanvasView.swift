@@ -87,9 +87,14 @@ private extension CanvasView {
             AddingPathView()
 
             ContextMenuRoot()
-            CanvasActionView()
 
-            FloatingPanelRoot()
+            VStack(spacing: 0) {
+                FloatingPanelRoot()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                CanvasActionView()
+                    .aligned(axis: .horizontal, .start)
+                    .frame(maxWidth: .infinity)
+            }
             PanelPopover()
         }
         .allowsHitTesting(!multipleTouch.active)

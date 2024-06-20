@@ -54,28 +54,30 @@ struct CanvasActionView: View, TracedView, SelectorHolder {
 
 private extension CanvasActionView {
     var content: some View {
-        VStack(alignment: .leading) {
+        HStack {
+            Text("")
+                .padding(3)
+                .allowsHitTesting(false)
             if !selector.continuousHints.isEmpty {
                 Text(selector.continuousHints.joined(separator: " "))
-                    .padding(8)
-                    .background(.green.opacity(0.5))
-                    .clipRounded(radius: 12)
+                    .padding(3)
+                    .background(.green.opacity(0.3))
+                    .clipRounded(radius: 6)
             }
             if !selector.triggeringHints.isEmpty {
                 Text(selector.triggeringHints.joined(separator: " "))
-                    .padding(8)
-                    .background(.orange.opacity(0.5))
-                    .clipRounded(radius: 12)
+                    .padding(3)
+                    .background(.orange.opacity(0.3))
+                    .clipRounded(radius: 6)
             }
             if !selector.instantHints.isEmpty {
                 Text(selector.instantHints.joined(separator: " "))
-                    .padding(8)
-                    .background(.blue.opacity(0.5))
-                    .clipRounded(radius: 12)
+                    .padding(3)
+                    .background(.blue.opacity(0.3))
+                    .clipRounded(radius: 6)
             }
         }
-        .font(.footnote)
-        .innerAligned(.topLeading)
-        .padding(12)
+        .font(.system(size: 12))
+        .padding(.all.subtracting(.top), 12)
     }
 }

@@ -20,6 +20,7 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
     var body: some View { trace {
         setupSelector(.init(panelId: panelId)) {
             content
+                .id(panelId)
         }
     } }
 }

@@ -25,15 +25,18 @@ extension PanelData: EquatableBy {
 
 extension PanelData: TriviallyCloneable {}
 
+// MARK: - MovingPanelData
+
 struct MovingPanelData: Equatable {
-    let data: PanelData
-    var globalPosition: Point2
+    let id: UUID
+    var globalDragPosition: Point2
     var offset: Vector2
-    var align: PlaneInnerAlign?
-    var endTask: Task<Void, any Error>?
+    var align: PlaneInnerAlign
 }
 
 extension MovingPanelData: TriviallyCloneable {}
+
+// MARK: - PanelIdKey
 
 private struct PanelIdKey: EnvironmentKey {
     static let defaultValue: UUID = .init()

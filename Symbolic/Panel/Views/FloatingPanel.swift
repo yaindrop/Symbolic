@@ -9,9 +9,10 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-//        override var syncNotify: Bool { true }
         @Selected({ global.panel.get(id: $0.panelId) }) var panel
         @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
+        @Selected({ global.panel.floatingAlign(id: $0.panelId) }) var align
+        @Selected(animation: .default, { global.panel.floatingGap(id: $0.panelId) }) var gap
         @Selected(animation: .default, { global.panel.appearance(id: $0.panelId) }) var appearance
     }
 
@@ -29,34 +30,27 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 private extension FloatingPanelView {
     var width: Scalar { 320 }
 
-    var gap: Vector2 { .init(10, 20) }
-
-    var secondaryOffset: Vector2 { .init(24, 18) }
-
-    var offset: Vector2 {
-        guard let panel = selector.panel else { return .zero }
+    var secondaryOffset: Vector2 {
+        let size: Vector2 = .init(20, 20)
         switch selector.appearance {
         case .floatingSecondary, .floatingHidden:
-            switch panel.align {
-            case .topLeading: return secondaryOffset.flipY
-            case .topTrailing: return -secondaryOffset
-            case .bottomLeading: return secondaryOffset
-            case .bottomTrailing: return secondaryOffset.flipX
+            switch selector.align {
+            case .topLeading: return -size
+            case .topTrailing: return -size.flipX
+            case .bottomLeading: return size.flipX
+            case .bottomTrailing: return size
             default: return .zero
             }
         default: return .zero
         }
     }
 
-    var secondaryAngle: Scalar { 30 }
-
-    var hiddenAngle: Scalar { 45 }
-
     var rotation: Angle {
-        guard let panel = selector.panel else { return .zero }
+        let secondaryAngle: Scalar = 30
+        let hiddenAngle: Scalar = 45
         switch selector.appearance {
-        case .floatingSecondary: return .degrees((panel.align.isLeading ? -1 : 1) * secondaryAngle)
-        case .floatingHidden: return .degrees((panel.align.isLeading ? -1 : 1) * hiddenAngle)
+        case .floatingSecondary: return .degrees((selector.align.isLeading ? 1 : -1) * secondaryAngle)
+        case .floatingHidden: return .degrees((selector.align.isLeading ? 1 : -1) * hiddenAngle)
         default: return .zero
         }
     }
@@ -66,17 +60,6 @@ private extension FloatingPanelView {
         case .floatingSecondary: 0.4
         case .floatingHidden: 0.2
         default: 1
-        }
-    }
-
-    var anchor: UnitPoint {
-        guard let panel = selector.panel else { return .zero }
-        switch panel.align {
-        case .topLeading: return .topTrailing
-        case .topTrailing: return .topLeading
-        case .bottomLeading: return .bottomTrailing
-        case .bottomTrailing: return .bottomLeading
-        default: return .topLeading
         }
     }
 
@@ -91,17 +74,15 @@ private extension FloatingPanelView {
     @ViewBuilder var content: some View {
         if let panel = selector.panel {
             panel.view
-                .frame(width: width)
                 .environment(\.panelId, panelId)
-                .id(panel.id)
+                .frame(width: width)
                 .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
                 .offset(.init(selector.offset))
-                .scaleEffect(scale, anchor: anchor)
-                .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: anchor)
-                .padding(.horizontal, gap.dx)
-                .padding(.vertical, gap.dy)
-                .offset(.init(offset))
-                .innerAligned(panel.align)
+                .scaleEffect(scale, anchor: selector.align.unitPoint)
+                .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)
+                .padding(size: .init(selector.gap))
+                .offset(.init(secondaryOffset))
+                .innerAligned(selector.align)
                 .opacity(selector.appearance == .floatingHidden ? 0 : 1)
         }
     }

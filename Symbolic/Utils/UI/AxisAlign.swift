@@ -59,6 +59,20 @@ extension PlaneInnerAlign {
         }
     }
 
+    var unitPoint: UnitPoint {
+        switch self {
+        case .topLeading: .topLeading
+        case .topCenter: .top
+        case .topTrailing: .topTrailing
+        case .centerLeading: .leading
+        case .center: .center
+        case .centerTrailing: .trailing
+        case .bottomLeading: .bottomLeading
+        case .bottomCenter: .bottom
+        case .bottomTrailing: .bottomTrailing
+        }
+    }
+
     subscript(axis: Axis) -> AxisAlign {
         switch axis {
         case .horizontal: horizontal

@@ -92,6 +92,14 @@ extension View {
     }
 }
 
+// MARK: - padding
+
+extension View {
+    func padding(size: CGSize) -> some View {
+        padding(.horizontal, size.width).padding(.vertical, size.height)
+    }
+}
+
 // MARK: - frame
 
 extension View {

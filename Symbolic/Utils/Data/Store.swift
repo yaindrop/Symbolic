@@ -297,6 +297,8 @@ private extension _StoreProtocol {
     }
 }
 
+// MARK: Updater
+
 extension Store {
     struct Updater<S: _StoreProtocol> {
         let store: S

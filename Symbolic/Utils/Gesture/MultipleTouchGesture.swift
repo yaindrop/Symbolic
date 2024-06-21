@@ -132,6 +132,7 @@ struct MultipleTouchPressDetector {
     var pressLocation: Point2? { isPress ? location : nil }
 
     func subscribe() {
+        model.cancellables.removeAll()
         multipleTouch.$startTime
             .sink { time in
                 guard time != nil else { return }

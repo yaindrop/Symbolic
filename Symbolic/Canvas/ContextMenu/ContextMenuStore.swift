@@ -24,6 +24,10 @@ extension ContextMenuStore {
         update { $0(\._menus, menus.cloned { $0.remove(data) }) }
     }
 
+    func clear() {
+        update { $0(\._menus, []) }
+    }
+
     @ViewBuilder func representative(_ data: ContextMenuData) -> some View {
         Color.clear
             .onAppear { self.register(data) }

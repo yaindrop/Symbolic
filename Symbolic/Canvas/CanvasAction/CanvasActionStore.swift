@@ -57,24 +57,24 @@ private extension CanvasActionView {
         HStack {
             if empty {
                 Text("")
-                    .padding(3)
+                    .padding(size: .init(6, 3))
                     .allowsHitTesting(false)
             }
             if !selector.continuousHints.isEmpty {
                 Text(selector.continuousHints.joined(separator: " "))
-                    .padding(3)
+                    .padding(size: .init(6, 3))
                     .background(.green.opacity(0.3))
                     .clipRounded(radius: 6)
             }
             if !selector.triggeringHints.isEmpty {
                 Text(selector.triggeringHints.joined(separator: " "))
-                    .padding(3)
+                    .padding(size: .init(6, 3))
                     .background(.orange.opacity(0.3))
                     .clipRounded(radius: 6)
             }
             if !selector.instantHints.isEmpty {
                 Text(selector.instantHints.joined(separator: " "))
-                    .padding(3)
+                    .padding(size: .init(6, 3))
                     .background(.blue.opacity(0.3))
                     .clipRounded(radius: 6)
             }

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct CanvasSetup {
     func pathUpdate() {
+        global.document.store.cancellables.removeAll()
+
         global.documentUpdater.store.pendingEventPublisher
             .sink {
                 global.document.setPendingEvent($0)
@@ -16,6 +18,8 @@ struct CanvasSetup {
     }
 
     func documentLoad() {
+        global.item.store.cancellables.removeAll()
+
         global.document.store.$activeDocument.didSet
             .sink {
                 global.path.loadDocument($0)
@@ -34,9 +38,12 @@ struct CanvasSetup {
     }
 
     func multipleTouch(multipleTouch: MultipleTouchModel) {
+        global.viewportUpdater.store.cancellables.removeAll()
+
         multipleTouch.$panInfo
             .sink { global.viewportUpdater.onPanInfo($0) }
             .store(in: global.viewportUpdater.store)
+
         multipleTouch.$pinchInfo
             .sink { global.viewportUpdater.onPinchInfo($0) }
             .store(in: global.viewportUpdater.store)
@@ -127,16 +134,20 @@ struct CanvasSetup {
             global.addingPath.onDrag($0)
         }
 
+        global.draggingSelection.store.cancellables.removeAll()
+
         global.draggingSelection.store.$intersectedItems.willNotify
             .sink {
                 global.activeItem.select(itemIds: $0.map { $0.id })
             }
             .store(in: global.draggingSelection.store)
 
+        global.activeItem.store.cancellables.removeAll()
+
         global.activeItem.store.$focusedItemId.willNotify
             .sink { _ in
                 global.focusedPath.clear()
             }
-            .store(in: global.draggingSelection.store)
+            .store(in: global.activeItem.store)
     }
 }

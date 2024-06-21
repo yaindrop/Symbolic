@@ -21,12 +21,14 @@ struct CanvasView: View, TracedView {
                 setup.multipleTouchPress(multipleTouchPress: multipleTouchPress)
             }
             .onAppear {
+                global.panel.clear()
                 global.panel.register(align: .bottomTrailing) { PathPanel() }
                 global.panel.register(align: .bottomLeading) { HistoryPanel() }
                 global.panel.register(align: .bottomLeading) { ItemPanel() }
                 global.panel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
             }
             .onAppear {
+                global.contextMenu.clear()
                 global.contextMenu.register(.pathFocusedPart)
                 global.contextMenu.register(.focusedPath)
                 global.contextMenu.register(.focusedGroup)
@@ -53,7 +55,6 @@ private extension CanvasView {
         .clipped()
         .edgesIgnoringSafeArea(.all)
         .toolbar(.hidden)
-//        .modifier(ToolbarModifier())
     }
 
     @ViewBuilder var background: some View { trace("background") {

@@ -42,9 +42,9 @@ extension DocumentsView {
             ScrollView {
                 VStack {
                     Button("Canvas!") { isPresenting.toggle() }
-                    //                    .fullScreenCover(isPresented: $isPresenting) {
-                    //                        CanvasView()
-                    //                    }
+                        .fullScreenCover(isPresented: $isPresenting) {
+                            CanvasView()
+                        }
                     LazyVGrid(columns: adaptiveColumn, spacing: 20) {
                         ForEach(data, id: \.self) { item in
                             Text(String(item))
@@ -59,11 +59,6 @@ extension DocumentsView {
                 .padding()
             }
             .navigationTitle("Documents")
-            if isPresenting {
-                CanvasView()
-                    .background(.background)
-                    .navigationTitle("")
-            }
         }
     }
 }

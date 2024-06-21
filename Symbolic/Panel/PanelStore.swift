@@ -99,6 +99,10 @@ extension PanelStore {
     func deregister(panelId: UUID) {
         update(panelMap: panelMap.cloned { $0.removeValue(forKey: panelId) })
     }
+
+    func clear() {
+        update(panelMap: [:])
+    }
 }
 
 extension PanelStore {

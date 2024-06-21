@@ -19,6 +19,7 @@ struct DocumentsView: View, TracedView, SelectorHolder {
     @SelectorWrapper var selector
 
     @State private var sidebarType: SidebarType = .document
+    @State private var isPresenting = false
 
     var body: some View { trace {
         setupSelector {
@@ -37,23 +38,33 @@ extension DocumentsView {
     }
 
     var content: some View {
-        ScrollView {
-            VStack {
-                NavigationLink { CanvasView() } label: { Text("Canvas!") }
-                LazyVGrid(columns: adaptiveColumn, spacing: 20) {
-                    ForEach(data, id: \.self) { item in
-                        Text(String(item))
-                            .frame(width: 150, height: 150, alignment: .center)
-                            .background(.blue)
-                            .cornerRadius(10)
-                            .foregroundColor(.white)
-                            .font(.title)
+        ZStack {
+            ScrollView {
+                VStack {
+                    Button("Canvas!") { isPresenting.toggle() }
+                    //                    .fullScreenCover(isPresented: $isPresenting) {
+                    //                        CanvasView()
+                    //                    }
+                    LazyVGrid(columns: adaptiveColumn, spacing: 20) {
+                        ForEach(data, id: \.self) { item in
+                            Text(String(item))
+                                .frame(width: 150, height: 150, alignment: .center)
+                                .background(.blue)
+                                .cornerRadius(10)
+                                .foregroundColor(.white)
+                                .font(.title)
+                        }
                     }
                 }
+                .padding()
             }
-            .padding()
+            .navigationTitle("Documents")
+            if isPresenting {
+                CanvasView()
+                    .background(.background)
+                    .navigationTitle("")
+            }
         }
-        .navigationTitle("Documents")
     }
 }
 

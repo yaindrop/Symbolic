@@ -50,10 +50,10 @@ private extension CanvasView {
             canvas
             overlay
         }
-        .navigationBarTitleDisplayMode(.inline)
         .clipped()
-        .edgesIgnoringSafeArea(.bottom)
-        .modifier(ToolbarModifier())
+        .edgesIgnoringSafeArea(.all)
+        .toolbar(.hidden)
+//        .modifier(ToolbarModifier())
     }
 
     @ViewBuilder var background: some View { trace("background") {
@@ -89,13 +89,24 @@ private extension CanvasView {
             ContextMenuRoot()
 
             VStack(spacing: 0) {
-                FloatingPanelRoot()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Toolbar()
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 20)
+                    .zIndex(2)
+                ZStack {
+                    FloatingPanelRoot()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    PanelPopover()
+                }
+                .zIndex(1)
                 CanvasActionView()
                     .aligned(axis: .horizontal, .start)
                     .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+                    .zIndex(0)
             }
-            PanelPopover()
         }
         .allowsHitTesting(!multipleTouch.active)
     } }

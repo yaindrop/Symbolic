@@ -55,9 +55,11 @@ struct CanvasActionView: View, TracedView, SelectorHolder {
 private extension CanvasActionView {
     var content: some View {
         HStack {
-            Text("")
-                .padding(3)
-                .allowsHitTesting(false)
+            if empty {
+                Text("")
+                    .padding(3)
+                    .allowsHitTesting(false)
+            }
             if !selector.continuousHints.isEmpty {
                 Text(selector.continuousHints.joined(separator: " "))
                     .padding(3)
@@ -78,6 +80,9 @@ private extension CanvasActionView {
             }
         }
         .font(.system(size: 12))
-        .padding(.all.subtracting(.top), 12)
+    }
+
+    var empty: Bool {
+        selector.continuousHints.isEmpty && selector.triggeringHints.isEmpty && selector.instantHints.isEmpty
     }
 }

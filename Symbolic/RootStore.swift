@@ -1,11 +1,17 @@
 import Foundation
 
 class RootStore: Store {
+    @Trackable var fileTree: FileTree? = nil
+
     @Trackable var showCanvas = false
     @Trackable var activeDocumentUrl: URL?
 }
 
 extension RootStore {
+    func update(fileTree: FileTree) {
+        update { $0(\._fileTree, fileTree) }
+    }
+
     func update(showCanvas: Bool) {
         update { $0(\._showCanvas, showCanvas) }
     }

@@ -24,44 +24,60 @@ struct RootView: View, TracedView, SelectorHolder {
     }}
 }
 
-struct DocumentsView: View, TracedView {
-    @State private var fileTree: FileTree?
+struct DocumentsView: View, TracedView, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected(animation: .fast, { global.root.fileTree }) var fileTree
+    }
+
+    @SelectorWrapper var selector
 
     var body: some View { trace {
-        content
-            .onAppear {
-                Task {
-                    fileTree = await listFiles()
-                    print("fileTree", fileTree)
+        setupSelector {
+            content
+                .onAppear {
+                    Task {
+                        if let fileTree = await listFiles() {
+                            global.root.update(fileTree: fileTree)
+                        }
+                    }
                 }
-            }
+        }
     } }
 }
 
 extension DocumentsView {
     @ViewBuilder var content: some View {
-        if let fileTree {
-            DirectoryView(fileTree: fileTree, url: fileTree.root)
-        } else {
-            Text("Loading")
+        NavigationStack {
+            if let fileTree = selector.fileTree {
+                DirectoryView(url: fileTree.root)
+            } else {
+                Text("Loading")
+            }
         }
     }
 }
 
-struct DirectoryView: View, TracedView {
+struct DirectoryView: View, TracedView, SelectorHolder {
     @Environment(\.dismiss) private var dismiss
 
-    let fileTree: FileTree
     let url: URL
 
+    class Selector: SelectorBase {
+        @Selected(animation: .fast, { global.root.fileTree }) var fileTree
+    }
+
+    @SelectorWrapper var selector
+
     var body: some View { trace {
-        content
+        setupSelector {
+            content
+        }
     } }
 }
 
 extension DirectoryView {
     var data: [FileTree.Entry] {
-        guard let entries = fileTree.dirToEntries[url] else { return [] }
+        guard let entries = selector.fileTree?.dirToEntries[url] else { return [] }
         return entries.sorted {
             if $0.isDirectory == $1.isDirectory {
                 return $0.url.lastPathComponent < $1.url.lastPathComponent
@@ -76,24 +92,17 @@ extension DirectoryView {
                 Button("Canvas!") { global.root.update(showCanvas: !global.root.showCanvas) }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 20) {
                     ForEach(data, id: \.url) {
-                        EntryCard(fileTree: fileTree, entry: $0)
+                        EntryCard(entry: $0)
                     }
                 }
             }
             .padding()
         }
         .navigationTitle(url.lastPathComponent)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: { Image(systemName: "chevron.left") }
-                    .disabled(url == fileTree.root)
-            }
-        }
     }
 }
 
 struct EntryCard: View, TracedView {
-    let fileTree: FileTree
     let entry: FileTree.Entry
 
     var body: some View { trace {
@@ -104,13 +113,11 @@ struct EntryCard: View, TracedView {
 extension EntryCard {
     @ViewBuilder var content: some View {
         if entry.isDirectory {
-            NavigationLink { DirectoryView(fileTree: fileTree, url: entry.url) } label: { card }
+            NavigationLink { DirectoryView(url: entry.url) } label: { card }
                 .tint(.label)
         } else {
-            card
-                .onTapGesture {
-                    global.root.open(url: entry.url)
-                }
+            Button { global.root.open(url: entry.url) } label: { card }
+                .tint(.label)
         }
     }
 
@@ -163,8 +170,8 @@ private extension SidebarView {
     }
 }
 
-struct FileTree {
-    struct Entry {
+struct FileTree: Equatable {
+    struct Entry: Equatable {
         let url: URL
         let isDirectory: Bool
     }

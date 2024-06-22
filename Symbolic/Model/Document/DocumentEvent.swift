@@ -2,25 +2,25 @@ import Foundation
 
 // MARK: - ItemEvent
 
-enum ItemEvent: Equatable, Encodable {
-    struct SetMembers: Equatable, Encodable { let members: [UUID], inGroupId: UUID? }
+enum ItemEvent: Equatable, Codable {
+    struct SetMembers: Equatable, Codable { let members: [UUID], inGroupId: UUID? }
 
     case setMembers(SetMembers)
 }
 
 // MARK: - PathEvent
 
-enum PathEvent: Equatable, Encodable {
-    struct Create: Equatable, Encodable { let paths: [Path] }
-    struct Delete: Equatable, Encodable { let pathIds: [UUID] }
-    struct Move: Equatable, Encodable { let pathIds: [UUID], offset: Vector2 }
+enum PathEvent: Equatable, Codable {
+    struct Create: Equatable, Codable { let paths: [Path] }
+    struct Delete: Equatable, Codable { let pathIds: [UUID] }
+    struct Move: Equatable, Codable { let pathIds: [UUID], offset: Vector2 }
 
-    struct Update: Equatable, Encodable { let pathId: UUID, kinds: [Kind] }
+    struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
 
     // multi update
-    struct Merge: Equatable, Encodable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct NodeBreak: Equatable, Encodable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
-    struct EdgeBreak: Equatable, Encodable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
+    struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
+    struct EdgeBreak: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
 
     case create(Create)
     case delete(Delete)
@@ -36,12 +36,12 @@ enum PathEvent: Equatable, Encodable {
 // MARK: Update
 
 extension PathEvent.Update {
-    struct NodeCreate: Equatable, Encodable { let prevNodeId: UUID?, node: PathNode }
-    struct NodeUpdate: Equatable, Encodable { let node: PathNode }
-    struct NodeDelete: Equatable, Encodable { let nodeId: UUID }
-    struct EdgeUpdate: Equatable, Encodable { let fromNodeId: UUID, edge: PathEdge }
+    struct NodeCreate: Equatable, Codable { let prevNodeId: UUID?, node: PathNode }
+    struct NodeUpdate: Equatable, Codable { let node: PathNode }
+    struct NodeDelete: Equatable, Codable { let nodeId: UUID }
+    struct EdgeUpdate: Equatable, Codable { let fromNodeId: UUID, edge: PathEdge }
 
-    enum Kind: Equatable, Encodable {
+    enum Kind: Equatable, Codable {
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
@@ -51,18 +51,18 @@ extension PathEvent.Update {
 
 // MARK: - PathPropertyEvent
 
-enum PathPropertyEvent: Equatable, Encodable {
-    struct Update: Equatable, Encodable { let pathId: UUID, kinds: [Kind] }
+enum PathPropertyEvent: Equatable, Codable {
+    struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
 
     case update(Update)
 }
 
 extension PathPropertyEvent.Update {
-    struct SetName: Equatable, Encodable { let name: String? }
-    struct SetNodeType: Equatable, Encodable { let nodeIds: [UUID], nodeType: PathNodeType? }
-    struct SetEdgeType: Equatable, Encodable { let fromNodeIds: [UUID], edgeType: PathEdgeType? }
+    struct SetName: Equatable, Codable { let name: String? }
+    struct SetNodeType: Equatable, Codable { let nodeIds: [UUID], nodeType: PathNodeType? }
+    struct SetEdgeType: Equatable, Codable { let fromNodeIds: [UUID], edgeType: PathEdgeType? }
 
-    enum Kind: Equatable, Encodable {
+    enum Kind: Equatable, Codable {
         case setName(SetName)
         case setNodeType(SetNodeType)
         case setEdgeType(SetEdgeType)
@@ -71,7 +71,7 @@ extension PathPropertyEvent.Update {
 
 // MARK: - SingleEvent
 
-enum SingleEvent: Equatable, Encodable {
+enum SingleEvent: Equatable, Codable {
     case item(ItemEvent)
     case path(PathEvent)
     case pathProperty(PathPropertyEvent)
@@ -79,14 +79,14 @@ enum SingleEvent: Equatable, Encodable {
 
 // MARK: - CompoundEvent
 
-struct CompoundEvent: Equatable, Encodable {
+struct CompoundEvent: Equatable, Codable {
     let events: [SingleEvent]
 }
 
 // MARK: - DocumentEvent
 
-struct DocumentEvent: Identifiable, Equatable, Encodable {
-    enum Kind: Equatable, Encodable {
+struct DocumentEvent: Identifiable, Equatable, Codable {
+    enum Kind: Equatable, Codable {
         case single(SingleEvent)
         case compound(CompoundEvent)
     }

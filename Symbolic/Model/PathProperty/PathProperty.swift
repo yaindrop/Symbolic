@@ -1,6 +1,6 @@
 import Foundation
 
-enum PathNodeType: Encodable {
+enum PathNodeType: Codable {
     case corner
     case locked
     case mirrored
@@ -16,7 +16,7 @@ extension PathNodeType: CustomStringConvertible {
     }
 }
 
-enum PathEdgeType: Encodable {
+enum PathEdgeType: Codable {
     case auto
     case cubic
     case line
@@ -34,7 +34,7 @@ extension PathEdgeType: CustomStringConvertible {
     }
 }
 
-struct PathProperty: Identifiable, Equatable, Encodable, TriviallyCloneable {
+struct PathProperty: Identifiable, Equatable, Codable, TriviallyCloneable {
     let id: UUID
     var name: String?
 

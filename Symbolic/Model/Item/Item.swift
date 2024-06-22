@@ -1,6 +1,6 @@
 import Foundation
 
-struct ItemGroup: Identifiable, Equatable, Encodable {
+struct ItemGroup: Identifiable, Equatable, Codable {
     let id: UUID
     let members: [UUID]
 }
@@ -11,8 +11,8 @@ extension ItemGroup: CustomStringConvertible {
     }
 }
 
-struct Item: TriviallyCloneable, Equatable, Encodable {
-    enum Kind: Equatable, Encodable {
+struct Item: TriviallyCloneable, Equatable, Codable {
+    enum Kind: Equatable, Codable {
         case path(UUID)
         case group(ItemGroup)
     }

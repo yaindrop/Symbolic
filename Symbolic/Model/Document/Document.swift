@@ -2,14 +2,18 @@ import SwiftUI
 
 // MARK: - Document
 
-struct Document: Encodable {
+struct Document: Codable {
+    let id: UUID
+    var name: String?
     var events: [DocumentEvent] = []
 
     init(events: [DocumentEvent] = []) {
+        id = .init()
         self.events = events
     }
 
     init(from svg: String) {
+        id = .init()
         guard let svgData = svg.data(using: .utf8) else {
             events = []
             return

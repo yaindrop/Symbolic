@@ -8,7 +8,7 @@ protocol SUPathAppendable {
 
 // MARK: - PathEdge
 
-struct PathEdge: Equatable, Encodable {
+struct PathEdge: Equatable, Codable {
     let control0: Vector2
     let control1: Vector2
 
@@ -39,7 +39,7 @@ extension PathEdge: Transformable {
 
 // MARK: - PathNode
 
-struct PathNode: Identifiable, Equatable, Encodable {
+struct PathNode: Identifiable, Equatable, Codable {
     let id: UUID
     let position: Point2
 
@@ -59,8 +59,8 @@ extension PathNode: CustomStringConvertible {
 
 // MARK: - Path
 
-class Path: Identifiable, ReflectedStringConvertible, Cloneable {
-    struct NodeEdgePair: Equatable, TriviallyCloneable, Encodable {
+class Path: Identifiable, Cloneable, Codable {
+    struct NodeEdgePair: Equatable, TriviallyCloneable, Codable {
         var node: PathNode, edge: PathEdge
 
         var id: UUID { node.id }
@@ -77,18 +77,42 @@ class Path: Identifiable, ReflectedStringConvertible, Cloneable {
     private(set) var pairs: PairMap
     private(set) var isClosed: Bool
 
+    required init(id: UUID, pairs: PairMap, isClosed: Bool) {
+        self.id = id
+        self.pairs = pairs
+        self.isClosed = isClosed
+    }
+
+    // MARK: Cloneable
+
     required init(_ path: Path) {
         id = path.id
         pairs = path.pairs
         isClosed = path.isClosed
     }
 
-    required init(id: UUID, pairs: PairMap, isClosed: Bool) {
-        self.id = id
-        self.pairs = pairs
-        self.isClosed = isClosed
+    // MARK: Codable
+
+    private enum CodingKeys: String, CodingKey {
+        case id, pairs, isClosed
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(pairs.values, forKey: .pairs)
+        try container.encode(isClosed, forKey: .isClosed)
+    }
+
+    required init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        pairs = try .init(values.decode([NodeEdgePair].self, forKey: .pairs)) { $0.id }
+        isClosed = try values.decode(Bool.self, forKey: .isClosed)
     }
 }
+
+extension Path: ReflectedStringConvertible {}
 
 extension Path {
     var count: Int { pairs.count }
@@ -267,21 +291,6 @@ extension Path.NodeEdgePair: CustomStringConvertible {
 extension Path: CustomStringConvertible {
     var description: String {
         "Path(id: \(id), pairs: \(pairs.values), isClosed: \(isClosed))"
-    }
-}
-
-// MARK: Encodable
-
-extension Path: Encodable {
-    private enum CodingKeys: String, CodingKey {
-        case id, pairs, isClosed
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(pairs.values, forKey: .pairs)
-        try container.encode(isClosed, forKey: .isClosed)
     }
 }
 

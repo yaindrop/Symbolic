@@ -109,6 +109,7 @@
 		57DD2A212C02DB850046931C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A202C02DB850046931C /* Item.swift */; };
 		57DD2A282C0321110046931C /* ItemPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* ItemPanel.swift */; };
 		57E082062C230526008CC67B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082052C230526008CC67B /* RootView.swift */; };
+		57E082082C25B9BA008CC67B /* DocumentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082072C25B9BA008CC67B /* DocumentModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -234,6 +235,8 @@
 		57DD2A202C02DB850046931C /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		57DD2A272C0321110046931C /* ItemPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPanel.swift; sourceTree = "<group>"; };
 		57E082052C230526008CC67B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		57E082072C25B9BA008CC67B /* DocumentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentModel.swift; sourceTree = "<group>"; };
+		57E082092C26C75A008CC67B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -331,6 +334,7 @@
 		5723BF782BC39844002209F2 /* Symbolic */ = {
 			isa = PBXGroup;
 			children = (
+				57E082092C26C75A008CC67B /* Info.plist */,
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
 				574CC7B92BF3B2950042FEE3 /* GlobalStore.swift */,
 				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
@@ -556,6 +560,7 @@
 				572487912BDFA7B80096DDE4 /* DocumentAction.swift */,
 				57B5F1482BD54279001E1B2E /* DocumentEvent.swift */,
 				572487752BDBAF860096DDE4 /* DocumentUpdater.swift */,
+				57E082072C25B9BA008CC67B /* DocumentModel.swift */,
 			);
 			path = Document;
 			sourceTree = "<group>";
@@ -872,6 +877,7 @@
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelection.swift in Sources */,
 				5774B1602BFD864300C53CDD /* Background.swift in Sources */,
+				57E082082C25B9BA008CC67B /* DocumentModel.swift in Sources */,
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572487852BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift in Sources */,
@@ -1041,6 +1047,7 @@
 				DEVELOPMENT_TEAM = 433469HL57;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Symbolic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -1071,6 +1078,7 @@
 				DEVELOPMENT_TEAM = 433469HL57;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Symbolic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -5,7 +5,7 @@ import SwiftUI
 struct SymbolicApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            ContentViewItem.self,
+            DocumentModel.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

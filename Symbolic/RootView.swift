@@ -116,7 +116,7 @@ struct FileTree {
 extension FileTree {
     init(root: URL) {
         var dirToEntries: [URL: [Entry]] = [:]
-        let enumerator = FileManager.default.enumerator(atPath: root.path())
+        let enumerator = FileManager.default.enumerator(atPath: root.path)
         while let relative = enumerator?.nextObject() as? String {
             let url = root.appending(path: relative)
             guard let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType,
@@ -138,9 +138,12 @@ func listFiles() async -> FileTree? {
     let documentURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 
     do {
-        let foobarUrl = documentURL.appendingPathComponent("foobar")
+        let foobarUrl = documentURL.appendingPathComponent("foobar.symbolic")
 
         let helloWorldString = "Hello, World!"
+        if !FileManager.default.fileExists(atPath: foobarUrl.path) {
+            FileManager.default.createFile(atPath: foobarUrl.path, contents: .init())
+        }
         if let data = helloWorldString.data(using: .utf8) {
             let file = try FileHandle(forWritingTo: foobarUrl)
             try file.write(contentsOf: data)
@@ -148,7 +151,7 @@ func listFiles() async -> FileTree? {
 
         let foobardirUrl = documentURL.appendingPathComponent("foobardir")
         try FileManager.default.createDirectory(at: foobardirUrl, withIntermediateDirectories: true)
-        let foobar2Url = foobardirUrl.appendingPathComponent("foobar2")
+        let foobar2Url = foobardirUrl.appendingPathComponent("foobar2.symbolicdoc")
         if let data = helloWorldString.data(using: .utf8) {
             do {
                 try data.write(to: foobar2Url)

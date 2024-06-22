@@ -17,10 +17,8 @@ extension DocumentModel: Identifiable {
 
 struct DocumentQueryModifier: ViewModifier {
     @Query private var documents: [DocumentModel]
-    
+
     func body(content: Content) -> some View {
-        content.onChange(of: documents) {
-            
-        }
+        content.onChange(of: documents) {}
     }
 }

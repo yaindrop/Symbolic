@@ -1,51 +1,5 @@
 import SwiftUI
 
-// MARK: - PanelPopoverButton
-
-struct PanelPopoverButton: View, SelectorHolder {
-    class Selector: SelectorBase {
-        @Selected({ global.panel.popoverActive }) var active
-        @Selected({ !global.panel.movingPanelMap.isEmpty }) var moving
-        @Selected({ global.panel.popoverButtonHovering }) var hovering
-    }
-
-    @SelectorWrapper var selector
-
-    @State private var glowingRadius: Scalar = 0
-
-    var body: some View {
-        setupSelector {
-            content
-        }
-    }
-}
-
-// MARK: private
-
-private extension PanelPopoverButton {
-    var content: some View {
-        Button {
-            global.panel.togglePopover()
-        } label: {
-            Image(systemName: "list.dash.header.rectangle")
-                .padding(6)
-                .geometryReader { global.panel.setPopoverButtonFrame($0.frame(in: .global)) }
-                .if(selector.active && !selector.moving) {
-                    $0.tint(.systemBackground)
-                        .background(.blue)
-                        .clipRounded(radius: 6)
-                }
-                .if(selector.moving && !selector.hovering) {
-                    $0.overlay { RoundedRectangle(cornerRadius: 6).stroke(Color.invisibleSolid).shadow(color: .blue, radius: glowingRadius) }
-                        .animatedValue($glowingRadius, from: 1, to: 6, .linear(duration: 0.5).repeatForever())
-                }
-                .if(selector.hovering) {
-                    $0.clipRounded(radius: 6, border: .blue, stroke: .init(lineWidth: 2))
-                }
-        }
-    }
-}
-
 // MARK: - PanelPopover
 
 struct PanelPopover: View, SelectorHolder {

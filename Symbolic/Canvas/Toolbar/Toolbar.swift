@@ -34,8 +34,6 @@ extension ToolbarStore {
 // MARK: - Toolbar
 
 struct Toolbar: View, SelectorHolder {
-    @Environment(\.dismiss) var dismiss
-
     class Selector: SelectorBase {
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.toolbar.mode }) var toolbarMode
@@ -69,67 +67,49 @@ private extension Toolbar {
         }
     }
 
+    @ViewBuilder var documentMenu: some View {
+        Text("Item 0")
+        Divider()
+        Text("Item 1")
+    }
+
+    var documentTitle: some View {
+        HStack(spacing: 12) {
+            Text("未命名2").font(.headline)
+            Image(systemName: "chevron.down.circle.fill")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color.label.opacity(0.5))
+                .font(.body)
+                .fontWeight(.black)
+        }
+        .tint(.label)
+    }
+
     var leading: some View {
-        HStack(spacing: 24) {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.title2)
-                    .frame(size: .init(squared: 24))
+        ToolbarSection {
+            ToolbarButton(systemName: "chevron.left") {
+                global.root.update(showCanvas: false)
             }
 
-            Menu {
-                Text("Item 0")
-                Divider()
-                Text("Item 1")
-            } label: {
-                HStack {
-                    Text("未命名2").font(.headline)
-                    Image(systemName: "chevron.down.circle.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.label.opacity(0.5))
-                        .font(.footnote)
-                        .fontWeight(.black)
-                }
-                .tint(.label)
-            }
+            Menu { documentMenu } label: { documentTitle }
         }
-        .padding(12)
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-        .shadow(color: .init(.sRGBLinear, white: 0, opacity: 0.2), radius: 6)
     }
 
     @ViewBuilder var trailing: some View {
-        HStack(spacing: 24) {
+        ToolbarSection {
             PanelPopoverButton()
-                .font(.title2)
-                .frame(size: .init(squared: 24))
 
-            Button {
+            ToolbarButton(systemName: "arrow.uturn.backward") {
                 global.document.undo()
-            } label: {
-                Image(systemName: "arrow.uturn.backward")
-                    .font(.title2)
-                    .frame(size: .init(squared: 24))
             }
             .disabled(!selector.undoable)
         }
-        .padding(12)
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-        .shadow(color: .init(.sRGBLinear, white: 0, opacity: 0.2), radius: 6)
     }
 
     var principal: some View {
-        HStack(spacing: 24) {
-            Button {
+        ToolbarSection {
+            ToolbarButton(systemName: selector.toolbarMode.select != nil ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left") {
                 global.toolbar.setMode(.select(.init()))
-            } label: {
-                Image(systemName: selector.toolbarMode.select != nil ? "rectangle.and.hand.point.up.left.fill" : "rectangle.and.hand.point.up.left")
-                    .font(.title2)
-                    .frame(size: .init(squared: 24))
             }
             .overlay {
                 if let select = selector.toolbarMode.select {
@@ -149,17 +129,81 @@ private extension Toolbar {
                     }
                 }
             }
-            Button {
+
+            ToolbarButton(systemName: selector.toolbarMode.addPath != nil ? "plus.circle.fill" : "plus.circle") {
                 global.toolbar.setMode(.addPath(.init()))
-            } label: {
-                Image(systemName: selector.toolbarMode.addPath != nil ? "plus.circle.fill" : "plus.circle")
-                    .font(.title2)
-                    .frame(size: .init(squared: 24))
             }
         }
-        .padding(12)
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-        .shadow(color: .init(.sRGBLinear, white: 0, opacity: 0.2), radius: 6)
+    }
+}
+
+private struct ToolbarSection<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        HStack(spacing: 12) { content() }
+            .padding(6)
+            .background(.ultraThinMaterial)
+            .clipRounded(radius: 12)
+            .shadow(color: .init(.sRGBLinear, white: 0, opacity: 0.2), radius: 6)
+    }
+}
+
+private struct ToolbarButton: View {
+    let systemName: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.title2)
+                .frame(size: .init(squared: 36))
+        }
+    }
+}
+
+// MARK: - PanelPopoverButton
+
+struct PanelPopoverButton: View, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected({ global.panel.popoverActive }) var active
+        @Selected({ !global.panel.movingPanelMap.isEmpty }) var moving
+        @Selected({ global.panel.popoverButtonHovering }) var hovering
+    }
+
+    @SelectorWrapper var selector
+
+    @State private var glowingRadius: Scalar = 0
+
+    var body: some View {
+        setupSelector {
+            content
+        }
+    }
+}
+
+// MARK: private
+
+private extension PanelPopoverButton {
+    var content: some View {
+        ToolbarButton(systemName: "list.dash.header.rectangle") {
+            global.panel.togglePopover()
+        }
+        .geometryReader { global.panel.setPopoverButtonFrame($0.frame(in: .global)) }
+        .if(selector.active && !selector.moving) {
+            $0.tint(.systemBackground)
+                .background(.blue)
+                .clipRounded(radius: 6)
+        }
+        .if(selector.moving && !selector.hovering) {
+            $0.overlay {
+                RoundedRectangle(cornerRadius: 6).stroke(Color.invisibleSolid).shadow(color: .blue, radius: glowingRadius)
+                    .allowsHitTesting(false)
+            }
+            .animatedValue($glowingRadius, from: 1, to: 6, .linear(duration: 0.5).repeatForever())
+        }
+        .if(selector.hovering) {
+            $0.clipRounded(radius: 6, border: .blue, stroke: .init(lineWidth: 2))
+        }
     }
 }

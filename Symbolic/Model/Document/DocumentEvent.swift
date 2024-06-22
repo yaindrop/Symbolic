@@ -91,10 +91,17 @@ struct DocumentEvent: Identifiable, Equatable, Codable {
         case compound(CompoundEvent)
     }
 
-    let id: UUID = .init()
-    let time: Date = .init()
+    let id: UUID
+    let time: Date
     let kind: Kind
     let action: DocumentAction
+
+    init(kind: Kind, action: DocumentAction) {
+        id = .init()
+        time = .init()
+        self.kind = kind
+        self.action = action
+    }
 }
 
 extension PathEvent {

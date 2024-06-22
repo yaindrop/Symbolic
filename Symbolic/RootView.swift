@@ -1,11 +1,25 @@
 import SwiftUI
 
-struct RootView: View, TracedView {
+struct RootView: View, TracedView, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected(animation: .fast, { global.root.showCanvas }) var showCanvas
+    }
+
+    @SelectorWrapper var selector
+
     var body: some View { trace {
-        NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
-            SidebarView()
-        } detail: {
-            DocumentsView()
+        setupSelector {
+            NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
+                SidebarView()
+            } detail: {
+                DocumentsView()
+            }
+            .if(selector.showCanvas) {
+                $0.overlay {
+                    CanvasView()
+                        .background(.background)
+                }
+            }
         }
     }}
 }
@@ -19,7 +33,6 @@ struct DocumentsView: View, TracedView, SelectorHolder {
     @SelectorWrapper var selector
 
     @State private var fileTree: FileTree?
-    @State private var isPresenting = false
 
     var body: some View { trace {
         setupSelector {
@@ -43,18 +56,31 @@ extension DocumentsView {
         ZStack {
             ScrollView {
                 VStack {
-                    Button("Canvas!") { isPresenting.toggle() }
-                        .fullScreenCover(isPresented: $isPresenting) {
-                            CanvasView()
-                        }
+                    Button("Canvas!") { global.root.update(showCanvas: !global.root.showCanvas) }
+//                        .fullScreenCover(isPresented: $showCanvas) {
+//                            CanvasView()
+//                        }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 20) {
-                        ForEach(data, id: \.url) {
-                            Text($0.url.lastPathComponent)
-                                .frame(width: 150, height: 150, alignment: .center)
-                                .background($0.isDirectory ? .blue : .gray)
-                                .cornerRadius(10)
-                                .foregroundColor(.white)
-                                .font(.title)
+                        ForEach(data, id: \.url) { entry in
+                            VStack(spacing: 0) {
+                                HStack {
+                                    Image(systemName: "questionmark.app.dashed")
+                                        .font(.title)
+                                }
+                                .frame(maxWidth: .infinity, maxHeight: 100, alignment: .center)
+                                .background(.background.tertiary)
+                                Divider()
+                                Text(entry.url.lastPathComponent)
+                                    .frame(maxWidth: .infinity, maxHeight: 50, alignment: .center)
+                                    .background(entry.isDirectory ? .blue : .gray)
+                                    .foregroundColor(.white)
+                                    .font(.headline)
+                            }
+                            .frame(width: 150, height: 150, alignment: .center)
+                            .clipRounded(radius: 12)
+                            .onTapGesture {
+                                global.root.open(url: entry.url)
+                            }
                         }
                     }
                 }

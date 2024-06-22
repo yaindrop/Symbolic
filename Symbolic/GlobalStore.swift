@@ -26,6 +26,8 @@ struct GlobalStore {
 
     private let addingPathStore = AddingPathStore()
 
+    let root = RootStore()
+
     let panel = PanelStore()
 
     let toolbar = ToolbarStore()

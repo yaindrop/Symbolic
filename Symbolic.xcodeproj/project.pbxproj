@@ -110,6 +110,7 @@
 		57DD2A282C0321110046931C /* ItemPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* ItemPanel.swift */; };
 		57E082062C230526008CC67B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082052C230526008CC67B /* RootView.swift */; };
 		57E082082C25B9BA008CC67B /* DocumentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082072C25B9BA008CC67B /* DocumentModel.swift */; };
+		57E0820B2C2705B9008CC67B /* RootStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0820A2C2705B9008CC67B /* RootStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -237,6 +238,7 @@
 		57E082052C230526008CC67B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		57E082072C25B9BA008CC67B /* DocumentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentModel.swift; sourceTree = "<group>"; };
 		57E082092C26C75A008CC67B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		57E0820A2C2705B9008CC67B /* RootStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -337,6 +339,8 @@
 				57E082092C26C75A008CC67B /* Info.plist */,
 				5723BF7B2BC39844002209F2 /* ContentView.swift */,
 				574CC7B92BF3B2950042FEE3 /* GlobalStore.swift */,
+				57E0820A2C2705B9008CC67B /* RootStore.swift */,
+				57E082052C230526008CC67B /* RootView.swift */,
 				5723BF792BC39844002209F2 /* SymbolicApp.swift */,
 				5723BF7F2BC39846002209F2 /* Assets.xcassets */,
 				57B5F11D2BC68620001E1B2E /* Canvas */,
@@ -344,7 +348,6 @@
 				5700C2C22BEB5A6800481FA7 /* Panel */,
 				5723BF812BC39846002209F2 /* Preview Content */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
-				57E082052C230526008CC67B /* RootView.swift */,
 			);
 			path = Symbolic;
 			sourceTree = "<group>";
@@ -825,6 +828,7 @@
 				57B5F1402BD4A3EF001E1B2E /* ActiveItemStore.swift in Sources */,
 				57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */,
 				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
+				57E0820B2C2705B9008CC67B /* RootStore.swift in Sources */,
 				5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				571B9B3D2C14A97D00AAD516 /* UUID+Extension.swift in Sources */,

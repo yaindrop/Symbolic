@@ -140,21 +140,23 @@ extension FocusedPathView.NodeHandle {
             RoundedRectangle(cornerRadius: 2)
                 .stroke(.blue, style: StrokeStyle(lineWidth: 1))
                 .fill(.blue.opacity(0.3))
-                .if(!selector.selectingNodes && selector.active) { $0.overlay { focusMark }}
+                .overlay { focusMark }
                 .frame(size: .init(squared: rectSize * (selector.selectingNodes ? 1.5 : 1)))
         } else {
             Circle()
                 .stroke(.blue, style: StrokeStyle(lineWidth: selector.nodeType == .mirrored ? 2 : 1))
                 .fill(.blue.opacity(0.3))
-                .if(!selector.selectingNodes && selector.active) { $0.overlay { focusMark }}
+                .overlay { focusMark }
                 .frame(size: .init(squared: circleSize * (selector.selectingNodes ? 1.5 : 1)))
         }
     }
 
     @ViewBuilder var focusMark: some View {
-        Circle()
-            .fill(.blue)
-            .scaleEffect(0.5)
-            .allowsHitTesting(false)
+        if !selector.selectingNodes && selector.active {
+            Circle()
+                .fill(.blue)
+                .scaleEffect(0.5)
+                .allowsHitTesting(false)
+        }
     }
 }

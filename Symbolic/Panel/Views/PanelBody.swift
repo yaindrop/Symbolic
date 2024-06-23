@@ -64,6 +64,8 @@ private extension PanelBody {
         .padding(12)
     }
 
+    var isSecondary: Bool { selector.appearance == .floatingSecondary }
+
     var floatingBody: some View {
         VStack(spacing: 12) {
             floatingTitle
@@ -77,14 +79,16 @@ private extension PanelBody {
             .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
-        .if(selector.appearance == .floatingSecondary) {
-            $0.background(.background.secondary)
-                .invisibleSoildOverlay()
-                .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
-        } else: {
-            $0.background(.ultraThinMaterial)
+        .multipleGesture(isSecondary ? global.panel.floatingPanelDrag(panelId: panelId) : nil)
+        .background {
+            Rectangle()
+                .if(isSecondary) {
+                    $0.fill(.background.secondary)
+                } else: {
+                    $0.fill(.ultraThinMaterial)
+                }
+                .clipRounded(radius: 18)
         }
-        .clipRounded(radius: 18)
     }
 
     var floatingTitle: some View {
@@ -94,6 +98,13 @@ private extension PanelBody {
             .aligned(axis: .horizontal, .center)
             .invisibleSoildOverlay()
             .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
-            .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) { $0.background(.ultraThinMaterial) }
+            .background {
+                Rectangle()
+                    .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) {
+                        $0.fill(.ultraThinMaterial)
+                    } else: {
+                        $0.fill(.clear)
+                    }
+            }
     }
 }

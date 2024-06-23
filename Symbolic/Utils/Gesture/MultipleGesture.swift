@@ -31,7 +31,7 @@ struct MultipleGesture {
 struct MultipleGestureModifier: ViewModifier {
     typealias Value = DragGesture.Value
 
-    let gesture: MultipleGesture
+    let gesture: MultipleGesture?
 
     func body(content: Content) -> some View {
         content
@@ -71,7 +71,10 @@ struct MultipleGestureModifier: ViewModifier {
 
     @GestureState private var active: Bool = false
 
-    private var configs: MultipleGesture.Configs { gesture.configs }
+    private var configs: MultipleGesture.Configs {
+        guard let gesture else { return .init() }
+        return gesture.configs
+    }
 
     private var isPress: Bool {
         guard let context else { return false }
@@ -99,6 +102,7 @@ struct MultipleGestureModifier: ViewModifier {
     // MARK: stages
 
     private func onPressStart(_ v: DragGesture.Value) {
+        guard let gesture else { return }
         let _r = subtracer.range(type: .intent, "press start"); defer { _r() }
         context = .init(value: v)
         setupLongPress()
@@ -106,6 +110,7 @@ struct MultipleGestureModifier: ViewModifier {
     }
 
     private func onPressChange() {
+        guard let gesture else { return }
         guard let context else { return }
         let _r = subtracer.range(type: .intent, "press change"); defer { _r() }
         if !isPress {
@@ -117,6 +122,7 @@ struct MultipleGestureModifier: ViewModifier {
     }
 
     private func onPressEnd() {
+        guard let gesture else { return }
         guard let context else { return }
         let _r = subtracer.range(type: .intent, "press end"); defer { _r() }
         if isPress {
@@ -135,6 +141,7 @@ struct MultipleGestureModifier: ViewModifier {
     }
 
     private func onPressCancel() {
+        guard let gesture else { return }
         guard context != nil else { return }
         let _r = subtracer.range(type: .intent, "press cancel"); defer { _r() }
         resetLongPress(cancel: true)
@@ -145,6 +152,7 @@ struct MultipleGestureModifier: ViewModifier {
     // MARK: long press
 
     private func setupLongPress() {
+        guard let gesture else { return }
         guard let context else { return }
         let _r = subtracer.range("setup long press"); defer { _r() }
         let longPressTimeout = DispatchWorkItem {
@@ -156,6 +164,7 @@ struct MultipleGestureModifier: ViewModifier {
     }
 
     private func resetLongPress(cancel: Bool = false) {
+        guard let gesture else { return }
         guard let context else { return }
         if let timeout = context.longPressTimeout {
             let _r = subtracer.range("reset long press timeout"); defer { _r() }
@@ -173,11 +182,7 @@ struct MultipleGestureModifier: ViewModifier {
 }
 
 extension View {
-    func multipleGesture(_ gesture: MultipleGesture) -> some View {
-        modifier(MultipleGestureModifier(gesture: gesture))
-    }
-
     func multipleGesture(_ gesture: MultipleGesture?) -> some View {
-        self.if(gesture) { $0.modifier(MultipleGestureModifier(gesture: $1)) }
+        modifier(MultipleGestureModifier(gesture: gesture))
     }
 }

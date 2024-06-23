@@ -31,12 +31,15 @@ private extension PanelSection {
             VStack(spacing: 0) {
                 sectionContent()
             }
-            .if(selector.appearance == .floatingSecondary) {
-                $0.background(.background.secondary)
-            } else: {
-                $0.background(.ultraThickMaterial)
+            .background {
+                Rectangle()
+                    .if(selector.appearance == .floatingSecondary) {
+                        $0.fill(.background.secondary)
+                    } else: {
+                        $0.fill(.ultraThickMaterial)
+                    }
+                    .clipRounded(radius: 12)
             }
-            .clipRounded(radius: 12)
         }
     }
 

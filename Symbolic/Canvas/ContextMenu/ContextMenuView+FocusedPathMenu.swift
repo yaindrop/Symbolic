@@ -38,7 +38,7 @@ extension ContextMenuView.FocusedPathMenu {
 
             Button { onToggleSelectingNodes() } label: { Image(systemName: "checklist") }
                 .frame(minWidth: 32)
-                .if(!selector.selectingNodes) { $0.tint(.label) }
+                .tint(selector.selectingNodes ? .blue : .label)
 
             Divider()
 

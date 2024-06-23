@@ -185,25 +185,25 @@ struct PanelPopoverButton: View, SelectorHolder {
 // MARK: private
 
 private extension PanelPopoverButton {
+    var active: Bool { selector.active && !selector.moving }
+
+    var glowing: Bool { selector.moving && !selector.hovering }
+
+    var hovering: Bool { selector.hovering }
+
     var content: some View {
         ToolbarButton(systemName: "list.dash.header.rectangle") {
             global.panel.togglePopover()
         }
         .geometryReader { global.panel.setPopoverButtonFrame($0.frame(in: .global)) }
-        .if(selector.active && !selector.moving) {
-            $0.tint(.systemBackground)
-                .background(.blue)
-                .clipRounded(radius: 6)
-        }
-        .if(selector.moving && !selector.hovering) {
-            $0.overlay {
-                RoundedRectangle(cornerRadius: 6).stroke(Color.invisibleSolid).shadow(color: .blue, radius: glowingRadius)
-                    .allowsHitTesting(false)
-            }
-            .animatedValue($glowingRadius, from: 1, to: 6, .linear(duration: 0.5).repeatForever())
-        }
-        .if(selector.hovering) {
-            $0.clipRounded(radius: 6, border: .blue, stroke: .init(lineWidth: 2))
+        .tint(active ? .systemBackground : .blue)
+        .background(active ? .blue : .clear)
+        .clipRounded(radius: 6, border: hovering ? .blue : .clear, stroke: .init(lineWidth: 2))
+        .overlay {
+            RoundedRectangle(cornerRadius: 6).stroke(Color.invisibleSolid).shadow(color: .blue, radius: glowingRadius)
+                .allowsHitTesting(false)
+                .animatedValue($glowingRadius, from: 1, to: 6, .linear(duration: 0.5).repeatForever())
+                .opacity(glowing ? 1 : 0)
         }
     }
 }

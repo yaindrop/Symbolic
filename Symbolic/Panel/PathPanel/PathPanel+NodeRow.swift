@@ -53,7 +53,7 @@ private extension PathPanel.NodeRow {
             Text("\(nodeId.shortDescription)")
                 .font(.subheadline)
         }
-        .if(selector.focused) { $0.foregroundStyle(.blue) }
+        .foregroundStyle(selector.focused ? .blue : .label)
         .padding(12)
         .frame(maxHeight: .infinity)
     }
@@ -133,7 +133,7 @@ private extension NodeDetailView {
                 }
                 .menuOrder(.fixed)
                 .tint(.label)
-                .if(selector.focused) { $0.foregroundStyle(.blue.opacity(0.8)) }
+                .foregroundStyle(selector.focused ? .blue.opacity(0.8) : .label)
                 Spacer(minLength: 12)
                 PositionPicker(position: node.position) { updatePosition(position: $0, pending: true) } onDone: { updatePosition(position: $0) }
                     .padding(12)
@@ -152,7 +152,7 @@ private extension NodeDetailView {
                     Menu { menu } label: { rowTitle(name: "Cubic", subname: "Before") }
                         .menuOrder(.fixed)
                         .tint(.label)
-                        .if(selector.focused) { $0.foregroundStyle(.orange.opacity(0.8)) }
+                        .foregroundStyle(selector.focused ? .orange.opacity(0.8) : .label)
                 } else if isLine {
                     Menu { menu } label: { rowTitle(name: "Line", subname: "Before") }
                         .menuOrder(.fixed)
@@ -179,7 +179,7 @@ private extension NodeDetailView {
                     Menu { menu } label: { rowTitle(name: "Cubic", subname: "After") }
                         .menuOrder(.fixed)
                         .tint(.label)
-                        .if(selector.focused) { $0.foregroundStyle(.green.opacity(0.8)) }
+                        .foregroundStyle(selector.focused ? .green.opacity(0.8) : .label)
                 } else if isLine {
                     Menu { menu } label: { rowTitle(name: "Line", subname: "After") }
                         .menuOrder(.fixed)

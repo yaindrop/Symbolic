@@ -2,6 +2,7 @@ import SwiftUI
 
 // MARK: - conditional modifier
 
+/// Important: use only when necessary since it alters the view structure
 extension View {
     @ViewBuilder func `if`<Value, T: View>(
         _ value: @autoclosure () -> Value?,
@@ -61,8 +62,8 @@ extension Color {
 }
 
 extension View {
-    func invisibleSoildOverlay() -> some View {
-        overlay(Color.invisibleSolid)
+    func invisibleSoildOverlay(disabled: Bool = false) -> some View {
+        overlay(disabled ? Color.clear : Color.invisibleSolid)
     }
 }
 
@@ -118,12 +119,7 @@ extension View {
 extension View {
     @ViewBuilder func clipRounded<S: ShapeStyle>(radius: Scalar, border: S, stroke: StrokeStyle? = nil) -> some View {
         let shape = RoundedRectangle(cornerSize: .init(radius, radius))
-        clipShape(shape)
-            .if(stroke) {
-                $0.overlay(shape.stroke(border, style: $1).allowsHitTesting(false))
-            } else: {
-                $0.overlay(shape.stroke(border).allowsHitTesting(false))
-            }
+        overlay(shape.stroke(border, style: stroke ?? .init(lineWidth: 1)).allowsHitTesting(false))
     }
 
     func clipRounded(radius: Scalar) -> some View {

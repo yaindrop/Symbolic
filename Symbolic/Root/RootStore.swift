@@ -1,5 +1,7 @@
 import Foundation
 
+private let subtracer = tracer.tagged("RootStore")
+
 class RootStore: Store {
     @Trackable var fileTree: FileTree? = nil
 
@@ -24,18 +26,23 @@ private extension RootStore {
 }
 
 extension RootStore {
-    func loadFiles() {
+    func loadFileTree() {
         Task { @MainActor in
-            if let fileTree = await FileTree.documentDirectory() {
-                self.update(fileTree: fileTree)
-            }
+            let _r = subtracer.range(type: .intent, "load file tree"); defer { _r() }
+            guard let fileTree = FileTree.documentDirectory else { return }
+            subtracer.instant("fileTree size=\(fileTree.dirToEntries.count)")
+            self.update(fileTree: fileTree)
         }
     }
 
     func open(documentFrom url: URL) {
-        let decoder = JSONDecoder()
+        let _r = subtracer.range(type: .intent, "open document url=\(url)"); defer { _r() }
         guard let data = try? Data(contentsOf: url) else { return }
+        subtracer.instant("data size=\(data.count)")
+
+        let decoder = JSONDecoder()
         guard let document = try? decoder.decode(Document.self, from: data) else { return }
+        subtracer.instant("document size=\(document.events.count)")
 
         withStoreUpdating {
             update(showCanvas: true)
@@ -45,19 +52,23 @@ extension RootStore {
     }
 
     func new(inDirectory url: URL) {
+        let _r = subtracer.range(type: .intent, "new in directory url=\(url)"); defer { _r() }
         let prefix = "Untitled"
         let ext = "symbolic"
         var index = 0
-        var name: String { "\(prefix) \(index).\(ext)" }
+        var name: String { index == 0 ? "\(prefix).\(ext)" : "\(prefix) \(index).\(ext)" }
         var newUrl: URL { url.appendingPathComponent(name) }
 
         let document = Document()
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(document) else { return }
+        subtracer.instant("data size=\(data.count)")
 
         while FileManager.default.fileExists(atPath: newUrl.path) {
             index += 1
         }
+
+        subtracer.instant("name=\(name)")
 
         do {
             try data.write(to: newUrl)
@@ -73,10 +84,12 @@ extension RootStore {
     }
 
     func save(document: Document) {
+        let _r = subtracer.range(type: .intent, "save document"); defer { _r() }
         guard let activeDocumentUrl else { return }
 
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(document) else { return }
+        subtracer.instant("data size=\(data.count)")
 
         do {
             try data.write(to: activeDocumentUrl)

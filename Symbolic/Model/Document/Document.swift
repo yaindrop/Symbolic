@@ -1,5 +1,7 @@
 import SwiftUI
 
+private let subtracer = tracer.tagged("DocumentService")
+
 // MARK: - Document
 
 struct Document: Codable {
@@ -77,7 +79,7 @@ extension DocumentService {
 
 extension DocumentService {
     func setDocument(_ document: Document) {
-        let _r = tracer.range("Document set"); defer { _r() }
+        let _r = subtracer.range("set"); defer { _r() }
         withStoreUpdating {
             store.update(pendingEvent: nil)
             store.update(activeDocument: document)
@@ -85,7 +87,7 @@ extension DocumentService {
     }
 
     func sendEvent(_ event: DocumentEvent) {
-        let _r = tracer.range("Document send event"); defer { _r() }
+        let _r = subtracer.range("send event"); defer { _r() }
         if store.pendingEvent == nil {
             withStoreUpdating(configs: .init(animation: .override(.fast))) {
                 store.update(activeDocument: .init(events: activeDocument.events + [event]))
@@ -99,7 +101,7 @@ extension DocumentService {
     }
 
     func setPendingEvent(_ event: DocumentEvent?) {
-        let _r = tracer.range("Document set pending event"); defer { _r() }
+        let _r = subtracer.range("set pending event"); defer { _r() }
         store.update(pendingEvent: event)
     }
 

@@ -34,8 +34,7 @@ extension FileTree {
         self.dirToEntries = dirToEntries
     }
 
-    @MainActor
-    static func documentDirectory() async -> FileTree? {
+    static var documentDirectory: FileTree? {
         let documentURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return FileTree(root: documentURL)
     }

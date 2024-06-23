@@ -102,7 +102,6 @@
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
 		57B847912C0E12AC00D0E7C3 /* PathPropertyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */; };
 		57DD2A162C0236E60046931C /* ItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A152C0236E60046931C /* ItemStore.swift */; };
-		57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A182C02D7540046931C /* CanvasSetup.swift */; };
 		57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */; };
 		57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1C2C02DB5A0046931C /* Grid.swift */; };
 		57DD2A212C02DB850046931C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A202C02DB850046931C /* Item.swift */; };
@@ -113,6 +112,7 @@
 		57E0820E2C27A7F9008CC67B /* DocumentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0820D2C27A7F9008CC67B /* DocumentsView.swift */; };
 		57E082102C27A871008CC67B /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0820F2C27A871008CC67B /* SidebarView.swift */; };
 		57E082132C27A8EC008CC67B /* FileTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082122C27A8EC008CC67B /* FileTree.swift */; };
+		57E082152C27B1F7008CC67B /* CancellablesHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082142C27B1F7008CC67B /* CancellablesHolder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -231,7 +231,6 @@
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
 		57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyStore.swift; sourceTree = "<group>"; };
 		57DD2A152C0236E60046931C /* ItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemStore.swift; sourceTree = "<group>"; };
-		57DD2A182C02D7540046931C /* CanvasSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasSetup.swift; sourceTree = "<group>"; };
 		57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionStore.swift; sourceTree = "<group>"; };
 		57DD2A1C2C02DB5A0046931C /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
 		57DD2A202C02DB850046931C /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
@@ -243,6 +242,7 @@
 		57E0820D2C27A7F9008CC67B /* DocumentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentsView.swift; sourceTree = "<group>"; };
 		57E0820F2C27A871008CC67B /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		57E082122C27A8EC008CC67B /* FileTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTree.swift; sourceTree = "<group>"; };
+		57E082142C27B1F7008CC67B /* CancellablesHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellablesHolder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -311,6 +311,7 @@
 		571B9B482C14AA9F00AAD516 /* General */ = {
 			isa = PBXGroup;
 			children = (
+				57E082142C27B1F7008CC67B /* CancellablesHolder.swift */,
 				57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */,
 				571B9B3E2C14A99200AAD516 /* IncrementalIdGenerator.swift */,
 			);
@@ -491,7 +492,6 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				57DD2A182C02D7540046931C /* CanvasSetup.swift */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
 				576BE2632C048F5400353912 /* ActiveItem */,
 				57DD2A232C02DC280046931C /* Background */,
@@ -832,6 +832,7 @@
 				571B9B382C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift in Sources */,
 				571B9B432C14AA1200AAD516 /* ClosedRange+Extension.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* AddingPath.swift in Sources */,
+				57E082152C27B1F7008CC67B /* CancellablesHolder.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
@@ -839,7 +840,6 @@
 				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */,
-				57DD2A192C02D7540046931C /* CanvasSetup.swift in Sources */,
 				571B9B2E2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift in Sources */,
 				57416E3A2BE0BAB600C73434 /* Line.swift in Sources */,
 				57DD2A162C0236E60046931C /* ItemStore.swift in Sources */,

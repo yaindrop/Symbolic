@@ -63,16 +63,6 @@ extension ReflectedStringConvertible {
     }
 }
 
-protocol CancellableHolder: AnyObject {
-    var cancellables: Set<AnyCancellable> { get set }
-}
-
-extension AnyCancellable {
-    func store(in holder: CancellableHolder) {
-        store(in: &holder.cancellables)
-    }
-}
-
 protocol SelfIdentifiable: Identifiable {}
 
 extension SelfIdentifiable {

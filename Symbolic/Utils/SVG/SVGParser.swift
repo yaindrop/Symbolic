@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - SVGParserDelegate
 
-class SVGParserDelegate: NSObject, XMLParserDelegate, CancellableHolder {
+class SVGParserDelegate: NSObject, XMLParserDelegate, CancellablesHolder {
     var cancellables = Set<AnyCancellable>()
 
     func onPath(_ callback: @escaping (SVGPath) -> Void) {

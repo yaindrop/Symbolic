@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - global actions
 
-private extension GlobalStore {
+private extension GlobalStores {
     func onTap(group: ItemGroup, position: Point2) {
         let worldPosition = position.applying(viewport.toWorld)
         let groupedPaths = item.groupedPaths(groupId: group.id)

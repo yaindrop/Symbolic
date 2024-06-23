@@ -36,7 +36,7 @@ struct MultipleTouchGesture {
 
 // MARK: - MultipleTouchPressModel
 
-class MultipleTouchPressModel: CancellableHolder {
+class MultipleTouchPressModel: CancellablesHolder {
     var cancellables = Set<AnyCancellable>()
 
     func onPress(_ callback: @escaping () -> Void) {
@@ -132,32 +132,30 @@ struct MultipleTouchPressDetector {
     var pressLocation: Point2? { isPress ? location : nil }
 
     func subscribe() {
-        model.cancellables.removeAll()
-        multipleTouch.$startTime
-            .sink { time in
-                guard time != nil else { return }
-                self.onPressStart()
-                self.onPressChange()
-            }
-            .store(in: model)
-        multipleTouch.$panInfo
-            .sink { info in
-                if let info {
-                    self.context?.onValue(info)
+        model.holdCancellables {
+            multipleTouch.$startTime
+                .sink { time in
+                    guard time != nil else { return }
+                    self.onPressStart()
                     self.onPressChange()
                 }
-            }
-            .store(in: model)
-        multipleTouch.$touchesCount
-            .sink { count in
-                guard count != 1 else { return }
-                if count == 0 {
-                    self.onPressEnd()
-                } else if count > 1 {
-                    self.onPressCancel()
+            multipleTouch.$panInfo
+                .sink { info in
+                    if let info {
+                        self.context?.onValue(info)
+                        self.onPressChange()
+                    }
                 }
-            }
-            .store(in: model)
+            multipleTouch.$touchesCount
+                .sink { count in
+                    guard count != 1 else { return }
+                    if count == 0 {
+                        self.onPressEnd()
+                    } else if count > 1 {
+                        self.onPressCancel()
+                    }
+                }
+        }
     }
 
     // MARK: private

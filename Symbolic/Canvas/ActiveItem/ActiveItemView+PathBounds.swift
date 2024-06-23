@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - global actions
 
-private extension GlobalStore {
+private extension GlobalStores {
     func onTap(pathId: UUID) {
         if toolbar.multiSelect {
             activeItem.selectRemove(itemIds: [pathId])

@@ -66,7 +66,7 @@ struct StoreUpdateConfigs {
 }
 
 extension StoreManager {
-    class UpdatingContext: CancellableHolder {
+    class UpdatingContext: CancellablesHolder {
         let configs: StoreUpdateConfigs
         var cancellables = Set<AnyCancellable>()
         var subscriptions: [StoreSubscription] = []
@@ -149,7 +149,7 @@ private var manager: StoreManager {
 
 // MARK: - Store
 
-class Store: CancellableHolder {
+class Store: CancellablesHolder {
     var cancellables = Set<AnyCancellable>()
 
     private var trackableIdGen = IncrementalIdGenerator()
@@ -398,7 +398,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
 
 // MARK: - Selector
 
-class _Selector<Props>: ObservableObject, CancellableHolder {
+class _Selector<Props>: ObservableObject, CancellablesHolder {
     var name: String?
     var syncNotify: Bool { false }
 

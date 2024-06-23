@@ -1,8 +1,20 @@
 import Foundation
 
-// MARK: - GlobalStore
+// MARK: - GlobalStores
 
-struct GlobalStore {
+struct GlobalStores {
+    let root = RootStore()
+
+    let panel = PanelStore()
+
+    let toolbar = ToolbarStore()
+
+    let canvasAction = CanvasActionStore()
+
+    let grid = GridStore()
+
+    let contextMenu = ContextMenuStore()
+
     private let viewportStore = ViewportStore()
     private let viewportUpdateStore = ViewportUpdateStore()
 
@@ -25,23 +37,11 @@ struct GlobalStore {
     private let draggingSelectionStore = DraggingSelectionStore()
 
     private let addingPathStore = AddingPathStore()
-
-    let root = RootStore()
-
-    let panel = PanelStore()
-
-    let toolbar = ToolbarStore()
-
-    let canvasAction = CanvasActionStore()
-
-    let grid = GridStore()
-
-    let contextMenu = ContextMenuStore()
 }
 
 // MARK: services
 
-extension GlobalStore {
+extension GlobalStores {
     var viewport: ViewportService { .init(store: viewportStore) }
     var viewportUpdater: ViewportUpdater { .init(viewport: viewportStore, store: viewportUpdateStore) }
 
@@ -63,4 +63,4 @@ extension GlobalStore {
     var addingPath: AddingPathService { .init(viewport: viewport, grid: grid, store: addingPathStore) }
 }
 
-let global = GlobalStore()
+let global = GlobalStores()

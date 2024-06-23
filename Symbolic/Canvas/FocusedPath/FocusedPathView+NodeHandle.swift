@@ -4,7 +4,7 @@ private class GestureContext {
     var longPressAddedNodeId: UUID?
 }
 
-private extension GlobalStore {
+private extension GlobalStores {
     func onTap(node id: UUID) {
         if focusedPath.selectingNodes {
             if focusedPath.activeNodeIds.contains(id) {

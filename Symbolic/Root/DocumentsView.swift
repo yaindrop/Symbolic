@@ -2,17 +2,9 @@ import SwiftUI
 
 // MARK: - DocumentsView
 
-struct DocumentsView: View, TracedView, SelectorHolder {
-    class Selector: SelectorBase {
-        @Selected(animation: .fast, { global.root.fileTree }) var fileTree
-    }
-
-    @SelectorWrapper var selector
-
+struct DocumentsView: View, TracedView {
     var body: some View { trace {
-        setupSelector {
-            content
-        }
+        content
     } }
 }
 
@@ -21,11 +13,7 @@ struct DocumentsView: View, TracedView, SelectorHolder {
 private extension DocumentsView {
     @ViewBuilder var content: some View {
         NavigationStack {
-            if let fileTree = selector.fileTree {
-                DirectoryView(url: fileTree.root)
-            } else {
-                Text("Loading")
-            }
+            DirectoryView(url: .documentDirectory)
         }
     }
 }
@@ -46,6 +34,12 @@ private struct DirectoryView: View, TracedView, SelectorHolder {
     var body: some View { trace {
         setupSelector {
             content
+                .onAppear {
+                    global.root.load(directory: url)
+                }
+                .onDisappear {
+                    print("dbf disappear", url)
+                }
         }
     } }
 }
@@ -53,21 +47,21 @@ private struct DirectoryView: View, TracedView, SelectorHolder {
 // MARK: private
 
 private extension DirectoryView {
-    var data: [FileTree.Entry] {
-        guard let entries = selector.fileTree?.dirToEntries[url] else { return [] }
-        return entries.sorted {
-            if $0.isDirectory == $1.isDirectory {
-                return $0.url.lastPathComponent < $1.url.lastPathComponent
-            }
-            return $0.isDirectory
-        }
+    var directory: FileDirectory? { selector.fileTree?.directoryMap[url] }
+
+    var entries: [FileEntry] {
+        directory?.entries.sorted {
+            $0.isDirectory != $1.isDirectory
+                ? $0.isDirectory
+                : $0.url.lastPathComponent < $1.url.lastPathComponent
+        } ?? []
     }
 
     var content: some View {
         ScrollView {
             VStack {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 20) {
-                    ForEach(data, id: \.url) {
+                    ForEach(entries, id: \.url) {
                         EntryCard(entry: $0)
                     }
                 }
@@ -86,7 +80,7 @@ private extension DirectoryView {
 // MARK: - EntryCard
 
 struct EntryCard: View, TracedView {
-    let entry: FileTree.Entry
+    let entry: FileEntry
 
     var body: some View { trace {
         content

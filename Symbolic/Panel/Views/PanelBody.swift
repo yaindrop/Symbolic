@@ -82,7 +82,7 @@ private extension PanelBody {
         .background {
             Rectangle()
                 .if(isSecondary) {
-                    $0.fill(.background.secondary)
+                    $0.fill(.background.secondary.opacity(0.8))
                 } else: {
                     $0.fill(.ultraThinMaterial)
                 }

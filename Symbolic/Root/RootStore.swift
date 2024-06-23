@@ -29,8 +29,20 @@ extension RootStore {
     func loadFileTree() {
         Task { @MainActor in
             let _r = subtracer.range(type: .intent, "load file tree"); defer { _r() }
-            guard let fileTree = FileTree.documentDirectory else { return }
-            subtracer.instant("fileTree size=\(fileTree.dirToEntries.count)")
+            guard let fileTree = FileTree(root: .documentDirectory) else { return }
+            subtracer.instant("fileTree size=\(fileTree.directoryMap.count)")
+            self.update(fileTree: fileTree)
+        }
+    }
+
+    func load(directory url: URL) {
+        Task { @MainActor in
+            let _r = subtracer.range(type: .intent, "load directory \(url.lastPathComponent)"); defer { _r() }
+            guard let directory = FileDirectory(url: url) else { return }
+            subtracer.instant("directory size=\(directory.entries.count)")
+
+            guard var fileTree = self.fileTree else { return }
+            fileTree.directoryMap[directory.url] = directory
             self.update(fileTree: fileTree)
         }
     }
@@ -59,7 +71,7 @@ extension RootStore {
         var name: String { index == 0 ? "\(prefix).\(ext)" : "\(prefix) \(index).\(ext)" }
         var newUrl: URL { url.appendingPathComponent(name) }
 
-        let document = Document()
+        let document = Document(from: fooSvg)
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(document) else { return }
         subtracer.instant("data size=\(data.count)")
@@ -112,3 +124,17 @@ extension RootStore {
         }
     }
 }
+
+let fooSvg = """
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define the complex path with different commands -->
+  <path d="M 0 0 L 50 50 L 100 0 Z
+           M 50 100
+           C 60 110, 90 140, 100 150
+           S 180 120, 150 100
+           Q 160 180, 150 150
+           T 200 150
+           A 50 70 40 0 0 250 150
+           Z" fill="none" stroke="black" stroke-width="2" />
+</svg>
+"""

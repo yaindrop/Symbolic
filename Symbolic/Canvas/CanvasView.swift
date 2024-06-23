@@ -142,9 +142,6 @@ struct CanvasView: View, TracedView {
                 global.contextMenu.register(.focusedGroup)
                 global.contextMenu.register(.selection)
             }
-//            .onAppear {
-//                global.document.setDocument(.init(from: fooSvg))
-//            }
     }}
 }
 

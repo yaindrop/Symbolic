@@ -1,41 +1,69 @@
 import Foundation
 
-struct FileTree: Equatable {
-    struct Entry: Equatable {
-        let url: URL
-        let isDirectory: Bool
+extension URL {
+    static var documentDirectory: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     }
+}
 
+// MARK: - FileEntry
+
+struct FileEntry: Equatable {
+    let url: URL
+    let isDirectory: Bool
+}
+
+// MARK: - FileDirectory
+
+struct FileDirectory: Equatable {
+    let url: URL
+    var entries: [FileEntry]
+}
+
+extension FileDirectory {
+    init?(url: URL) {
+        guard let contents = try? FileManager.default.contentsOfDirectory(atPath: url.path) else { return nil }
+        let entries: [FileEntry] = contents.compactMap { name in
+            guard !name.hasPrefix("."),
+                  let attributes = try? FileManager.default.attributesOfItem(atPath: url.appending(path: name).path),
+                  let fType = attributes[FileAttributeKey.type] as? FileAttributeType,
+                  fType == .typeRegular || fType == .typeDirectory else { return nil }
+            let entryUrl = url.appending(path: name, directoryHint: fType == .typeDirectory ? .isDirectory : .notDirectory)
+            return FileEntry(url: entryUrl, isDirectory: fType == .typeDirectory)
+        }
+
+        self.url = url
+        self.entries = entries
+    }
+}
+
+// MARK: - FileTree
+
+struct FileTree: Equatable {
     let root: URL
-    let dirToEntries: [URL: [Entry]]
+    var directoryMap: [URL: FileDirectory]
 }
 
 extension FileTree {
-    init(root: URL) {
-        var dirToEntries: [URL: [Entry]] = [:]
+    init?(root: URL) {
+        var directoryMap: [URL: FileDirectory] = [:]
         let enumerator = FileManager.default.enumerator(atPath: root.path)
         while let relative = enumerator?.nextObject() as? String {
             guard let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType,
                   fType == .typeRegular || fType == .typeDirectory else { continue }
-            let isDirectory = fType == .typeDirectory
-            let url = root.appending(path: relative, directoryHint: isDirectory ? .isDirectory : .notDirectory)
-            let name = url.lastPathComponent
-            if name.hasPrefix(".") {
-                continue
-            }
+            let entryUrl = root.appending(path: relative, directoryHint: fType == .typeDirectory ? .isDirectory : .notDirectory)
 
-            let parent = url.deletingLastPathComponent()
-            var peers = dirToEntries.getOrSetDefault(key: parent, [])
-            peers.append(.init(url: url, isDirectory: isDirectory))
-            dirToEntries[parent] = peers
+            let name = entryUrl.lastPathComponent
+            guard !name.hasPrefix(".") else { continue }
+
+            let directoryUrl = entryUrl.deletingLastPathComponent()
+            var directory = directoryMap.getOrSetDefault(key: directoryUrl, .init(url: directoryUrl, entries: []))
+            directory.entries.append(.init(url: entryUrl, isDirectory: fType == .typeDirectory))
+            directoryMap[directoryUrl] = directory
         }
 
+        guard directoryMap[root] != nil else { return nil }
         self.root = root
-        self.dirToEntries = dirToEntries
-    }
-
-    static var documentDirectory: FileTree? {
-        let documentURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        return FileTree(root: documentURL)
+        self.directoryMap = directoryMap
     }
 }

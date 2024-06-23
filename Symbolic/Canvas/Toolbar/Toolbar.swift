@@ -88,7 +88,7 @@ private extension Toolbar {
     var leading: some View {
         ToolbarSection {
             ToolbarButton(systemName: "chevron.left") {
-                global.root.update(showCanvas: false)
+                global.root.exit()
             }
 
             Menu { documentMenu } label: { documentTitle }

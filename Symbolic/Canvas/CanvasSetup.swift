@@ -22,6 +22,7 @@ struct CanvasSetup {
 
         global.document.store.$activeDocument.didSet
             .sink {
+                global.root.asyncSave(document: $0)
                 global.path.loadDocument($0)
                 global.pathProperty.loadDocument($0)
                 global.item.loadDocument($0)

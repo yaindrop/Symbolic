@@ -63,8 +63,25 @@ extension RootStore {
         }
     }
 
-    func new(inDirectory url: URL) {
-        let _r = subtracer.range(type: .intent, "new in directory url=\(url)"); defer { _r() }
+    func newDirectory(inDirectory url: URL) {
+        let _r = subtracer.range(type: .intent, "new directory in directory url=\(url)"); defer { _r() }
+        let prefix = "Untitled Folder"
+        var index = 0
+        var name: String { index == 0 ? "\(prefix)" : "\(prefix) \(index)" }
+        var newUrl: URL { url.appendingPathComponent(name) }
+
+        while FileManager.default.fileExists(atPath: newUrl.path) {
+            index += 1
+        }
+
+        try? FileManager.default.createDirectory(at: newUrl, withIntermediateDirectories: true)
+        withStoreUpdating {
+            loadFileTree()
+        }
+    }
+
+    func newDocument(inDirectory url: URL) {
+        let _r = subtracer.range(type: .intent, "new document in directory url=\(url)"); defer { _r() }
         let prefix = "Untitled"
         let ext = "symbolic"
         var index = 0
@@ -82,16 +99,32 @@ extension RootStore {
 
         subtracer.instant("name=\(name)")
 
-        do {
-            try data.write(to: newUrl)
-        } catch {
-            return
-        }
+        try? data.write(to: newUrl)
 
         withStoreUpdating {
             update(showCanvas: true)
             update(activeDocumentUrl: newUrl)
             global.document.setDocument(document)
+            loadFileTree()
+        }
+    }
+
+    func delete(at url: URL) {
+        try? FileManager.default.removeItem(at: url)
+        withStoreUpdating {
+            loadFileTree()
+        }
+    }
+
+    func move(at url: URL, in directoryUrl: URL) -> Bool {
+        do {
+            try FileManager.default.moveItem(at: url, to: directoryUrl.appending(path: url.lastPathComponent))
+            withStoreUpdating {
+                loadFileTree()
+            }
+            return true
+        } catch {
+            return false
         }
     }
 

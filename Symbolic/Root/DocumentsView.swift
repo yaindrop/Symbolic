@@ -70,8 +70,8 @@ private extension DirectoryView {
         }
         .navigationTitle(url.lastPathComponent)
         .toolbar {
-            Button { global.root.new(inDirectory: url) } label: { Image(systemName: "doc.badge.plus") }
-            Button {} label: { Image(systemName: "folder.badge.plus") }
+            Button { global.root.newDocument(inDirectory: url) } label: { Image(systemName: "doc.badge.plus") }
+            Button { global.root.newDirectory(inDirectory: url) } label: { Image(systemName: "folder.badge.plus") }
             Button {} label: { Text("选择") }
         }
     }
@@ -82,8 +82,11 @@ private extension DirectoryView {
 struct EntryCard: View, TracedView {
     let entry: FileEntry
 
+    @State private var showingDeleteFolderAlert = false
+
     var body: some View { trace {
         content
+            .contextMenu { EntryCardMenu(entry: entry, showingDeleteFolderAlert: $showingDeleteFolderAlert) }
     } }
 }
 
@@ -94,6 +97,10 @@ private extension EntryCard {
         if entry.isDirectory {
             NavigationLink { DirectoryView(url: entry.url) } label: { card }
                 .tint(.label)
+                .dropDestination(for: URL.self) { payload, _ in
+                    guard let url = payload.first else { return false }
+                    return global.root.move(at: url, in: entry.url)
+                }
         } else {
             Button { global.root.open(documentFrom: entry.url) } label: { card }
                 .tint(.label)
@@ -125,5 +132,47 @@ private extension EntryCard {
         .frame(width: 150, height: 150, alignment: .center)
         .clipRounded(radius: 12)
         .shadow(radius: 6)
+        .draggable(entry.url)
+        .alert("Do you want to delete this folder with all contents?", isPresented: $showingDeleteFolderAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("OK", role: .destructive) { global.root.delete(at: entry.url) }
+        }
+    }
+}
+
+// MARK: - EntryCardMenu
+
+struct EntryCardMenu: View {
+    let entry: FileEntry
+
+    @Binding var showingDeleteFolderAlert: Bool
+
+    var body: some View {
+        content
+    }
+}
+
+// MARK: private
+
+extension EntryCardMenu {
+    @ViewBuilder var content: some View {
+        Button("Properties", systemImage: "info.circle") {}
+        Button("Rename", systemImage: "pencil") {}
+        Button("Wrap in new folder", systemImage: "folder.badge.plus") {}
+        Divider()
+        Button("Copy", systemImage: "doc.on.doc") {}
+        Button("Cut", systemImage: "scissors") {}
+        Button("Duplicate", systemImage: "plus.square.on.square") {}
+        Divider()
+        if entry.isDirectory {
+            Button("Unwrap folder", systemImage: "folder.badge.minus", role: .destructive) {}
+        }
+        Button("Delete", systemImage: "trash", role: .destructive) {
+            if entry.isDirectory && FileDirectory(url: entry.url)?.entries.isEmpty == false {
+                showingDeleteFolderAlert = true
+            } else {
+                global.root.delete(at: entry.url)
+            }
+        }
     }
 }

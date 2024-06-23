@@ -67,7 +67,7 @@ private extension PanelBody {
     var isSecondary: Bool { selector.appearance == .floatingSecondary }
 
     var floatingBody: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 0) {
             floatingTitle
             ManagedScrollView(model: scrollViewModel) { proxy in
                 VStack(spacing: 12) {
@@ -77,9 +77,8 @@ private extension PanelBody {
             .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
             .frame(maxWidth: .infinity, maxHeight: maxHeight)
             .fixedSize(horizontal: false, vertical: true)
+            .padding(.all.subtracting(.top), 12)
         }
-        .padding(12)
-        .multipleGesture(isSecondary ? global.panel.floatingPanelDrag(panelId: panelId) : nil)
         .background {
             Rectangle()
                 .if(isSecondary) {
@@ -87,8 +86,14 @@ private extension PanelBody {
                 } else: {
                     $0.fill(.ultraThinMaterial)
                 }
-                .clipRounded(radius: 18)
         }
+        .overlay {
+            Rectangle()
+                .fill(isSecondary ? Color.invisibleSolid : Color.clear)
+                .onTapGesture { global.panel.spin(on: panelId) }
+                .transaction { $0.animation = nil }
+        }
+        .clipRounded(radius: 18)
     }
 
     var floatingTitle: some View {
@@ -96,6 +101,7 @@ private extension PanelBody {
             .font(.headline)
             .padding(.vertical, 8)
             .aligned(axis: .horizontal, .center)
+            .padding(12)
             .invisibleSoildOverlay()
             .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
             .background {

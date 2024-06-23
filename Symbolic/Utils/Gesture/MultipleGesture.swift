@@ -34,16 +34,18 @@ struct MultipleGestureModifier: ViewModifier {
     let gesture: MultipleGesture?
 
     func body(content: Content) -> some View {
-        content
-            .gesture(dragGesture)
-            .onChange(of: active) {
-                if !active {
+        subtracer.range("gesture == nil \(gesture == nil)") {
+            content
+                .gesture(dragGesture, including: gesture == nil ? .none : .all)
+                .onChange(of: active) {
+                    if !active {
+                        onPressCancel()
+                    }
+                }
+                .onDisappear {
                     onPressCancel()
                 }
-            }
-            .onDisappear {
-                onPressCancel()
-            }
+        }
     }
 
     // MARK: private

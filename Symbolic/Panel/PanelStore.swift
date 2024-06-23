@@ -233,9 +233,6 @@ extension PanelStore {
                     self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
                 }
             },
-            onTap: { _ in
-                self.spin(on: panelId)
-            },
             onDrag: {
                 self.onMoving(panelId: panelId, $0)
             },

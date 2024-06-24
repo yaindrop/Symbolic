@@ -6,7 +6,6 @@ private let subtracer = tracer.tagged("DocumentService")
 
 struct Document: Codable {
     let id: UUID
-    var name: String?
     var events: [DocumentEvent] = []
 
     init(events: [DocumentEvent] = []) {

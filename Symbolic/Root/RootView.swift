@@ -46,12 +46,13 @@ struct RootView: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onAppear {
+                    try! URL.deletedDirectory.create()
                     global.setupDocumentFlow()
                     global.setupDocumentUpdaterFlow()
-                    global.root.loadFileTree()
+                    global.root.loadFileTree(at: .documentDirectory)
                 }
                 .onOpenURL {
-                    global.root.open(documentFrom: $0)
+                    global.root.open(documentAt: $0)
                 }
         }
     }}
@@ -71,6 +72,42 @@ private extension RootView {
                 CanvasView()
                     .background(.background)
             }
+        }
+    }
+}
+
+// MARK: - DocumentsView
+
+struct DocumentsView: View, TracedView {
+    var body: some View { trace {
+        content
+    } }
+}
+
+// MARK: private
+
+private extension DocumentsView {
+    @ViewBuilder var content: some View {
+        NavigationStack {
+            DirectoryView(url: .documentDirectory)
+        }
+    }
+}
+
+// MARK: - DeletedView
+
+struct DeletedView: View, TracedView {
+    var body: some View { trace {
+        content
+    } }
+}
+
+// MARK: private
+
+private extension DeletedView {
+    @ViewBuilder var content: some View {
+        NavigationStack {
+            DirectoryView(url: .deletedDirectory)
         }
     }
 }

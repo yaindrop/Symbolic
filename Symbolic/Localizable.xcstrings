@@ -1,0 +1,184 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    " ° " : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "%@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        }
+      }
+    },
+    "Back" : {
+
+    },
+    "Break" : {
+
+    },
+    "button_cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "button_done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
+    },
+    "Copy" : {
+
+    },
+    "Cut" : {
+
+    },
+    "Delete" : {
+
+    },
+    "Disable multi-select" : {
+
+    },
+    "Drag to select leaf" : {
+
+    },
+    "Drag to select root" : {
+
+    },
+    "Duplicate" : {
+
+    },
+    "Edge Type" : {
+
+    },
+    "False" : {
+
+    },
+    "Focus" : {
+
+    },
+    "Folder is empty" : {
+
+    },
+    "Front" : {
+
+    },
+    "Input" : {
+
+    },
+    "Merge" : {
+
+    },
+    "Move above" : {
+
+    },
+    "Move below" : {
+
+    },
+    "New name" : {
+
+    },
+    "No panels" : {
+
+    },
+    "No path is focused" : {
+
+    },
+    "Node" : {
+
+    },
+    "Node Type" : {
+
+    },
+    "Panels" : {
+
+    },
+    "Properties" : {
+
+    },
+    "rad" : {
+
+    },
+    "Rename" : {
+
+    },
+    "Rename %@" : {
+
+    },
+    "Select" : {
+
+    },
+    "Settings" : {
+
+    },
+    "some action" : {
+
+    },
+    "Split" : {
+
+    },
+    "Symbolic" : {
+
+    },
+    "Tap to multi-select" : {
+
+    },
+    "True" : {
+
+    },
+    "Unfocus" : {
+
+    },
+    "Unwrap folder" : {
+
+    },
+    "Wrap in new folder" : {
+
+    }
+  },
+  "version" : "1.0"
+}

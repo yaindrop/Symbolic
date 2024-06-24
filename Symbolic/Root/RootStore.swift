@@ -26,20 +26,20 @@ private extension RootStore {
 }
 
 extension RootStore {
-    func loadFileTree() {
+    func loadFileTree(at url: URL) {
         Task { @MainActor in
             let _r = subtracer.range(type: .intent, "load file tree"); defer { _r() }
-            guard let fileTree = FileTree(root: .documentDirectory) else { return }
+            guard let fileTree = FileTree(root: url) else { return }
             subtracer.instant("fileTree size=\(fileTree.directoryMap.count)")
             self.update(fileTree: fileTree)
         }
     }
 
-    func load(directory url: URL) {
+    func loadDirectory(at url: URL) {
         Task { @MainActor in
             let _r = subtracer.range(type: .intent, "load directory \(url.lastPathComponent)"); defer { _r() }
             guard let directory = FileDirectory(url: url) else { return }
-            subtracer.instant("directory size=\(directory.entries.count)")
+            subtracer.instant("directory size=\(directory.contents.count)")
 
             guard var fileTree = self.fileTree else { return }
             fileTree.directoryMap[directory.url] = directory
@@ -47,7 +47,7 @@ extension RootStore {
         }
     }
 
-    func open(documentFrom url: URL) {
+    func open(documentAt url: URL) {
         let _r = subtracer.range(type: .intent, "open document url=\(url)"); defer { _r() }
         guard let data = try? Data(contentsOf: url) else { return }
         subtracer.instant("data size=\(data.count)")
@@ -63,68 +63,81 @@ extension RootStore {
         }
     }
 
-    func newDirectory(inDirectory url: URL) {
-        let _r = subtracer.range(type: .intent, "new directory in directory url=\(url)"); defer { _r() }
-        let prefix = "Untitled Folder"
-        var index = 0
-        var name: String { index == 0 ? "\(prefix)" : "\(prefix) \(index)" }
-        var newUrl: URL { url.appendingPathComponent(name) }
-
-        while FileManager.default.fileExists(atPath: newUrl.path) {
-            index += 1
-        }
-
-        try? FileManager.default.createDirectory(at: newUrl, withIntermediateDirectories: true)
+    func newDirectory(in entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "new directory in directory url=\(entry.url)"); defer { _r() }
+        guard let _ = try? entry.newDirectory() else { return }
         withStoreUpdating {
-            loadFileTree()
+            loadFileTree(at: .documentDirectory)
         }
     }
 
-    func newDocument(inDirectory url: URL) {
-        let _r = subtracer.range(type: .intent, "new document in directory url=\(url)"); defer { _r() }
-        let prefix = "Untitled"
-        let ext = "symbolic"
-        var index = 0
-        var name: String { index == 0 ? "\(prefix).\(ext)" : "\(prefix) \(index).\(ext)" }
-        var newUrl: URL { url.appendingPathComponent(name) }
-
+    func newDocument(in entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "new document in directory url=\(entry.url)"); defer { _r() }
         let document = Document(from: fooSvg)
         let encoder = JSONEncoder()
-        guard let data = try? encoder.encode(document) else { return }
-        subtracer.instant("data size=\(data.count)")
+        guard let data = try? encoder.encode(document),
+              let newUrl = try? entry.newFile(ext: "symbolic", data: data) else { return }
 
-        while FileManager.default.fileExists(atPath: newUrl.path) {
-            index += 1
-        }
-
-        subtracer.instant("name=\(name)")
-
-        try? data.write(to: newUrl)
+        subtracer.instant("newUrl=\(newUrl)")
 
         withStoreUpdating {
             update(showCanvas: true)
             update(activeDocumentUrl: newUrl)
             global.document.setDocument(document)
-            loadFileTree()
+            loadFileTree(at: .documentDirectory)
         }
     }
 
-    func delete(at url: URL) {
-        try? FileManager.default.removeItem(at: url)
+    func moveToDeleted(at entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "move to deleted at url=\(entry.url)"); defer { _r() }
+        _ = move(at: entry, in: .deletedDirectory)
+    }
+
+    func delete(at entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "delete at url=\(entry.url)"); defer { _r() }
+        guard let _ = try? entry.delete() else { return }
         withStoreUpdating {
-            loadFileTree()
+            loadFileTree(at: .documentDirectory)
         }
     }
 
-    func move(at url: URL, in directoryUrl: URL) -> Bool {
-        do {
-            try FileManager.default.moveItem(at: url, to: directoryUrl.appending(path: url.lastPathComponent))
-            withStoreUpdating {
-                loadFileTree()
-            }
-            return true
-        } catch {
-            return false
+    func wrapDirectory(at entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "wrap directory at url=\(entry.url)"); defer { _r() }
+        guard let parent = entry.parent,
+              let newUrl = try? parent.newDirectory(),
+              let _ = try? entry.move(in: newUrl) else { return }
+        withStoreUpdating {
+            loadFileTree(at: .documentDirectory)
+        }
+    }
+
+    func unwrapDirectory(at entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "unwrap directory at url=\(entry.url)"); defer { _r() }
+        guard let parent = entry.parent,
+              let directory = FileDirectory(url: parent.url) else { return }
+        for entry in directory.contents {
+            _ = try? entry.move(in: parent.url)
+        }
+        guard let _ = try? entry.delete() else { return }
+        withStoreUpdating {
+            loadFileTree(at: .documentDirectory)
+        }
+    }
+
+    func move(at entry: FileEntry, in directoryUrl: URL) -> Bool {
+        let _r = subtracer.range(type: .intent, "move at url=\(entry.url) in directoryUrl=\(directoryUrl)"); defer { _r() }
+        guard let _ = try? entry.move(in: directoryUrl) else { return false }
+        withStoreUpdating {
+            loadFileTree(at: .documentDirectory)
+        }
+        return true
+    }
+
+    func rename(at entry: FileEntry, name: String) {
+        let _r = subtracer.range(type: .intent, "rename at url=\(entry.url) with name=\(name)"); defer { _r() }
+        guard let _ = try? entry.rename(name: name) else { return }
+        withStoreUpdating {
+            loadFileTree(at: .documentDirectory)
         }
     }
 

@@ -1,26 +1,8 @@
 import SwiftUI
 
-// MARK: - DocumentsView
-
-struct DocumentsView: View, TracedView {
-    var body: some View { trace {
-        content
-    } }
-}
-
-// MARK: private
-
-private extension DocumentsView {
-    @ViewBuilder var content: some View {
-        NavigationStack {
-            DirectoryView(url: .documentDirectory)
-        }
-    }
-}
-
 // MARK: - DirectoryView
 
-private struct DirectoryView: View, TracedView, SelectorHolder {
+struct DirectoryView: View, TracedView, SelectorHolder {
     @Environment(\.dismiss) private var dismiss
 
     let url: URL
@@ -35,10 +17,7 @@ private struct DirectoryView: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onAppear {
-                    global.root.load(directory: url)
-                }
-                .onDisappear {
-                    print("dbf disappear", url)
+                    global.root.loadDirectory(at: url)
                 }
         }
     } }
@@ -50,7 +29,7 @@ private extension DirectoryView {
     var directory: FileDirectory? { selector.fileTree?.directoryMap[url] }
 
     var entries: [FileEntry] {
-        directory?.entries.sorted {
+        directory?.contents.sorted {
             $0.isDirectory != $1.isDirectory
                 ? $0.isDirectory
                 : $0.url.lastPathComponent < $1.url.lastPathComponent
@@ -68,11 +47,23 @@ private extension DirectoryView {
             }
             .padding()
         }
+        .overlay {
+            if entries.isEmpty {
+                Text("Folder is empty")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
         .navigationTitle(url.lastPathComponent)
         .toolbar {
-            Button { global.root.newDocument(inDirectory: url) } label: { Image(systemName: "doc.badge.plus") }
-            Button { global.root.newDirectory(inDirectory: url) } label: { Image(systemName: "folder.badge.plus") }
-            Button {} label: { Text("选择") }
+            Button {
+                guard let directory else { return }
+                global.root.newDocument(in: directory.entry)
+            } label: { Image(systemName: "doc.badge.plus") }
+            Button {
+                guard let directory else { return }
+                global.root.newDirectory(in: directory.entry)
+            } label: { Image(systemName: "folder.badge.plus") }
+            Button {} label: { Text("Select") }
         }
     }
 }
@@ -82,11 +73,25 @@ private extension DirectoryView {
 struct EntryCard: View, TracedView {
     let entry: FileEntry
 
-    @State private var showingDeleteFolderAlert = false
+    @State private var showingRenameAlert = false
+
+    @State private var newName: String = ""
+    @State private var isNewNameValid: Bool = false
 
     var body: some View { trace {
         content
-            .contextMenu { EntryCardMenu(entry: entry, showingDeleteFolderAlert: $showingDeleteFolderAlert) }
+            .contextMenu {
+                EntryCardMenu(
+                    entry: entry,
+                    onRename: {
+                        newName = entry.url.name
+                        showingRenameAlert = true
+                    }
+                )
+            }
+            .onChange(of: newName) {
+                isNewNameValid = !entry.url.renaming(to: newName, ext: "symbolic").exists
+            }
     } }
 }
 
@@ -98,11 +103,12 @@ private extension EntryCard {
             NavigationLink { DirectoryView(url: entry.url) } label: { card }
                 .tint(.label)
                 .dropDestination(for: URL.self) { payload, _ in
-                    guard let url = payload.first else { return false }
-                    return global.root.move(at: url, in: entry.url)
+                    guard let payloadUrl = payload.first,
+                          let payloadEntry = FileEntry(url: payloadUrl) else { return false }
+                    return global.root.move(at: payloadEntry, in: entry.url)
                 }
         } else {
-            Button { global.root.open(documentFrom: entry.url) } label: { card }
+            Button { global.root.open(documentAt: entry.url) } label: { card }
                 .tint(.label)
         }
     }
@@ -119,9 +125,10 @@ private extension EntryCard {
             .background(.background.tertiary)
             Divider()
             HStack {
-                Text(entry.url.lastPathComponent)
-                    .font(.callout)
+                Text(entry.url.name)
+                    .font(.footnote)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(2)
                 Spacer()
             }
             .padding(.horizontal, 12)
@@ -131,11 +138,18 @@ private extension EntryCard {
         }
         .frame(width: 150, height: 150, alignment: .center)
         .clipRounded(radius: 12)
-        .shadow(radius: 6)
+        .shadow(radius: 3)
         .draggable(entry.url)
-        .alert("Do you want to delete this folder with all contents?", isPresented: $showingDeleteFolderAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("OK", role: .destructive) { global.root.delete(at: entry.url) }
+//        .alert("Do you want to delete this folder with all contents?", isPresented: $showingDeleteFolderAlert) {
+//            Button(LocalizedStringKey("button_cancel"), role: .cancel) {}
+//            Button(LocalizedStringKey("button_done"), role: .destructive) { global.root.delete(at: entry) }
+//        }
+        .alert("Rename \(entry.isDirectory ? "folder" : "document")", isPresented: $showingRenameAlert) {
+            TextField("New name", text: $newName)
+                .textInputAutocapitalization(.never)
+            Button(LocalizedStringKey("button_cancel")) {}
+            Button(LocalizedStringKey("button_done")) { global.root.rename(at: entry, name: newName) }
+                .disabled(!isNewNameValid)
         }
     }
 }
@@ -144,8 +158,7 @@ private extension EntryCard {
 
 struct EntryCardMenu: View {
     let entry: FileEntry
-
-    @Binding var showingDeleteFolderAlert: Bool
+    let onRename: () -> Void
 
     var body: some View {
         content
@@ -157,22 +170,20 @@ struct EntryCardMenu: View {
 extension EntryCardMenu {
     @ViewBuilder var content: some View {
         Button("Properties", systemImage: "info.circle") {}
-        Button("Rename", systemImage: "pencil") {}
-        Button("Wrap in new folder", systemImage: "folder.badge.plus") {}
+        Button("Rename", systemImage: "pencil") { onRename() }
+        Button("Wrap in new folder", systemImage: "folder.badge.plus") { global.root.wrapDirectory(at: entry) }
         Divider()
         Button("Copy", systemImage: "doc.on.doc") {}
         Button("Cut", systemImage: "scissors") {}
         Button("Duplicate", systemImage: "plus.square.on.square") {}
         Divider()
         if entry.isDirectory {
-            Button("Unwrap folder", systemImage: "folder.badge.minus", role: .destructive) {}
+            Button("Unwrap folder", systemImage: "folder.badge.minus", role: .destructive) {
+                global.root.unwrapDirectory(at: entry)
+            }
         }
         Button("Delete", systemImage: "trash", role: .destructive) {
-            if entry.isDirectory && FileDirectory(url: entry.url)?.entries.isEmpty == false {
-                showingDeleteFolderAlert = true
-            } else {
-                global.root.delete(at: entry.url)
-            }
+            global.root.moveToDeleted(at: entry)
         }
     }
 }

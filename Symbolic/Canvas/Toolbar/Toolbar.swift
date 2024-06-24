@@ -35,7 +35,7 @@ extension ToolbarStore {
 
 struct Toolbar: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.viewport.store.viewSize }) var viewSize
+        @Selected({ global.root.activeDocumentUrl?.name }) var filename
         @Selected({ global.toolbar.mode }) var toolbarMode
         @Selected({ global.document.undoable }) var undoable
     }
@@ -68,14 +68,14 @@ private extension Toolbar {
     }
 
     @ViewBuilder var documentMenu: some View {
-        Text("Item 0")
+        Button("Rename", systemImage: "pencil") {}
         Divider()
-        Text("Item 1")
+        Button("Delete", systemImage: "trash", role: .destructive) {}
     }
 
     var documentTitle: some View {
         HStack(spacing: 12) {
-            Text("未命名2").font(.headline)
+            Text(selector.filename ?? "Untitled").font(.headline)
             Image(systemName: "chevron.down.circle.fill")
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color.label.opacity(0.5))

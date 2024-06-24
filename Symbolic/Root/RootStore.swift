@@ -4,6 +4,8 @@ private let subtracer = tracer.tagged("RootStore")
 
 class RootStore: Store {
     @Trackable var fileTree: FileTree? = nil
+    @Trackable var isSelectingFiles: Bool = false
+    @Trackable var selectedFiles = Set<URL>()
 
     @Trackable var showCanvas = false
     @Trackable var activeDocumentUrl: URL?
@@ -16,6 +18,14 @@ private extension RootStore {
         update { $0(\._fileTree, fileTree) }
     }
 
+    func update(isSelectingFiles: Bool) {
+        update { $0(\._isSelectingFiles, isSelectingFiles) }
+    }
+
+    func update(selectedFiles: Set<URL>) {
+        update { $0(\._selectedFiles, selectedFiles) }
+    }
+
     func update(showCanvas: Bool) {
         update { $0(\._showCanvas, showCanvas) }
     }
@@ -26,6 +36,29 @@ private extension RootStore {
 }
 
 extension RootStore {
+    func toggleSelecting() {
+        withStoreUpdating {
+            if isSelectingFiles {
+                update(isSelectingFiles: false)
+                update(selectedFiles: .init())
+            } else {
+                update(isSelectingFiles: true)
+                update(selectedFiles: .init())
+            }
+        }
+    }
+
+    func toggleSelect(at url: URL) {
+        guard isSelectingFiles else { return }
+        withStoreUpdating {
+            if selectedFiles.contains(url) {
+                update(selectedFiles: selectedFiles.cloned { $0.remove(url) })
+            } else {
+                update(selectedFiles: selectedFiles.cloned { $0.insert(url) })
+            }
+        }
+    }
+
     func loadFileTree(at url: URL) {
         Task { @MainActor in
             let _r = subtracer.range(type: .intent, "load file tree"); defer { _r() }

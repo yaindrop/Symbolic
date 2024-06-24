@@ -5,10 +5,12 @@ import SwiftUI
 struct DirectoryView: View, TracedView, SelectorHolder {
     @Environment(\.dismiss) private var dismiss
 
+    @Binding var path: [URL]
     let url: URL
 
     class Selector: SelectorBase {
         @Selected(animation: .fast, { global.root.fileTree }) var fileTree
+        @Selected({ global.root.isSelectingFiles }) var isSelectingFiles
     }
 
     @SelectorWrapper var selector
@@ -41,7 +43,7 @@ private extension DirectoryView {
             VStack {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 20) {
                     ForEach(entries, id: \.url) {
-                        EntryCard(entry: $0)
+                        EntryCard(path: $path, entry: $0)
                     }
                 }
             }
@@ -63,15 +65,26 @@ private extension DirectoryView {
                 guard let directory else { return }
                 global.root.newDirectory(in: directory.entry)
             } label: { Image(systemName: "folder.badge.plus") }
-            Button {} label: { Text("Select") }
+            Button {
+                global.root.toggleSelecting()
+            } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
         }
     }
 }
 
 // MARK: - EntryCard
 
-struct EntryCard: View, TracedView {
+struct EntryCard: View, TracedView, ComputedSelectorHolder {
+    @Binding var path: [URL]
     let entry: FileEntry
+
+    struct SelectorProps: Equatable { let entry: FileEntry }
+    class Selector: SelectorBase {
+        @Selected({ global.root.isSelectingFiles }) var isSelectingFiles
+        @Selected(animation: .fast, { global.root.selectedFiles.contains($0.entry.url) }) var selected
+    }
+
+    @SelectorWrapper var selector
 
     @State private var showingRenameAlert = false
 
@@ -79,19 +92,21 @@ struct EntryCard: View, TracedView {
     @State private var isNewNameValid: Bool = false
 
     var body: some View { trace {
-        content
-            .contextMenu {
-                EntryCardMenu(
-                    entry: entry,
-                    onRename: {
-                        newName = entry.url.name
-                        showingRenameAlert = true
-                    }
-                )
-            }
-            .onChange(of: newName) {
-                isNewNameValid = !entry.url.renaming(to: newName, ext: "symbolic").exists
-            }
+        setupSelector(.init(entry: entry)) {
+            content
+                .contextMenu {
+                    EntryCardMenu(
+                        entry: entry,
+                        onRename: {
+                            newName = entry.url.name
+                            showingRenameAlert = true
+                        }
+                    )
+                }
+                .onChange(of: newName) {
+                    isNewNameValid = !entry.url.renaming(to: newName, ext: "symbolic").exists
+                }
+        }
     } }
 }
 
@@ -99,8 +114,12 @@ struct EntryCard: View, TracedView {
 
 private extension EntryCard {
     @ViewBuilder var content: some View {
-        if entry.isDirectory {
-            NavigationLink { DirectoryView(url: entry.url) } label: { card }
+        if selector.isSelectingFiles {
+            card.onTapGesture {
+                global.root.toggleSelect(at: entry.url)
+            }
+        } else if entry.isDirectory {
+            Button { path.append(entry.url) } label: { card }
                 .tint(.label)
                 .dropDestination(for: URL.self) { payload, _ in
                     guard let payloadUrl = payload.first,
@@ -150,6 +169,16 @@ private extension EntryCard {
             Button(LocalizedStringKey("button_cancel")) {}
             Button(LocalizedStringKey("button_done")) { global.root.rename(at: entry, name: newName) }
                 .disabled(!isNewNameValid)
+        }
+        .overlay {
+            if selector.isSelectingFiles {
+                Image(systemName: selector.selected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(selector.selected ? .blue : .white)
+                    .font(.title3)
+                    .shadow(color: (selector.selected ? Color.systemBackground : .label).opacity(0.66), radius: 1)
+                    .padding(6)
+                    .innerAligned(.topLeading)
+            }
         }
     }
 }

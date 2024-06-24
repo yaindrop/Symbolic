@@ -1,11 +1,7 @@
 import SwiftUI
 
-enum SidebarNavigationValue: CaseIterable, SelfIdentifiable {
-    case documents, deleted
-}
-
 struct SidebarView: View, TracedView {
-    @State private var selection: SidebarNavigationValue = .documents
+    @State private var selection: RootNavigationValue = .documents
 
     var body: some View { trace {
         content
@@ -16,13 +12,13 @@ private extension SidebarView {
     @ViewBuilder var content: some View {
         ScrollView {
             VStack {
-                ForEach(SidebarNavigationValue.allCases) {
+                ForEach(RootNavigationValue.allCases) {
                     SidebarItem(value: $0, selection: selection)
                 }
             }
             .padding()
         }
-        .navigationDestination(for: SidebarNavigationValue.self) { value in
+        .navigationDestination(for: RootNavigationValue.self) { value in
             switch value {
             case .documents: DocumentsView().onAppear { selection = value }
             case .deleted: DeletedView().onAppear { selection = value }
@@ -33,8 +29,8 @@ private extension SidebarView {
 }
 
 struct SidebarItem: View {
-    let value: SidebarNavigationValue
-    let selection: SidebarNavigationValue
+    let value: RootNavigationValue
+    let selection: RootNavigationValue
 
     var imageName: String {
         switch value {

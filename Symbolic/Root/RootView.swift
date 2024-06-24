@@ -33,6 +33,11 @@ private extension GlobalStores {
     }
 }
 
+enum RootNavigationValue: CaseIterable, SelfIdentifiable {
+    case documents
+    case deleted
+}
+
 // MARK: - RootView
 
 struct RootView: View, TracedView, SelectorHolder {
@@ -66,7 +71,9 @@ private extension RootView {
             NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
                 SidebarView()
             } detail: {
-                DocumentsView()
+                NavigationStack {
+                    DocumentsView()
+                }
             }
             if selector.showCanvas {
                 CanvasView()
@@ -79,6 +86,8 @@ private extension RootView {
 // MARK: - DocumentsView
 
 struct DocumentsView: View, TracedView {
+    @State private var path: [URL] = []
+
     var body: some View { trace {
         content
     } }
@@ -88,8 +97,11 @@ struct DocumentsView: View, TracedView {
 
 private extension DocumentsView {
     @ViewBuilder var content: some View {
-        NavigationStack {
-            DirectoryView(url: .documentDirectory)
+        NavigationStack(path: $path) {
+            DirectoryView(path: $path, url: .documentDirectory)
+                .navigationDestination(for: URL.self) {
+                    DirectoryView(path: $path, url: $0)
+                }
         }
     }
 }
@@ -106,8 +118,6 @@ struct DeletedView: View, TracedView {
 
 private extension DeletedView {
     @ViewBuilder var content: some View {
-        NavigationStack {
-            DirectoryView(url: .deletedDirectory)
-        }
+        DirectoryView(path: .constant([]), url: .deletedDirectory)
     }
 }

@@ -139,7 +139,8 @@ struct FileTree: Equatable {
 
 extension FileTree {
     init?(root: URL) {
-        var directoryMap: [URL: FileDirectory] = [:]
+        guard let rootDirectory = FileDirectory(url: root) else { return nil }
+        var directoryMap: [URL: FileDirectory] = [root: rootDirectory]
         let enumerator = FileManager.default.enumerator(atPath: root.path)
         while let relative = enumerator?.nextObject() as? String {
             guard let entry = FileEntry(url: root.appending(path: relative)),

@@ -7,8 +7,7 @@ class RootStore: Store {
     @Trackable var isSelectingFiles: Bool = false
     @Trackable var selectedFiles = Set<URL>()
 
-    @Trackable var showCanvas = false
-    @Trackable var activeDocumentUrl: URL?
+    @Trackable var activeDocument: FileEntry?
 
     var savingTask: Task<Void, Never>?
 }
@@ -26,12 +25,8 @@ private extension RootStore {
         update { $0(\._selectedFiles, selectedFiles) }
     }
 
-    func update(showCanvas: Bool) {
-        update { $0(\._showCanvas, showCanvas) }
-    }
-
-    func update(activeDocumentUrl: URL?) {
-        update { $0(\._activeDocumentUrl, activeDocumentUrl) }
+    func update(activeDocument: FileEntry?) {
+        update { $0(\._activeDocument, activeDocument) }
     }
 }
 
@@ -90,8 +85,7 @@ extension RootStore {
         subtracer.instant("document size=\(document.events.count)")
 
         withStoreUpdating {
-            update(showCanvas: true)
-            update(activeDocumentUrl: url)
+            update(activeDocument: .init(url: url))
             global.document.setDocument(document)
         }
     }
@@ -114,8 +108,7 @@ extension RootStore {
         subtracer.instant("newUrl=\(newUrl)")
 
         withStoreUpdating {
-            update(showCanvas: true)
-            update(activeDocumentUrl: newUrl)
+            update(activeDocument: .init(url: newUrl))
             global.document.setDocument(document)
             loadFileTree(at: .documentDirectory)
         }
@@ -123,7 +116,12 @@ extension RootStore {
 
     func moveToDeleted(at entry: FileEntry) {
         let _r = subtracer.range(type: .intent, "move to deleted at url=\(entry.url)"); defer { _r() }
-        _ = move(at: entry, in: .deletedDirectory)
+        withStoreUpdating {
+            _ = move(at: entry, in: .deletedDirectory)
+            if entry == activeDocument {
+                update(activeDocument: nil)
+            }
+        }
     }
 
     func delete(at entry: FileEntry) {
@@ -168,22 +166,25 @@ extension RootStore {
 
     func rename(at entry: FileEntry, name: String) {
         let _r = subtracer.range(type: .intent, "rename at url=\(entry.url) with name=\(name)"); defer { _r() }
-        guard let _ = try? entry.rename(name: name) else { return }
+        guard let newUrl = try? entry.rename(name: name) else { return }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)
+            if entry == activeDocument {
+                update(activeDocument: .init(url: newUrl))
+            }
         }
     }
 
     func save(document: Document) {
         let _r = subtracer.range(type: .intent, "save document"); defer { _r() }
-        guard let activeDocumentUrl else { return }
+        guard let activeDocument else { return }
 
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(document) else { return }
         subtracer.instant("data size=\(data.count)")
 
         do {
-            try data.write(to: activeDocumentUrl)
+            try data.write(to: activeDocument.url)
         } catch {
             return
         }
@@ -198,8 +199,7 @@ extension RootStore {
 
     func exit() {
         withStoreUpdating {
-            update(showCanvas: false)
-            update(activeDocumentUrl: nil)
+            update(activeDocument: nil)
         }
     }
 }

@@ -35,16 +35,19 @@ extension ToolbarStore {
 
 struct Toolbar: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.root.activeDocumentUrl?.name }) var filename
+        @Selected({ global.root.activeDocument }) var activeDocument
         @Selected({ global.toolbar.mode }) var toolbarMode
         @Selected({ global.document.undoable }) var undoable
     }
 
     @SelectorWrapper var selector
 
+    @State private var showingRenameAlert = false
+
     var body: some View {
         setupSelector {
             content
+                .if(selector.activeDocument) { $0.modifier(FileRenameAlertModifier(entry: $1, isPresented: $showingRenameAlert)) }
         }
     }
 }
@@ -69,14 +72,19 @@ private extension Toolbar {
 
     @ViewBuilder var documentMenu: some View {
         Button("Properties", systemImage: "info.circle") {}
-        Button("Rename", systemImage: "pencil") {}
+        Button("Rename", systemImage: "pencil") {
+            showingRenameAlert = true
+        }
         Divider()
-        Button("Delete", systemImage: "trash", role: .destructive) {}
+        Button("Delete", systemImage: "trash", role: .destructive) {
+            guard let entry = global.root.activeDocument else { return }
+            global.root.moveToDeleted(at: entry)
+        }
     }
 
     var documentTitle: some View {
         HStack(spacing: 12) {
-            Text(selector.filename ?? "Untitled").font(.headline)
+            Text(selector.activeDocument?.url.name ?? "Untitled").font(.headline)
             Image(systemName: "chevron.down.circle.fill")
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(Color.label.opacity(0.5))

@@ -42,7 +42,7 @@ enum RootNavigationValue: CaseIterable, SelfIdentifiable {
 
 struct RootView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(animation: .fast, { global.root.showCanvas }) var showCanvas
+        @Selected(animation: .fast, { global.root.activeDocument != nil }) var showCanvas
     }
 
     @SelectorWrapper var selector

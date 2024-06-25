@@ -68,6 +68,7 @@ private extension Toolbar {
     }
 
     @ViewBuilder var documentMenu: some View {
+        Button("Properties", systemImage: "info.circle") {}
         Button("Rename", systemImage: "pencil") {}
         Divider()
         Button("Delete", systemImage: "trash", role: .destructive) {}

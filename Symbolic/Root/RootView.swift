@@ -121,3 +121,28 @@ private extension DeletedView {
         DirectoryView(path: .constant([]), url: .deletedDirectory)
     }
 }
+
+struct FileRenameAlertModifier: ViewModifier {
+    let entry: FileEntry
+    @Binding var isPresented: Bool
+
+    @State private var name: String = ""
+    @State private var isValid: Bool = false
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: name) {
+                isValid = !entry.url.renaming(to: name, ext: "symbolic").exists
+            }
+            .onChange(of: isPresented) {
+                name = entry.url.name
+            }
+            .alert("Rename \(entry.isDirectory ? "folder" : "document")", isPresented: $isPresented) {
+                TextField("New name", text: $name)
+                    .textInputAutocapitalization(.never)
+                Button(LocalizedStringKey("button_cancel")) {}
+                Button(LocalizedStringKey("button_done")) { global.root.rename(at: entry, name: name) }
+                    .disabled(!isValid)
+            }
+    }
+}

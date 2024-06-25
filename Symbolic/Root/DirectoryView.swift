@@ -88,23 +88,14 @@ struct EntryCard: View, TracedView, ComputedSelectorHolder {
 
     @State private var showingRenameAlert = false
 
-    @State private var newName: String = ""
-    @State private var isNewNameValid: Bool = false
-
     var body: some View { trace {
         setupSelector(.init(entry: entry)) {
             content
                 .contextMenu {
                     EntryCardMenu(
                         entry: entry,
-                        onRename: {
-                            newName = entry.url.name
-                            showingRenameAlert = true
-                        }
+                        onRename: { showingRenameAlert = true }
                     )
-                }
-                .onChange(of: newName) {
-                    isNewNameValid = !entry.url.renaming(to: newName, ext: "symbolic").exists
                 }
         }
     } }
@@ -159,17 +150,7 @@ private extension EntryCard {
         .clipRounded(radius: 12)
         .shadow(radius: 3)
         .draggable(entry.url)
-//        .alert("Do you want to delete this folder with all contents?", isPresented: $showingDeleteFolderAlert) {
-//            Button(LocalizedStringKey("button_cancel"), role: .cancel) {}
-//            Button(LocalizedStringKey("button_done"), role: .destructive) { global.root.delete(at: entry) }
-//        }
-        .alert("Rename \(entry.isDirectory ? "folder" : "document")", isPresented: $showingRenameAlert) {
-            TextField("New name", text: $newName)
-                .textInputAutocapitalization(.never)
-            Button(LocalizedStringKey("button_cancel")) {}
-            Button(LocalizedStringKey("button_done")) { global.root.rename(at: entry, name: newName) }
-                .disabled(!isNewNameValid)
-        }
+        .modifier(FileRenameAlertModifier(entry: entry, isPresented: $showingRenameAlert))
         .overlay {
             if selector.isSelectingFiles {
                 Image(systemName: selector.selected ? "checkmark.circle.fill" : "circle")

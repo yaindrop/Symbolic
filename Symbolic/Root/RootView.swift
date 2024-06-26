@@ -71,9 +71,7 @@ private extension RootView {
             NavigationSplitView(preferredCompactColumn: .constant(.detail)) {
                 SidebarView()
             } detail: {
-                NavigationStack {
-                    DocumentsView()
-                }
+                DocumentsView()
             }
             if selector.showCanvas {
                 CanvasView()
@@ -97,12 +95,11 @@ struct DocumentsView: View, TracedView {
 
 private extension DocumentsView {
     @ViewBuilder var content: some View {
-        NavigationStack(path: $path) {
-            DirectoryView(path: $path, url: .documentDirectory)
-                .navigationDestination(for: URL.self) {
-                    DirectoryView(path: $path, url: $0)
-                }
-        }
+        let top = path.last ?? .documentDirectory
+        DirectoryView(path: $path, url: top)
+            .navigationDestination(for: URL.self) {
+                DirectoryView(path: $path, url: $0)
+            }
     }
 }
 

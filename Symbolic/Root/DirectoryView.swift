@@ -57,17 +57,31 @@ private extension DirectoryView {
         }
         .navigationTitle(url.lastPathComponent)
         .toolbar {
-            Button {
-                guard let directory else { return }
-                global.root.newDocument(in: directory.entry)
-            } label: { Image(systemName: "doc.badge.plus") }
-            Button {
-                guard let directory else { return }
-                global.root.newDirectory(in: directory.entry)
-            } label: { Image(systemName: "folder.badge.plus") }
-            Button {
-                global.root.toggleSelecting()
-            } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    withAnimation {
+                        _ = path.popLast()
+                    }
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+                .disabled(path.isEmpty)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack {
+                    Button {
+                        guard let directory else { return }
+                        global.root.newDocument(in: directory.entry)
+                    } label: { Image(systemName: "doc.badge.plus") }
+                    Button {
+                        guard let directory else { return }
+                        global.root.newDirectory(in: directory.entry)
+                    } label: { Image(systemName: "folder.badge.plus") }
+                    Button {
+                        global.root.toggleSelecting()
+                    } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
+                }
+            }
         }
     }
 }
@@ -110,7 +124,11 @@ private extension EntryCard {
                 global.root.toggleSelect(at: entry.url)
             }
         } else if entry.isDirectory {
-            Button { path.append(entry.url) } label: { card }
+            Button {
+                withAnimation {
+                    path.append(entry.url)
+                }
+            } label: { card }
                 .tint(.label)
                 .dropDestination(for: URL.self) { payload, _ in
                     guard let payloadUrl = payload.first,

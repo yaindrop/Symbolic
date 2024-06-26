@@ -3,13 +3,11 @@ import SwiftUI
 // MARK: - DirectoryView
 
 struct DirectoryView: View, TracedView, SelectorHolder {
-    @Environment(\.dismiss) private var dismiss
-
-    @Binding var path: [URL]
     let url: URL
 
     class Selector: SelectorBase {
         @Selected(animation: .fast, { global.root.fileTree }) var fileTree
+        @Selected(animation: .fast, { global.root.directoryPath }) var directoryPath
         @Selected({ global.root.isSelectingFiles }) var isSelectingFiles
     }
 
@@ -43,7 +41,7 @@ private extension DirectoryView {
             VStack {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 20) {
                     ForEach(entries, id: \.url) {
-                        EntryCard(path: $path, entry: $0)
+                        EntryCard(entry: $0)
                     }
                 }
             }
@@ -58,14 +56,22 @@ private extension DirectoryView {
         .navigationTitle(url.lastPathComponent)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    withAnimation {
-                        _ = path.popLast()
+                HStack {
+                    Button {
+                        global.root.directoryBack()
+                    } label: {
+                        Image(systemName: "chevron.left")
                     }
-                } label: {
-                    Image(systemName: "chevron.left")
+                    .disabled(global.root.directoryPath.isEmpty)
+                    .frame(size: .init(squared: 36))
+                    Button {
+                        global.root.directoryForward()
+                    } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                    .disabled(global.root.forwardPath.isEmpty)
+                    .frame(size: .init(squared: 36))
                 }
-                .disabled(path.isEmpty)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack {
@@ -73,10 +79,12 @@ private extension DirectoryView {
                         guard let directory else { return }
                         global.root.newDocument(in: directory.entry)
                     } label: { Image(systemName: "doc.badge.plus") }
+                        .frame(size: .init(squared: 36))
                     Button {
                         guard let directory else { return }
                         global.root.newDirectory(in: directory.entry)
                     } label: { Image(systemName: "folder.badge.plus") }
+                        .frame(size: .init(squared: 36))
                     Button {
                         global.root.toggleSelecting()
                     } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
@@ -89,7 +97,6 @@ private extension DirectoryView {
 // MARK: - EntryCard
 
 struct EntryCard: View, TracedView, ComputedSelectorHolder {
-    @Binding var path: [URL]
     let entry: FileEntry
 
     struct SelectorProps: Equatable { let entry: FileEntry }
@@ -123,21 +130,16 @@ private extension EntryCard {
             card.onTapGesture {
                 global.root.toggleSelect(at: entry.url)
             }
-        } else if entry.isDirectory {
-            Button {
-                withAnimation {
-                    path.append(entry.url)
-                }
-            } label: { card }
-                .tint(.label)
-                .dropDestination(for: URL.self) { payload, _ in
-                    guard let payloadUrl = payload.first,
-                          let payloadEntry = FileEntry(url: payloadUrl) else { return false }
-                    return global.root.move(at: payloadEntry, in: entry.url)
-                }
         } else {
-            Button { global.root.open(documentAt: entry.url) } label: { card }
+            Button { global.root.open(at: entry) } label: { card }
                 .tint(.label)
+                .if(entry.isDirectory) {
+                    $0.dropDestination(for: URL.self) { payload, _ in
+                        guard let payloadUrl = payload.first,
+                              let payloadEntry = FileEntry(url: payloadUrl) else { return false }
+                        return global.root.move(at: payloadEntry, in: entry.url)
+                    }
+                }
         }
     }
 

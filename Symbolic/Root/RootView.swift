@@ -57,7 +57,8 @@ struct RootView: View, TracedView, SelectorHolder {
                     global.root.loadFileTree(at: .documentDirectory)
                 }
                 .onOpenURL {
-                    global.root.open(documentAt: $0)
+                    guard let entry = FileEntry(url: $0) else { return }
+                    global.root.open(at: entry)
                 }
         }
     }}
@@ -83,11 +84,17 @@ private extension RootView {
 
 // MARK: - DocumentsView
 
-struct DocumentsView: View, TracedView {
-    @State private var path: [URL] = []
+struct DocumentsView: View, TracedView, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected({ global.root.directoryPath }) var directoryPath
+    }
+
+    @SelectorWrapper var selector
 
     var body: some View { trace {
-        content
+        setupSelector {
+            content
+        }
     } }
 }
 
@@ -95,10 +102,10 @@ struct DocumentsView: View, TracedView {
 
 private extension DocumentsView {
     @ViewBuilder var content: some View {
-        let top = path.last ?? .documentDirectory
-        DirectoryView(path: $path, url: top)
+        let top = selector.directoryPath.last ?? .documentDirectory
+        DirectoryView(url: top)
             .navigationDestination(for: URL.self) {
-                DirectoryView(path: $path, url: $0)
+                DirectoryView(url: $0)
             }
     }
 }
@@ -115,7 +122,7 @@ struct DeletedView: View, TracedView {
 
 private extension DeletedView {
     @ViewBuilder var content: some View {
-        DirectoryView(path: .constant([]), url: .deletedDirectory)
+        DirectoryView(url: .deletedDirectory)
     }
 }
 

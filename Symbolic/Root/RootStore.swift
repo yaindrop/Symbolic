@@ -4,6 +4,9 @@ private let subtracer = tracer.tagged("RootStore")
 
 class RootStore: Store {
     @Trackable var fileTree: FileTree? = nil
+    @Trackable var directoryPath: [URL] = []
+    @Trackable var forwardPath: [URL] = []
+
     @Trackable var isSelectingFiles: Bool = false
     @Trackable var selectedFiles = Set<URL>()
 
@@ -15,6 +18,14 @@ class RootStore: Store {
 private extension RootStore {
     func update(fileTree: FileTree) {
         update { $0(\._fileTree, fileTree) }
+    }
+
+    func update(directoryPath: [URL]) {
+        update { $0(\._directoryPath, directoryPath) }
+    }
+
+    func update(forwardPath: [URL]) {
+        update { $0(\._forwardPath, forwardPath) }
     }
 
     func update(isSelectingFiles: Bool) {
@@ -75,18 +86,46 @@ extension RootStore {
         }
     }
 
-    func open(documentAt url: URL) {
-        let _r = subtracer.range(type: .intent, "open document url=\(url)"); defer { _r() }
-        guard let data = try? Data(contentsOf: url) else { return }
-        subtracer.instant("data size=\(data.count)")
+    func open(at entry: FileEntry) {
+        let _r = subtracer.range(type: .intent, "open url=\(entry.url)"); defer { _r() }
+        if entry.isDirectory {
+            withStoreUpdating {
+                update(directoryPath: directoryPath.cloned { $0.append(entry.url) })
+                update(forwardPath: [])
+            }
+        } else {
+            guard let data = try? Data(contentsOf: entry.url) else { return }
+            subtracer.instant("data size=\(data.count)")
 
-        let decoder = JSONDecoder()
-        guard let document = try? decoder.decode(Document.self, from: data) else { return }
-        subtracer.instant("document size=\(document.events.count)")
+            let decoder = JSONDecoder()
+            guard let document = try? decoder.decode(Document.self, from: data) else { return }
+            subtracer.instant("document size=\(document.events.count)")
 
+            withStoreUpdating {
+                update(activeDocument: .init(url: entry.url))
+                global.document.setDocument(document)
+            }
+        }
+    }
+
+    func directoryBack() {
+        let _r = subtracer.range(type: .intent, "directory back"); defer { _r() }
+        var directoryPath = directoryPath
+        guard let backed = directoryPath.popLast() else { return }
         withStoreUpdating {
-            update(activeDocument: .init(url: url))
-            global.document.setDocument(document)
+            update(directoryPath: directoryPath)
+            update(forwardPath: forwardPath.cloned { $0.insert(backed, at: 0) })
+        }
+    }
+
+    func directoryForward() {
+        let _r = subtracer.range(type: .intent, "directory forward"); defer { _r() }
+        var forwardPath = forwardPath
+        guard !forwardPath.isEmpty else { return }
+        let forwarded = forwardPath.remove(at: 0)
+        withStoreUpdating {
+            update(directoryPath: directoryPath.cloned { $0.append(forwarded) })
+            update(forwardPath: forwardPath)
         }
     }
 

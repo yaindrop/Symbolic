@@ -42,6 +42,8 @@ private extension RootStore {
 }
 
 extension RootStore {
+    var directories: [URL] { [.documentDirectory] + directoryPath }
+
     func toggleSelecting() {
         withStoreUpdating {
             if isSelectingFiles {

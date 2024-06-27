@@ -181,7 +181,6 @@ private extension CanvasView {
             items
             foreground
         }
-        .sizeReader { global.viewport.setViewSize($0) }
     } }
 
     @ViewBuilder var overlay: some View { trace("overlay") {

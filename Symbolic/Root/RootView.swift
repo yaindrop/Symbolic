@@ -50,6 +50,7 @@ struct RootView: View, TracedView, SelectorHolder {
     var body: some View { trace {
         setupSelector {
             content
+                .sizeReader { global.viewport.setViewSize($0) }
                 .onAppear {
                     try! URL.deletedDirectory.create()
                     global.setupDocumentFlow()
@@ -86,8 +87,7 @@ private extension RootView {
 
 struct DocumentsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(animation: .default, { [.documentDirectory] + global.root.directoryPath }) var directories
-        @Selected(animation: .default, { global.root.isSelectingFiles }) var isSelectingFiles
+        @Selected(animation: .default, { global.root.directories }) var directories
     }
 
     @SelectorWrapper var selector
@@ -110,44 +110,68 @@ private extension DocumentsView {
                     .transition(.slide)
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                HStack {
-                    Button {
-                        global.root.directoryBack()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .disabled(global.root.directoryPath.isEmpty)
-                    .frame(size: .init(squared: 36))
-                    Button {
-                        global.root.directoryForward()
-                    } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                    .disabled(global.root.forwardPath.isEmpty)
-                    .frame(size: .init(squared: 36))
-                }
+        .modifier(DocumentsToolbarModifier())
+    }
+}
+
+// MARK: - DocumentToolbarModifier
+
+private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected({ global.viewport.viewSize }) var viewSize
+        @Selected(animation: .default, { global.root.isSelectingFiles }) var isSelectingFiles
+    }
+
+    @SelectorWrapper var selector
+
+    func body(content: Content) -> some View {
+        setupSelector {
+            let _ = selector.viewSize // strange bug that toolbar is lost when window size changes, need to reset ids
+            content.toolbar { toolbar }
+        }
+    }
+
+    @ToolbarContentBuilder var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }
+        ToolbarItem(placement: .topBarTrailing) { trailing.id(UUID()) }
+    }
+
+    var leading: some View {
+        HStack {
+            Button {
+                global.root.directoryBack()
+            } label: {
+                Image(systemName: "chevron.left")
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                HStack {
-                    Button {
-                        guard let url = selector.directories.last,
-                              let entry = FileEntry(url: url) else { return }
-                        global.root.newDocument(in: entry)
-                    } label: { Image(systemName: "doc.badge.plus") }
-                        .frame(size: .init(squared: 36))
-                    Button {
-                        guard let url = selector.directories.last,
-                              let entry = FileEntry(url: url) else { return }
-                        global.root.newDirectory(in: entry)
-                    } label: { Image(systemName: "folder.badge.plus") }
-                        .frame(size: .init(squared: 36))
-                    Button {
-                        global.root.toggleSelecting()
-                    } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
-                }
+            .disabled(global.root.directoryPath.isEmpty)
+            .frame(size: .init(squared: 36))
+            Button {
+                global.root.directoryForward()
+            } label: {
+                Image(systemName: "chevron.right")
             }
+            .disabled(global.root.forwardPath.isEmpty)
+            .frame(size: .init(squared: 36))
+        }
+    }
+
+    var trailing: some View {
+        HStack {
+            Button {
+                guard let url = global.root.directories.last,
+                      let entry = FileEntry(url: url) else { return }
+                global.root.newDocument(in: entry)
+            } label: { Image(systemName: "doc.badge.plus") }
+                .frame(size: .init(squared: 36))
+            Button {
+                guard let url = global.root.directories.last,
+                      let entry = FileEntry(url: url) else { return }
+                global.root.newDirectory(in: entry)
+            } label: { Image(systemName: "folder.badge.plus") }
+                .frame(size: .init(squared: 36))
+            Button {
+                global.root.toggleSelecting()
+            } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
         }
     }
 }

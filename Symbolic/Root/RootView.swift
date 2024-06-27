@@ -86,7 +86,8 @@ private extension RootView {
 
 struct DocumentsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.root.directoryPath }) var directoryPath
+        @Selected(animation: .default, { [.documentDirectory] + global.root.directoryPath }) var directories
+        @Selected(animation: .default, { global.root.isSelectingFiles }) var isSelectingFiles
     }
 
     @SelectorWrapper var selector
@@ -102,11 +103,52 @@ struct DocumentsView: View, TracedView, SelectorHolder {
 
 private extension DocumentsView {
     @ViewBuilder var content: some View {
-        let top = selector.directoryPath.last ?? .documentDirectory
-        DirectoryView(url: top)
-            .navigationDestination(for: URL.self) {
+        ZStack {
+            ForEach(selector.directories, id: \.path) {
                 DirectoryView(url: $0)
+                    .background(.white)
+                    .transition(.slide)
             }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                HStack {
+                    Button {
+                        global.root.directoryBack()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    .disabled(global.root.directoryPath.isEmpty)
+                    .frame(size: .init(squared: 36))
+                    Button {
+                        global.root.directoryForward()
+                    } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                    .disabled(global.root.forwardPath.isEmpty)
+                    .frame(size: .init(squared: 36))
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack {
+                    Button {
+                        guard let url = selector.directories.last,
+                              let entry = FileEntry(url: url) else { return }
+                        global.root.newDocument(in: entry)
+                    } label: { Image(systemName: "doc.badge.plus") }
+                        .frame(size: .init(squared: 36))
+                    Button {
+                        guard let url = selector.directories.last,
+                              let entry = FileEntry(url: url) else { return }
+                        global.root.newDirectory(in: entry)
+                    } label: { Image(systemName: "folder.badge.plus") }
+                        .frame(size: .init(squared: 36))
+                    Button {
+                        global.root.toggleSelecting()
+                    } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
+                }
+            }
+        }
     }
 }
 

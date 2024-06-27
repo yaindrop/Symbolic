@@ -53,44 +53,6 @@ private extension DirectoryView {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(url.lastPathComponent)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                HStack {
-                    Button {
-                        global.root.directoryBack()
-                    } label: {
-                        Image(systemName: "chevron.left")
-                    }
-                    .disabled(global.root.directoryPath.isEmpty)
-                    .frame(size: .init(squared: 36))
-                    Button {
-                        global.root.directoryForward()
-                    } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                    .disabled(global.root.forwardPath.isEmpty)
-                    .frame(size: .init(squared: 36))
-                }
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                HStack {
-                    Button {
-                        guard let directory else { return }
-                        global.root.newDocument(in: directory.entry)
-                    } label: { Image(systemName: "doc.badge.plus") }
-                        .frame(size: .init(squared: 36))
-                    Button {
-                        guard let directory else { return }
-                        global.root.newDirectory(in: directory.entry)
-                    } label: { Image(systemName: "folder.badge.plus") }
-                        .frame(size: .init(squared: 36))
-                    Button {
-                        global.root.toggleSelecting()
-                    } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
-                }
-            }
-        }
     }
 }
 
@@ -109,7 +71,7 @@ struct EntryCard: View, TracedView, ComputedSelectorHolder {
 
     @State private var showingRenameAlert = false
 
-    var body: some View { trace {
+    var body: some View { trace("url=\(entry.url)") {
         setupSelector(.init(entry: entry)) {
             content
                 .contextMenu {

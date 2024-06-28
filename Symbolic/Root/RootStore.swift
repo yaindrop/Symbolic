@@ -89,7 +89,7 @@ extension RootStore {
     }
 
     func open(at entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "open url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "open \(entry)"); defer { _r() }
         if entry.isDirectory {
             withStoreUpdating {
                 update(directoryPath: directoryPath.cloned { $0.append(entry.url) })
@@ -132,7 +132,7 @@ extension RootStore {
     }
 
     func newDirectory(in entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "new directory in directory url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "new directory in directory \(entry)"); defer { _r() }
         guard let _ = try? entry.newDirectory() else { return }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)
@@ -140,7 +140,7 @@ extension RootStore {
     }
 
     func newDocument(in entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "new document in directory url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "new document in directory \(entry)"); defer { _r() }
         let document = Document(from: fooSvg)
         let encoder = JSONEncoder()
         guard let data = try? encoder.encode(document),
@@ -156,7 +156,7 @@ extension RootStore {
     }
 
     func moveToDeleted(at entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "move to deleted at url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "move to deleted at \(entry)"); defer { _r() }
         withStoreUpdating {
             _ = move(at: entry, in: .deletedDirectory)
             if entry == activeDocument {
@@ -166,7 +166,7 @@ extension RootStore {
     }
 
     func delete(at entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "delete at url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "delete at \(entry)"); defer { _r() }
         guard let _ = try? entry.delete() else { return }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)
@@ -184,7 +184,7 @@ extension RootStore {
     }
 
     func wrapDirectory(at entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "wrap directory at url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "wrap directory at \(entry)"); defer { _r() }
         guard let parent = entry.parent,
               let newUrl = try? parent.newDirectory(),
               let _ = try? entry.move(in: newUrl) else { return }
@@ -194,7 +194,7 @@ extension RootStore {
     }
 
     func unwrapDirectory(at entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "unwrap directory at url=\(entry.url)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "unwrap directory at \(entry)"); defer { _r() }
         guard let parent = entry.parent,
               let directory = FileDirectory(url: parent.url) else { return }
         for entry in directory.contents {
@@ -207,7 +207,7 @@ extension RootStore {
     }
 
     func move(at entry: FileEntry, in directoryUrl: URL) -> Bool {
-        let _r = subtracer.range(type: .intent, "move at url=\(entry.url) in directoryUrl=\(directoryUrl)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "move at \(entry) in directoryUrl=\(directoryUrl)"); defer { _r() }
         guard let _ = try? entry.move(in: directoryUrl) else { return false }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)
@@ -216,7 +216,7 @@ extension RootStore {
     }
 
     func rename(at entry: FileEntry, name: String) {
-        let _r = subtracer.range(type: .intent, "rename at url=\(entry.url) with name=\(name)"); defer { _r() }
+        let _r = subtracer.range(type: .intent, "rename at \(entry) with name=\(name)"); defer { _r() }
         guard let newUrl = try? entry.rename(name: name) else { return }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)

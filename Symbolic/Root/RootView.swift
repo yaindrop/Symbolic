@@ -135,17 +135,7 @@ private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
         ToolbarItem(id: UUID().uuidString, placement: .topBarLeading) { leading }
         ToolbarItem(id: UUID().uuidString, placement: .topBarTrailing) { trailing }
         if selector.isSelectingFiles {
-            ToolbarItem(id: UUID().uuidString, placement: .bottomBar) {
-                HStack {
-                    Button("Duplicate") {}
-                    Spacer()
-                    Button("Move") {}
-                    Spacer()
-                    Button("Delete") {
-                        global.root.delete(at: .init(global.root.selectedFiles))
-                    }
-                }
-            }
+            ToolbarItem(id: UUID().uuidString, placement: .bottomBar) { bottomBar }
         }
     }
 
@@ -185,6 +175,18 @@ private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
             Button {
                 global.root.toggleSelecting()
             } label: { Text(LocalizedStringKey(selector.isSelectingFiles ? "button_done" : "button_select")) }
+        }
+    }
+
+    var bottomBar: some View {
+        HStack {
+            Button("Duplicate") {}
+            Spacer()
+            Button("Move") {}
+            Spacer()
+            Button("Delete") {
+                global.root.delete(at: .init(global.root.selectedFiles))
+            }
         }
     }
 }

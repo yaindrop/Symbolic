@@ -1,6 +1,18 @@
 import Foundation
 
 extension URL {
+    func relativeTo(root: URL) -> String? {
+        if path.hasPrefix(root.path) {
+            return .init(path.dropFirst(root.path.count))
+        }
+        return nil
+    }
+
+    var relativeToDocument: String? {
+        guard let relative = relativeTo(root: .documentDirectory) else { return nil }
+        return "Documents/" + relative
+    }
+
     static var documentDirectory: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     }
@@ -49,6 +61,12 @@ struct FileEntry: Equatable, Hashable {
         let isDirectory = fType == .typeDirectory
         self.url = url.deletingLastPathComponent().appending(path: url.lastPathComponent, directoryHint: isDirectory ? .isDirectory : .notDirectory)
         self.isDirectory = isDirectory
+    }
+}
+
+extension FileEntry: CustomStringConvertible {
+    var description: String {
+        "FileEntry(url=\(url.relativeToDocument?.description ?? "nil"), isDirectory=\(isDirectory)"
     }
 }
 

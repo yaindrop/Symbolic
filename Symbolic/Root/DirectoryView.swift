@@ -64,7 +64,7 @@ struct EntryCard: View, TracedView, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let entry: FileEntry }
     class Selector: SelectorBase {
         @Selected({ global.root.isSelectingFiles }) var isSelectingFiles
-        @Selected(animation: .fast, { global.root.selectedFiles.contains($0.entry.url) }) var selected
+        @Selected(animation: .fast, { global.root.selectedFiles.contains($0.entry) }) var selected
     }
 
     @SelectorWrapper var selector
@@ -90,7 +90,7 @@ private extension EntryCard {
     @ViewBuilder var content: some View {
         if selector.isSelectingFiles {
             card.onTapGesture {
-                global.root.toggleSelect(at: entry.url)
+                global.root.toggleSelect(at: entry)
             }
         } else {
             Button { global.root.open(at: entry) } label: { card }

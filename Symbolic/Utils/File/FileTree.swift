@@ -38,7 +38,7 @@ extension URL {
 
 // MARK: - FileEntry
 
-struct FileEntry: Equatable {
+struct FileEntry: Equatable, Hashable {
     let url: URL
     let isDirectory: Bool
 

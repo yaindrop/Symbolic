@@ -118,7 +118,7 @@ private extension DocumentsView {
 
 private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.viewport.viewSize }) var viewSize
+        @Selected(alwaysNotify: true, { global.viewport.viewSize }) var viewSize
         @Selected(animation: .default, { global.root.isSelectingFiles }) var isSelectingFiles
     }
 
@@ -132,8 +132,21 @@ private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
     }
 
     @ToolbarContentBuilder var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) { leading.id(UUID()) }
-        ToolbarItem(placement: .topBarTrailing) { trailing.id(UUID()) }
+        ToolbarItem(id: UUID().uuidString, placement: .topBarLeading) { leading }
+        ToolbarItem(id: UUID().uuidString, placement: .topBarTrailing) { trailing }
+        if selector.isSelectingFiles {
+            ToolbarItem(id: UUID().uuidString, placement: .bottomBar) {
+                HStack {
+                    Button("Duplicate") {}
+                    Spacer()
+                    Button("Move") {}
+                    Spacer()
+                    Button("Delete") {
+                        global.root.delete(at: .init(global.root.selectedFiles))
+                    }
+                }
+            }
+        }
     }
 
     var leading: some View {

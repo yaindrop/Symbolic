@@ -8,7 +8,7 @@ class RootStore: Store {
     @Trackable var forwardPath: [URL] = []
 
     @Trackable var isSelectingFiles: Bool = false
-    @Trackable var selectedFiles = Set<URL>()
+    @Trackable var selectedFiles = Set<FileEntry>()
 
     @Trackable var activeDocument: FileEntry?
 
@@ -32,7 +32,7 @@ private extension RootStore {
         update { $0(\._isSelectingFiles, isSelectingFiles) }
     }
 
-    func update(selectedFiles: Set<URL>) {
+    func update(selectedFiles: Set<FileEntry>) {
         update { $0(\._selectedFiles, selectedFiles) }
     }
 
@@ -56,13 +56,13 @@ extension RootStore {
         }
     }
 
-    func toggleSelect(at url: URL) {
+    func toggleSelect(at entry: FileEntry) {
         guard isSelectingFiles else { return }
         withStoreUpdating {
-            if selectedFiles.contains(url) {
-                update(selectedFiles: selectedFiles.cloned { $0.remove(url) })
+            if selectedFiles.contains(entry) {
+                update(selectedFiles: selectedFiles.cloned { $0.remove(entry) })
             } else {
-                update(selectedFiles: selectedFiles.cloned { $0.insert(url) })
+                update(selectedFiles: selectedFiles.cloned { $0.insert(entry) })
             }
         }
     }
@@ -168,6 +168,16 @@ extension RootStore {
     func delete(at entry: FileEntry) {
         let _r = subtracer.range(type: .intent, "delete at url=\(entry.url)"); defer { _r() }
         guard let _ = try? entry.delete() else { return }
+        withStoreUpdating {
+            loadFileTree(at: .documentDirectory)
+        }
+    }
+
+    func delete(at entries: [FileEntry]) {
+        let _r = subtracer.range(type: .intent, "delete at url=\(entries.first?.url)"); defer { _r() }
+        for entry in entries {
+            _ = try? entry.delete()
+        }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)
         }

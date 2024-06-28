@@ -474,7 +474,7 @@ private extension _SelectorProtocol {
             wrapper.value = newValue
             setupRetrack { [weak self] in self?.retrack(keyPath: keyPath) }
             subtracer.instant("setup \(newValue)")
-        } else if wrapper.value != newValue {
+        } else if wrapper.value != newValue || wrapper.alwaysNotify {
             let animation = wrapper.animation(with: configs)
             wrapper.value = newValue
             if let animation {
@@ -525,6 +525,7 @@ private extension _SelectorProtocol {
 @propertyWrapper
 struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     var syncNotify: Bool
+    var alwaysNotify: Bool
     var animation: Animation?
     let selector: (Instance.Props) -> Value
 
@@ -544,14 +545,16 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         @available(*, unavailable) set {}
     }
 
-    init(syncNotify: Bool = false, animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
+    init(syncNotify: Bool = false, alwaysNotify: Bool = false, animation: Animation? = nil, _ selector: @escaping (Instance.Props) -> Value) {
         self.syncNotify = syncNotify
+        self.alwaysNotify = alwaysNotify
         self.animation = animation
         self.selector = selector
     }
 
-    init(syncNotify: Bool = false, animation: Animation? = nil, _ selector: @escaping () -> Value) {
+    init(syncNotify: Bool = false, alwaysNotify: Bool = false, animation: Animation? = nil, _ selector: @escaping () -> Value) {
         self.syncNotify = syncNotify
+        self.alwaysNotify = alwaysNotify
         self.animation = animation
         self.selector = { _ in selector() }
     }

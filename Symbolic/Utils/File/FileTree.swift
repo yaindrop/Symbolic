@@ -145,11 +145,9 @@ extension FileTree {
         while let relative = enumerator?.nextObject() as? String {
             guard let entry = FileEntry(url: root.appending(path: relative)),
                   !entry.url.lastPathComponent.hasPrefix(".") else { continue }
-            let directoryUrl = entry.url.deletingLastPathComponent()
-            guard let directoryEntry = FileEntry(url: directoryUrl) else { continue }
-            var directory = directoryMap.getOrSetDefault(key: directoryUrl, .init(entry: directoryEntry, contents: []))
-            directory.contents.append(entry)
-            directoryMap[directoryUrl] = directory
+            if entry.isDirectory {
+                directoryMap[entry.url] = FileDirectory(url: entry.url)
+            }
         }
 
         guard directoryMap[root] != nil else { return nil }

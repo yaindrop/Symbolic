@@ -175,7 +175,7 @@ extension EntryCardMenu {
             }
         }
         Button("Delete", systemImage: "trash", role: .destructive) {
-            global.root.moveToDeleted(at: entry)
+            global.root.moveToDeleted(at: [entry])
         }
     }
 }

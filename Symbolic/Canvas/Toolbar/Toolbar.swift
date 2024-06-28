@@ -78,7 +78,7 @@ private extension Toolbar {
         Divider()
         Button("Delete", systemImage: "trash", role: .destructive) {
             guard let entry = global.root.activeDocument else { return }
-            global.root.moveToDeleted(at: entry)
+            global.root.moveToDeleted(at: [entry])
         }
     }
 

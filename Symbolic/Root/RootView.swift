@@ -106,7 +106,7 @@ private extension DocumentsView {
         ZStack {
             ForEach(selector.directories, id: \.path) {
                 DirectoryView(url: $0)
-                    .background(.white)
+                    .background(.background)
                     .transition(.slide)
             }
         }
@@ -185,7 +185,7 @@ private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
             Button("Move") {}
             Spacer()
             Button("Delete") {
-                global.root.delete(at: .init(global.root.selectedFiles))
+                global.root.moveToDeleted(at: .init(global.root.selectedFiles))
             }
         }
     }

@@ -155,11 +155,14 @@ extension RootStore {
         }
     }
 
-    func moveToDeleted(at entry: FileEntry) {
-        let _r = subtracer.range(type: .intent, "move to deleted at \(entry)"); defer { _r() }
+    func moveToDeleted(at entries: [FileEntry]) {
+        let _r = subtracer.range(type: .intent, "move to deleted, at entries=\(entries)"); defer { _r() }
+        for entry in entries {
+            _ = try? entry.move(in: .deletedDirectory)
+        }
         withStoreUpdating {
-            _ = move(at: entry, in: .deletedDirectory)
-            if entry == activeDocument {
+            loadFileTree(at: .documentDirectory)
+            if entries.contains(where: { $0 == activeDocument }) {
                 update(activeDocument: nil)
             }
         }
@@ -168,16 +171,6 @@ extension RootStore {
     func delete(at entry: FileEntry) {
         let _r = subtracer.range(type: .intent, "delete at \(entry)"); defer { _r() }
         guard let _ = try? entry.delete() else { return }
-        withStoreUpdating {
-            loadFileTree(at: .documentDirectory)
-        }
-    }
-
-    func delete(at entries: [FileEntry]) {
-        let _r = subtracer.range(type: .intent, "delete at url=\(entries.first?.url)"); defer { _r() }
-        for entry in entries {
-            _ = try? entry.delete()
-        }
         withStoreUpdating {
             loadFileTree(at: .documentDirectory)
         }

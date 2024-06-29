@@ -207,27 +207,42 @@ private extension DeletedView {
     }
 }
 
-struct FileRenameAlertModifier: ViewModifier {
+struct FileRenameView: View {
     let entry: FileEntry
-    @Binding var isPresented: Bool
 
-    @State private var name: String = ""
+    @State private var name: String
     @State private var isValid: Bool = false
 
-    func body(content: Content) -> some View {
+    init(entry: FileEntry) {
+        self.entry = entry
+        name = entry.url.name
+    }
+
+    var body: some View {
         content
             .onChange(of: name) {
                 isValid = !entry.url.renaming(to: name, ext: "symbolic").exists
             }
-            .onChange(of: isPresented) {
-                name = entry.url.name
-            }
-            .alert("Rename \(entry.isDirectory ? "folder" : "document")", isPresented: $isPresented) {
-                TextField("New name", text: $name)
-                    .textInputAutocapitalization(.never)
-                Button(LocalizedStringKey("button_cancel")) {}
-                Button(LocalizedStringKey("button_done")) { global.root.rename(at: entry, name: name) }
-                    .disabled(!isValid)
-            }
+    }
+}
+
+extension FileRenameView {
+    @ViewBuilder var content: some View {
+        TextField("New name", text: $name)
+            .textInputAutocapitalization(.never)
+        Button(LocalizedStringKey("button_cancel")) {}
+        Button(LocalizedStringKey("button_done")) { global.root.rename(at: entry, name: name) }
+            .disabled(!isValid)
+    }
+}
+
+struct FileRenameAlertModifier: ViewModifier {
+    let entry: FileEntry
+    @Binding var isPresented: Bool
+
+    func body(content: Content) -> some View {
+        content.alert("Rename \(entry.isDirectory ? "folder" : "document")", isPresented: $isPresented) {
+            FileRenameView(entry: entry)
+        }
     }
 }

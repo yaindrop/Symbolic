@@ -69,14 +69,18 @@ struct EntryCard: View, TracedView, ComputedSelectorHolder {
 
     @SelectorWrapper var selector
 
+    @State private var showingProperties = false
     @State private var showingRenameAlert = false
 
     var body: some View { trace("url=\(entry.url)") {
         setupSelector(.init(entry: entry)) {
             content
+                .modifier(FileRenameAlertModifier(entry: entry, isPresented: $showingRenameAlert))
+                .sheet(isPresented: $showingProperties) { propertiesSheet }
                 .contextMenu {
                     EntryCardMenu(
                         entry: entry,
+                        onProperties: { showingProperties = true },
                         onRename: { showingRenameAlert = true }
                     )
                 }
@@ -88,13 +92,19 @@ struct EntryCard: View, TracedView, ComputedSelectorHolder {
 
 private extension EntryCard {
     @ViewBuilder var content: some View {
-        if selector.isSelectingFiles {
-            card.onTapGesture {
+        Button {
+            if selector.isSelectingFiles {
                 global.root.toggleSelect(at: entry)
+            } else {
+                global.root.open(at: entry)
             }
-        } else {
-            Button { global.root.open(at: entry) } label: { card }
-                .tint(.label)
+        } label: {
+            card
+        }
+        .tint(.label)
+        .overlay { selectingOverlay }
+        .if(!selector.isSelectingFiles) {
+            $0.draggable(entry.url)
                 .if(entry.isDirectory) {
                     $0.dropDestination(for: URL.self) { payload, _ in
                         guard let payloadUrl = payload.first,
@@ -131,18 +141,29 @@ private extension EntryCard {
         .frame(width: 150, height: 150, alignment: .center)
         .clipRounded(radius: 12)
         .shadow(radius: 3)
-        .draggable(entry.url)
-        .modifier(FileRenameAlertModifier(entry: entry, isPresented: $showingRenameAlert))
-        .overlay {
-            if selector.isSelectingFiles {
-                Image(systemName: selector.selected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(selector.selected ? .blue : .white)
-                    .font(.title3)
-                    .shadow(color: (selector.selected ? Color.systemBackground : .label).opacity(0.66), radius: 1)
-                    .padding(6)
-                    .innerAligned(.topLeading)
+    }
+
+    @ViewBuilder var selectingOverlay: some View {
+        if selector.isSelectingFiles {
+            Image(systemName: selector.selected ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(selector.selected ? .blue : .white)
+                .font(.title3)
+                .shadow(color: (selector.selected ? Color.systemBackground : .label).opacity(0.66), radius: 1)
+                .padding(6)
+                .innerAligned(.topLeading)
+                .allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder var propertiesSheet: some View {
+        VStack {
+            HStack {
+                Text("Name")
+                Spacer()
+                Text(entry.url.name)
             }
         }
+        .padding()
     }
 }
 
@@ -150,6 +171,7 @@ private extension EntryCard {
 
 struct EntryCardMenu: View {
     let entry: FileEntry
+    let onProperties: () -> Void
     let onRename: () -> Void
 
     var body: some View {
@@ -161,7 +183,7 @@ struct EntryCardMenu: View {
 
 extension EntryCardMenu {
     @ViewBuilder var content: some View {
-        Button("Properties", systemImage: "info.circle") {}
+        Button("Properties", systemImage: "info.circle") { onProperties() }
         Button("Rename", systemImage: "pencil") { onRename() }
         Button("Wrap in new folder", systemImage: "folder.badge.plus") { global.root.wrapDirectory(at: entry) }
         Divider()

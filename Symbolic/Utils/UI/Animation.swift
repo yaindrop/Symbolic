@@ -28,7 +28,7 @@ extension View {
 }
 
 extension Animation {
-    var fast: Animation { speed(5) }
+    var fast: Animation { speed(4) }
 
     static let fast: Animation = .default.fast
 }

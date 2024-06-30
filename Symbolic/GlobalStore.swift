@@ -5,6 +5,8 @@ import Foundation
 struct GlobalStores {
     let root = RootStore()
 
+    let fileBrowser = FileBrowserStore()
+
     let panel = PanelStore()
 
     let toolbar = ToolbarStore()

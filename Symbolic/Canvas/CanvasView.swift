@@ -1,6 +1,8 @@
 import Combine
 import SwiftUI
 
+// MARK: - global actions
+
 private extension GlobalStores {
     func setupViewportFlow(multipleTouch: MultipleTouchModel) {
         viewportUpdater.store.holdCancellables {

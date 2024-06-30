@@ -35,7 +35,7 @@ extension ToolbarStore {
 
 struct Toolbar: View, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.root.activeDocument }) var activeDocument
+        @Selected({ global.fileBrowser.activeDocument }) var activeDocument
         @Selected({ global.toolbar.mode }) var toolbarMode
         @Selected({ global.document.undoable }) var undoable
     }
@@ -77,8 +77,8 @@ private extension Toolbar {
         }
         Divider()
         Button("Delete", systemImage: "trash", role: .destructive) {
-            guard let entry = global.root.activeDocument else { return }
-            global.root.moveToDeleted(at: [entry])
+            guard let entry = global.fileBrowser.activeDocument else { return }
+            global.fileBrowser.moveToDeleted(at: [entry])
         }
     }
 
@@ -97,7 +97,7 @@ private extension Toolbar {
     var leading: some View {
         ToolbarSection {
             ToolbarButton(systemName: "chevron.left") {
-                global.root.exit()
+                global.fileBrowser.exit()
             }
 
             Menu { documentMenu } label: { documentTitle }

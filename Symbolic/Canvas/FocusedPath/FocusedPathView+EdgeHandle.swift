@@ -5,6 +5,8 @@ private class GestureContext {
     var longPressSplitNodeId: UUID?
 }
 
+// MARK: - global actions
+
 private extension GlobalStores {
     func onTap(segment fromId: UUID) {
         if focusedPath.selectingNodes {

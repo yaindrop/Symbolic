@@ -1,71 +1,14 @@
 import SwiftUI
 
-// MARK: - DirectoryView
+// MARK: - FileEntryCard
 
-struct DirectoryView: View, TracedView, SelectorHolder {
-    let entry: FileEntry
-
-    class Selector: SelectorBase {
-        @Selected(animation: .fast, { global.root.fileTree }) var fileTree
-        @Selected(animation: .fast, { global.root.directoryPath }) var directoryPath
-        @Selected({ global.root.isSelectingFiles }) var isSelectingFiles
-    }
-
-    @SelectorWrapper var selector
-
-    var body: some View { trace {
-        setupSelector {
-            content
-                .onAppear {
-                    global.root.loadDirectory(at: entry.url)
-                }
-        }
-    } }
-}
-
-// MARK: private
-
-private extension DirectoryView {
-    var directory: FileDirectory? { selector.fileTree?.directoryMap[entry.url] }
-
-    var entries: [FileEntry] {
-        directory?.contents.sorted {
-            $0.isDirectory != $1.isDirectory
-                ? $0.isDirectory
-                : $0.url.lastPathComponent < $1.url.lastPathComponent
-        } ?? []
-    }
-
-    var content: some View {
-        ScrollView {
-            VStack {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 20) {
-                    ForEach(entries, id: \.url) {
-                        EntryCard(entry: $0)
-                    }
-                }
-            }
-            .padding()
-        }
-        .overlay {
-            if entries.isEmpty {
-                Text("Folder is empty")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .background(.background)
-    }
-}
-
-// MARK: - EntryCard
-
-struct EntryCard: View, TracedView, ComputedSelectorHolder {
+struct FileEntryCard: View, TracedView, ComputedSelectorHolder {
     let entry: FileEntry
 
     struct SelectorProps: Equatable { let entry: FileEntry }
     class Selector: SelectorBase {
-        @Selected({ global.root.isSelectingFiles }) var isSelectingFiles
-        @Selected(animation: .fast, { global.root.selectedFiles.contains($0.entry) }) var selected
+        @Selected({ global.fileBrowser.isSelectingFiles }) var isSelectingFiles
+        @Selected(animation: .fast, { global.fileBrowser.selectedFiles.contains($0.entry) }) var selected
     }
 
     @SelectorWrapper var selector
@@ -91,13 +34,13 @@ struct EntryCard: View, TracedView, ComputedSelectorHolder {
 
 // MARK: private
 
-private extension EntryCard {
+private extension FileEntryCard {
     @ViewBuilder var content: some View {
         Button {
             if selector.isSelectingFiles {
-                global.root.toggleSelect(at: entry)
+                global.fileBrowser.toggleSelect(at: entry)
             } else {
-                global.root.open(at: entry)
+                global.fileBrowser.open(at: entry)
             }
         } label: {
             card
@@ -110,7 +53,7 @@ private extension EntryCard {
                     $0.dropDestination(for: URL.self) { payload, _ in
                         guard let payloadUrl = payload.first,
                               let payloadEntry = FileEntry(url: payloadUrl) else { return false }
-                        return global.root.move(at: payloadEntry, in: entry.url)
+                        return global.fileBrowser.move(at: payloadEntry, in: entry.url)
                     }
                 }
         }
@@ -170,7 +113,7 @@ private extension EntryCard {
 
 // MARK: - EntryCardMenu
 
-struct EntryCardMenu: View {
+private struct EntryCardMenu: View {
     let entry: FileEntry
     let onProperties: () -> Void
     let onRename: () -> Void
@@ -186,7 +129,7 @@ extension EntryCardMenu {
     @ViewBuilder var content: some View {
         Button("Properties", systemImage: "info.circle") { onProperties() }
         Button("Rename", systemImage: "pencil") { onRename() }
-        Button("Wrap in new folder", systemImage: "folder.badge.plus") { global.root.wrapDirectory(at: entry) }
+        Button("Wrap in new folder", systemImage: "folder.badge.plus") { global.fileBrowser.wrapDirectory(at: entry) }
         Divider()
         Button("Copy", systemImage: "doc.on.doc") {}
         Button("Cut", systemImage: "scissors") {}
@@ -194,11 +137,11 @@ extension EntryCardMenu {
         Divider()
         if entry.isDirectory {
             Button("Unwrap folder", systemImage: "folder.badge.minus", role: .destructive) {
-                global.root.unwrapDirectory(at: entry)
+                global.fileBrowser.unwrapDirectory(at: entry)
             }
         }
         Button("Delete", systemImage: "trash", role: .destructive) {
-            global.root.moveToDeleted(at: [entry])
+            global.fileBrowser.moveToDeleted(at: [entry])
         }
     }
 }

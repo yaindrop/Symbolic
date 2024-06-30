@@ -20,8 +20,14 @@ private extension SidebarView {
         }
         .navigationDestination(for: RootNavigationValue.self) { value in
             switch value {
-            case .documents: DocumentsView().onAppear { selection = value }
-            case .deleted: DeletedView().onAppear { selection = value }
+            case .documents:
+                DocumentsView()
+                    .onAppear { selection = value }
+                    .sizeReader { global.root.setDetailSize($0) }
+            case .deleted:
+                DeletedView()
+                    .onAppear { selection = value }
+                    .sizeReader { global.root.setDetailSize($0) }
             }
         }
         .navigationTitle("Symbolic")

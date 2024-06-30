@@ -3,9 +3,13 @@ import Foundation
 private let subtracer = tracer.tagged("RootStore")
 
 class RootStore: Store {
+    @Trackable var navigationSize: CGSize = .zero
+    @Trackable var detailSize: CGSize = .zero
+
     @Trackable var fileTree: FileTree? = nil
-    @Trackable var directoryPath: [URL] = []
-    @Trackable var forwardPath: [URL] = []
+    @Trackable var rootDirectory: [FileEntry] = []
+    @Trackable var directoryPath: [FileEntry] = []
+    @Trackable var forwardPath: [FileEntry] = []
 
     @Trackable var isSelectingFiles: Bool = false
     @Trackable var selectedFiles = Set<FileEntry>()
@@ -16,15 +20,23 @@ class RootStore: Store {
 }
 
 private extension RootStore {
+    func update(navigationSize: CGSize) {
+        update { $0(\._navigationSize, navigationSize) }
+    }
+
+    func update(detailSize: CGSize) {
+        update { $0(\._detailSize, detailSize) }
+    }
+
     func update(fileTree: FileTree) {
         update { $0(\._fileTree, fileTree) }
     }
 
-    func update(directoryPath: [URL]) {
+    func update(directoryPath: [FileEntry]) {
         update { $0(\._directoryPath, directoryPath) }
     }
 
-    func update(forwardPath: [URL]) {
+    func update(forwardPath: [FileEntry]) {
         update { $0(\._forwardPath, forwardPath) }
     }
 
@@ -42,7 +54,17 @@ private extension RootStore {
 }
 
 extension RootStore {
-    var directories: [URL] { [.documentDirectory] + directoryPath }
+    func setNavigationSize(_ navigationSize: CGSize) {
+        update(navigationSize: navigationSize)
+    }
+
+    func setDetailSize(_ detailSize: CGSize) {
+        update(detailSize: detailSize)
+    }
+}
+
+extension RootStore {
+    var directories: [FileEntry] { [.init(url: .documentDirectory)!] + directoryPath }
 
     func toggleSelecting() {
         withStoreUpdating {
@@ -92,7 +114,7 @@ extension RootStore {
         let _r = subtracer.range(type: .intent, "open \(entry)"); defer { _r() }
         if entry.isDirectory {
             withStoreUpdating {
-                update(directoryPath: directoryPath.cloned { $0.append(entry.url) })
+                update(directoryPath: directoryPath.cloned { $0.append(entry) })
                 update(forwardPath: [])
             }
         } else {

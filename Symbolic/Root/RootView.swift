@@ -50,7 +50,6 @@ struct RootView: View, TracedView, SelectorHolder {
     var body: some View { trace {
         setupSelector {
             content
-                .sizeReader { global.viewport.setViewSize($0) }
                 .onAppear {
                     try! URL.deletedDirectory.create()
                     global.setupDocumentFlow()
@@ -74,10 +73,13 @@ private extension RootView {
                 SidebarView()
             } detail: {
                 DocumentsView()
+                    .sizeReader { global.root.setDetailSize($0) }
             }
+            .sizeReader { global.root.setNavigationSize($0) }
             if selector.showCanvas {
                 CanvasView()
                     .background(.background)
+                    .sizeReader { global.viewport.setViewSize($0) }
             }
         }
     }
@@ -88,6 +90,7 @@ private extension RootView {
 struct DocumentsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected(animation: .default, { global.root.directories }) var directories
+        @Selected(animation: .default, { global.root.detailSize }) var detailSize
     }
 
     @SelectorWrapper var selector
@@ -104,10 +107,15 @@ struct DocumentsView: View, TracedView, SelectorHolder {
 private extension DocumentsView {
     @ViewBuilder var content: some View {
         ZStack {
-            ForEach(selector.directories, id: \.path) {
-                DirectoryView(url: $0)
-                    .background(.background)
-                    .transition(.slide)
+            let directories = selector.directories
+            ForEach(Array(zip(directories.indices, directories)), id: \.1.url.path) { pair in
+                let (index, entry) = pair
+                let isTop = entry == directories.last
+                DirectoryView(entry: entry)
+                    .offset(isTop ? .zero : .init(Vector2(-selector.detailSize.width, 0)))
+                    .overlay(isTop ? .clear : .secondarySystemBackground.opacity(0.5))
+                    .transition(.asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .trailing)))
+                    .zIndex(.init(index)) // exiting transition works only when z-index is set
             }
         }
         .modifier(DocumentsToolbarModifier())
@@ -161,14 +169,12 @@ private struct DocumentsToolbarModifier: ViewModifier, SelectorHolder {
     var trailing: some View {
         HStack {
             Button {
-                guard let url = global.root.directories.last,
-                      let entry = FileEntry(url: url) else { return }
+                guard let entry = global.root.directories.last else { return }
                 global.root.newDocument(in: entry)
             } label: { Image(systemName: "doc.badge.plus") }
                 .frame(size: .init(squared: 36))
             Button {
-                guard let url = global.root.directories.last,
-                      let entry = FileEntry(url: url) else { return }
+                guard let entry = global.root.directories.last else { return }
                 global.root.newDirectory(in: entry)
             } label: { Image(systemName: "folder.badge.plus") }
                 .frame(size: .init(squared: 36))
@@ -203,7 +209,7 @@ struct DeletedView: View, TracedView {
 
 private extension DeletedView {
     @ViewBuilder var content: some View {
-        DirectoryView(url: .deletedDirectory)
+        DirectoryView(entry: .init(url: .deletedDirectory)!)
     }
 }
 

@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - DirectoryView
 
 struct DirectoryView: View, TracedView, SelectorHolder {
-    let url: URL
+    let entry: FileEntry
 
     class Selector: SelectorBase {
         @Selected(animation: .fast, { global.root.fileTree }) var fileTree
@@ -17,7 +17,7 @@ struct DirectoryView: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onAppear {
-                    global.root.loadDirectory(at: url)
+                    global.root.loadDirectory(at: entry.url)
                 }
         }
     } }
@@ -26,7 +26,7 @@ struct DirectoryView: View, TracedView, SelectorHolder {
 // MARK: private
 
 private extension DirectoryView {
-    var directory: FileDirectory? { selector.fileTree?.directoryMap[url] }
+    var directory: FileDirectory? { selector.fileTree?.directoryMap[entry.url] }
 
     var entries: [FileEntry] {
         directory?.contents.sorted {
@@ -53,6 +53,7 @@ private extension DirectoryView {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .background(.background)
     }
 }
 

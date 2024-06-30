@@ -10,7 +10,7 @@ extension URL {
 
     var relativeToDocument: String? {
         guard let relative = relativeTo(root: .documentDirectory) else { return nil }
-        return "Documents/" + relative
+        return URL.documentDirectory.name + "/" + relative
     }
 
     static var documentDirectory: URL {
@@ -66,7 +66,7 @@ struct FileEntry: Equatable, Hashable {
 
 extension FileEntry: CustomStringConvertible {
     var description: String {
-        "FileEntry(url=\(url.relativeToDocument?.description ?? "nil"), isDirectory=\(isDirectory)"
+        "FileEntry(url=\(url.relativeToDocument?.description ?? "nil"), isDirectory=\(isDirectory))"
     }
 }
 

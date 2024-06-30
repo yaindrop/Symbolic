@@ -5,7 +5,7 @@ import SwiftUI
 extension FocusedPathView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            override var syncNotify: Bool { true }
+            override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.focusedPath.activeNodeIndexPairs }) var nodeIndexPairs
         }
 
@@ -42,7 +42,7 @@ private struct SubpathBounds: View, TracedView, EquatableBy, ComputedSelectorHol
 
     struct SelectorProps: Equatable { let from: Int, to: Int }
     class Selector: SelectorBase {
-        override var syncNotify: Bool { true }
+        override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.focusedPath.subpath(from: $0.from, to: $0.to) }) var subpath
         @Selected({ global.viewport.info }) var viewport
     }
@@ -87,7 +87,7 @@ private struct NodeBounds: View, TracedView, EquatableBy, ComputedSelectorHolder
 
     struct SelectorProps: Equatable { let index: Int }
     class Selector: SelectorBase {
-        override var syncNotify: Bool { true }
+        override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.activeItem.focusedPath?.node(at: $0.index) }) var node
         @Selected({ global.viewport.info }) var viewport
     }

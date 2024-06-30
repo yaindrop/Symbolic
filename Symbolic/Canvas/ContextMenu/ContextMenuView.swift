@@ -24,7 +24,7 @@ struct ContextMenuModifier: ViewModifier, SelectorHolder {
     let bounds: CGRect
 
     class Selector: SelectorBase {
-        override var syncNotify: Bool { true }
+        override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.viewport.store.viewSize }) var viewSize
     }
 

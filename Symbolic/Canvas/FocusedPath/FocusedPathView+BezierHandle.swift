@@ -10,7 +10,7 @@ extension FocusedPathView {
 
         struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
         class Selector: SelectorBase {
-            override var syncNotify: Bool { true }
+            override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
             @Formula({ path($0)?.node(after: $0.fromNodeId)?.id }) static var nextNodeId

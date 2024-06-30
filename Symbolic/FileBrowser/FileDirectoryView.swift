@@ -6,8 +6,8 @@ struct FileDirectoryView: View, TracedView, SelectorHolder {
     let entry: FileEntry
 
     class Selector: SelectorBase {
-        @Selected(animation: .fast, { global.fileBrowser.fileTree }) var fileTree
-        @Selected(animation: .fast, { global.fileBrowser.directoryPath }) var directoryPath
+        @Selected(configs: .init(animation: .fast), { global.fileBrowser.fileTree }) var fileTree
+        @Selected(configs: .init(animation: .fast), { global.fileBrowser.directoryPath }) var directoryPath
         @Selected({ global.fileBrowser.isSelectingFiles }) var isSelectingFiles
     }
 

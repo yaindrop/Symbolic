@@ -99,13 +99,13 @@ extension FocusedPathView {
 
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var syncNotify: Bool { true }
+            override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
             @Selected({ path($0)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
             @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
-            @Selected(animation: .fast, { global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected(configs: .init(animation: .fast), { global.focusedPath.selectingNodes }) var selectingNodes
         }
 
         @SelectorWrapper var selector

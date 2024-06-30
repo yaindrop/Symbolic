@@ -5,7 +5,7 @@ import SwiftUI
 extension ActiveItemView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            override var syncNotify: Bool { true }
+            override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.activeItem.selectionBounds }) var bounds
         }
 

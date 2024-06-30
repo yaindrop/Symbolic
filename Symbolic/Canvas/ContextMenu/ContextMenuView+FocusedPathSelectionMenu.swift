@@ -5,7 +5,7 @@ import SwiftUI
 extension ContextMenuView {
     struct FocusedPathSelectionMenu: View, SelectorHolder {
         class Selector: SelectorBase {
-            override var syncNotify: Bool { true }
+            override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.focusedPath.activeNodesBounds?.applying(global.viewport.toView) }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeSegmentIds }) var activeSegmentIds

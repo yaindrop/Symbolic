@@ -4,7 +4,7 @@ import SwiftUI
 
 struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        override var syncNotify: Bool { true }
+        override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.viewport.info }) var viewportInfo
         @Selected({ global.viewport.store.viewSize }) var viewSize
         @Selected({ global.viewport.worldRect }) var worldRect

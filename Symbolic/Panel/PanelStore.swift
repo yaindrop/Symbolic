@@ -182,7 +182,7 @@ extension PanelStore {
             update(movingPanelMap: movingPanelMap.cloned { $0[panelId] = moving })
         }
 
-        withStoreUpdating(configs: .init(animation: .override(.spring(duration: 0.5)))) {
+        withStoreUpdating(configs: .init(animation: .spring(duration: 0.5))) {
             self.update(movingPanelMap: self.movingPanelMap.cloned { $0.removeValue(forKey: panelId) })
         }
     }
@@ -249,7 +249,7 @@ extension PanelStore {
     func onResized(panelId: UUID, size: CGSize) {
         let _r = subtracer.range("resize \(panelId) to \(size)"); defer { _r() }
         guard let panel = get(id: panelId) else { return }
-        withStoreUpdating(configs: .init(animation: .override(.fast))) {
+        withStoreUpdating(configs: .init(animation: .fast)) {
             update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.size = size } })
         }
     }
@@ -257,7 +257,7 @@ extension PanelStore {
     func setRootRect(_ rect: CGRect) {
         let _r = subtracer.range("set root rect \(rect)"); defer { _r() }
 
-        withStoreUpdating(configs: .init(animation: .override(.fast))) {
+        withStoreUpdating(configs: .init(animation: .fast)) {
             update(rootRect: rect)
         }
     }

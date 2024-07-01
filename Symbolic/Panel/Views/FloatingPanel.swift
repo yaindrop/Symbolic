@@ -12,8 +12,8 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
         @Selected({ global.panel.get(id: $0.panelId) }) var panel
         @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
         @Selected({ global.panel.floatingAlign(id: $0.panelId) }) var align
-        @Selected(configs: .init(animation: .fast), { global.panel.floatingGap(id: $0.panelId) }) var gap
-        @Selected(configs: .init(animation: .default), { global.panel.appearance(id: $0.panelId) }) var appearance
+        @Selected(configs: .init(animation: .faster), { global.panel.floatingGap(id: $0.panelId) }) var gap
+        @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
     }
 
     @SelectorWrapper var selector

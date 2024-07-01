@@ -1,8 +1,52 @@
 import SwiftUI
 
-extension Tracer {
-    // MARK: - Node
+let tracerQueue = DispatchQueue(label: "com.example.tracerQueue", qos: .background)
 
+// MARK: - Message
+
+extension Tracer {
+    protocol Message: CustomStringConvertible {
+        var message: String { get }
+    }
+
+    class AnyMessage: Message, ExpressibleByStringLiteral {
+        typealias Message = Tracer.Message
+        private let _message: () -> String
+
+        var message: String { _message() }
+
+        required init<M: Message>(_ instance: M) {
+            _message = { instance.message }
+        }
+
+        required init(stringLiteral value: String) {
+            _message = { value }
+        }
+    }
+
+    struct StringMessage: Message, ExpressibleByStringLiteral {
+        var message: String
+
+        init(stringLiteral value: String) {
+            message = value
+        }
+    }
+
+    struct TaggedMessage: Message {
+        let tags: [String]
+        let wrapped: AnyMessage
+
+        var message: String { "\(tags.map { "[\($0)]" }.joined(separator: " ")) \(wrapped.message)" }
+    }
+}
+
+extension Tracer.Message {
+    var description: String { message }
+}
+
+// MARK: - Node
+
+extension Tracer {
     enum NodeType {
         case intent
         case normal
@@ -13,7 +57,7 @@ extension Tracer {
         struct Instant {
             let type: NodeType
             let time: ContinuousClock.Instant
-            let message: String
+            let message: AnyMessage
         }
 
         struct Range {
@@ -21,7 +65,7 @@ extension Tracer {
             let start: ContinuousClock.Instant
             let end: ContinuousClock.Instant
             let nodes: [Node]
-            let message: String
+            let message: AnyMessage
 
             var duration: Duration { start.duration(to: end) }
         }
@@ -30,16 +74,16 @@ extension Tracer {
         case range(Range)
     }
 
-    // MARK: - PendingRange
+    // MARK: PendingRange
 
     struct PendingRange {
         let type: NodeType
         let start: ContinuousClock.Instant
-        let message: String
+        let message: AnyMessage
         var nodes: [Node] = []
     }
 
-    // MARK: - EndRange
+    // MARK: EndRange
 
     class EndRange {
         @discardableResult
@@ -130,15 +174,27 @@ class Tracer {
     }
 
     func instant(type: NodeType = .normal, _ message: @autoclosure () -> String) {
+        instant(type: type, AnyMessage(stringLiteral: message()))
+    }
+
+    func instant(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) {
         onNode(.instant(.init(type: type, time: .now, message: message())))
     }
 
     func range(type: NodeType = .normal, _ message: @autoclosure () -> String) -> EndRange {
+        range(type: type, AnyMessage(stringLiteral: message()))
+    }
+
+    func range(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) -> EndRange {
         rangeStack.append(.init(type: type, start: .now, message: message()))
         return .init(tracer: self)
     }
 
-    func range<Result>(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
+    func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
+        range(type: type, AnyMessage(stringLiteral: message()), work)
+    }
+
+    func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage, _ work: () -> Result) -> Result {
         let _r = range(type: type, message()); defer { _r() }
         return work()
     }
@@ -167,52 +223,74 @@ class Tracer {
             return
         }
         nodes.append(node)
-        if case let .range(r) = node {
-            let startTime = setupTime.duration(to: r.start)
-            if r.type == .intent {
-                logInfo("[intent] (\(startTime)) \(r.tree)")
-            } else {
-                let tree = r.buildTreeLines().enumerated().map { $0 == 0 ? " ... (\(startTime)) \($1)" : "     \($1)" }.joined(separator: "\n")
-                logInfo(tree)
+        if case let .range(range) = node {
+            tracerQueue.async {
+                let startTime = self.setupTime.duration(to: range.start)
+                if range.type == .intent {
+                    logInfo("[intent] (\(startTime)) \(range.tree)")
+                } else {
+                    let tree = range.buildTreeLines().enumerated().map { $0 == 0 ? " ... (\(startTime)) \($1)" : "     \($1)" }.joined(separator: "\n")
+                    logInfo(tree)
+                }
             }
         }
     }
 }
 
-struct SubTracer {
-    let tags: [String]
-    let tracer: Tracer
-    var enabled = true
-    var verbose = false
+// MARK: - SubTracer
 
-    var prefix: String { tags.map { "[\($0)]" }.joined(separator: " ") }
+extension Tracer {
+    struct SubTracer {
+        let tags: [String]
+        let tracer: Tracer
+        var enabled = true
+        var verbose = false
 
-    func instant(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String) {
-        guard enabled, verbose || type != .verbose else { return }
-        tracer.instant(type: type, "\(prefix) \(message())")
-    }
+        func instant(type: NodeType = .normal, _ message: @autoclosure () -> String) {
+            instant(type: type, AnyMessage(stringLiteral: message()))
+        }
 
-    func range(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String) -> Tracer.EndRange {
-        guard enabled, verbose || type != .verbose else { return .init() }
-        return tracer.range(type: type, "\(prefix) \(message())")
-    }
+        func instant(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) {
+            guard enabled, verbose || type != .verbose else { return }
+            tracer.instant(type: type, .init(TaggedMessage(tags: tags, wrapped: .init(message()))))
+        }
 
-    func range<Result>(type: Tracer.NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
-        guard enabled, verbose || type != .verbose else { return work() }
-        return tracer.range(type: type, "\(prefix) \(message())", work)
-    }
+        func range(type: NodeType = .normal, _ message: @autoclosure () -> String) -> EndRange {
+            range(type: type, AnyMessage(stringLiteral: message()))
+        }
 
-    func tagged(_ tag: String, enabled: Bool = true, verbose: Bool = false) -> SubTracer {
-        .init(tags: tags + [tag], tracer: tracer, enabled: enabled, verbose: verbose)
+        func range(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) -> EndRange {
+            guard enabled, verbose || type != .verbose else { return .init() }
+            return tracer.range(type: type, .init(TaggedMessage(tags: tags, wrapped: .init(message()))))
+        }
+
+        func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
+            range(type: type, AnyMessage(stringLiteral: message()), work)
+        }
+
+        func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage, _ work: () -> Result) -> Result {
+            guard enabled, verbose || type != .verbose else { return work() }
+            return tracer.range(type: type, .init(TaggedMessage(tags: tags, wrapped: .init(message()))), work)
+        }
+
+        func tagged(_ tag: String, enabled: Bool = true, verbose: Bool = false) -> SubTracer {
+            .init(tags: tags + [tag], tracer: tracer, enabled: enabled, verbose: verbose)
+        }
     }
 }
 
-let tracer = Tracer()
+// MARK: - TracedView
 
 protocol TracedView: View {}
 
 extension TracedView {
     func trace<Content: View>(_ message: @autoclosure () -> String? = nil, @ViewBuilder _ work: () -> Content) -> Content {
-        tracer.range(type: .normal, "[\(String(describing: type(of: self)))] \(message() ?? "body")", work)
+        trace(Tracer.AnyMessage(stringLiteral: message() ?? "body"), work)
+    }
+
+    func trace<Content: View>(_ message: @autoclosure () -> Tracer.AnyMessage, @ViewBuilder _ work: () -> Content) -> Content {
+        tracer.range(type: .normal, .init(Tracer.TaggedMessage(tags: [String(describing: type(of: self))], wrapped: .init(message()))), work)
     }
 }
+
+let tracer = Tracer()

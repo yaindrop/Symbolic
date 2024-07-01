@@ -4,7 +4,7 @@ import SwiftUI
 
 struct FileBrowserView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .default.speed(2)), { global.fileBrowser.directories }) var directories
+        @Selected(configs: .init(animation: .fast), { global.fileBrowser.directories }) var directories
         @Selected({ global.root.detailSize }) var detailSize
     }
 
@@ -41,7 +41,7 @@ private extension FileBrowserView {
 private struct ToolbarModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
         @Selected(configs: .init(alwaysNotify: true), { global.viewport.viewSize }) var viewSize
-        @Selected(configs: .init(animation: .default.speed(2)), { global.fileBrowser.isSelectingFiles }) var isSelectingFiles
+        @Selected(configs: .init(animation: .fast), { global.fileBrowser.isSelectingFiles }) var isSelectingFiles
     }
 
     @SelectorWrapper var selector

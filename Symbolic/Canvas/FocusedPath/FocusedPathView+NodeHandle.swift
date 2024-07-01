@@ -105,7 +105,7 @@ extension FocusedPathView {
             @Selected({ path($0)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
             @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
-            @Selected(configs: .init(animation: .fast), { global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
         }
 
         @SelectorWrapper var selector

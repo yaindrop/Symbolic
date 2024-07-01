@@ -10,7 +10,7 @@ struct PanelSection<Content: View>: View, TracedView, ComputedSelectorHolder {
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .default), { global.panel.appearance(id: $0.panelId) }) var appearance
+        @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
     }
 
     @SelectorWrapper var selector

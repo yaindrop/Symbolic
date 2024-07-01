@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - AnimatedValueModifier
+
 struct AnimatedValueModifier<Value: Equatable>: ViewModifier {
     @Binding var value: Value
     let from: Value
@@ -27,8 +29,30 @@ extension View {
     }
 }
 
-extension Animation {
-    var fast: Animation { speed(4) }
+// MARK: - AnimationPreset
 
-    static let fast: Animation = .default.fast
+enum AnimationPreset {
+    case normal, fast, faster, fastest, custom(Animation)
+
+    var animation: Animation {
+        switch self {
+        case .normal: .default
+        case .fast: .default.speed(2)
+        case .faster: .default.speed(4)
+        case .fastest: .default.speed(6)
+        case let .custom(animation): animation
+        }
+    }
+}
+
+extension AnimationPreset: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .normal: "normal"
+        case .fast: "fast"
+        case .faster: "faster"
+        case .fastest: "fastest"
+        case let .custom(animation): animation.description
+        }
+    }
 }

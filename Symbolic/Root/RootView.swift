@@ -39,7 +39,7 @@ private extension GlobalStores {
 
 struct RootView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.fileBrowser.activeDocument != nil }) var showCanvas
+        @Selected(configs: .init(animation: .faster), { global.fileBrowser.activeDocument != nil }) var showCanvas
     }
 
     @SelectorWrapper var selector

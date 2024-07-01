@@ -5,7 +5,7 @@ import SwiftUI
 struct PanelPopover: View, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
-        @Selected(configs: .init(animation: .fast), { global.panel.popoverActive && global.panel.movingPanelMap.isEmpty }) var visible
+        @Selected(configs: .init(animation: .faster), { global.panel.popoverActive && global.panel.movingPanelMap.isEmpty }) var visible
         @Selected({ global.viewport.viewSize }) var viewSize
         @Selected({ global.panel.popoverPanels }) var popoverPanels
     }

@@ -138,7 +138,7 @@ extension ViewportUpdater {
         let newWorldRect = worldRect.applying(transform)
         let origin = newWorldRect.origin
         let scale = viewport.viewSize.width / newWorldRect.width
-        withStoreUpdating {
+        withStoreUpdating(configs: .init(animation: .fast)) {
             viewport.setInfo(origin: origin, scale: scale)
             store.update(previousInfo: viewport.info)
         }

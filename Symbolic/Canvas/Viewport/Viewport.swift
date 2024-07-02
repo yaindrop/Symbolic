@@ -87,13 +87,18 @@ extension ViewportService {
     func setViewSize(_ viewSize: CGSize) {
         store.update(viewSize: viewSize)
     }
+
+    func setInfo(origin: Point2, scale: Scalar) {
+        store.update(info: .init(origin: origin, scale: scale))
+    }
 }
 
 // MARK: - ViewportUpdater
 
 struct ViewportUpdater {
-    let viewport: ViewportStore
     let store: ViewportUpdateStore
+    let viewport: ViewportService
+    let panel: PanelStore
 }
 
 // MARK: actions
@@ -111,7 +116,7 @@ extension ViewportUpdater {
         let previousInfo = store.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
-        viewport.update(info: .init(origin: origin, scale: scale))
+        viewport.setInfo(origin: origin, scale: scale)
     }
 
     func onPinchInfo(_ pinch: PinchInfo?) {
@@ -124,7 +129,19 @@ extension ViewportUpdater {
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
         let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
-        viewport.update(info: .init(origin: origin, scale: scale))
+        viewport.setInfo(origin: origin, scale: scale)
+    }
+
+    func zoomTo(rect: CGRect) {
+        let worldRect = viewport.worldRect
+        let transform = CGAffineTransform(fit: rect, to: worldRect).inverted()
+        let newWorldRect = worldRect.applying(transform)
+        let origin = newWorldRect.origin
+        let scale = viewport.viewSize.width / newWorldRect.width
+        withStoreUpdating {
+            viewport.setInfo(origin: origin, scale: scale)
+            store.update(previousInfo: viewport.info)
+        }
     }
 }
 

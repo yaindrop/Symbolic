@@ -17,3 +17,16 @@ struct Ref<Instance, Value> {
         self.keypath = keypath
     }
 }
+
+// MARK: - Getter
+
+@propertyWrapper
+struct Getter<Value> {
+    let callback: () -> Value
+
+    var wrappedValue: Value { callback() }
+
+    init(_ callback: @escaping () -> Value) {
+        self.callback = callback
+    }
+}

@@ -45,24 +45,24 @@ struct GlobalStores {
 
 extension GlobalStores {
     var viewport: ViewportService { .init(store: viewportStore) }
-    var viewportUpdater: ViewportUpdater { .init(viewport: viewportStore, store: viewportUpdateStore) }
+    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, panel: panel) }
 
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(pathStore: pathStore, itemStore: itemStore, pathPropertyStore: pathPropertyStore, activeItem: activeItem, viewport: viewport, grid: grid, store: documentUpdaterStore) }
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, itemStore: itemStore, pathPropertyStore: pathPropertyStore, activeItem: activeItem, viewport: viewport, grid: grid) }
 
-    var path: PathService { .init(viewport: viewport, store: pathStore, pendingStore: pendingPathStore) }
+    var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore, viewport: viewport) }
 
-    var pathProperty: PathPropertyService { .init(path: path, store: pathPropertyStore, pendingStore: pendingPathPropertyStore) }
+    var pathProperty: PathPropertyService { .init(store: pathPropertyStore, pendingStore: pendingPathPropertyStore, path: path) }
 
-    var item: ItemService { .init(path: path, store: itemStore, pendingStore: pendingItemStore) }
+    var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path) }
 
-    var activeItem: ActiveItemService { .init(viewport: viewport, toolbar: toolbar, item: item, path: path, pathProperty: pathProperty, store: activeItemStore) }
+    var activeItem: ActiveItemService { .init(store: activeItemStore, viewport: viewport, toolbar: toolbar, item: item, path: path, pathProperty: pathProperty) }
 
-    var focusedPath: FocusedPathService { .init(viewport: viewport, activeItem: activeItem, store: focusedPathStore) }
+    var focusedPath: FocusedPathService { .init(store: focusedPathStore, viewport: viewport, activeItem: activeItem) }
 
-    var draggingSelection: DraggingSelectionService { .init(viewport: viewport, store: draggingSelectionStore) }
+    var draggingSelection: DraggingSelectionService { .init(store: draggingSelectionStore, viewport: viewport) }
 
-    var addingPath: AddingPathService { .init(viewport: viewport, grid: grid, store: addingPathStore) }
+    var addingPath: AddingPathService { .init(store: addingPathStore, viewport: viewport, grid: grid) }
 }
 
 let global = GlobalStores()

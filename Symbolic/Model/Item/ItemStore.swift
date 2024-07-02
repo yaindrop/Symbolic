@@ -148,9 +148,9 @@ private extension PendingItemStore {
 // MARK: - ItemService
 
 struct ItemService {
-    let path: PathService
     let store: ItemStore
     let pendingStore: PendingItemStore
+    let path: PathService
 }
 
 // MARK: selectors

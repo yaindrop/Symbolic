@@ -73,10 +73,11 @@ private extension RootView {
                     .sizeReader { global.root.setDetailSize($0) }
             }
             .sizeReader { global.root.setNavigationSize($0) }
+            .zIndex(0)
             if selector.showCanvas {
                 CanvasView()
                     .background(.background)
-                    .sizeReader { global.viewport.setViewSize($0) }
+                    .zIndex(1)
             }
         }
     }

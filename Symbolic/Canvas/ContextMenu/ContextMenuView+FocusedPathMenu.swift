@@ -32,7 +32,11 @@ extension ContextMenuView.FocusedPathMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button {
+                if let bounds = selector.bounds {
+                    global.viewportUpdater.zoomTo(rect: bounds.applying(global.viewport.toWorld))
+                }
+            } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
 

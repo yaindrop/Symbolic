@@ -33,12 +33,12 @@ private extension ActiveItemStore {
 // MARK: - ActiveItemService
 
 struct ActiveItemService {
+    let store: ActiveItemStore
     let viewport: ViewportService
     let toolbar: ToolbarStore
     let item: ItemService
     let path: PathService
     let pathProperty: PathPropertyService
-    let store: ActiveItemStore
 }
 
 // MARK: selectors

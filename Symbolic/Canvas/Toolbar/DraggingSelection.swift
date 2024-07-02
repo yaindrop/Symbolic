@@ -28,8 +28,8 @@ private extension DraggingSelectionStore {
 // MARK: - DraggingSelectionService
 
 struct DraggingSelectionService {
-    let viewport: ViewportService
     let store: DraggingSelectionStore
+    let viewport: ViewportService
 }
 
 // MARK: selectors

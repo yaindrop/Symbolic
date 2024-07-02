@@ -9,18 +9,15 @@ extension Tracer {
         var message: String { get }
     }
 
-    class AnyMessage: Message, ExpressibleByStringLiteral {
-        typealias Message = Tracer.Message
-        private let _message: () -> String
+    struct AnyMessage: Message, ExpressibleByStringLiteral {
+        @Getter var message: String
 
-        var message: String { _message() }
-
-        required init<M: Message>(_ instance: M) {
-            _message = { instance.message }
+        init<M: Message>(_ instance: M) {
+            _message = .init { instance.message }
         }
 
-        required init(stringLiteral value: String) {
-            _message = { value }
+        init(stringLiteral value: String) {
+            _message = .init { value }
         }
     }
 

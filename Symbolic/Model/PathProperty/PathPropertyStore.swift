@@ -45,9 +45,9 @@ private extension PendingPathPropertyStore {
 // MARK: - PathPropertyService
 
 struct PathPropertyService {
-    let path: PathService
     let store: PathPropertyStore
     let pendingStore: PendingPathPropertyStore
+    let path: PathService
 }
 
 // MARK: selectors

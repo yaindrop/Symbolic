@@ -25,9 +25,9 @@ private extension AddingPathStore {
 // MARK: - AddingPathService
 
 struct AddingPathService {
+    let store: AddingPathStore
     let viewport: ViewportService
     let grid: GridStore
-    let store: AddingPathStore
 }
 
 // MARK: selectors

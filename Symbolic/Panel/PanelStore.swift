@@ -49,21 +49,25 @@ extension PanelStore {
     func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
     func moving(id: UUID) -> MovingPanelData? { movingPanelMap.value(key: id) }
 
-    var panels: [PanelData] { panelMap.values }
-
     var panelIds: [UUID] { panelMap.keys }
+    var panels: [PanelData] { panelMap.values }
+}
 
+extension PanelStore {
     var floatingPanelIds: [UUID] { panelIds.filter { !popoverPanelIds.contains($0) } }
     var floatingPanels: [PanelData] { floatingPanelIds.compactMap { get(id: $0) } }
+}
 
+extension PanelStore {
     var popoverPanels: [PanelData] { panels.filter { popoverPanelIds.contains($0.id) } }
 
     var popoverButtonHovering: Bool {
         movingPanelMap.contains { popoverButtonFrame.contains($0.value.globalDragPosition) }
     }
+}
 
+extension PanelStore {
     func appearance(id: UUID) -> PanelAppearance {
-        guard let panel = get(id: id) else { return .floatingHidden }
         guard floatingPanelIds.contains(id) else { return .popoverSection }
         let align = floatingAlign(id: id)
         let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }

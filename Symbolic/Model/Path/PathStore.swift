@@ -47,9 +47,9 @@ private extension PendingPathStore {
 // MARK: - PathService
 
 struct PathService: PathStoreProtocol {
-    let viewport: ViewportService
     let store: PathStore
     let pendingStore: PendingPathStore
+    let viewport: ViewportService
 }
 
 // MARK: selectors

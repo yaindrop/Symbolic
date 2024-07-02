@@ -16,13 +16,13 @@ extension DocumentUpdaterStore {
 // MARK: - DocumentUpdater
 
 struct DocumentUpdater {
+    let store: DocumentUpdaterStore
     let pathStore: PathStore
     let itemStore: ItemStore
     let pathPropertyStore: PathPropertyStore
     let activeItem: ActiveItemService
     let viewport: ViewportService
     let grid: GridStore
-    let store: DocumentUpdaterStore
 }
 
 // MARK: update focusedPath

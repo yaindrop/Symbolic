@@ -160,6 +160,7 @@ private extension CanvasView {
             overlay
         }
         .clipped()
+        .sizeReader { global.viewport.setViewSize($0) }
         .edgesIgnoringSafeArea(.all)
         .toolbar(.hidden)
     }

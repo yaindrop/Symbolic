@@ -8,14 +8,15 @@ struct ViewportInfo: Equatable {
     let origin: Point2 // world position of the view origin (top left corner)
     let scale: Scalar
 
-    init(origin: Point2, scale: Scalar) {
+    init(origin: Point2 = .zero, scale: Scalar = 1) {
         self.origin = origin
         self.scale = scale
     }
 
-    init(origin: Point2) { self.init(origin: origin, scale: 1) }
-
-    init() { self.init(origin: .zero, scale: 1) }
+    init(viewSize: CGSize, worldRect: CGRect) {
+        origin = worldRect.origin
+        scale = viewSize.width / worldRect.width
+    }
 }
 
 extension ViewportInfo {
@@ -23,7 +24,7 @@ extension ViewportInfo {
 
     var viewToWorld: CGAffineTransform { worldToView.inverted() }
 
-    func worldRect(viewSize: CGSize) -> CGRect { CGRect(x: origin.x, y: origin.y, width: viewSize.width / scale, height: viewSize.height / scale) }
+    func worldRect(viewSize: CGSize) -> CGRect { CGRect(origin: origin, size: viewSize / scale) }
 }
 
 extension ViewportInfo: CustomStringConvertible {

@@ -21,6 +21,18 @@ extension Vector2: AdditiveArithmetic {
     public static prefix func - (vector: Self) -> Self { .zero - vector }
 }
 
+// MARK: - VectorArithmetic
+
+extension Vector2: VectorArithmetic {
+    public mutating func scale(by rhs: Double) { self *= rhs }
+
+    public var magnitudeSquared: Double { dotProduct(self) }
+}
+
+func lerp<T: VectorArithmetic>(from: T, to: T, at t: Scalar) -> T {
+    from + (to - from).scaled(by: t)
+}
+
 // MARK: - ScalarMultiplicable
 
 protocol ScalarMultiplicable {
@@ -34,14 +46,12 @@ extension ScalarMultiplicable {
     public static func *= (lhs: inout Self, rhs: Scalar) { lhs = lhs * rhs }
 }
 
-extension Scalar: ScalarMultiplicable {}
-
 extension Vector2: ScalarMultiplicable {
     public static func * (lhs: Self, rhs: Scalar) -> Self { .init(lhs.dx * rhs, lhs.dy * rhs) }
 }
 
-func lerp<T: AdditiveArithmetic & ScalarMultiplicable>(from: T, to: T, at t: Scalar) -> T {
-    from + (to - from) * t
+extension CGSize: ScalarMultiplicable {
+    public static func * (lhs: Self, rhs: Scalar) -> Self { .init(lhs.width * rhs, lhs.height * rhs) }
 }
 
 // MARK: - ScalarDivisable
@@ -57,6 +67,10 @@ extension ScalarDivisable {
 
 extension Vector2: ScalarDivisable {
     public static func / (lhs: Self, rhs: Scalar) -> Self { .init(lhs.dx / rhs, lhs.dy / rhs) }
+}
+
+extension CGSize: ScalarDivisable {
+    public static func / (lhs: Self, rhs: Scalar) -> Self { .init(lhs.width / rhs, lhs.height / rhs) }
 }
 
 // MARK: - NearlyEquatable

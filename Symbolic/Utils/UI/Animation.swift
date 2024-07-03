@@ -56,18 +56,3 @@ extension AnimationPreset: CustomStringConvertible {
         }
     }
 }
-
-@resultBuilder
-struct AnimatableDataBuilder {
-    static func buildPartialBlock<Content>(first content: Content) -> Content where Content: VectorArithmetic {
-        content
-    }
-
-    static func buildPartialBlock<C0, C1>(accumulated: C0, next: C1) -> AnimatablePair<C0, C1> where C0: VectorArithmetic, C1: VectorArithmetic {
-        .init(accumulated, next)
-    }
-}
-
-@AnimatableDataBuilder func foo() -> some VectorArithmetic {
-    1.0
-}

@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 private let subtracer = tracer.tagged("viewport")
 
@@ -12,23 +12,56 @@ struct ViewportInfo: Equatable {
         self.origin = origin
         self.scale = scale
     }
-
-    init(viewSize: CGSize, worldRect: CGRect) {
-        origin = worldRect.origin
-        scale = viewSize.width / worldRect.width
-    }
 }
 
 extension ViewportInfo {
     var worldToView: CGAffineTransform { .init(scale: scale).translatedBy(-Vector2(origin)) }
 
     var viewToWorld: CGAffineTransform { worldToView.inverted() }
-
-    func worldRect(viewSize: CGSize) -> CGRect { CGRect(origin: origin, size: viewSize / scale) }
 }
 
 extension ViewportInfo: CustomStringConvertible {
     public var description: String { "(\(origin.shortDescription), \(scale.shortDescription))" }
+}
+
+// MARK: - SizedViewportInfo
+
+struct SizedViewportInfo: Equatable {
+    let size: CGSize
+    let info: ViewportInfo
+
+    init(size: CGSize, info: ViewportInfo) {
+        self.size = size
+        self.info = info
+    }
+
+    init(size: CGSize, worldRect: CGRect) {
+        self.size = size
+        info = .init(origin: worldRect.origin, scale: size.width / worldRect.width)
+    }
+
+    init(size: CGSize, center: Point2, scale: Scalar) {
+        let worldRect = CGRect(center: center, size: size / scale)
+        self.size = size
+        info = .init(origin: worldRect.origin, scale: scale)
+    }
+}
+
+extension SizedViewportInfo {
+    var worldRect: CGRect { .init(origin: info.origin, size: size / info.scale) }
+
+    var center: Point2 { worldRect.center }
+}
+
+extension SizedViewportInfo: Animatable {
+    var animatableData: CGRect.AnimatableData {
+        get { worldRect.animatableData }
+        set {
+            var worldRect = worldRect
+            worldRect.animatableData = newValue
+            self = .init(size: size, worldRect: worldRect)
+        }
+    }
 }
 
 // MARK: - ViewportStore
@@ -79,7 +112,9 @@ extension ViewportService {
 
     var toWorld: CGAffineTransform { info.viewToWorld }
     var toView: CGAffineTransform { info.worldToView }
-    var worldRect: CGRect { info.worldRect(viewSize: viewSize) }
+
+    var sizedInfo: SizedViewportInfo { .init(size: viewSize, info: info) }
+    var worldRect: CGRect { sizedInfo.worldRect }
 }
 
 // MARK: actions
@@ -139,7 +174,7 @@ extension ViewportUpdater {
         let newWorldRect = worldRect.applying(transform)
         let origin = newWorldRect.origin
         let scale = viewport.viewSize.width / newWorldRect.width
-        withStoreUpdating(configs: .init(animation: .fast)) {
+        withStoreUpdating(configs: .init(animation: .custom(.default.speed(0.2)))) {
             viewport.setInfo(origin: origin, scale: scale)
             store.update(previousInfo: viewport.info)
         }

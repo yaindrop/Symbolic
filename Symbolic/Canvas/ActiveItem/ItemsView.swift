@@ -23,11 +23,13 @@ struct ItemsView: View, TracedView, SelectorHolder {
 
 private extension ItemsView {
     @ViewBuilder var content: some View {
-        ForEach(selector.allPaths.filter { $0.id != selector.focusedItemId }) { p in
-            SUPath { path in p.append(to: &path) }
-                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        AnimatableReader(selector.viewport) {
+            ForEach(selector.allPaths.filter { $0.id != selector.focusedItemId }) { p in
+                SUPath { path in p.append(to: &path) }
+                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+            }
+            .transformEffect($0.worldToView)
         }
-        .modifier(ViewportEffect(selector.viewport, \.worldToView))
 //        .blur(radius: 1)
     }
 }

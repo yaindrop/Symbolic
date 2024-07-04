@@ -56,11 +56,11 @@ extension GlobalStores {
 
     var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path) }
 
-    var activeItem: ActiveItemService { .init(store: activeItemStore, viewport: viewport, toolbar: toolbar, item: item, path: path, pathProperty: pathProperty) }
+    var activeItem: ActiveItemService { .init(store: activeItemStore, toolbar: toolbar, item: item, path: path, pathProperty: pathProperty) }
 
-    var focusedPath: FocusedPathService { .init(store: focusedPathStore, viewport: viewport, activeItem: activeItem) }
+    var focusedPath: FocusedPathService { .init(store: focusedPathStore, activeItem: activeItem) }
 
-    var draggingSelection: DraggingSelectionService { .init(store: draggingSelectionStore, viewport: viewport) }
+    var draggingSelection: DraggingSelectionService { .init(store: draggingSelectionStore, viewport: viewport, item: item, path: path) }
 
     var addingPath: AddingPathService { .init(store: addingPathStore, viewport: viewport, grid: grid) }
 }

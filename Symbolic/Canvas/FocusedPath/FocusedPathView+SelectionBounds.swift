@@ -35,16 +35,14 @@ private extension FocusedPathView.SelectionBounds {
 
 // MARK: - SubpathBounds
 
-private struct SubpathBounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
+private struct SubpathBounds: View, TracedView, ComputedSelectorHolder {
     let from: Int, to: Int
-
-    var equatableBy: some Equatable { from; to }
 
     struct SelectorProps: Equatable { let from: Int, to: Int }
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
+        @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.focusedPath.subpath(from: $0.from, to: $0.to) }) var subpath
-        @Selected({ global.viewport.info }) var viewport
     }
 
     @SelectorWrapper var selector
@@ -68,28 +66,28 @@ private extension SubpathBounds {
 
     @ViewBuilder var content: some View {
         if let subpath = selector.subpath {
-            let width = (strokedWidth * Vector2.unitX).applying(selector.viewport.viewToWorld).dx
-            SUPath { subpath.append(to: &$0) }
-                .strokedPath(.init(lineWidth: width, lineCap: .round, lineJoin: .round))
-                .transform(selector.viewport.worldToView)
-                .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
+            AnimatableReader(selector.viewport) {
+                let width = (strokedWidth * Vector2.unitX).applying($0.viewToWorld).dx
+                SUPath { subpath.append(to: &$0) }
+                    .strokedPath(.init(lineWidth: width, lineCap: .round, lineJoin: .round))
+                    .transform($0.worldToView)
+                    .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                    .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
+            }
         }
     }
 }
 
 // MARK: - NodeBounds
 
-private struct NodeBounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
+private struct NodeBounds: View, TracedView, ComputedSelectorHolder {
     let index: Int
-
-    var equatableBy: some Equatable { index }
 
     struct SelectorProps: Equatable { let index: Int }
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
+        @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.activeItem.focusedPath?.node(at: $0.index) }) var node
-        @Selected({ global.viewport.info }) var viewport
     }
 
     @SelectorWrapper var selector
@@ -113,10 +111,12 @@ private extension NodeBounds {
 
     @ViewBuilder var content: some View {
         if let node = selector.node {
-            Circle()
-                .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-                .framePosition(rect: .init(center: node.position.applying(selector.viewport.worldToView), size: .init(squared: strokedWidth)))
-                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
+            AnimatableReader(selector.viewport) {
+                Circle()
+                    .stroke(color, style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                    .framePosition(rect: .init(center: node.position.applying($0.worldToView), size: .init(squared: strokedWidth)))
+                    .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
+            }
         }
     }
 }

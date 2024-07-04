@@ -30,6 +30,8 @@ private extension DraggingSelectionStore {
 struct DraggingSelectionService {
     let store: DraggingSelectionStore
     let viewport: ViewportService
+    let item: ItemService
+    let path: PathService
 }
 
 // MARK: selectors
@@ -47,13 +49,13 @@ extension DraggingSelectionService {
     func intersects(item: Item) -> Bool {
         guard let rectInWorld else { return false }
         guard let pathId = item.pathId else { return false }
-        guard let path = global.path.get(id: pathId) else { return false }
+        guard let path = path.get(id: pathId) else { return false }
         return path.boundingRect.intersects(rectInWorld)
     }
 
     var intersectedRootItems: [Item] {
-        global.item.rootItems.filter {
-            global.item.leafItems(rootItemId: $0.id)
+        item.rootItems.filter {
+            item.leafItems(rootItemId: $0.id)
                 .contains { intersects(item: $0) }
         }
     }

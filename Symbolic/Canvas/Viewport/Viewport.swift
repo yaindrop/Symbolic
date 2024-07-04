@@ -177,7 +177,7 @@ extension ViewportUpdater {
         let newWorldRect = worldRect.applying(transform)
         let origin = newWorldRect.origin
         let scale = viewport.viewSize.width / newWorldRect.width
-        withStoreUpdating(configs: .init(animation: .custom(.default.speed(0.2)))) {
+        withStoreUpdating(configs: .init(animation: .fast)) {
             viewport.setInfo(origin: origin, scale: scale)
             store.update(previousInfo: viewport.info)
         }
@@ -193,38 +193,5 @@ private extension ViewportUpdater {
         global.canvasAction.end(continuous: .pinchViewport)
         let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
         store.update(previousInfo: viewport.info)
-    }
-}
-
-// MARK: - ViewportEffect
-
-struct ViewportEffect: GeometryEffect {
-    var viewport: SizedViewportInfo
-    let keyPath: KeyPath<SizedViewportInfo, CGAffineTransform>
-
-    init(_ viewport: SizedViewportInfo, _ keyPath: KeyPath<SizedViewportInfo, CGAffineTransform>) {
-        self.viewport = viewport
-        self.keyPath = keyPath
-    }
-
-    var animatableData: SizedViewportInfo.AnimatableData {
-        get { viewport.animatableData }
-        set { viewport.animatableData = newValue }
-    }
-
-    func effectValue(size _: CGSize) -> ProjectionTransform {
-        .init(viewport[keyPath: keyPath])
-    }
-}
-
-struct ViewportWorldToView<Content: View>: View {
-    let frame: CGRect
-    let viewport: SizedViewportInfo
-    @ViewBuilder let content: (CGRect) -> Content
-
-    var body: some View {
-        GeometryFrameMapper(frame: frame, effect: ViewportEffect(viewport, \.worldToView)) {
-            content($0 ?? frame.applying(viewport.worldToView))
-        }
     }
 }

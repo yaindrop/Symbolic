@@ -31,10 +31,10 @@ extension ActiveItemView.SelectionBounds {
 
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+            AnimatableReader(selector.viewport) {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-                    .framePosition(rect: $0.outset(by: selector.outset))
+                    .framePosition(rect: bounds.applying($0.worldToView).outset(by: selector.outset))
                     .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
             }
         }

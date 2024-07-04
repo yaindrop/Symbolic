@@ -34,7 +34,6 @@ private extension ActiveItemStore {
 
 struct ActiveItemService {
     let store: ActiveItemStore
-    let viewport: ViewportService
     let toolbar: ToolbarStore
     let item: ItemService
     let path: PathService

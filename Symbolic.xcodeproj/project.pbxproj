@@ -104,7 +104,6 @@
 		57B5F1442BD4A621001E1B2E /* MiscUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1432BD4A621001E1B2E /* MiscUtils.swift */; };
 		57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1482BD54279001E1B2E /* DocumentEvent.swift */; };
 		57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F14A2BD54AA5001E1B2E /* Document.swift */; };
-		57B703EC2C362CEC00B60F36 /* GeometryEffectWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703EB2C362CEC00B60F36 /* GeometryEffectWrapper.swift */; };
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
 		57B847912C0E12AC00D0E7C3 /* PathPropertyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */; };
@@ -239,7 +238,6 @@
 		57B5F1432BD4A621001E1B2E /* MiscUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUtils.swift; sourceTree = "<group>"; };
 		57B5F1482BD54279001E1B2E /* DocumentEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEvent.swift; sourceTree = "<group>"; };
 		57B5F14A2BD54AA5001E1B2E /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
-		57B703EB2C362CEC00B60F36 /* GeometryEffectWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeometryEffectWrapper.swift; sourceTree = "<group>"; };
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
 		57B847902C0E12AC00D0E7C3 /* PathPropertyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyStore.swift; sourceTree = "<group>"; };
@@ -451,7 +449,6 @@
 				574CC7C12BF44D630042FEE3 /* ManagedScrollView.swift */,
 				574CC7BB2BF44C390042FEE3 /* Memo.swift */,
 				576BE2662C0828A000353912 /* View+Modifiers.swift */,
-				57B703EB2C362CEC00B60F36 /* GeometryEffectWrapper.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -888,7 +885,6 @@
 				572CA9DC2C319EBB003760B7 /* FileBrowserStore.swift in Sources */,
 				5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */,
 				574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */,
-				57B703EC2C362CEC00B60F36 /* GeometryEffectWrapper.swift in Sources */,
 				574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* Viewport.swift in Sources */,
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,

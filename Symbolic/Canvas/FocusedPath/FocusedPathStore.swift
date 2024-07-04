@@ -23,7 +23,6 @@ private extension FocusedPathStore {
 
 struct FocusedPathService {
     let store: FocusedPathStore
-    let viewport: ViewportService
     let activeItem: ActiveItemService
 }
 

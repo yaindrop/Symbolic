@@ -14,7 +14,8 @@ extension FocusedPathView {
             @Formula({ global.path.get(id: $0.pathId) }) static var path
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
             @Formula({ path($0)?.node(after: $0.fromNodeId)?.id }) static var nextNodeId
-            @Selected({ path($0)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var segmentFocused
             @Selected({ global.focusedPath.focusedNodeId == $0.fromNodeId }) var nodeFocused
             @Selected({ global.focusedPath.focusedNodeId == nextNodeId($0) }) var nextFocused
@@ -43,37 +44,40 @@ private extension FocusedPathView.BezierHandle {
     var circleSize: Scalar { 8 }
     var touchablePadding: Scalar { 16 }
 
-    var content: some View {
-        ZStack {
-            control0
-            control1
+    @ViewBuilder var content: some View {
+        if let segment = selector.segment {
+            AnimatableReader(selector.viewport) {
+                let segment = segment.applying($0.worldToView)
+                ZStack {
+                    control0(segment: segment)
+                    control1(segment: segment)
+                }
+            }
         }
     }
 
-    var showControl0: Bool {
-        guard let segment = selector.segment else { return false }
+    func showControl0(segment: PathSegment) -> Bool {
         let focused = selector.segmentFocused || selector.nodeFocused
         let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control0 != .zero)
         return dragging0 || focused && valid
     }
 
-    @ViewBuilder var control0: some View {
-        if let segment = selector.segment, showControl0 {
+    @ViewBuilder func control0(segment: PathSegment) -> some View {
+        if showControl0(segment: segment) {
             line(from: segment.from, to: segment.control0, color: control0Color)
             circle(at: segment.control0, color: control0Color)
                 .multipleGesture(bezierGesture(isControl0: true))
         }
     }
 
-    var showControl1: Bool {
-        guard let segment = selector.segment else { return false }
+    func showControl1(segment: PathSegment) -> Bool {
         let focused = selector.segmentFocused || selector.nextFocused
         let valid = selector.edgeType == .cubic || (selector.edgeType == .auto && segment.edge.control1 != .zero)
         return dragging1 || focused && valid
     }
 
-    @ViewBuilder var control1: some View {
-        if let segment = selector.segment, showControl1 {
+    @ViewBuilder func control1(segment: PathSegment) -> some View {
+        if showControl1(segment: segment) {
             line(from: segment.to, to: segment.control1, color: control1Color)
             circle(at: segment.control1, color: control1Color)
                 .multipleGesture(bezierGesture(isControl0: false))

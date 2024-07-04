@@ -46,27 +46,23 @@ extension ActiveItemView {
 extension ActiveItemView.PathBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            EmptyShape().fill(.clear)
-                .multipleTouchGesture(.init(
-                    onPress: {
-                        global.canvasAction.start(continuous: .moveSelection)
-                    },
-                    onPressEnd: { cancelled in
-                        global.canvasAction.end(continuous: .moveSelection)
-                        if cancelled { global.documentUpdater.cancel() }
-                    },
-                    onTap: { _ in global.onTap(pathId: pathId) },
-                    onDrag: { updateDrag($0, pending: true) },
-                    onDragEnd: { updateDrag($0) }
-                ))
-                .framePosition(rect: bounds)
-                .modifier(ViewportEffect(selector.viewport, \.worldToView))
-            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+            AnimatableReader(selector.viewport) {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
-                    .framePosition(rect: $0)
-                    .allowsHitTesting(false)
+                    .multipleTouchGesture(.init(
+                        onPress: {
+                            global.canvasAction.start(continuous: .moveSelection)
+                        },
+                        onPressEnd: { cancelled in
+                            global.canvasAction.end(continuous: .moveSelection)
+                            if cancelled { global.documentUpdater.cancel() }
+                        },
+                        onTap: { _ in global.onTap(pathId: pathId) },
+                        onDrag: { updateDrag($0, pending: true) },
+                        onDragEnd: { updateDrag($0) }
+                    ))
+                    .framePosition(rect: bounds.applying($0.worldToView))
             }
         }
     }

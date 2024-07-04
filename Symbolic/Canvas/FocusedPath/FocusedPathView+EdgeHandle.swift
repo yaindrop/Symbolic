@@ -110,7 +110,8 @@ extension FocusedPathView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
-            @Selected({ path($0)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
         }
 
         @SelectorWrapper var selector
@@ -130,10 +131,13 @@ extension FocusedPathView {
 private extension FocusedPathView.EdgeHandle {
     @ViewBuilder var content: some View {
         if let segment = selector.segment {
-            SUPath { p in segment.append(to: &p) }
-                .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
-                .fill(Color.invisibleSolid)
-                .multipleGesture(global.edgeGesture(fromId: fromNodeId, segment: segment, context: gestureContext))
+            AnimatableReader(selector.viewport) {
+                let segment = segment.applying($0.worldToView)
+                SUPath { p in segment.append(to: &p) }
+                    .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
+                    .fill(Color.invisibleSolid)
+                    .multipleGesture(global.edgeGesture(fromId: fromNodeId, segment: segment, context: gestureContext))
+            }
         }
     }
 
@@ -162,7 +166,8 @@ extension FocusedPathView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
-            @Selected({ path($0)?.segment(from: $0.fromNodeId)?.applying(global.viewport.toView) }) var segment
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
         }
 
@@ -184,8 +189,7 @@ private extension FocusedPathView.FocusedEdgeHandle {
     var circleSize: Scalar { 12 }
     var touchablePadding: Scalar { 24 }
 
-    var circlePosition: Point2? {
-        guard let segment = selector.segment else { return nil }
+    func circlePosition(segment: PathSegment) -> Point2 {
         let tessellated = segment.tessellated()
         let t = tessellated.approxPathParamT(lineParamT: 0.5).t
         return segment.position(paramT: t)
@@ -196,16 +200,18 @@ private extension FocusedPathView.FocusedEdgeHandle {
     }
 
     @ViewBuilder var content: some View {
-        if let circlePosition, selector.focused {
-            Circle()
-                .stroke(color, style: .init(lineWidth: lineWidth))
-                .fill(color.opacity(0.5))
-                .frame(size: .init(squared: circleSize))
-                .padding(touchablePadding)
-                .invisibleSoildOverlay()
-                .position(circlePosition)
-                .overlay {
-                    if selector.focused, let segment = selector.segment {
+        if let segment = selector.segment, selector.focused {
+            AnimatableReader(selector.viewport) {
+                let segment = segment.applying($0.worldToView)
+                let circlePosition = circlePosition(segment: segment)
+                Circle()
+                    .stroke(color, style: .init(lineWidth: lineWidth))
+                    .fill(color.opacity(0.5))
+                    .frame(size: .init(squared: circleSize))
+                    .padding(touchablePadding)
+                    .invisibleSoildOverlay()
+                    .position(circlePosition)
+                    .overlay {
                         SUPath { p in
                             let tessellated = segment.tessellated()
                             let fromT = tessellated.approxPathParamT(lineParamT: 0.1).t
@@ -217,8 +223,8 @@ private extension FocusedPathView.FocusedEdgeHandle {
                         .fill(color)
                         .allowsHitTesting(false)
                     }
-                }
-                .multipleGesture(global.focusedEdgeGesture(fromId: fromNodeId))
+                    .multipleGesture(global.focusedEdgeGesture(fromId: fromNodeId))
+            }
         }
     }
 }

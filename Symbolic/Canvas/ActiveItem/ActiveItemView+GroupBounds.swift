@@ -64,11 +64,11 @@ extension ActiveItemView {
 private extension ActiveItemView.GroupBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+            AnimatableReader(selector.viewport) {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
-                    .framePosition(rect: $0.outset(by: selector.outset))
+                    .framePosition(rect: bounds.applying($0.worldToView).outset(by: selector.outset))
                     .multipleGesture(.init(
                         onPress: {
                             global.canvasAction.start(continuous: .moveSelection)

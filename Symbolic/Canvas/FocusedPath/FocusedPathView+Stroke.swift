@@ -30,11 +30,13 @@ extension FocusedPathView {
 private extension FocusedPathView.Stroke {
     @ViewBuilder var content: some View {
         if let path = selector.path {
-            SUPath { path.append(to: &$0) }
-                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                .allowsHitTesting(false)
-                .modifier(ViewportEffect(selector.viewport, \.worldToView))
-                .id(path.id)
+            AnimatableReader(selector.viewport) {
+                SUPath { path.append(to: &$0) }
+                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+                    .allowsHitTesting(false)
+                    .transformEffect($0.worldToView)
+                    .id(path.id)
+            }
         }
     }
 }

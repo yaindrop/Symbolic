@@ -102,7 +102,8 @@ extension FocusedPathView {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
-            @Selected({ path($0)?.node(id: $0.nodeId)?.position.applying(global.viewport.toView) }) var position
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ path($0)?.node(id: $0.nodeId)?.position }) var position
             @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
             @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
@@ -129,11 +130,13 @@ extension FocusedPathView.NodeHandle {
 
     @ViewBuilder var content: some View {
         if let position = selector.position {
-            nodeShape
-                .padding(touchablePadding)
-                .invisibleSoildOverlay()
-                .position(position)
-                .multipleGesture(global.nodeGesture(nodeId: nodeId, context: gestureContext))
+            AnimatableReader(selector.viewport) {
+                nodeShape
+                    .padding(touchablePadding)
+                    .invisibleSoildOverlay()
+                    .position(position.applying($0.worldToView))
+                    .multipleGesture(global.nodeGesture(nodeId: nodeId, context: gestureContext))
+            }
         }
     }
 

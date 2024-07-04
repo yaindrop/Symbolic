@@ -27,8 +27,8 @@ extension ContextMenuView {
 extension ContextMenuView.FocusedPathMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds, selector.visible {
-            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
-                menu.contextMenu(bounds: $0)
+            AnimatableReader(selector.viewport) {
+                menu.contextMenu(bounds: bounds.applying($0.worldToView))
             }
         }
     }

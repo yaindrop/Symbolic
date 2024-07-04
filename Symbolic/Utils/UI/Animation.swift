@@ -56,3 +56,24 @@ extension AnimationPreset: CustomStringConvertible {
         }
     }
 }
+
+// MARK: - AnimatableReader
+
+struct AnimatableReader<Value: Animatable, Content: View>: View, Animatable {
+    var value: Value
+    @ViewBuilder let content: (Value) -> Content
+
+    init(_ value: Value, @ViewBuilder _ content: @escaping (Value) -> Content) {
+        self.value = value
+        self.content = content
+    }
+
+    var animatableData: Value.AnimatableData {
+        get { value.animatableData }
+        set { value.animatableData = newValue }
+    }
+
+    var body: some View {
+        content(value)
+    }
+}

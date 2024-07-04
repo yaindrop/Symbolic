@@ -16,7 +16,6 @@ struct ViewportInfo: Equatable {
 
 extension ViewportInfo {
     var worldToView: CGAffineTransform { .init(scale: scale).translatedBy(-Vector2(origin)) }
-
     var viewToWorld: CGAffineTransform { worldToView.inverted() }
 }
 
@@ -48,8 +47,12 @@ struct SizedViewportInfo: Equatable {
 }
 
 extension SizedViewportInfo {
-    var worldRect: CGRect { .init(origin: info.origin, size: size / info.scale) }
+    var origin: Point2 { info.origin }
+    var scale: Scalar { info.scale }
+    var worldToView: CGAffineTransform { info.worldToView }
+    var viewToWorld: CGAffineTransform { info.viewToWorld }
 
+    var worldRect: CGRect { .init(origin: info.origin, size: size / info.scale) }
     var center: Point2 { worldRect.center }
 }
 
@@ -190,5 +193,38 @@ private extension ViewportUpdater {
         global.canvasAction.end(continuous: .pinchViewport)
         let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
         store.update(previousInfo: viewport.info)
+    }
+}
+
+// MARK: - ViewportEffect
+
+struct ViewportEffect: GeometryEffect {
+    var viewport: SizedViewportInfo
+    let keyPath: KeyPath<SizedViewportInfo, CGAffineTransform>
+
+    init(_ viewport: SizedViewportInfo, _ keyPath: KeyPath<SizedViewportInfo, CGAffineTransform>) {
+        self.viewport = viewport
+        self.keyPath = keyPath
+    }
+
+    var animatableData: SizedViewportInfo.AnimatableData {
+        get { viewport.animatableData }
+        set { viewport.animatableData = newValue }
+    }
+
+    func effectValue(size _: CGSize) -> ProjectionTransform {
+        .init(viewport[keyPath: keyPath])
+    }
+}
+
+struct ViewportWorldToView<Content: View>: View {
+    let frame: CGRect
+    let viewport: SizedViewportInfo
+    @ViewBuilder let content: (CGRect) -> Content
+
+    var body: some View {
+        GeometryFrameMapper(frame: frame, effect: ViewportEffect(viewport, \.worldToView)) {
+            content($0 ?? frame.applying(viewport.worldToView))
+        }
     }
 }

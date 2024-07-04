@@ -6,7 +6,9 @@ extension ContextMenuView {
     struct SelectionMenu: View, SelectorHolder {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
+            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.activeItem.selectionBounds }) var bounds
+            @Selected({ global.activeItem.selectionOutset }) var outset
         }
 
         @SelectorWrapper var selector
@@ -24,13 +26,19 @@ extension ContextMenuView {
 extension ContextMenuView.SelectionMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            menu.contextMenu(bounds: bounds)
+            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+                menu.contextMenu(bounds: $0.outset(by: selector.outset))
+            }
         }
     }
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button {
+                if let bounds = selector.bounds {
+                    global.viewportUpdater.zoomTo(rect: bounds)
+                }
+            } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
 

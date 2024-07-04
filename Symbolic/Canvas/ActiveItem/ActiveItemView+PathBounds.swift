@@ -25,9 +25,10 @@ extension ActiveItemView {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.item.boundingRect(itemId: $0.pathId) }) var bounds
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
-            @Selected({ global.activeItem.boundingRect(itemId: $0.pathId) }) var bounds
         }
 
         @SelectorWrapper var selector
@@ -45,9 +46,7 @@ extension ActiveItemView {
 extension ActiveItemView.PathBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            RoundedRectangle(cornerRadius: 2)
-                .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
-                .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
+            EmptyShape().fill(.clear)
                 .multipleTouchGesture(.init(
                     onPress: {
                         global.canvasAction.start(continuous: .moveSelection)
@@ -61,6 +60,14 @@ extension ActiveItemView.PathBounds {
                     onDragEnd: { updateDrag($0) }
                 ))
                 .framePosition(rect: bounds)
+                .modifier(ViewportEffect(selector.viewport, \.worldToView))
+            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
+                    .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
+                    .framePosition(rect: $0)
+                    .allowsHitTesting(false)
+            }
         }
     }
 

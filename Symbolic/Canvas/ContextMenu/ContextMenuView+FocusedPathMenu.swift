@@ -6,7 +6,8 @@ extension ContextMenuView {
     struct FocusedPathMenu: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.activeItem.focusedPathBounds }) var bounds
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.activeItem.focusedPath.map { global.item.boundingRect(itemId: $0.id) } }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeNodeIds.isEmpty }) var visible
         }
@@ -26,7 +27,9 @@ extension ContextMenuView {
 extension ContextMenuView.FocusedPathMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds, selector.visible {
-            menu.contextMenu(bounds: bounds)
+            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+                menu.contextMenu(bounds: $0)
+            }
         }
     }
 
@@ -34,7 +37,7 @@ extension ContextMenuView.FocusedPathMenu {
         HStack {
             Button {
                 if let bounds = selector.bounds {
-                    global.viewportUpdater.zoomTo(rect: bounds.applying(global.viewport.toWorld))
+                    global.viewportUpdater.zoomTo(rect: bounds)
                 }
             } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)

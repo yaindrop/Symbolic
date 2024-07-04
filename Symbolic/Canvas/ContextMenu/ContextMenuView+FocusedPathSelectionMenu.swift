@@ -6,7 +6,8 @@ extension ContextMenuView {
     struct FocusedPathSelectionMenu: View, SelectorHolder {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.focusedPath.activeNodesBounds?.applying(global.viewport.toView) }) var bounds
+            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.focusedPath.activeNodesBounds }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeSegmentIds }) var activeSegmentIds
             @Selected({ global.focusedPath.activeNodeIds.map { global.activeItem.focusedPathProperty?.nodeType(id: $0) }.allSame() }) var activeNodeType
@@ -28,13 +29,19 @@ extension ContextMenuView {
 extension ContextMenuView.FocusedPathSelectionMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            menu.contextMenu(bounds: bounds)
+            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+                menu.contextMenu(bounds: $0)
+            }
         }
     }
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button {} label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button {
+                if let bounds = selector.bounds {
+                    global.viewportUpdater.zoomTo(rect: bounds)
+                }
+            } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
 

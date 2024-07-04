@@ -11,8 +11,8 @@ extension FocusedPathView {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
+            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.path.get(id: $0.pathId) }) var path
-            @Selected({ global.viewport.sizedInfo }) var sizedViewport
         }
 
         @SelectorWrapper var selector
@@ -33,7 +33,7 @@ private extension FocusedPathView.Stroke {
             SUPath { path.append(to: &$0) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
-                .modifier(ViewportEffect(keyPath: \.worldToView, sizedViewport: selector.sizedViewport))
+                .modifier(ViewportEffect(selector.viewport, \.worldToView))
                 .id(path.id)
         }
     }

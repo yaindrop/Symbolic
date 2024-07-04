@@ -69,10 +69,10 @@ extension ActiveItemService {
     }
 
     var selectionBounds: CGRect? {
-        .init(union: selectedItemIds.compactMap { item.boundingRect(itemId: $0.id) })?
-            .applying(viewport.toView)
-            .outset(by: 12)
+        .init(union: selectedItemIds.compactMap { item.boundingRect(itemId: $0.id) })
     }
+
+    var selectionOutset: Scalar { 12 }
 
     var selectedPaths: [Path] {
         selectedItemIds
@@ -94,19 +94,9 @@ extension ActiveItemService {
         return pathProperty.get(id: focusedItemId)
     }
 
-    var focusedPathBounds: CGRect? {
-        guard let focusedPath else { return nil }
-        return boundingRect(itemId: focusedPath.id)
-    }
-
     var focusedGroup: ItemGroup? {
         guard let focusedItemId else { return nil }
         return item.group(id: focusedItemId)
-    }
-
-    var focusedGroupBounds: CGRect? {
-        guard let focusedGroup else { return nil }
-        return boundingRect(itemId: focusedGroup.id)
     }
 
     func activeDescendants(groupId: UUID) -> [Item] {
@@ -114,22 +104,15 @@ extension ActiveItemService {
             .filter { $0.id != groupId && store.activeItemIds.contains($0.id) }
     }
 
-    func boundingRect(itemId: UUID) -> CGRect? {
-        guard let item = item.get(id: itemId) else { return nil }
-        if let pathId = item.pathId {
-            guard let path = path.get(id: pathId) else { return nil }
-            return path.boundingRect.applying(viewport.toView)
-        }
-        guard let group = item.group else { return nil }
+    func groupOutset(id: UUID) -> Scalar {
+        guard let group = item.group(id: id) else { return 0 }
         var outsetLevel = 1
         let minHeight = activeDescendants(groupId: group.id).map { self.item.height(itemId: $0.id) }.filter { $0 > 0 }.min()
         if let minHeight {
-            let height = self.item.height(itemId: group.id)
+            let height = item.height(itemId: group.id)
             outsetLevel += height - minHeight
         }
-        return self.item.boundingRect(itemId: group.id)?
-            .applying(viewport.toView)
-            .outset(by: 6 * Scalar(outsetLevel))
+        return 6 * Scalar(outsetLevel)
     }
 }
 

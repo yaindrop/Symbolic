@@ -6,7 +6,9 @@ extension ActiveItemView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
+            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.activeItem.selectionBounds }) var bounds
+            @Selected({ global.activeItem.selectionOutset }) var outset
         }
 
         @SelectorWrapper var selector
@@ -29,10 +31,12 @@ extension ActiveItemView.SelectionBounds {
 
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-                .framePosition(rect: bounds)
-                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
+            ViewportWorldToView(frame: bounds, viewport: selector.viewport) {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                    .framePosition(rect: $0.outset(by: selector.outset))
+                    .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
+            }
         }
     }
 }

@@ -5,7 +5,7 @@ import SwiftUI
 struct ItemsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
-        @Selected({ global.viewport.sizedInfo }) var sizedViewport
+        @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.item.allPaths }) var allPaths
         @Selected({ global.activeItem.focusedItemId }) var focusedItemId
     }
@@ -27,21 +27,7 @@ private extension ItemsView {
             SUPath { path in p.append(to: &path) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
         }
-        .modifier(ViewportEffect(keyPath: \.worldToView, sizedViewport: selector.sizedViewport))
+        .modifier(ViewportEffect(selector.viewport, \.worldToView))
 //        .blur(radius: 1)
-    }
-}
-
-struct ViewportEffect: GeometryEffect {
-    let keyPath: KeyPath<ViewportInfo, CGAffineTransform>
-    var sizedViewport: SizedViewportInfo
-
-    var animatableData: SizedViewportInfo.AnimatableData {
-        get { sizedViewport.animatableData }
-        set { sizedViewport.animatableData = newValue }
-    }
-
-    func effectValue(size _: CGSize) -> ProjectionTransform {
-        .init(sizedViewport.info[keyPath: keyPath])
     }
 }

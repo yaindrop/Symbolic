@@ -10,4 +10,8 @@ extension GridStore {
     func snap(_ point: Point2) -> Point2 {
         grid.snap(point)
     }
+
+    func update(grid: Grid) {
+        update { $0(\._gridStack, [grid]) }
+    }
 }

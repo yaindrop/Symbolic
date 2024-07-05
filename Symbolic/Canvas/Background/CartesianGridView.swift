@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum GridViewType {
+    case background
+    case preview
+}
+
 enum CartesianGridLineType: CaseIterable {
     case normal
     case principal
@@ -11,7 +16,8 @@ enum CartesianGridLineType: CaseIterable {
 struct CartesianGridView: View, TracedView {
     let grid: Grid.Cartesian
     let viewport: SizedViewportInfo
-    let lineColor: Color
+    let color: Color
+    let type: GridViewType
 
     var body: some View { trace {
         content
@@ -21,20 +27,8 @@ struct CartesianGridView: View, TracedView {
 extension CartesianGridView {
     @ViewBuilder var content: some View {
         ZStack {
-            ForEach(CartesianGridLineType.allCases, id: \.self) { type in
-                let lines = path(type: type)
-                switch type {
-                case .normal: lines.stroke(lineColor.opacity(0.3), style: .init(lineWidth: 0.5))
-                case .principal: lines.stroke(lineColor.opacity(0.5), style: .init(lineWidth: 1))
-                case .axis: lines.stroke(lineColor.opacity(0.8), style: .init(lineWidth: 2))
-                }
-            }
-            ForEach(horizontal, id: \.self) { x in
-                CartesianGridHorizontalLabel(x: x, viewport: viewport)
-            }
-            ForEach(vertical, id: \.self) { y in
-                CartesianGridVerticalLabel(y: y, viewport: viewport)
-            }
+            lines
+            labels
         }
     }
 
@@ -52,40 +46,69 @@ extension CartesianGridView {
 
     var horizontal: [Scalar] {
         let cellSize = adjustedCellSize
-        return .init(stride(from: round(worldRect.minX / cellSize) * cellSize, to: worldRect.maxX, by: cellSize))
+        var lower = worldRect.minX / cellSize
+        lower = (type == .background ? round(lower) : ceil(lower)) * cellSize
+        return .init(stride(from: lower, to: worldRect.maxX, by: cellSize))
     }
 
     var vertical: [Scalar] {
         let cellSize = adjustedCellSize
-        return .init(stride(from: round(worldRect.minY / cellSize) * cellSize, to: worldRect.maxY, by: cellSize))
+        var lower = worldRect.minY / cellSize
+        lower = (type == .background ? round(lower) : ceil(lower)) * cellSize
+        return .init(stride(from: lower, to: worldRect.maxY, by: cellSize))
+    }
+
+    func lineType(cellSize: Scalar, at position: Scalar) -> CartesianGridLineType {
+        if position / cellSize ~== 0 {
+            .axis
+        } else if position / cellSize / 2 ~== round(position / cellSize / 2) {
+            .principal
+        } else {
+            .normal
+        }
     }
 
     func path(type: CartesianGridLineType) -> SUPath {
         let cellSize = adjustedCellSize
-        func lineType(at position: Scalar) -> CartesianGridLineType {
-            if position / cellSize ~== 0 {
-                .axis
-            } else if position / cellSize / 2 ~== round(position / cellSize / 2) {
-                .principal
-            } else {
-                .normal
-            }
-        }
         let maxInView = worldRect.maxPoint.applying(toView)
         return .init { path in
             for x in horizontal {
-                guard lineType(at: x) == type else { continue }
+                guard lineType(cellSize: cellSize, at: x) == type else { continue }
                 let x = Point2(x, 0).applying(toView).x
                 path.move(to: .init(x, 0))
                 path.addLine(to: .init(x, maxInView.y))
             }
             for y in vertical {
-                guard lineType(at: y) == type else { continue }
+                guard lineType(cellSize: cellSize, at: y) == type else { continue }
                 let y = Point2(0, y).applying(toView).y
                 path.move(to: .init(0, y))
                 path.addLine(to: .init(maxInView.x, y))
             }
         }
+    }
+
+    @ViewBuilder var lines: some View {
+        ForEach(CartesianGridLineType.allCases, id: \.self) { type in
+            let lines = path(type: type)
+            switch type {
+            case .normal: lines.stroke(color.opacity(0.3), style: .init(lineWidth: 0.5))
+            case .principal: lines.stroke(color.opacity(0.5), style: .init(lineWidth: 1))
+            case .axis: lines.stroke(color.opacity(0.8), style: .init(lineWidth: 2))
+            }
+        }
+    }
+
+    @ViewBuilder var labels: some View {
+        let cellSize = adjustedCellSize
+        Group {
+            ForEach(horizontal.filter { lineType(cellSize: cellSize, at: $0) != .normal }, id: \.self) { x in
+                CartesianGridHorizontalLabel(x: x, viewport: viewport, hasSafeArea: type == .background)
+            }
+            ForEach(vertical.filter { lineType(cellSize: cellSize, at: $0) != .normal }, id: \.self) { y in
+                CartesianGridVerticalLabel(y: y, viewport: viewport)
+            }
+        }
+        .foregroundColor(color)
     }
 }
 
@@ -94,6 +117,7 @@ extension CartesianGridView {
 private struct CartesianGridHorizontalLabel: View, TracedView {
     let x: Scalar
     let viewport: SizedViewportInfo
+    let hasSafeArea: Bool
 
     @State private var size: CGSize = .zero
 
@@ -115,7 +139,7 @@ private extension CartesianGridHorizontalLabel {
 
     var padding: Scalar { 3 }
 
-    var safeAreaPadding: Scalar { 12 }
+    var safeAreaPadding: Scalar { hasSafeArea ? 12 : 0 }
 
     var offset: Vector2 {
         if rotated {

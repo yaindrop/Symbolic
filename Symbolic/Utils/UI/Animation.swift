@@ -29,6 +29,13 @@ extension View {
     }
 }
 
+extension Animation {
+    static let normal: Animation = .default
+    static let fast: Animation = .normal.speed(2)
+    static let faster: Animation = .normal.speed(4)
+    static let fastest: Animation = .normal.speed(6)
+}
+
 // MARK: - AnimationPreset
 
 enum AnimationPreset {
@@ -36,10 +43,10 @@ enum AnimationPreset {
 
     var animation: Animation {
         switch self {
-        case .normal: .default
-        case .fast: .default.speed(2)
-        case .faster: .default.speed(4)
-        case .fastest: .default.speed(6)
+        case .normal: .normal
+        case .fast: .fast
+        case .faster: .faster
+        case .fastest: .fastest
         case let .custom(animation): animation
         }
     }

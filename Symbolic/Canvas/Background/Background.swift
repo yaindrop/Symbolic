@@ -21,12 +21,10 @@ struct Background: View, TracedView, SelectorHolder {
 // MARK: private
 
 private extension Background {
-    var lineColor: Color { .red }
-
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
             if case let .cartesian(cartesian) = selector.grid {
-                CartesianGridView(grid: cartesian, viewport: $0, lineColor: lineColor)
+                CartesianGridView(grid: cartesian, viewport: $0, color: .gray, type: .background)
             }
         }
     }

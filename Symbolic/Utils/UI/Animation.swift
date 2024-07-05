@@ -66,9 +66,9 @@ extension AnimationPreset: CustomStringConvertible {
 
 // MARK: - AnimatableReader
 
-struct AnimatableReader<Value: Animatable, Content: View>: View, Animatable {
+struct AnimatableReader<Value: Animatable, Content: View>: View, Animatable, TracedView, UniqueEquatable {
     var value: Value
-    @ViewBuilder let content: (Value) -> Content
+    let content: (Value) -> Content
 
     init(_ value: Value, @ViewBuilder _ content: @escaping (Value) -> Content) {
         self.value = value
@@ -80,7 +80,7 @@ struct AnimatableReader<Value: Animatable, Content: View>: View, Animatable {
         set { value.animatableData = newValue }
     }
 
-    var body: some View {
+    var body: some View { trace {
         content(value)
-    }
+    } }
 }

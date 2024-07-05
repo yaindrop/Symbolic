@@ -119,7 +119,8 @@ extension View {
 extension View {
     @ViewBuilder func clipRounded<S: ShapeStyle>(radius: Scalar, border: S, stroke: StrokeStyle? = nil) -> some View {
         let shape = RoundedRectangle(cornerSize: .init(radius, radius))
-        overlay(shape.stroke(border, style: stroke ?? .init(lineWidth: 1)).allowsHitTesting(false))
+        clipShape(shape)
+            .overlay(shape.stroke(border, style: stroke ?? .init(lineWidth: 1)).allowsHitTesting(false))
     }
 
     func clipRounded(radius: Scalar) -> some View {

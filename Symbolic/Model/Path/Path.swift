@@ -236,7 +236,7 @@ extension Path {
     func subpath(from i: Int, to j: Int) -> Self? {
         guard let pairs = indices(from: i, to: j).completeMap({ pairs[$0] }) else { return nil }
         guard pairs.count > 1 else { return nil }
-        return .init(id: UUID(), pairs: .init(pairs) { $0.id }, isClosed: pairs.count == self.pairs.count)
+        return .init(id: UUID(), pairs: .init(pairs) { $0.id }, isClosed: isClosed && pairs.count == self.pairs.count)
     }
 
     func continuousNodeIndexPairs(nodeIds: Set<UUID>) -> [Pair<Int, Int>] {

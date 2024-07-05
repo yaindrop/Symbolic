@@ -10,12 +10,28 @@ extension Snappable {
     }
 }
 
-struct CartesianGrid: Equatable {
-    let cellSize: Scalar
+enum Grid: Equatable {
+    struct Cartesian: Equatable {
+        let cellSize: Scalar
+    }
 
+    case cartesian(Cartesian)
+}
+
+// MARK: - Snappable
+
+extension Grid.Cartesian: Snappable {
     func snap(_ point: Point2) -> Point2 {
         let x = round(point.x / cellSize) * cellSize
         let y = round(point.y / cellSize) * cellSize
         return .init(x: x, y: y)
+    }
+}
+
+extension Grid: Snappable {
+    func snap(_ point: Point2) -> Point2 {
+        switch self {
+        case let .cartesian(cartesian): cartesian.snap(point)
+        }
     }
 }

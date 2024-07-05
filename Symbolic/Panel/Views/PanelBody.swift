@@ -73,11 +73,11 @@ private extension PanelBody {
                 VStack(spacing: 12) {
                     bodyContent(proxy)
                 }
+                .padding(.all.subtracting(.top), 12)
             }
             .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
             .frame(maxWidth: .infinity, maxHeight: maxHeight)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.all.subtracting(.top), 12)
         }
         .background {
             Rectangle()

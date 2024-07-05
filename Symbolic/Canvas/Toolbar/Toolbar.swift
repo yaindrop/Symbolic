@@ -178,7 +178,9 @@ private extension PanelPopoverButton {
         .background(active ? .blue : .clear)
         .clipRounded(radius: 6, border: hovering ? .blue : .clear, stroke: .init(lineWidth: 2))
         .overlay {
-            RoundedRectangle(cornerRadius: 6).stroke(Color.invisibleSolid).shadow(color: .blue, radius: glowingRadius)
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.invisibleSolid)
+                .shadow(color: .blue, radius: glowingRadius)
                 .allowsHitTesting(false)
                 .animatedValue($glowingRadius, from: 1, to: 6, .linear(duration: 0.5).repeatForever())
                 .opacity(glowing ? 1 : 0)

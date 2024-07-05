@@ -44,7 +44,7 @@ private extension PanelPopover {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-                .frame(maxWidth: .infinity, maxHeight: selector.viewSize.height - 120)
+                .frame(maxWidth: .infinity, maxHeight: selector.viewSize.height - 240)
                 .fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: 320)

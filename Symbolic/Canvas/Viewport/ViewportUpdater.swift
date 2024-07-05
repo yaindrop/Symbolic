@@ -60,7 +60,8 @@ extension ViewportUpdater {
 
     func zoomTo(rect: CGRect) {
         let worldRect = viewport.worldRect
-        let transform = CGAffineTransform(fit: rect, to: worldRect).inverted()
+        let scaledWorldRect = CGRect(center: worldRect.center, size: worldRect.size * 0.8)
+        let transform = CGAffineTransform(fit: rect, to: scaledWorldRect).inverted()
         let newWorldRect = worldRect.applying(transform)
         let origin = newWorldRect.origin
         let scale = viewport.viewSize.width / newWorldRect.width

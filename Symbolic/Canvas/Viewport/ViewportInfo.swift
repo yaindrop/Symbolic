@@ -37,7 +37,7 @@ struct SizedViewportInfo: Equatable {
         info = .init(origin: worldRect.origin, scale: size.width / worldRect.width)
     }
 
-    init(size: CGSize, center: Point2, scale: Scalar) {
+    init(size: CGSize, center: Point2, scale: Scalar = 1) {
         let worldRect = CGRect(center: center, size: size / scale)
         self.size = size
         info = .init(origin: worldRect.origin, scale: scale)

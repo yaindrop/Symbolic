@@ -63,19 +63,19 @@ private extension CanvasActionView {
             if !selector.continuousHints.isEmpty {
                 Text(selector.continuousHints.joined(separator: " "))
                     .padding(size: .init(6, 3))
-                    .background(.green.opacity(0.3))
+                    .background(.green.opacity(0.6))
                     .clipRounded(radius: 6)
             }
             if !selector.triggeringHints.isEmpty {
                 Text(selector.triggeringHints.joined(separator: " "))
                     .padding(size: .init(6, 3))
-                    .background(.orange.opacity(0.3))
+                    .background(.orange.opacity(0.6))
                     .clipRounded(radius: 6)
             }
             if !selector.instantHints.isEmpty {
                 Text(selector.instantHints.joined(separator: " "))
                     .padding(size: .init(6, 3))
-                    .background(.blue.opacity(0.3))
+                    .background(.blue.opacity(0.6))
                     .clipRounded(radius: 6)
             }
         }

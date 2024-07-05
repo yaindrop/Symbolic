@@ -136,6 +136,7 @@ struct CanvasView: View, TracedView {
                 global.panel.register(align: .bottomLeading) { HistoryPanel() }
                 global.panel.register(align: .bottomLeading) { ItemPanel() }
                 global.panel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
+                global.panel.register(align: .bottomTrailing) { GridPanel() }
             }
             .onAppear {
                 global.contextMenu.clear()

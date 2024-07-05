@@ -211,6 +211,7 @@ private extension FocusedPathView.FocusedEdgeHandle {
                     .padding(touchablePadding)
                     .invisibleSoildOverlay()
                     .position(circlePosition)
+                    .multipleGesture(global.focusedEdgeGesture(fromId: fromNodeId))
                     .overlay {
                         SUPath { p in
                             let tessellated = segment.tessellated()
@@ -223,7 +224,6 @@ private extension FocusedPathView.FocusedEdgeHandle {
                         .fill(color)
                         .allowsHitTesting(false)
                     }
-                    .multipleGesture(global.focusedEdgeGesture(fromId: fromNodeId))
             }
         }
     }

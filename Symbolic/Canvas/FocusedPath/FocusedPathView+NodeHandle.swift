@@ -42,7 +42,8 @@ private extension GlobalStores {
             if let newNodeId = context.longPressAddedNodeId {
                 moveAddedNode(newNodeId: newNodeId, offset: v.offset, pending: pending)
             } else {
-                let nodeIds = global.focusedPath.activeNodeIds.contains(nodeId) ? .init(global.focusedPath.activeNodeIds) : [nodeId]
+                let multiDrag = focusedPath.selectingNodes && focusedPath.activeNodeIds.contains(nodeId)
+                let nodeIds = multiDrag ? .init(global.focusedPath.activeNodeIds) : [nodeId]
                 documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: nodeIds, offset: v.offset)), pending: pending)
             }
         }

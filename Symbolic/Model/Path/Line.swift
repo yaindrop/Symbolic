@@ -26,6 +26,9 @@ enum Line {
     static var xAxis: Line { .horizontal(y: 0) }
     static var yAxis: Line { .vertical(x: 0) }
 
+    var slopeIntercept: SlopeIntercept? { if case let .slopeIntercept(slopeIntercept) = self { slopeIntercept } else { nil } }
+    var vertical: Vertical? { if case let .vertical(vertical) = self { vertical } else { nil } }
+
     init(p0: Point2, p1: Point2) {
         if p0.x == p1.x {
             self = .vertical(x: p0.x)
@@ -59,12 +62,15 @@ enum Line {
 // MARK: Impl
 
 private protocol LineImpl: Equatable {
+    var angle: Angle { get } // from x axis
     func projected(from point: Point2) -> Point2
     func parallel(to other: Line) -> Bool
     func intersection(with other: Line) -> Point2?
 }
 
 extension Line.SlopeIntercept: LineImpl {
+    var angle: Angle { .radians(atan(Scalar(m))) }
+
     func projected(from point: Point2) -> Point2 {
         self.point(x: (m * (point.y - b) + point.x) / (m * m + 1))
     }
@@ -88,6 +94,8 @@ extension Line.SlopeIntercept: LineImpl {
 }
 
 extension Line.Vertical: LineImpl {
+    var angle: Angle { .radians(.pi / 2) }
+
     func projected(from point: Point2) -> Point2 {
         self.point(y: point.y)
     }
@@ -109,6 +117,8 @@ extension Line.Vertical: LineImpl {
 
 extension Line: LineImpl {
     fileprivate typealias Impl = any LineImpl
+
+    var angle: Angle { impl.angle }
 
     func projected(from point: Point2) -> Point2 { impl.projected(from: point) }
 

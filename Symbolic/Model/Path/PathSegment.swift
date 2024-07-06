@@ -38,6 +38,7 @@ private protocol Tessellatable {
 
 extension PathSegment: Tessellatable {
     func tessellated(count: Int = defaultTessellationCount) -> Polyline {
+        assert(count != 0)
         let points = (0 ... count).map { i in position(paramT: Scalar(i) / Scalar(count)) }
         return Polyline(points: points)
     }

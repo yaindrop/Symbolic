@@ -102,7 +102,8 @@ extension LineSegment.SlopeIntercept: InverseParametrizable {
         var p = line.projected(from: point)
         let x = xRange.clamp(p.x)
         p = Point2(x, slopeIntercept.y(x: x))
-        return (t: (x - x0) / (x1 - x0), p.distance(to: point))
+        let t = x1 != x0 ? (x - x0) / (x1 - x0) : 0
+        return (t: t, p.distance(to: point))
     }
 }
 
@@ -111,7 +112,8 @@ extension LineSegment.Vertical: InverseParametrizable {
         var p = line.projected(from: point)
         let y = yRange.clamp(p.y)
         p = Point2(vertical.x, y)
-        return (t: (y - y0) / (y1 - y0), p.distance(to: point))
+        let t = y1 != y0 ? (y - y0) / (y1 - y0) : 0
+        return (t: t, p.distance(to: point))
     }
 }
 
@@ -189,7 +191,8 @@ extension Polyline: Parametrizable {
         for (i, s) in segments.enumerated() {
             let curr = cumulated + s.length
             if curr > target {
-                return SegmentParam(i: i, t: (target - cumulated) / s.length)
+                let t = s.length != 0 ? (target - cumulated) / s.length : 0
+                return SegmentParam(i: i, t: 0)
             }
             cumulated = curr
         }
@@ -223,6 +226,7 @@ extension Polyline: InverseParametrizable {
             }
             cumulated += s.length
         }
+        guard length != 0 else { return 0 }
         return (0 ... 1).clamp(cumulated / length)
     }
 
@@ -239,7 +243,9 @@ extension Polyline {
         var cumulated = Scalar(param.i)
         let s = segments[param.i]
         let p = s.position(paramT: param.t)
+        guard length != 0 else { return 0 }
         cumulated += p.distance(to: s.start) / s.length
+        guard !segments.isEmpty else { return 0 }
         return (0 ... 1).clamp(cumulated / Scalar(segments.count))
     }
 

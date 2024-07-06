@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 protocol Snappable {
     func snap(_ point: Point2) -> Point2
@@ -12,15 +12,15 @@ extension Snappable {
 
 enum Grid: Equatable {
     struct Cartesian: Equatable {
-        let cellSize: Scalar
+        var interval: Scalar
     }
 
     struct Isometric: Equatable {
-        let cellSize: Scalar
+        var interval: Scalar, angle0: Angle, angle1: Angle
     }
 
     struct Radial: Equatable {
-        let radialSize: Scalar, angularDivision: Int
+        var radialSize: Scalar, angularDivision: Int
     }
 
     case cartesian(Cartesian)
@@ -28,12 +28,30 @@ enum Grid: Equatable {
     case radial(Radial)
 }
 
+extension Grid.Cartesian: Animatable {
+    var animatableData: Scalar.AnimatableData {
+        get { interval.animatableData }
+        set { interval.animatableData = newValue }
+    }
+}
+
+extension Grid.Isometric: Animatable {
+    var animatableData: AnimatablePair<Scalar, AnimatablePair<Scalar, Scalar>> {
+        get { .init(interval, .init(angle0.radians, angle1.radians)) }
+        set {
+            interval = newValue.first
+            angle0 = .radians(newValue.second.first)
+            angle1 = .radians(newValue.second.second)
+        }
+    }
+}
+
 // MARK: - Snappable
 
 extension Grid.Cartesian: Snappable {
     func snap(_ point: Point2) -> Point2 {
-        let x = round(point.x / cellSize) * cellSize
-        let y = round(point.y / cellSize) * cellSize
+        let x = round(point.x / interval) * interval
+        let y = round(point.y / interval) * interval
         return .init(x: x, y: y)
     }
 }

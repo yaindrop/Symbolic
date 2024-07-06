@@ -109,10 +109,8 @@
 		57B703F22C366B0300B60F36 /* DocumentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703F12C366B0300B60F36 /* DocumentService.swift */; };
 		57B703F42C366B8100B60F36 /* ToolbarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703F32C366B8100B60F36 /* ToolbarStore.swift */; };
 		57B703F72C37768200B60F36 /* GridPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703F62C37768200B60F36 /* GridPanel.swift */; };
-		57B703F92C37955A00B60F36 /* CartesianGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703F82C37955A00B60F36 /* CartesianGridView.swift */; };
 		57B703FB2C38418000B60F36 /* ThrottledState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FA2C38418000B60F36 /* ThrottledState.swift */; };
-		57B703FD2C38460A00B60F36 /* IsometricGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FC2C38460A00B60F36 /* IsometricGridView.swift */; };
-		57B703FF2C38F18500B60F36 /* LineSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FE2C38F18500B60F36 /* LineSet.swift */; };
+		57B703FF2C38F18500B60F36 /* GridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FE2C38F18500B60F36 /* GridView.swift */; };
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
 		57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */; };
@@ -252,10 +250,8 @@
 		57B703F12C366B0300B60F36 /* DocumentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentService.swift; sourceTree = "<group>"; };
 		57B703F32C366B8100B60F36 /* ToolbarStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarStore.swift; sourceTree = "<group>"; };
 		57B703F62C37768200B60F36 /* GridPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridPanel.swift; sourceTree = "<group>"; };
-		57B703F82C37955A00B60F36 /* CartesianGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartesianGridView.swift; sourceTree = "<group>"; };
 		57B703FA2C38418000B60F36 /* ThrottledState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottledState.swift; sourceTree = "<group>"; };
-		57B703FC2C38460A00B60F36 /* IsometricGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsometricGridView.swift; sourceTree = "<group>"; };
-		57B703FE2C38F18500B60F36 /* LineSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSet.swift; sourceTree = "<group>"; };
+		57B703FE2C38F18500B60F36 /* GridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridView.swift; sourceTree = "<group>"; };
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
 		57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyService.swift; sourceTree = "<group>"; };
@@ -568,7 +564,6 @@
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
-				57B703FE2C38F18500B60F36 /* LineSet.swift */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -659,8 +654,7 @@
 			isa = PBXGroup;
 			children = (
 				5774B15F2BFD864300C53CDD /* Background.swift */,
-				57B703F82C37955A00B60F36 /* CartesianGridView.swift */,
-				57B703FC2C38460A00B60F36 /* IsometricGridView.swift */,
+				57B703FE2C38F18500B60F36 /* GridView.swift */,
 			);
 			path = Background;
 			sourceTree = "<group>";
@@ -898,7 +892,6 @@
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
 				572487872BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift in Sources */,
 				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
-				57B703FD2C38460A00B60F36 /* IsometricGridView.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */,
 				571B9B2E2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift in Sources */,
@@ -906,7 +899,6 @@
 				57DD2A162C0236E60046931C /* ItemService.swift in Sources */,
 				57E082062C230526008CC67B /* RootView.swift in Sources */,
 				5700C2C62BEB5B0A00481FA7 /* PanelSection.swift in Sources */,
-				57B703F92C37955A00B60F36 /* CartesianGridView.swift in Sources */,
 				574CC7E82BFA3EAF0042FEE3 /* ContextMenuStore.swift in Sources */,
 				57B5F1402BD4A3EF001E1B2E /* ActiveItemService.swift in Sources */,
 				57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */,
@@ -956,7 +948,7 @@
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
 				571B9B412C14A9B600AAD516 /* Operators.swift in Sources */,
-				57B703FF2C38F18500B60F36 /* LineSet.swift in Sources */,
+				57B703FF2C38F18500B60F36 /* GridView.swift in Sources */,
 				57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */,
 				571B9B2A2C148B0800AAD516 /* FocusedPathService.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,

@@ -8,6 +8,7 @@ enum LineSegment {
     struct SlopeIntercept {
         let slopeIntercept: Line.SlopeIntercept
         let x0: Scalar, x1: Scalar
+        var xRange: ClosedRange<Scalar> { .init(start: x0, end: x1) }
     }
 
     // MARK: Vertical
@@ -15,10 +16,14 @@ enum LineSegment {
     struct Vertical {
         let vertical: Line.Vertical
         let y0: Scalar, y1: Scalar
+        var yRange: ClosedRange<Scalar> { .init(start: y0, end: y1) }
     }
 
     case slopeIntercept(SlopeIntercept)
     case vertical(Vertical)
+
+    static func vertical(x: Scalar, y0: Scalar, y1: Scalar) -> Self { .vertical(.init(vertical: .init(x: x), y0: y0, y1: y1)) }
+    static func horizontal(y: Scalar, x0: Scalar, x1: Scalar) -> Self { .slopeIntercept(.init(slopeIntercept: .init(m: 0, b: y), x0: x0, x1: x1)) }
 
     init(p0: Point2, p1: Point2) {
         switch Line(p0: p0, p1: p1) {
@@ -95,7 +100,7 @@ extension LineSegment: Parametrizable {
 extension LineSegment.SlopeIntercept: InverseParametrizable {
     func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) {
         var p = line.projected(from: point)
-        let x = ClosedRange(start: x0, end: x1).clamp(p.x)
+        let x = xRange.clamp(p.x)
         p = Point2(x, slopeIntercept.y(x: x))
         return (t: (x - x0) / (x1 - x0), p.distance(to: point))
     }
@@ -104,7 +109,7 @@ extension LineSegment.SlopeIntercept: InverseParametrizable {
 extension LineSegment.Vertical: InverseParametrizable {
     func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) {
         var p = line.projected(from: point)
-        let y = ClosedRange(start: y0, end: y1).clamp(p.y)
+        let y = yRange.clamp(p.y)
         p = Point2(vertical.x, y)
         return (t: (y - y0) / (y1 - y0), p.distance(to: point))
     }
@@ -112,6 +117,32 @@ extension LineSegment.Vertical: InverseParametrizable {
 
 extension LineSegment: InverseParametrizable {
     func paramT(closestTo point: Point2) -> (t: Scalar, distance: Scalar) { impl.paramT(closestTo: point) }
+}
+
+extension CGRect {
+    var left: LineSegment { .vertical(x: minX, y0: minY, y1: maxY) }
+    var right: LineSegment { .vertical(x: maxX, y0: minY, y1: maxY) }
+    var top: LineSegment { .horizontal(y: minY, x0: minX, x1: maxX) }
+    var bottom: LineSegment { .horizontal(y: maxY, x0: minX, x1: maxX) }
+}
+
+extension Line {
+    func intersection(with segment: LineSegment) -> Point2? {
+        guard let p = intersection(with: segment.line) else { return nil }
+        switch segment {
+        case let .slopeIntercept(segment):
+            return segment.xRange.contains(p.x) ? p : nil
+        case let .vertical(segment):
+            return segment.yRange.contains(p.y) ? p : nil
+        }
+    }
+
+    func segment(in rect: CGRect) -> LineSegment? {
+        let edges = [rect.left, rect.top, rect.right, rect.bottom]
+        let intersections = edges.compactMap { intersection(with: $0) }
+        guard intersections.count == 2 else { return nil }
+        return .init(p0: intersections[0], p1: intersections[1])
+    }
 }
 
 // MARK: - Polyline

@@ -24,7 +24,7 @@ private extension Background {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
             if case let .cartesian(cartesian) = selector.grid {
-                CartesianGridView(grid: cartesian, viewport: $0, color: .gray, type: .background)
+                GridView(grid: cartesian, viewport: $0, color: .gray, type: .background)
             }
         }
     }

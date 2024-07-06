@@ -112,6 +112,7 @@
 		57B703F92C37955A00B60F36 /* CartesianGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703F82C37955A00B60F36 /* CartesianGridView.swift */; };
 		57B703FB2C38418000B60F36 /* ThrottledState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FA2C38418000B60F36 /* ThrottledState.swift */; };
 		57B703FD2C38460A00B60F36 /* IsometricGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FC2C38460A00B60F36 /* IsometricGridView.swift */; };
+		57B703FF2C38F18500B60F36 /* LineSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FE2C38F18500B60F36 /* LineSet.swift */; };
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
 		57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */; };
@@ -254,6 +255,7 @@
 		57B703F82C37955A00B60F36 /* CartesianGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartesianGridView.swift; sourceTree = "<group>"; };
 		57B703FA2C38418000B60F36 /* ThrottledState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottledState.swift; sourceTree = "<group>"; };
 		57B703FC2C38460A00B60F36 /* IsometricGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsometricGridView.swift; sourceTree = "<group>"; };
+		57B703FE2C38F18500B60F36 /* LineSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSet.swift; sourceTree = "<group>"; };
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
 		57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyService.swift; sourceTree = "<group>"; };
@@ -566,6 +568,7 @@
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
+				57B703FE2C38F18500B60F36 /* LineSet.swift */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -953,6 +956,7 @@
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
 				571B9B412C14A9B600AAD516 /* Operators.swift in Sources */,
+				57B703FF2C38F18500B60F36 /* LineSet.swift in Sources */,
 				57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */,
 				571B9B2A2C148B0800AAD516 /* FocusedPathService.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,

@@ -23,6 +23,8 @@ extension CGRect {
     var midPoint: Point2 { .init(midX, midY) }
     var maxPoint: Point2 { .init(maxX, maxY) }
     var center: Point2 { midPoint }
+    var minXmaxYPoint: Point2 { .init(minX, maxY) }
+    var maxXminYPoint: Point2 { .init(maxX, minY) }
 
     func clampingOffset(by rect: CGRect) -> Vector2 {
         let offsetMax = maxPoint.offset(to: maxPoint.clamped(by: rect))

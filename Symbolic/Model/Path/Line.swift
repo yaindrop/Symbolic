@@ -20,9 +20,12 @@ enum Line {
     case slopeIntercept(SlopeIntercept)
     case vertical(Vertical)
 
+    static func vertical(x: Scalar) -> Line { .vertical(.init(x: x)) }
+    static func horizontal(y: Scalar) -> Line { .slopeIntercept(.init(m: 0, b: y)) }
+
     init(p0: Point2, p1: Point2) {
         if p0.x == p1.x {
-            self = .vertical(.init(x: p0.x))
+            self = .vertical(x: p0.x)
         } else {
             let m = (p1.y - p0.y) / (p1.x - p0.x)
             let b = p0.y - m * p0.x
@@ -35,20 +38,61 @@ enum Line {
 
 private protocol LineImpl: Equatable {
     func projected(from point: Point2) -> Point2
+    func parallel(to other: Line) -> Bool
+    func intersection(with other: Line) -> Point2?
 }
 
 extension Line.SlopeIntercept: LineImpl {
-    func projected(from point: Point2) -> Point2 { self.point(x: (m * (point.y - b) + point.x) / (m * m + 1)) }
+    func projected(from point: Point2) -> Point2 {
+        self.point(x: (m * (point.y - b) + point.x) / (m * m + 1))
+    }
+
+    func parallel(to other: Line) -> Bool {
+        switch other {
+        case let .slopeIntercept(other): m == other.m
+        case .vertical: false
+        }
+    }
+
+    func intersection(with other: Line) -> Point2? {
+        switch other {
+        case let .slopeIntercept(other):
+            guard m != other.m else { return nil }
+            return point(x: (other.b - b) / (m - other.m))
+        case let .vertical(other):
+            return point(x: other.x)
+        }
+    }
 }
 
 extension Line.Vertical: LineImpl {
-    func projected(from point: Point2) -> Point2 { self.point(y: point.y) }
+    func projected(from point: Point2) -> Point2 {
+        self.point(y: point.y)
+    }
+
+    func parallel(to other: Line) -> Bool {
+        switch other {
+        case .slopeIntercept: false
+        case .vertical: true
+        }
+    }
+
+    func intersection(with other: Line) -> Point2? {
+        switch other {
+        case let .slopeIntercept(other): other.point(x: x)
+        case .vertical: nil
+        }
+    }
 }
 
 extension Line: LineImpl {
     fileprivate typealias Impl = any LineImpl
 
     func projected(from point: Point2) -> Point2 { impl.projected(from: point) }
+
+    func parallel(to other: Line) -> Bool { impl.parallel(to: other) }
+
+    func intersection(with other: Line) -> Point2? { impl.intersection(with: other) }
 
     private var impl: Impl {
         switch self {

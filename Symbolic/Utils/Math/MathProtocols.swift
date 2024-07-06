@@ -91,6 +91,16 @@ extension Scalar: NearlyEquatable {
     public static func ~== (lhs: Self, rhs: Self) -> Bool { lhs.nearlyEqual(rhs) }
 }
 
+extension Scalar {
+    var isNearlyInteger: Bool { rounded() ~== self }
+
+    var nearlyInteger: Int? {
+        let rounded = rounded()
+        guard rounded ~== self else { return nil }
+        return Int(rounded)
+    }
+}
+
 extension Vector2: NearlyEquatable {
     func nearlyEqual(_ v: Self, epsilon: Scalar = Scalar.nearlyEqualEpsilon) -> Bool {
         dx.nearlyEqual(v.dx, epsilon: epsilon) && dy.nearlyEqual(v.dy, epsilon: epsilon)

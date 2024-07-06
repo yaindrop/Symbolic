@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 // MARK: - Line
 
@@ -23,12 +23,34 @@ enum Line {
     static func vertical(x: Scalar) -> Line { .vertical(.init(x: x)) }
     static func horizontal(y: Scalar) -> Line { .slopeIntercept(.init(m: 0, b: y)) }
 
+    static var xAxis: Line { .horizontal(y: 0) }
+    static var yAxis: Line { .vertical(x: 0) }
+
     init(p0: Point2, p1: Point2) {
         if p0.x == p1.x {
             self = .vertical(x: p0.x)
         } else {
             let m = (p1.y - p0.y) / (p1.x - p0.x)
             let b = p0.y - m * p0.x
+            self = .slopeIntercept(.init(m: m, b: b))
+        }
+    }
+
+    init(point: Point2, angle: Angle) {
+        if angle.isRight {
+            self = .vertical(x: point.x)
+        } else {
+            let m = tan(angle.radians)
+            let b = point.y - m * point.x
+            self = .slopeIntercept(.init(m: m, b: b))
+        }
+    }
+
+    init(b: Scalar, angle: Angle) {
+        if angle.isRight {
+            self = .vertical(x: 0)
+        } else {
+            let m = tan(angle.radians)
             self = .slopeIntercept(.init(m: m, b: b))
         }
     }
@@ -93,6 +115,10 @@ extension Line: LineImpl {
     func parallel(to other: Line) -> Bool { impl.parallel(to: other) }
 
     func intersection(with other: Line) -> Point2? { impl.intersection(with: other) }
+
+    func distance(to point: Point2) -> Scalar {
+        point.distance(to: projected(from: point))
+    }
 
     private var impl: Impl {
         switch self {

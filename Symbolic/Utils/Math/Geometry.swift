@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 // MARK: - CGSize
 
@@ -67,4 +67,12 @@ extension CGRect {
         guard let first = rects.first else { return nil }
         self = rects.dropFirst().reduce(into: first) { bounds, rect in bounds = bounds.union(rect) }
     }
+}
+
+extension Angle {
+    var isFull: Bool { (radians / (2 * Scalar.pi)).isNearlyInteger }
+
+    var isStraight: Bool { (radians / (Scalar.pi)).isNearlyInteger && !isFull }
+
+    var isRight: Bool { (radians / (Scalar.pi / 2)).isNearlyInteger && !isFull && !isStraight }
 }

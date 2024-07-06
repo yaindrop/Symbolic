@@ -15,7 +15,17 @@ enum Grid: Equatable {
         let cellSize: Scalar
     }
 
+    struct Isometric: Equatable {
+        let cellSize: Scalar
+    }
+
+    struct Radial: Equatable {
+        let radialSize: Scalar, angularDivision: Int
+    }
+
     case cartesian(Cartesian)
+    case isometric(Isometric)
+    case radial(Radial)
 }
 
 // MARK: - Snappable
@@ -32,6 +42,7 @@ extension Grid: Snappable {
     func snap(_ point: Point2) -> Point2 {
         switch self {
         case let .cartesian(cartesian): cartesian.snap(point)
+        default: point
         }
     }
 }

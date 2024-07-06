@@ -3,13 +3,8 @@ import SwiftUI
 // MARK: - ViewportInfo
 
 struct ViewportInfo: Equatable {
-    let origin: Point2 // world position of the view origin (top left corner)
-    let scale: Scalar
-
-    init(origin: Point2 = .zero, scale: Scalar = 1) {
-        self.origin = origin
-        self.scale = scale
-    }
+    var origin: Point2 = .zero // world position of the view origin (top left corner)
+    var scale: Scalar = 1
 }
 
 extension ViewportInfo {
@@ -24,8 +19,8 @@ extension ViewportInfo: CustomStringConvertible {
 // MARK: - SizedViewportInfo
 
 struct SizedViewportInfo: Equatable {
-    let size: CGSize
-    let info: ViewportInfo
+    var size: CGSize
+    var info: ViewportInfo
 
     init(size: CGSize, info: ViewportInfo) {
         self.size = size

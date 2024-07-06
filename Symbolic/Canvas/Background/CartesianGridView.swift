@@ -35,11 +35,9 @@ extension CartesianGridView {
     var targetCellSize: Scalar { 24 }
 
     var worldRect: CGRect { viewport.worldRect }
-    var toWorld: CGAffineTransform { viewport.viewToWorld }
-    var toView: CGAffineTransform { viewport.worldToView }
 
     var adjustedCellSize: Scalar {
-        let targetSizeInWorld = (Vector2.unitX * targetCellSize).applying(toWorld).dx
+        let targetSizeInWorld = (Vector2.unitX * targetCellSize).applying(viewport.viewToWorld).dx
         let adjustedRatio = pow(2, max(0, ceil(log2(targetSizeInWorld / grid.cellSize))))
         return grid.cellSize * adjustedRatio
     }
@@ -70,19 +68,18 @@ extension CartesianGridView {
 
     func path(type: CartesianGridLineType) -> SUPath {
         let cellSize = adjustedCellSize
-        let maxInView = worldRect.maxPoint.applying(toView)
         return .init { path in
             for x in horizontal {
                 guard lineType(cellSize: cellSize, at: x) == type else { continue }
-                let x = Point2(x, 0).applying(toView).x
+                let x = Point2(x, 0).applying(viewport.worldToView).x
                 path.move(to: .init(x, 0))
-                path.addLine(to: .init(x, maxInView.y))
+                path.addLine(to: .init(x, viewport.size.height))
             }
             for y in vertical {
                 guard lineType(cellSize: cellSize, at: y) == type else { continue }
-                let y = Point2(0, y).applying(toView).y
+                let y = Point2(0, y).applying(viewport.worldToView).y
                 path.move(to: .init(0, y))
-                path.addLine(to: .init(maxInView.x, y))
+                path.addLine(to: .init(viewport.size.width, y))
             }
         }
     }
@@ -127,11 +124,7 @@ private struct CartesianGridHorizontalLabel: View, TracedView {
 }
 
 private extension CartesianGridHorizontalLabel {
-    var toView: CGAffineTransform { viewport.worldToView }
-
-    var xInView: Scalar { Point2(x, 0).applying(toView).x }
-
-    var maxInView: Point2 { viewport.worldRect.maxPoint.applying(toView) }
+    var xInView: Scalar { Point2(x, 0).applying(viewport.worldToView).x }
 
     var text: String { "\(Int(x))" }
 
@@ -155,7 +148,7 @@ private extension CartesianGridHorizontalLabel {
             .font(.caption2)
             .sizeReader { size = $0 }
             .rotationEffect(rotated ? .degrees(-45) : .zero)
-            .position(.init(xInView, maxInView.y))
+            .position(.init(xInView, viewport.size.height))
             .offset(.init(offset))
     }
 }
@@ -174,9 +167,7 @@ private struct CartesianGridVerticalLabel: View, TracedView {
 }
 
 private extension CartesianGridVerticalLabel {
-    var toView: CGAffineTransform { viewport.worldToView }
-
-    var yInView: Scalar { Point2(0, y).applying(toView).y }
+    var yInView: Scalar { Point2(0, y).applying(viewport.worldToView).y }
 
     var text: String { "\(Int(y))" }
 

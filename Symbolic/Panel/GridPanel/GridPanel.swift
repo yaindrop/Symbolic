@@ -11,6 +11,8 @@ struct GridPanel: View, TracedView, SelectorHolder {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
+    @State private var isIsometric: Bool = false
+
     @State private var sliderValue: Scalar = 8
     @ThrottledState(configs: .init(duration: 0.5, leading: false)) private var cellSize: Scalar = 8
 
@@ -21,18 +23,20 @@ struct GridPanel: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onChange(of: sliderValue) { cellSize = sliderValue }
-                .onChange(of: cellSize) {
-//                    global.grid.update(grid: .cartesian(.init(cellSize: cellSize)))
-                    global.grid.update(grid: .isometric(.init(interval: cellSize, angle0: .degrees(angle0Value), angle1: .degrees(angle1Value))))
-                }
-                .onChange(of: angle0Value) {
-                    global.grid.update(grid: .isometric(.init(interval: cellSize, angle0: .degrees(angle0Value), angle1: .degrees(angle1Value))))
-                }
-                .onChange(of: angle1Value) {
-                    global.grid.update(grid: .isometric(.init(interval: cellSize, angle0: .degrees(angle0Value), angle1: .degrees(angle1Value))))
-                }
+                .onChange(of: isIsometric) { update() }
+                .onChange(of: cellSize) { update() }
+                .onChange(of: angle0Value) { update() }
+                .onChange(of: angle1Value) { update() }
         }
     } }
+
+    func update() {
+        if isIsometric {
+            global.grid.update(grid: .isometric(.init(interval: cellSize, angle0: .degrees(angle0Value), angle1: .degrees(angle1Value))))
+        } else {
+            global.grid.update(grid: .cartesian(.init(interval: cellSize)))
+        }
+    }
 }
 
 // MARK: private
@@ -46,43 +50,66 @@ extension GridPanel {
 
     @ViewBuilder private var events: some View {
         PanelSection(name: "Preview") {
+            Picker("", selection: $isIsometric.animation()) {
+                Text("Cartesian").tag(false)
+                Text("Isometric").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .padding(12)
             GridPreview()
         }
-        PanelSection(name: "Configs") {
-            HStack {
-                Text("Cell Size")
-                Spacer()
-                Slider(
-                    value: $sliderValue,
-                    in: 2 ... 64,
-                    step: 1,
-                    onEditingChanged: { if !$0 { _cellSize.throttleEnd() }}
-                )
-                Text("\(Int(sliderValue))")
+        if !isIsometric {
+            PanelSection(name: "Cartesian") {
+                HStack {
+                    Text("Cell Size")
+                    Spacer()
+                    Slider(
+                        value: $sliderValue,
+                        in: 2 ... 64,
+                        step: 1,
+                        onEditingChanged: { if !$0 { _cellSize.throttleEnd() }}
+                    )
+                    Text("\(Int(sliderValue))")
+                }
+                .padding(12)
             }
-            .padding(12)
-            HStack {
-                Text("Angle0")
-                Spacer()
-                Slider(
-                    value: $angle0Value,
-                    in: -90 ... 90,
-                    step: 5
-                )
-                Text("\(Int(angle0Value))")
+        } else {
+            PanelSection(name: "Isometric") {
+                HStack {
+                    Text("Cell Size")
+                    Spacer()
+                    Slider(
+                        value: $sliderValue,
+                        in: 2 ... 64,
+                        step: 1,
+                        onEditingChanged: { if !$0 { _cellSize.throttleEnd() }}
+                    )
+                    Text("\(Int(sliderValue))")
+                }
+                .padding(12)
+                HStack {
+                    Text("Angle0")
+                    Spacer()
+                    Slider(
+                        value: $angle0Value,
+                        in: -90 ... 90,
+                        step: 5
+                    )
+                    Text("\(Int(angle0Value))")
+                }
+                .padding(12)
+                HStack {
+                    Text("Angle1")
+                    Spacer()
+                    Slider(
+                        value: $angle1Value,
+                        in: -90 ... 90,
+                        step: 5
+                    )
+                    Text("\(Int(angle1Value))")
+                }
+                .padding(12)
             }
-            .padding(12)
-            HStack {
-                Text("Angle1")
-                Spacer()
-                Slider(
-                    value: $angle1Value,
-                    in: -90 ... 90,
-                    step: 5
-                )
-                Text("\(Int(angle1Value))")
-            }
-            .padding(12)
         }
     }
 }

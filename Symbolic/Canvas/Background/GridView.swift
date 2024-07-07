@@ -9,12 +9,12 @@ struct ParallelLineSet {
         self.angle = angle
     }
 
-    init(line: Line) {
-        switch line {
-        case let .vertical(line): interval = line.x
-        case let .slopeIntercept(line): interval = line.b * cos(line.angle.radians)
-        }
-        angle = line.angle
+    static func vertical(interval: Scalar) -> Self {
+        .init(interval: interval, angle: .radians(.pi / 2))
+    }
+
+    static func horizontal(interval: Scalar) -> Self {
+        .init(interval: interval, angle: .radians(0))
     }
 }
 
@@ -84,32 +84,33 @@ extension GridView {
         }
     }
 
-    var targetCellSize: Scalar { 24 }
+    var targetInterval: Scalar { 24 }
 
     var worldRect: CGRect { viewport.worldRect }
 
-    var cellSize: Scalar {
-        switch grid {
-        case let .cartesian(grid): grid.interval
-        case let .isometric(grid): grid.interval
-        case .radial: 1
-        }
-    }
-
-    var adjustedCellSize: Scalar {
-        let targetSizeInWorld = (Vector2.unitX * targetCellSize).applying(viewport.viewToWorld).dx
-        let adjustedRatio = pow(2, max(0, ceil(log2(targetSizeInWorld / cellSize))))
-        return cellSize * adjustedRatio
+    func adjustedInterval(interval: Scalar) -> Scalar {
+        let targetIntervalInWorld = (Vector2.unitX * targetInterval).applying(viewport.viewToWorld).dx
+        let adjustedRatio = pow(2, max(0, ceil(log2(targetIntervalInWorld / interval))))
+        return interval * adjustedRatio
     }
 
     var lineSets: [ParallelLineSet] {
-        let adjustedCellSize = adjustedCellSize
         switch grid {
-        case .cartesian:
-            return [.init(line: .vertical(x: adjustedCellSize)), .init(line: .horizontal(y: adjustedCellSize))]
+        case let .cartesian(grid):
+            let adjuested = adjustedInterval(interval: grid.interval)
+            return [.vertical(interval: adjuested), .horizontal(interval: adjuested)]
         case let .isometric(grid):
-            let b = adjustedCellSize * (tan(grid.angle0.radians) + tan(-grid.angle1.radians))
-            return [.init(line: .init(b: b, angle: grid.angle0)), .init(line: .init(b: b, angle: grid.angle1)), .init(line: .vertical(x: adjustedCellSize))]
+            let adjuested = adjustedInterval(interval: grid.interval)
+            let b = grid.interval * abs(tan(grid.angle0.radians) + tan(-grid.angle1.radians))
+            if Scalar(b).nearlyEqual(0, epsilon: 0.1) {
+                return [.init(interval: adjuested, angle: grid.angle0), .vertical(interval: adjuested)]
+            } else {
+                let interval0 = b * cos(grid.angle0.radians)
+                let interval1 = b * cos(grid.angle1.radians)
+                let adjuested0 = adjustedInterval(interval: interval0)
+                let adjuested1 = adjustedInterval(interval: interval1)
+                return [.init(interval: adjuested0, angle: grid.angle0), .init(interval: adjuested1, angle: grid.angle1), .vertical(interval: adjuested)]
+            }
         case .radial: return []
         }
     }

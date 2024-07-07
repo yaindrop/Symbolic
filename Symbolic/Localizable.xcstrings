@@ -97,6 +97,9 @@
         }
       }
     },
+    "Cartesian" : {
+
+    },
     "Cell Size" : {
 
     },
@@ -137,6 +140,9 @@
 
     },
     "Input" : {
+
+    },
+    "Isometric" : {
 
     },
     "Merge" : {

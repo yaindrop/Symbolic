@@ -1,7 +1,7 @@
 import Foundation
 
 class GridStore: Store {
-    @Trackable var gridStack: [Grid] = [.cartesian(.init(interval: 8))]
+    @Trackable var gridStack: [Grid] = [.init(kind: .cartesian(.init(interval: 8)))]
 }
 
 extension GridStore {

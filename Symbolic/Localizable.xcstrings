@@ -178,6 +178,9 @@
     "Panels" : {
 
     },
+    "Primary" : {
+
+    },
     "Properties" : {
 
     },
@@ -188,6 +191,9 @@
 
     },
     "Rename %@" : {
+
+    },
+    "Secondary" : {
 
     },
     "Settings" : {
@@ -203,6 +209,12 @@
 
     },
     "Tap to multi-select" : {
+
+    },
+    "Tertiary" : {
+
+    },
+    "Tint Color" : {
 
     },
     "True" : {

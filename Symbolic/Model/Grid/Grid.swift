@@ -10,7 +10,10 @@ extension Snappable {
     }
 }
 
-enum Grid: Equatable {
+struct Grid: Equatable {
+    var tintColor: Color = .gray
+    var kind: Kind
+
     struct Cartesian: Equatable {
         var interval: Scalar
     }
@@ -23,11 +26,13 @@ enum Grid: Equatable {
         var radialSize: Scalar, angularDivision: Int
     }
 
-    case cartesian(Cartesian)
-    case isometric(Isometric)
-    case radial(Radial)
-
     enum Case { case cartesian, isometric, radial }
+
+    enum Kind: Equatable {
+        case cartesian(Cartesian)
+        case isometric(Isometric)
+        case radial(Radial)
+    }
 }
 
 extension Grid.Cartesian: Animatable {
@@ -60,7 +65,7 @@ extension Grid.Cartesian: Snappable {
 
 extension Grid: Snappable {
     func snap(_ point: Point2) -> Point2 {
-        switch self {
+        switch kind {
         case let .cartesian(cartesian): cartesian.snap(point)
         default: point
         }

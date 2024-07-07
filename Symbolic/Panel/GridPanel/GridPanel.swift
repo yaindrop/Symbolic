@@ -9,15 +9,22 @@ struct GridPanel: View, TracedView, SelectorHolder {
 
     @SelectorWrapper var selector
 
+    @State private var tintColor = Color.red
+
     @State private var gridCase: Grid.Case = .cartesian
 
     var body: some View { trace {
         setupSelector {
             content
+                .onChange(of: tintColor) {
+                    var grid = selector.grid
+                    grid.tintColor = tintColor
+                    global.grid.update(grid: grid)
+                }
                 .onChange(of: gridCase) {
                     switch gridCase {
-                    case .cartesian: global.grid.update(grid: .cartesian(.init(interval: 8)))
-                    case .isometric: global.grid.update(grid: .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30))))
+                    case .cartesian: global.grid.update(grid: .init(kind: .cartesian(.init(interval: 8))))
+                    case .isometric: global.grid.update(grid: .init(kind: .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))))
                     case .radial: break
                     }
                 }
@@ -30,8 +37,31 @@ struct GridPanel: View, TracedView, SelectorHolder {
 extension GridPanel {
     @ViewBuilder private var content: some View {
         PanelBody(name: "Grid", maxHeight: 600) { _ in
+            stack
             preview
             configs
+        }
+    }
+
+    @ViewBuilder private var stack: some View {
+        PanelSection(name: "Stack") {
+            HStack {
+                Picker("", selection: $gridCase) {
+                    Text("Primary").tag(Grid.Case.cartesian)
+                    Text("Secondary").tag(Grid.Case.isometric)
+                    Text("Tertiary").tag(Grid.Case.isometric)
+                }
+                .pickerStyle(.segmented)
+                Button {} label: {
+                    Image(systemName: "plus")
+                }
+                .buttonBorderShape(.capsule)
+                .buttonStyle(.bordered)
+            }
+            .padding(12)
+            ColorPicker("Tint Color", selection: $tintColor)
+                .font(.callout)
+                .padding(12)
         }
     }
 
@@ -49,7 +79,7 @@ extension GridPanel {
             }
             .pickerStyle(.segmented)
             .padding(12)
-            switch selector.grid {
+            switch selector.grid.kind {
             case let .cartesian(grid): GridCartesianConfigs(grid: grid)
             case let .isometric(grid): GridIsometricConfigs(grid: grid)
             case .radial: EmptyView()
@@ -90,7 +120,7 @@ private struct GridPreview: View, TracedView, SelectorHolder {
 
 private extension GridPreview {
     var interval: Scalar {
-        switch selector.grid {
+        switch selector.grid.kind {
         case let .cartesian(grid):
             grid.interval != 0 ? grid.interval : 1
         case let .isometric(grid):
@@ -101,12 +131,14 @@ private extension GridPreview {
 
     @ViewBuilder var gridView: some View {
         AnimatableReader(viewport) { viewport in
-            switch selector.grid {
+            switch selector.grid.kind {
             case let .cartesian(grid):
-                GridView(grid: .cartesian(grid), viewport: viewport, color: .red, type: .preview)
+                AnimatableReader(grid) {
+                    GridView(grid: .init(kind: .cartesian($0)), viewport: viewport, color: selector.grid.tintColor, type: .preview)
+                }
             case let .isometric(grid):
                 AnimatableReader(grid) {
-                    GridView(grid: .isometric(.init(interval: grid.interval, angle0: $0.angle0, angle1: $0.angle1)), viewport: viewport, color: .red, type: .preview)
+                    GridView(grid: .init(kind: .isometric($0)), viewport: viewport, color: selector.grid.tintColor, type: .preview)
                 }
             default: EmptyView()
             }
@@ -137,7 +169,7 @@ private struct GridCartesianConfigs: View, TracedView {
     var body: some View { trace {
         content
             .onChange(of: interval) {
-                global.grid.update(grid: .cartesian(.init(interval: interval)))
+                global.grid.update(grid: .init(kind: .cartesian(.init(interval: interval))))
             }
     } }
 }
@@ -180,7 +212,7 @@ private struct GridIsometricConfigs: View, TracedView {
     var body: some View { trace {
         content
             .onChange(of: EquatableTuple(interval, angle0, angle1)) {
-                global.grid.update(grid: .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1))))
+                global.grid.update(grid: .init(kind: .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)))))
             }
     } }
 }

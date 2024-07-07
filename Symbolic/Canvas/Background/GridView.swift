@@ -95,7 +95,7 @@ extension GridView {
     }
 
     var lineSets: [ParallelLineSet] {
-        switch grid {
+        switch grid.kind {
         case let .cartesian(grid):
             let adjuested = adjustedInterval(interval: grid.interval)
             return [.vertical(interval: adjuested), .horizontal(interval: adjuested)]

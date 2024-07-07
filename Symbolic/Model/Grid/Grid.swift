@@ -26,6 +26,8 @@ enum Grid: Equatable {
     case cartesian(Cartesian)
     case isometric(Isometric)
     case radial(Radial)
+
+    enum Case { case cartesian, isometric, radial }
 }
 
 extension Grid.Cartesian: Animatable {

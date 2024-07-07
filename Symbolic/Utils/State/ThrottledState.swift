@@ -26,6 +26,8 @@ struct ThrottledState<Value>: DynamicProperty {
         func throttleStart(_ newValue: Value) {
             if configs.leading {
                 value = newValue
+            } else {
+                throttledValue = newValue
             }
             task = .init { @MainActor [weak self] in
                 guard let self else { return }

@@ -9,34 +9,20 @@ struct GridPanel: View, TracedView, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    @StateObject private var scrollViewModel = ManagedScrollViewModel()
-
-    @State private var isIsometric: Bool = false
-
-    @State private var sliderValue: Scalar = 8
-    @ThrottledState(configs: .init(duration: 0.5, leading: false)) private var cellSize: Scalar = 8
-
-    @State private var angle0Value: Scalar = 30
-    @State private var angle1Value: Scalar = -30
+    @State private var gridCase: Grid.Case = .cartesian
 
     var body: some View { trace {
         setupSelector {
             content
-                .onChange(of: sliderValue) { cellSize = sliderValue }
-                .onChange(of: isIsometric) { update() }
-                .onChange(of: cellSize) { update() }
-                .onChange(of: angle0Value) { update() }
-                .onChange(of: angle1Value) { update() }
+                .onChange(of: gridCase) {
+                    switch gridCase {
+                    case .cartesian: global.grid.update(grid: .cartesian(.init(interval: 8)))
+                    case .isometric: global.grid.update(grid: .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30))))
+                    case .radial: break
+                    }
+                }
         }
     } }
-
-    func update() {
-        if isIsometric {
-            global.grid.update(grid: .isometric(.init(interval: cellSize, angle0: .degrees(angle0Value), angle1: .degrees(angle1Value))))
-        } else {
-            global.grid.update(grid: .cartesian(.init(interval: cellSize)))
-        }
-    }
 }
 
 // MARK: private
@@ -44,95 +30,66 @@ struct GridPanel: View, TracedView, SelectorHolder {
 extension GridPanel {
     @ViewBuilder private var content: some View {
         PanelBody(name: "Grid", maxHeight: 600) { _ in
-            events
+            preview
+            configs
         }
     }
 
-    @ViewBuilder private var events: some View {
+    @ViewBuilder private var preview: some View {
         PanelSection(name: "Preview") {
-            Picker("", selection: $isIsometric.animation()) {
-                Text("Cartesian").tag(false)
-                Text("Isometric").tag(true)
+            GridPreview()
+        }
+    }
+
+    @ViewBuilder private var configs: some View {
+        PanelSection(name: "Configs") {
+            Picker("", selection: $gridCase) {
+                Text("Cartesian").tag(Grid.Case.cartesian)
+                Text("Isometric").tag(Grid.Case.isometric)
             }
             .pickerStyle(.segmented)
             .padding(12)
-            GridPreview()
-        }
-        if !isIsometric {
-            PanelSection(name: "Cartesian") {
-                HStack {
-                    Text("Cell Size")
-                    Spacer()
-                    Slider(
-                        value: $sliderValue,
-                        in: 2 ... 64,
-                        step: 1,
-                        onEditingChanged: { if !$0 { _cellSize.throttleEnd() }}
-                    )
-                    Text("\(Int(sliderValue))")
-                }
-                .padding(12)
-            }
-        } else {
-            PanelSection(name: "Isometric") {
-                HStack {
-                    Text("Cell Size")
-                    Spacer()
-                    Slider(
-                        value: $sliderValue,
-                        in: 2 ... 64,
-                        step: 1,
-                        onEditingChanged: { if !$0 { _cellSize.throttleEnd() }}
-                    )
-                    Text("\(Int(sliderValue))")
-                }
-                .padding(12)
-                HStack {
-                    Text("Angle0")
-                    Spacer()
-                    Slider(
-                        value: $angle0Value,
-                        in: -90 ... 90,
-                        step: 5
-                    )
-                    Text("\(Int(angle0Value))")
-                }
-                .padding(12)
-                HStack {
-                    Text("Angle1")
-                    Spacer()
-                    Slider(
-                        value: $angle1Value,
-                        in: -90 ... 90,
-                        step: 5
-                    )
-                    Text("\(Int(angle1Value))")
-                }
-                .padding(12)
+            switch selector.grid {
+            case let .cartesian(grid): GridCartesianConfigs(grid: grid)
+            case let .isometric(grid): GridIsometricConfigs(grid: grid)
+            case .radial: EmptyView()
             }
         }
     }
 }
 
-struct GridPreview: View, TracedView, SelectorHolder {
+// MARK: - GridPreview
+
+private struct GridPreview: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected(configs: .init(animation: .fast), { global.grid.grid }) var grid
     }
 
     @SelectorWrapper var selector
 
+    @ThrottledState(configs: .init(duration: 1, leading: false)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
+
     @State private var size: CGSize = .zero
 
     var body: some View { trace {
         setupSelector {
             content
+                .onChange(of: selector.grid, initial: true) {
+                    let scale = size.width > 0 ? size.width / (5 * interval) : 1
+                    viewport = .init(size: size, center: .zero, scale: scale)
+                    if viewport.size == .zero {
+                        _viewport.throttleEnd()
+                    }
+                }
                 .animation(.fast, value: viewport)
         }
     } }
 }
 
-extension GridPreview {
-    var cellSize: Scalar {
+// MARK: private
+
+private extension GridPreview {
+    var interval: Scalar {
         switch selector.grid {
         case let .cartesian(grid):
             grid.interval != 0 ? grid.interval : 1
@@ -140,11 +97,6 @@ extension GridPreview {
             grid.interval != 0 ? grid.interval : 1
         default: 1
         }
-    }
-
-    var viewport: SizedViewportInfo {
-        let scale = size.width > 0 ? size.width / (5 * cellSize) : 1
-        return .init(size: size, center: .zero, scale: scale)
     }
 
     @ViewBuilder var gridView: some View {
@@ -167,5 +119,111 @@ extension GridPreview {
             .aspectRatio(1, contentMode: .fill)
             .sizeReader { size = $0 }
             .clipped()
+    }
+}
+
+// MARK: - GridCartesianConfigs
+
+private struct GridCartesianConfigs: View, TracedView {
+    let grid: Grid.Cartesian
+
+    @State private var interval: Scalar
+
+    init(grid: Grid.Cartesian) {
+        self.grid = grid
+        interval = grid.interval
+    }
+
+    var body: some View { trace {
+        content
+            .onChange(of: interval) {
+                global.grid.update(grid: .cartesian(.init(interval: interval)))
+            }
+    } }
+}
+
+// MARK: private
+
+private extension GridCartesianConfigs {
+    @ViewBuilder var content: some View {
+        HStack {
+            Text("Interval")
+            Spacer()
+            Slider(
+                value: $interval,
+                in: 2 ... 64,
+                step: 1
+            )
+            Text("\(Int(grid.interval))")
+        }
+        .font(.callout)
+        .padding(12)
+    }
+}
+
+// MARK: - GridIsometricConfigs
+
+private struct GridIsometricConfigs: View, TracedView {
+    let grid: Grid.Isometric
+
+    @State private var interval: Scalar
+    @State private var angle0: Scalar
+    @State private var angle1: Scalar
+
+    init(grid: Grid.Isometric) {
+        self.grid = grid
+        interval = grid.interval
+        angle0 = grid.angle0.degrees
+        angle1 = grid.angle1.degrees
+    }
+
+    var body: some View { trace {
+        content
+            .onChange(of: EquatableTuple(interval, angle0, angle1)) {
+                global.grid.update(grid: .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1))))
+            }
+    } }
+}
+
+// MARK: private
+
+private extension GridIsometricConfigs {
+    @ViewBuilder var content: some View {
+        Group {
+            HStack {
+                Text("Interval")
+                Spacer()
+                Slider(
+                    value: $interval,
+                    in: 2 ... 64,
+                    step: 1
+                )
+                Text("\(Int(grid.interval))")
+            }
+            .padding(12)
+            HStack {
+                Text("Angle 0")
+                Spacer()
+                Slider(
+                    value: $angle0,
+                    in: -90 ... 90,
+                    step: 5
+                )
+                Text("\(grid.angle0.shortDescription)")
+            }
+            .padding(12)
+            HStack {
+                Text("Angle 1")
+                Spacer()
+                Slider(
+                    value: $angle1,
+                    in: -90 ... 90,
+                    step: 5
+                )
+                Text("\(grid.angle1.shortDescription)")
+            }
+            .padding(12)
+        }
+        .font(.callout)
     }
 }

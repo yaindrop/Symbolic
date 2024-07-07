@@ -9,8 +9,6 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    @StateObject private var scrollViewModel = ManagedScrollViewModel()
-
     var body: some View { trace {
         setupSelector {
             content

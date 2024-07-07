@@ -34,10 +34,10 @@
     "%lld" : {
 
     },
-    "Angle0" : {
+    "Angle 0" : {
 
     },
-    "Angle1" : {
+    "Angle 1" : {
 
     },
     "Back" : {
@@ -100,9 +100,6 @@
     "Cartesian" : {
 
     },
-    "Cell Size" : {
-
-    },
     "Copy" : {
 
     },
@@ -140,6 +137,9 @@
 
     },
     "Input" : {
+
+    },
+    "Interval" : {
 
     },
     "Isometric" : {

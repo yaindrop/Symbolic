@@ -6,7 +6,7 @@ struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.viewport.sizedInfo }) var viewport
-        @Selected(configs: .init(animation: .fast), { global.grid.grid }) var grid
+        @Selected(configs: .init(animation: .fast), { global.grid.active }) var grid
     }
 
     @SelectorWrapper var selector

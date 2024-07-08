@@ -4,10 +4,14 @@ import SwiftUI
 
 struct GridPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.grid.grid }) var grid
+        @Selected(configs: .init(animation: .fast), { global.grid.active }) var grid
+        @Selected(configs: .init(animation: .fast), { global.grid.gridStack }) var gridStack
+        @Selected(configs: .init(animation: .fast), { global.grid.activeIndex }) var activeIndex
     }
 
     @SelectorWrapper var selector
+
+    @State private var index = 0
 
     @State private var tintColor = Color.red
 
@@ -16,17 +20,34 @@ struct GridPanel: View, TracedView, SelectorHolder {
     var body: some View { trace {
         setupSelector {
             content
+                .onChange(of: selector.activeIndex, initial: true) {
+                    index = selector.activeIndex
+                }
+                .onChange(of: selector.grid.tintColor, initial: true) {
+                    tintColor = selector.grid.tintColor
+                }
+                .onChange(of: selector.grid.case, initial: true) {
+                    gridCase = selector.grid.case
+                }
+                .onChange(of: index) {
+                    guard index != selector.activeIndex else { return }
+                    global.grid.setActive(index)
+                }
                 .onChange(of: tintColor) {
+                    guard tintColor != selector.grid.tintColor else { return }
                     var grid = selector.grid
                     grid.tintColor = tintColor
                     global.grid.update(grid: grid)
                 }
                 .onChange(of: gridCase) {
+                    guard gridCase != selector.grid.case else { return }
+                    var grid = selector.grid
                     switch gridCase {
-                    case .cartesian: global.grid.update(grid: .init(kind: .cartesian(.init(interval: 8))))
-                    case .isometric: global.grid.update(grid: .init(kind: .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))))
+                    case .cartesian: grid.kind = .cartesian(.init(interval: 8))
+                    case .isometric: grid.kind = .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))
                     case .radial: break
                     }
+                    global.grid.update(grid: grid)
                 }
         }
     } }
@@ -37,82 +58,114 @@ struct GridPanel: View, TracedView, SelectorHolder {
 extension GridPanel {
     @ViewBuilder private var content: some View {
         PanelBody(name: "Grid", maxHeight: 600) { _ in
-            stack
             preview
+            tabs
             configs
         }
     }
 
-    @ViewBuilder private var stack: some View {
-        PanelSection(name: "Stack") {
+    @ViewBuilder private var tabs: some View {
+        if selector.gridStack.count > 1 {
             HStack {
-                Picker("", selection: $gridCase) {
-                    Text("Primary").tag(Grid.Case.cartesian)
-                    Text("Secondary").tag(Grid.Case.isometric)
-                    Text("Tertiary").tag(Grid.Case.isometric)
+                Picker("", selection: $index) {
+                    Text("Primary").tag(0)
+                    Text("Secondary").tag(1)
+                    if selector.gridStack.count > 2 {
+                        Text("Tertiary").tag(2)
+                    }
                 }
                 .pickerStyle(.segmented)
-                Button {} label: {
-                    Image(systemName: "plus")
-                }
-                .buttonBorderShape(.capsule)
-                .buttonStyle(.bordered)
             }
-            .padding(12)
-            ColorPicker("Tint Color", selection: $tintColor)
-                .font(.callout)
-                .padding(12)
         }
     }
 
     @ViewBuilder private var preview: some View {
         PanelSection(name: "Preview") {
-            GridPreview()
+            GridPreview(grid: selector.grid)
         }
     }
 
     @ViewBuilder private var configs: some View {
         PanelSection(name: "Configs") {
-            Picker("", selection: $gridCase) {
-                Text("Cartesian").tag(Grid.Case.cartesian)
-                Text("Isometric").tag(Grid.Case.isometric)
+            HStack {
+                Text("Tint Color")
+                Spacer()
+                ColorPicker("", selection: $tintColor)
             }
-            .pickerStyle(.segmented)
+            .font(.callout)
             .padding(12)
+
+            Divider()
+                .padding(.leading, 12)
+
+            HStack {
+                Text("Type")
+                Spacer()
+                Picker("Type", selection: $gridCase) {
+                    Text("Cartesian").tag(Grid.Case.cartesian)
+                    Text("Isometric").tag(Grid.Case.isometric)
+                    Text("Radial").tag(Grid.Case.radial)
+                }
+            }
+            .font(.callout)
+            .padding(12)
+
+            Divider()
+                .padding(.leading, 12)
+
             switch selector.grid.kind {
             case let .cartesian(grid): GridCartesianConfigs(grid: grid)
             case let .isometric(grid): GridIsometricConfigs(grid: grid)
             case .radial: EmptyView()
             }
+
+            Divider()
+                .padding(.leading, 12)
+
+            HStack {
+                Button(role: .destructive) {
+                    global.grid.delete()
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonBorderShape(.capsule)
+                .buttonStyle(.bordered)
+                .disabled(selector.gridStack.count == 1)
+                Spacer()
+                Button {
+                    global.grid.add()
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .buttonBorderShape(.capsule)
+                .buttonStyle(.bordered)
+                .disabled(selector.gridStack.count == 3)
+            }
+            .padding(12)
         }
     }
 }
 
 // MARK: - GridPreview
 
-private struct GridPreview: View, TracedView, SelectorHolder {
-    class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.grid.grid }) var grid
-    }
-
-    @SelectorWrapper var selector
+private struct GridPreview: View, TracedView {
+    let grid: Grid
 
     @ThrottledState(configs: .init(duration: 1, leading: false)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
 
     @State private var size: CGSize = .zero
 
     var body: some View { trace {
-        setupSelector {
-            content
-                .onChange(of: selector.grid, initial: true) {
-                    let scale = size.width > 0 ? size.width / (5 * interval) : 1
-                    viewport = .init(size: size, center: .zero, scale: scale)
-                    if viewport.size == .zero {
-                        _viewport.throttleEnd()
-                    }
+        content
+            .onChange(of: grid, initial: true) {
+                let scale = size.width > 0 ? size.width / (5 * interval) : 1
+                viewport = .init(size: size, center: .zero, scale: scale)
+                if viewport.size == .zero {
+                    _viewport.throttleEnd()
                 }
-                .animation(.fast, value: viewport)
-        }
+            }
+            .animation(.fast, value: viewport)
+
     } }
 }
 
@@ -120,7 +173,7 @@ private struct GridPreview: View, TracedView, SelectorHolder {
 
 private extension GridPreview {
     var interval: Scalar {
-        switch selector.grid.kind {
+        switch grid.kind {
         case let .cartesian(grid):
             grid.interval != 0 ? grid.interval : 1
         case let .isometric(grid):
@@ -131,14 +184,14 @@ private extension GridPreview {
 
     @ViewBuilder var gridView: some View {
         AnimatableReader(viewport) { viewport in
-            switch selector.grid.kind {
+            switch grid.kind {
             case let .cartesian(grid):
                 AnimatableReader(grid) {
-                    GridView(grid: .init(kind: .cartesian($0)), viewport: viewport, color: selector.grid.tintColor, type: .preview)
+                    GridView(grid: .init(kind: .cartesian($0)), viewport: viewport, color: self.grid.tintColor, type: .preview)
                 }
             case let .isometric(grid):
                 AnimatableReader(grid) {
-                    GridView(grid: .init(kind: .isometric($0)), viewport: viewport, color: selector.grid.tintColor, type: .preview)
+                    GridView(grid: .init(kind: .isometric($0)), viewport: viewport, color: self.grid.tintColor, type: .preview)
                 }
             default: EmptyView()
             }
@@ -169,7 +222,9 @@ private struct GridCartesianConfigs: View, TracedView {
     var body: some View { trace {
         content
             .onChange(of: interval) {
-                global.grid.update(grid: .init(kind: .cartesian(.init(interval: interval))))
+                var grid = global.grid.active
+                grid.kind = .cartesian(.init(interval: interval))
+                global.grid.update(grid: grid)
             }
     } }
 }
@@ -212,7 +267,9 @@ private struct GridIsometricConfigs: View, TracedView {
     var body: some View { trace {
         content
             .onChange(of: EquatableTuple(interval, angle0, angle1)) {
-                global.grid.update(grid: .init(kind: .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)))))
+                var grid = global.grid.active
+                grid.kind = .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)))
+                global.grid.update(grid: grid)
             }
     } }
 }
@@ -233,6 +290,9 @@ private extension GridIsometricConfigs {
                 Text("\(Int(grid.interval))")
             }
             .padding(12)
+
+            Divider()
+
             HStack {
                 Text("Angle 0")
                 Spacer()
@@ -244,6 +304,9 @@ private extension GridIsometricConfigs {
                 Text("\(grid.angle0.shortDescription)")
             }
             .padding(12)
+
+            Divider()
+
             HStack {
                 Text("Angle 1")
                 Spacer()

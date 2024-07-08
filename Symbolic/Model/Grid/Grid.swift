@@ -11,8 +11,15 @@ extension Snappable {
 }
 
 struct Grid: Equatable {
-    var tintColor: Color = .gray
     var kind: Kind
+    var tintColor: Color = .gray
+    var `case`: Case {
+        switch kind {
+        case .cartesian: .cartesian
+        case .isometric: .isometric
+        case .radial: .radial
+        }
+    }
 
     struct Cartesian: Equatable {
         var interval: Scalar

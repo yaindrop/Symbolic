@@ -14,6 +14,11 @@ extension Dictionary {
 }
 
 extension Array {
+    func value(at index: Int) -> Element? {
+        guard indices.contains(index) else { return nil }
+        return self[index]
+    }
+
     func shifted(by size: Int) -> [Element?] {
         guard size < count else { return .init(repeating: nil, count: count) }
         return suffix(count - size) + .init(repeating: nil, count: size)

@@ -7,5 +7,7 @@ class IncrementalIdGenerator {
         return id
     }
 
+    var current: Int { next - 1 }
+
     private var next: Int = 0
 }

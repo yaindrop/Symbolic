@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 // MARK: - GridPanel
@@ -21,6 +22,7 @@ struct GridPanel: View, TracedView, SelectorHolder {
                     global.grid.setActive(index)
                 }
                 .bind(selector.activeIndex, to: $index)
+                .environmentObject(ViewModel())
         }
     } }
 }
@@ -97,13 +99,23 @@ extension GridPanel {
     }
 }
 
+// MARK: - ViewModel
+
+private extension GridPanel {
+    class ViewModel: ObservableObject {
+        @State var intervalCommit = PassthroughSubject<Void, Never>()
+    }
+}
+
 // MARK: - Preview
 
 private extension GridPanel {
     struct Preview: View, TracedView {
+        @EnvironmentObject private var viewModel: GridPanel.ViewModel
+
         let grid: Grid
 
-        @ThrottledState(configs: .init(duration: 1, leading: false)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
+        @DelayedState(configs: .init(duration: 1)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
 
         @State private var size: CGSize = .zero
 
@@ -111,7 +123,7 @@ private extension GridPanel {
             content
                 .onChange(of: grid, initial: true) { updateViewport() }
                 .animation(.fast, value: viewport)
-
+                .onReceive(viewModel.intervalCommit) { _viewport.delayEnd() }
         } }
     }
 }
@@ -123,7 +135,7 @@ private extension GridPanel.Preview {
         let scale = size.width > 0 ? size.width / (7 * interval) : 1
         viewport = .init(size: size, center: .zero, scale: scale)
         if viewport.size == .zero {
-            _viewport.throttleEnd()
+            _viewport.delayEnd()
         }
     }
 
@@ -235,6 +247,8 @@ private extension GridPanel {
     struct CartesianConfigs: View, TracedView {
         let grid: Grid.Cartesian
 
+        @EnvironmentObject private var viewModel: GridPanel.ViewModel
+
         @State private var interval: Scalar
 
         init(grid: Grid.Cartesian) {
@@ -266,7 +280,8 @@ private extension GridPanel.CartesianConfigs {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
-                step: 1
+                step: 1,
+                onEditingChanged: { _ in viewModel.intervalCommit.send() }
             )
             Text("\(Int(grid.interval))")
         }
@@ -280,6 +295,8 @@ private extension GridPanel.CartesianConfigs {
 private extension GridPanel {
     struct IsometricConfigs: View, TracedView {
         let grid: Grid.Isometric
+
+        @EnvironmentObject private var viewModel: GridPanel.ViewModel
 
         @State private var interval: Scalar
         @State private var angle0: Scalar
@@ -319,7 +336,8 @@ private extension GridPanel.IsometricConfigs {
                 Slider(
                     value: $interval,
                     in: 2 ... 64,
-                    step: 1
+                    step: 1,
+                    onEditingChanged: { _ in viewModel.intervalCommit.send() }
                 )
                 Text("\(Int(grid.interval))")
             }

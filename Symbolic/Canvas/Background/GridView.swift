@@ -41,6 +41,10 @@ extension ParallelLineSet {
         }
     }
 
+    func line(closestTo p: Point2) -> Line {
+        line(at: index(closestTo: p))
+    }
+
     func range(in rect: CGRect) -> ClosedRange<Int> {
         let extrema = [rect.minPoint, rect.minXmaxYPoint, rect.maxXminYPoint, rect.maxPoint].map { index(closestTo: $0) }
         return .init(start: extrema.min()!, end: extrema.max()!)
@@ -86,32 +90,15 @@ extension GridView {
 
     var targetInterval: Scalar { 24 }
 
-    var worldRect: CGRect { viewport.worldRect }
+    var targetIntervalInWorld: Scalar { Vector2(targetInterval, 0).applying(viewport.viewToWorld).dx }
 
-    func adjustedInterval(interval: Scalar) -> Scalar {
-        let targetIntervalInWorld = (Vector2.unitX * targetInterval).applying(viewport.viewToWorld).dx
-        let adjustedRatio = pow(2, max(0, ceil(log2(targetIntervalInWorld / interval))))
-        return interval * adjustedRatio
-    }
+    var worldRect: CGRect { viewport.worldRect }
 
     var lineSets: [ParallelLineSet] {
         switch grid.kind {
-        case let .cartesian(grid):
-            let adjuested = adjustedInterval(interval: grid.interval)
-            return [.vertical(interval: adjuested), .horizontal(interval: adjuested)]
-        case let .isometric(grid):
-            let adjuested = adjustedInterval(interval: grid.interval)
-            let b = grid.interval * abs(tan(grid.angle0.radians) + tan(-grid.angle1.radians))
-            if Scalar(b).nearlyEqual(0, epsilon: 0.1) {
-                return [.init(interval: adjuested, angle: grid.angle0), .vertical(interval: adjuested)]
-            } else {
-                let interval0 = b * cos(grid.angle0.radians)
-                let interval1 = b * cos(grid.angle1.radians)
-                let adjuested0 = adjustedInterval(interval: interval0)
-                let adjuested1 = adjustedInterval(interval: interval1)
-                return [.init(interval: adjuested0, angle: grid.angle0), .init(interval: adjuested1, angle: grid.angle1), .vertical(interval: adjuested)]
-            }
-        case .radial: return []
+        case let .cartesian(grid): grid.lineSets(target: targetIntervalInWorld)
+        case let .isometric(grid): grid.lineSets(target: targetIntervalInWorld)
+        case .radial: []
         }
     }
 

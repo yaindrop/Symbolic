@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - ThrottledState
+
 @propertyWrapper
 struct ThrottledState<Value>: DynamicProperty {
     struct Configs {
@@ -69,6 +71,8 @@ struct ThrottledState<Value>: DynamicProperty {
     }
 }
 
+// MARK: - DelayedState
+
 @propertyWrapper
 struct DelayedState<Value>: DynamicProperty {
     struct Configs {
@@ -80,8 +84,7 @@ struct DelayedState<Value>: DynamicProperty {
 
         private let configs: Configs
         private var delayedValue: Value?
-        private var task: Task<Void, Never>?
-        private var idGen = IncrementalIdGenerator()
+        private var task: DispatchWorkItem?
 
         func on(newValue: Value) {
             delayedValue = newValue
@@ -90,13 +93,12 @@ struct DelayedState<Value>: DynamicProperty {
 
         func setupTask() {
             task?.cancel()
-            let id = idGen.generate()
-            task = .init { @MainActor [weak self] in
+            let task = DispatchWorkItem { [weak self] in
                 guard let self else { return }
-                try? await Task.sleep(for: .milliseconds(UInt64(configs.duration * Double(MSEC_PER_SEC))))
-                guard id == idGen.current else { return }
                 delayEnd()
             }
+            DispatchQueue.main.asyncAfter(deadline: .now() + configs.duration, execute: task)
+            self.task = task
         }
 
         func delayEnd() {

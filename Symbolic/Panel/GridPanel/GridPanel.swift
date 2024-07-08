@@ -115,7 +115,7 @@ private extension GridPanel {
 
         let grid: Grid
 
-        @DelayedState(configs: .init(duration: 1)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
+        @DelayedState(configs: .init(duration: 0.5)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
 
         @State private var size: CGSize = .zero
 

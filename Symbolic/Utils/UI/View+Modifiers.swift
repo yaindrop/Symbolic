@@ -139,3 +139,24 @@ extension View {
         clipShape(UnevenRoundedRectangle(cornerRadii: .init(topLeading: topLeading, bottomLeading: bottomLeading, bottomTrailing: bottomTrailing, topTrailing: topTrailing)))
     }
 }
+
+// MARK: - bind
+
+extension View {
+    func bind<Value: Equatable>(_ value: Value, to binding: Binding<Value>) -> some View {
+        onChange(of: value, initial: true) {
+            if binding.wrappedValue != value {
+                binding.wrappedValue = value
+            }
+        }
+    }
+
+    func bind<Value, T: Equatable>(_ value: Value, to binding: Binding<T>, mapper: @escaping (Value) -> T) -> some View {
+        onChange(of: mapper(value), initial: true) {
+            let value = mapper(value)
+            if binding.wrappedValue != value {
+                binding.wrappedValue = value
+            }
+        }
+    }
+}

@@ -101,9 +101,10 @@ private extension PanelBody {
             .font(.headline)
             .padding(.vertical, 8)
             .aligned(axis: .horizontal, .center)
-            .padding(12)
+            .padding(.horizontal, 12)
             .invisibleSoildOverlay()
             .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
+            .padding(.vertical, 12)
             .background {
                 Rectangle()
                     .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) {

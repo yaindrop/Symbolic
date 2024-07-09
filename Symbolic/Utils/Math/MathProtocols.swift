@@ -145,24 +145,34 @@ extension CGSize: Transformable {
 
 // MARK: - ShortDescribable
 
+func decimalFormatStyle<Value>(maxFractionLength: Int = 3) -> FloatingPointFormatStyle<Value> {
+    FloatingPointFormatStyle<Value>().precision(.fractionLength(0 ... maxFractionLength))
+}
+
+extension BinaryFloatingPoint {
+    func decimalFormatted(maxFractionLength: Int = 3) -> String {
+        formatted(decimalFormatStyle(maxFractionLength: maxFractionLength))
+    }
+}
+
 protocol ShortDescribable {
     var shortDescription: String { get }
 }
 
 extension Scalar {
-    var shortDescription: String { String(format: "%.3f", self) }
+    var shortDescription: String { "\(decimalFormatted())" }
 }
 
 extension Vector2 {
-    var shortDescription: String { String(format: "(%.1f, %.1f)", dx, dy) }
+    var shortDescription: String { "(\(dx.decimalFormatted(maxFractionLength: 1)), \(dy.decimalFormatted(maxFractionLength: 1)))" }
 }
 
 extension Point2 {
-    var shortDescription: String { String(format: "(%.1f, %.1f)", x, y) }
+    var shortDescription: String { "(\(x.decimalFormatted(maxFractionLength: 1)), \(y.decimalFormatted(maxFractionLength: 1)))" }
 }
 
 extension CGSize {
-    var shortDescription: String { String(format: "(%.1f, %.1f)", width, height) }
+    var shortDescription: String { "(\(width.decimalFormatted(maxFractionLength: 1)), \(height.decimalFormatted(maxFractionLength: 1)))" }
 }
 
 extension CGRect {
@@ -170,5 +180,5 @@ extension CGRect {
 }
 
 extension Angle {
-    var shortDescription: String { String(format: "%.3f°", degrees) }
+    var shortDescription: String { "\(degrees.decimalFormatted())°" }
 }

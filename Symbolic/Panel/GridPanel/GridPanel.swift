@@ -63,8 +63,7 @@ extension GridPanel {
         PanelSection(name: "Configs") {
             Configs(grid: selector.grid)
 
-            Divider()
-                .padding(.leading, 12)
+            ConfigsDivider()
 
             switch selector.grid.kind {
             case let .cartesian(grid): CartesianConfigs(grid: grid)
@@ -72,10 +71,9 @@ extension GridPanel {
             case .radial: EmptyView()
             }
 
-            Divider()
-                .padding(.leading, 12)
+            ConfigsDivider()
 
-            HStack {
+            ConfigsRow {
                 Button(role: .destructive) {
                     global.grid.delete()
                 } label: {
@@ -94,16 +92,40 @@ extension GridPanel {
                 .buttonStyle(.bordered)
                 .disabled(selector.gridStack.count == 3)
             }
-            .padding(12)
         }
     }
 }
 
-// MARK: - ViewModel
+// MARK: - components
 
 private extension GridPanel {
     class ViewModel: ObservableObject {
         @State var intervalCommit = PassthroughSubject<Void, Never>()
+    }
+
+    struct ConfigsRow<Content: View>: View {
+        var label: String? = nil
+        @ViewBuilder let content: () -> Content
+
+        var body: some View {
+            HStack {
+                if let label {
+                    Text(label)
+                        .font(.callout)
+                    Spacer()
+                }
+                content()
+            }
+            .frame(height: 36)
+            .padding(size: .init(12, 6))
+        }
+    }
+
+    struct ConfigsDivider: View {
+        var body: some View {
+            Divider()
+                .padding(.leading, 12)
+        }
     }
 }
 
@@ -216,28 +238,19 @@ private extension GridPanel {
 
 private extension GridPanel.Configs {
     @ViewBuilder var content: some View {
-        HStack {
-            Text("Color")
-            Spacer()
+        GridPanel.ConfigsRow(label: "Color") {
             ColorPicker("", selection: $tintColor)
         }
-        .font(.callout)
-        .padding(12)
 
-        Divider()
-            .padding(.leading, 12)
+        GridPanel.ConfigsDivider()
 
-        HStack {
-            Text("Type")
-            Spacer()
-            Picker("Type", selection: $gridCase) {
+        GridPanel.ConfigsRow(label: "Type") {
+            Picker("", selection: $gridCase) {
                 Text("Cartesian").tag(Grid.Case.cartesian)
                 Text("Isometric").tag(Grid.Case.isometric)
                 Text("Radial").tag(Grid.Case.radial)
             }
         }
-        .font(.callout)
-        .padding(12)
     }
 }
 
@@ -274,9 +287,7 @@ private extension GridPanel.CartesianConfigs {
     }
 
     @ViewBuilder var content: some View {
-        HStack {
-            Text("Interval")
-            Spacer()
+        GridPanel.ConfigsRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -284,9 +295,8 @@ private extension GridPanel.CartesianConfigs {
                 onEditingChanged: { _ in viewModel.intervalCommit.send() }
             )
             Text("\(Int(grid.interval))")
+                .font(.callout)
         }
-        .font(.callout)
-        .padding(12)
     }
 }
 
@@ -329,50 +339,39 @@ private extension GridPanel.IsometricConfigs {
     }
 
     @ViewBuilder var content: some View {
-        Group {
-            HStack {
-                Text("Interval")
-                Spacer()
-                Slider(
-                    value: $interval,
-                    in: 2 ... 64,
-                    step: 1,
-                    onEditingChanged: { _ in viewModel.intervalCommit.send() }
-                )
-                Text("\(Int(grid.interval))")
-            }
-            .padding(12)
-
-            Divider()
-                .padding(.leading, 12)
-
-            HStack {
-                Text("Angle 0")
-                Spacer()
-                Slider(
-                    value: $angle0,
-                    in: -90 ... 90,
-                    step: 5
-                )
-                Text("\(grid.angle0.shortDescription)")
-            }
-            .padding(12)
-
-            Divider()
-                .padding(.leading, 12)
-
-            HStack {
-                Text("Angle 1")
-                Spacer()
-                Slider(
-                    value: $angle1,
-                    in: -90 ... 90,
-                    step: 5
-                )
-                Text("\(grid.angle1.shortDescription)")
-            }
-            .padding(12)
+        GridPanel.ConfigsRow(label: "Interval") {
+            Slider(
+                value: $interval,
+                in: 2 ... 64,
+                step: 1,
+                onEditingChanged: { _ in viewModel.intervalCommit.send() }
+            )
+            Text("\(Int(grid.interval))")
+                .font(.callout)
         }
-        .font(.callout)
+
+        GridPanel.ConfigsDivider()
+
+        GridPanel.ConfigsRow(label: "Angle 0") {
+            Slider(
+                value: $angle0,
+                in: -90 ... 90,
+                step: 5
+            )
+            Text("\(grid.angle0.shortDescription)")
+                .font(.callout)
+        }
+
+        GridPanel.ConfigsDivider()
+
+        GridPanel.ConfigsRow(label: "Angle 1") {
+            Slider(
+                value: $angle1,
+                in: -90 ... 90,
+                step: 5
+            )
+            Text("\(grid.angle1.shortDescription)")
+                .font(.callout)
+        }
     }
 }

@@ -188,7 +188,7 @@ private extension GridVerticalLabel {
 
     var xInView: Scalar { Point2(x, 0).applying(viewport.worldToView).x }
 
-    var text: String { "\(Int(x))" }
+    var text: String { x.decimalFormatted(maxFractionLength: 1) }
 
     var rotated: Bool { x >= 1000 || x <= -1000 }
 
@@ -233,7 +233,7 @@ private extension GridHorizontalLabel {
 
     var yInView: Scalar { Point2(0, y).applying(viewport.worldToView).y }
 
-    var text: String { "\(Int(y))" }
+    var text: String { y.decimalFormatted(maxFractionLength: 1) }
 
     var padding: Scalar { 3 }
 

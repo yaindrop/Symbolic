@@ -36,7 +36,7 @@ private extension PanelSection {
                     .if(selector.appearance == .floatingSecondary) {
                         $0.fill(.background.secondary.opacity(0.8))
                     } else: {
-                        $0.fill(.ultraThickMaterial)
+                        $0.fill(.ultraThinMaterial)
                     }
                     .clipRounded(radius: 12)
             }

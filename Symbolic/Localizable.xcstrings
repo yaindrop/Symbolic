@@ -34,12 +34,6 @@
     "%lld" : {
 
     },
-    "Angle 0" : {
-
-    },
-    "Angle 1" : {
-
-    },
     "Back" : {
 
     },
@@ -100,9 +94,6 @@
     "Cartesian" : {
 
     },
-    "Color" : {
-
-    },
     "Copy" : {
 
     },
@@ -140,9 +131,6 @@
 
     },
     "Input" : {
-
-    },
-    "Interval" : {
 
     },
     "Isometric" : {
@@ -221,9 +209,6 @@
 
     },
     "True" : {
-
-    },
-    "Type" : {
 
     },
     "Unfocus" : {

@@ -54,7 +54,7 @@ struct AnglePicker: View {
             if isInputMode {
                 DecimalInput(title: isRadians ? "Radians" : "Degrees", inputNumber: $inputNumber)
             } else {
-                Text(angleValue.formatted(decimalFormatStyle()))
+                Text(angleValue.decimalFormatted())
             }
             Button {
                 let angle = inputAngle

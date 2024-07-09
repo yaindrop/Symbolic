@@ -52,14 +52,14 @@ struct SizePicker: View {
             if isInputMode {
                 DecimalInput(title: "Width", inputNumber: $inputW)
             } else {
-                Text(size.width.formatted(decimalFormatStyle()))
+                Text(size.width.decimalFormatted())
             }
             Rectangle().frame(width: 1).background(Color.label).padding(.horizontal, 4)
             Image(systemName: "arrow.up.and.down")
             if isInputMode {
                 DecimalInput(title: "Height", inputNumber: $inputH)
             } else {
-                Text(size.height.formatted(decimalFormatStyle()))
+                Text(size.height.decimalFormatted())
             }
         }
         .font(.footnote.monospacedDigit())

@@ -9,10 +9,6 @@ func sanitized(decimalStr: String) -> String {
     return (dotSplit.first ?? "") + (remaining.isEmpty ? "" : "." + remaining.joined(separator: ""))
 }
 
-func decimalFormatStyle<Value>(maxFredgeDigits: Int = 3) -> FloatingPointFormatStyle<Value> {
-    FloatingPointFormatStyle<Value>().precision(.fractionLength(0 ... maxFredgeDigits))
-}
-
 struct DecimalInput: View {
     var body: some View {
         TextField(title, text: $inputText)

@@ -52,14 +52,14 @@ struct PositionPicker: View {
             if isInputMode {
                 DecimalInput(title: "X", inputNumber: $inputX)
             } else {
-                Text(position.x.formatted(decimalFormatStyle()))
+                Text(position.x.decimalFormatted())
             }
             Rectangle().frame(width: 1).background(Color.label).padding(.horizontal, 4)
             Image(systemName: "arrow.down")
             if isInputMode {
                 DecimalInput(title: "Y", inputNumber: $inputY)
             } else {
-                Text(position.y.formatted(decimalFormatStyle()))
+                Text(position.y.decimalFormatted())
             }
         }
         .font(.footnote.monospacedDigit())

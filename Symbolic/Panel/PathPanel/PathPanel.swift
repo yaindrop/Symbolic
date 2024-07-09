@@ -56,7 +56,7 @@ private extension PathPanel {
             .font(.callout)
             .foregroundStyle(Color.label.opacity(0.5))
             .frame(maxWidth: .infinity, idealHeight: 72)
-            .background(.ultraThickMaterial)
+            .background(.ultraThinMaterial)
             .clipRounded(radius: 12)
     }
 }

@@ -9,6 +9,8 @@ extension CGSize {
 
     func with(height: Scalar) -> Self { .init(width: width, height: height) }
 
+    static prefix func - (size: Self) -> Self { .init(width: -size.width, height: -size.height) }
+
     init(_ vector: Vector2) { self.init(vector.dx, vector.dy) }
 
     init(_ width: Scalar, _ height: Scalar) { self.init(width: width, height: height) }

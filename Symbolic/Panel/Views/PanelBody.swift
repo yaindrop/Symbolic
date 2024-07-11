@@ -15,6 +15,8 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
 
     @SelectorWrapper var selector
 
+    @State private var titleSize: CGSize = .zero
+
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     var body: some View { trace {
@@ -69,6 +71,7 @@ private extension PanelBody {
     var floatingBody: some View {
         VStack(spacing: 0) {
             floatingTitle
+                .sizeReader { titleSize = $0 }
             ManagedScrollView(model: scrollViewModel) { proxy in
                 VStack(spacing: 12) {
                     bodyContent(proxy)
@@ -76,7 +79,7 @@ private extension PanelBody {
                 .padding(.all.subtracting(.top), 12)
             }
             .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-            .frame(maxWidth: .infinity, maxHeight: maxHeight)
+            .frame(maxWidth: .infinity, maxHeight: maxHeight - titleSize.height)
             .fixedSize(horizontal: false, vertical: true)
         }
         .background {

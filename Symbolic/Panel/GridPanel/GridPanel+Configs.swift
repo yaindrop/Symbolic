@@ -1,5 +1,30 @@
 import SwiftUI
 
+private struct ConfigsRow<Content: View>: View {
+    var label: String? = nil
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        HStack {
+            if let label {
+                Text(label)
+                    .font(.callout)
+                Spacer()
+            }
+            content()
+        }
+        .frame(height: 36)
+        .padding(size: .init(12, 6))
+    }
+}
+
+private struct ConfigsDivider: View {
+    var body: some View {
+        Divider()
+            .padding(.leading, 12)
+    }
+}
+
 // MARK: - Configs
 
 extension GridPanel {
@@ -42,33 +67,6 @@ extension GridPanel {
 }
 
 private extension GridPanel.Configs {
-    struct Row<Content: View>: View {
-        var label: String? = nil
-        @ViewBuilder let content: () -> Content
-
-        var body: some View {
-            HStack {
-                if let label {
-                    Text(label)
-                        .font(.callout)
-                    Spacer()
-                }
-                content()
-            }
-            .frame(height: 36)
-            .padding(size: .init(12, 6))
-        }
-    }
-
-    struct Divider: View {
-        var body: some View {
-            SwiftUI.Divider()
-                .padding(.leading, 12)
-        }
-    }
-}
-
-private extension GridPanel.Configs {
     @ViewBuilder var content: some View {
         colorRow
 
@@ -86,13 +84,13 @@ private extension GridPanel.Configs {
     }
 
     var colorRow: some View {
-        Row(label: "Color") {
+        ConfigsRow(label: "Color") {
             ColorPicker("", selection: $tintColor)
         }
     }
 
     var typeRow: some View {
-        Row(label: "Type") {
+        ConfigsRow(label: "Type") {
             Picker("", selection: $gridCase) {
                 Text("Cartesian").tag(Grid.Case.cartesian)
                 Text("Isometric").tag(Grid.Case.isometric)
@@ -110,7 +108,7 @@ private extension GridPanel.Configs {
     }
 
     var editRow: some View {
-        Row {
+        ConfigsRow {
             Button(role: .destructive) {
                 global.grid.delete()
             } label: {
@@ -169,7 +167,7 @@ private extension GridPanel.Configs.Cartesian {
     }
 
     var intervalRow: some View {
-        GridPanel.Configs.Row(label: "Interval") {
+        ConfigsRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -223,17 +221,17 @@ private extension GridPanel.Configs.Isometric {
     @ViewBuilder var content: some View {
         intervalRow
 
-        GridPanel.Configs.Divider()
+        ConfigsDivider()
 
         angle0Row
 
-        GridPanel.Configs.Divider()
+        ConfigsDivider()
 
         angle1Row
     }
 
     var intervalRow: some View {
-        GridPanel.Configs.Row(label: "Interval") {
+        ConfigsRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -246,7 +244,7 @@ private extension GridPanel.Configs.Isometric {
     }
 
     var angle0Row: some View {
-        GridPanel.Configs.Row(label: "Angle 0") {
+        ConfigsRow(label: "Angle 0") {
             Slider(
                 value: $angle0,
                 in: -90 ... 90,
@@ -258,7 +256,7 @@ private extension GridPanel.Configs.Isometric {
     }
 
     var angle1Row: some View {
-        GridPanel.Configs.Row(label: "Angle 1") {
+        ConfigsRow(label: "Angle 1") {
             Slider(
                 value: $angle1,
                 in: -90 ... 90,

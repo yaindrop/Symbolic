@@ -37,7 +37,7 @@ extension GridPanel {
 
 extension GridPanel {
     @ViewBuilder private var content: some View {
-        PanelBody(name: "Grid", maxHeight: 600) { _ in
+        PanelBody(name: "Grid") { _ in
             tabs
             preview
             configs

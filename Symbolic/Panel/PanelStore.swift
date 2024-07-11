@@ -79,6 +79,12 @@ extension PanelStore {
         return .floatingHidden
     }
 
+    func floatingHeight(id: UUID) -> Scalar {
+        let maxHeight = rootRect.height - 24 * 2
+        guard let panel = get(id: id) else { return maxHeight }
+        return min(panel.targetHeight, maxHeight)
+    }
+
     func floatingAlign(id: UUID) -> PlaneInnerAlign {
         guard let panel = get(id: id) else { return .topLeading }
         return moving(id: id)?.align ?? panel.align
@@ -250,6 +256,11 @@ extension PanelStore {
 // MARK: resizing
 
 extension PanelStore {
+    func onTargetHeight(panelId: UUID, height: Scalar) {
+        guard let panel = get(id: panelId) else { return }
+        update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.targetHeight = height } })
+    }
+
     func onResized(panelId: UUID, size: CGSize) {
         let _r = subtracer.range("resize \(panelId) to \(size)"); defer { _r() }
         guard let panel = get(id: panelId) else { return }

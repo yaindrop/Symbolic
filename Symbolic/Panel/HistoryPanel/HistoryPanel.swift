@@ -88,7 +88,7 @@ struct HistoryPanel: View, TracedView, SelectorHolder {
 
 extension HistoryPanel {
     @ViewBuilder private var content: some View {
-        PanelBody(name: "History", maxHeight: 400) { _ in
+        PanelBody(name: "History") { _ in
             events
         }
     }

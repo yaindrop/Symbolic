@@ -20,7 +20,7 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 
 extension ItemPanel {
     @ViewBuilder private var content: some View {
-        PanelBody(name: "Items", maxHeight: 400) { _ in
+        PanelBody(name: "Items") { _ in
             items
         }
     }

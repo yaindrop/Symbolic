@@ -22,7 +22,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
 
 private extension PathPanel {
     @ViewBuilder var content: some View {
-        PanelBody(name: "Path", maxHeight: 400) { proxy in
+        PanelBody(name: "Path") { proxy in
             nodes
                 .onChange(of: selector.focusedNodeId) {
                     guard let id = selector.focusedNodeId else { return }

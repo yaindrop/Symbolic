@@ -13,13 +13,14 @@ struct PanelData: Identifiable {
     let id: UUID = .init()
     let view: AnyView
 
+    var targetHeight: Scalar = 400
     var size: CGSize = .zero
     var align: PlaneInnerAlign = .topLeading
 }
 
 extension PanelData: EquatableBy {
     var equatableBy: some Equatable {
-        id; size; align
+        id; targetHeight; size; align
     }
 }
 

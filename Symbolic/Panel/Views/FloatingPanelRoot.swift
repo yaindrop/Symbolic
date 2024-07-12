@@ -11,8 +11,9 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
     class Selector: SelectorBase {
         @Selected({ global.panel.get(id: $0.panelId) }) var panel
         @Selected({ global.panel.floatingPanelWidth }) var width
-        @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
         @Selected({ global.panel.floatingAlign(id: $0.panelId) }) var align
+        @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
+        @Selected({ global.panel.moving(id: $0.panelId)?.ended ?? false }) var ended
         @Selected(configs: .init(animation: .faster), { global.panel.floatingGap(id: $0.panelId) }) var gap
         @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
     }
@@ -22,6 +23,11 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
     var body: some View { trace {
         setupSelector(.init(panelId: panelId)) {
             content
+                .onChange(of: selector.ended) {
+                    if selector.ended {
+                        global.panel.resetMoving(panelId: panelId)
+                    }
+                }
         }
     } }
 }

@@ -33,6 +33,7 @@ struct MovingPanelData: Equatable {
     var globalDragPosition: Point2
     var offset: Vector2
     var align: PlaneInnerAlign
+    var ended: Bool = false
 }
 
 extension MovingPanelData: TriviallyCloneable {}

@@ -9,7 +9,7 @@ struct PanelView: View, TracedView, ComputedSelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.panel.panelFrameMap.value(key: $0.panelId) ?? .zero }) var frame
         @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
-        @Selected(configs: .init(animation: .fastest), { global.panel.floatingAlign(id: $0.panelId) }) var floatingAlign
+        @Selected(configs: .init(animation: .fast), { global.panel.floatingAlign(id: $0.panelId) }) var floatingAlign
         @Selected({ global.panel.floatingHeight(id: $0.panelId) }) var floatingHeight
     }
 

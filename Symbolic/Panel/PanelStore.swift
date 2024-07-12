@@ -204,13 +204,16 @@ extension PanelStore {
         let moveTarget = moveTarget(moving: moving, speed: v.speed)
         moving.align = moveTarget.align
         moving.offset = moveTarget.offset
+        moving.ended = true
         withStoreUpdating(configs: .init(syncNotify: true)) {
             update(panelMap: panelMap.cloned { $0[panelId] = panel.cloned { $0.align = moveTarget.align } })
             update(movingPanelMap: movingPanelMap.cloned { $0[panelId] = moving })
         }
+    }
 
+    func resetMoving(panelId: UUID) {
         withStoreUpdating(configs: .init(animation: .custom(.spring(duration: 0.5)))) {
-            self.update(movingPanelMap: self.movingPanelMap.cloned { $0.removeValue(forKey: panelId) })
+            global.panel.update(movingPanelMap: global.panel.movingPanelMap.cloned { $0.removeValue(forKey: panelId) })
         }
     }
 

@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - tracer
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private extension Tracer {
     struct Tracking: Message {
@@ -77,8 +77,8 @@ private extension Tracer {
     }
 
     struct SelectorTrack<S: _SelectorProtocol, T: Equatable>: Message {
-        let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>
-        var message: String { "track selector \(name) \(keyPath)" }
+        let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>, configs: SelectorConfigs
+        var message: String { "track selector \(name) \(keyPath) \(configs)" }
     }
 
     struct SelectorTrackSetup<T: Equatable>: Message {
@@ -88,7 +88,7 @@ private extension Tracer {
 
     struct SelectorTrackUpdate<T: Equatable>: Message {
         let newValue: T, animation: AnimationPreset?
-        var message: String { "update \(newValue), animation=\(animation?.description ?? "nil")" }
+        var message: String { "update selector with \(newValue), animation=\(animation?.description ?? "nil")" }
     }
 
     struct SelectorRetrack<S: _SelectorProtocol, T: Equatable>: Message {
@@ -207,6 +207,7 @@ extension StoreManager {
 extension StoreManager {
     class NotifyingContext {
         let configs: PartialSelectorConfigs
+        var subscriptionId: Int?
 
         init(configs: PartialSelectorConfigs) {
             self.configs = configs
@@ -214,6 +215,8 @@ extension StoreManager {
     }
 
     var notifyingConfigs: PartialSelectorConfigs? { notifying.last?.configs }
+
+    var notifyingId: Int? { notifying.last?.subscriptionId }
 
     func notify(subscriptionIds: Set<Int>) {
         let _r = subtracer.range("notify"); defer { _r() }
@@ -234,6 +237,7 @@ extension StoreManager {
         notifying.append(.init(configs: context.configs))
         for subscription in context.subscriptions {
             let _r = subtracer.range(.init(Tracer.NotifyingCallback(subscriptionId: subscription.id))); defer { _r() }
+            notifying.last?.subscriptionId = subscription.id
             subscription.callback()
         }
         notifying.removeLast()
@@ -510,6 +514,8 @@ class _Selector<Props>: ObservableObject, CancellablesHolder {
     var props: Props?
     var cancellables = Set<AnyCancellable>()
 
+    var asyncNotifyTask: Task<Void, Never>?
+
     fileprivate let retrackSubject = PassthroughSubject<Void, Never>()
 
     required init() {}
@@ -538,6 +544,8 @@ protocol _SelectorProtocol: AnyObject {
     var name: String? { get }
     var configs: SelectorConfigs { get }
     var props: Props? { get }
+
+    var asyncNotifyTask: Task<Void, Never>? { get set }
 
     func notify()
     func setupRetrack(callback: @escaping () -> Void)
@@ -568,11 +576,21 @@ private extension _SelectorProtocol {
 
     // MARK: track selected
 
+    func configs<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> SelectorConfigs {
+        let notifyingConfigs = manager.notifyingConfigs ?? .init()
+        let wrapperConfigs = self[keyPath: keyPath].configs
+        let alwaysNotify = notifyingConfigs.alwaysNotify ?? wrapperConfigs.alwaysNotify ?? configs.alwaysNotify
+        let syncNotify = notifyingConfigs.syncNotify ?? wrapperConfigs.syncNotify ?? configs.syncNotify
+        let animation = notifyingConfigs.animation ?? wrapperConfigs.animation ?? configs.animation
+        return .init(alwaysNotify: alwaysNotify, syncNotify: syncNotify, animation: animation)
+    }
+
     @discardableResult
-    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>, configs: SelectorConfigs = .init()) -> T {
-        let _r = subtracer.range(.init(Tracer.SelectorTrack(name: name!, keyPath: keyPath))); defer { _r() }
+    func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
+        let configs = self.configs(keyPath: keyPath)
+        let _r = subtracer.range(.init(Tracer.SelectorTrack(name: name!, keyPath: keyPath, configs: configs))); defer { _r() }
         @Ref(self, keyPath) var wrapper
-        let (newValue, subscriptionId) = manager.withTracking { wrapper.selector(self.props!) } onNotify: { [weak self] in self?.notify(keyPath: keyPath) }
+        let (newValue, subscriptionId) = manager.withTracking { wrapper.selector(self.props!) } onNotify: { [weak self] in self?.track(keyPath: keyPath) }
         wrapper.subscriptionId = subscriptionId
 
         if wrapper.value == nil {
@@ -582,15 +600,23 @@ private extension _SelectorProtocol {
         } else if wrapper.value != newValue || configs.alwaysNotify {
             wrapper.value = newValue
             let animation = configs.animation
-            if let animation { withAnimation(animation.animation) { notify() } } else { notify() }
+            asyncNotifyTask?.cancel()
+            if configs.syncNotify {
+                if let animation { withAnimation(animation.animation) { notify() } } else { notify() }
+            } else {
+                asyncNotifyTask = Task(priority: .high) { @MainActor [weak self] in
+                    guard let self, !Task.isCancelled else { return }
+                    let _r = subtracer.range(.init(Tracer.SelectorNotify(name: self.name!, keyPath: keyPath, configs: configs))); defer { _r() }
+                    asyncNotifyTask = nil
+                    if let animation { withAnimation(animation.animation) { self.notify() } } else { self.notify() }
+                }
+            }
             subtracer.instant(.init(Tracer.SelectorTrackUpdate(newValue: newValue, animation: animation)))
         } else {
             subtracer.instant("unchanged")
         }
         return newValue
     }
-
-    // MARK: retrack selected
 
     func retrack<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
         let _r = subtracer.range(.init(Tracer.SelectorRetrack(name: name!, keyPath: keyPath))); defer { _r() }
@@ -599,33 +625,6 @@ private extension _SelectorProtocol {
             manager.expire(subscriptionId: subscriptionId)
         }
         track(keyPath: keyPath)
-    }
-
-    // MARK: notify selected
-
-    func notify<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
-        @Ref(self, keyPath) var wrapper
-        let configs = configs(keyPath: keyPath)
-        let _r = subtracer.range(.init(Tracer.SelectorNotify(name: name!, keyPath: keyPath, configs: configs))); defer { _r() }
-        wrapper.asyncNotifyTask?.cancel()
-        if configs.syncNotify {
-            track(keyPath: keyPath, configs: configs)
-        } else {
-            wrapper.asyncNotifyTask = Task(priority: .high) { @MainActor [weak self] in
-                guard let self else { return }
-                self[keyPath: keyPath].asyncNotifyTask = nil
-                self.track(keyPath: keyPath, configs: configs)
-            }
-        }
-    }
-
-    func configs<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> SelectorConfigs {
-        let notifyingConfigs = manager.notifyingConfigs ?? .init()
-        let wrapperConfigs = self[keyPath: keyPath].configs
-        let alwaysNotify = notifyingConfigs.alwaysNotify ?? wrapperConfigs.alwaysNotify ?? configs.alwaysNotify
-        let syncNotify = notifyingConfigs.syncNotify ?? wrapperConfigs.syncNotify ?? configs.syncNotify
-        let animation = notifyingConfigs.animation ?? wrapperConfigs.animation ?? configs.animation
-        return .init(alwaysNotify: alwaysNotify, syncNotify: syncNotify, animation: animation)
     }
 }
 
@@ -638,7 +637,6 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
 
     var value: Value?
     var subscriptionId: Int?
-    var asyncNotifyTask: Task<Void, Never>?
 
     @available(*, unavailable, message: "@Selected can only be applied to Selector")
     var wrappedValue: Value { get { fatalError() } set { fatalError() } }

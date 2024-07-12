@@ -234,6 +234,7 @@ extension FileBrowserStore {
     func asyncSave(document: Document) {
         savingTask?.cancel()
         savingTask = Task { @MainActor in
+            guard !Task.isCancelled else { return }
             self.save(document: document)
         }
     }

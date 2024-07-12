@@ -6,6 +6,16 @@ enum AxisAlign: CaseIterable {
     case start, center, end
 }
 
+extension AxisAlign {
+    var flipped: AxisAlign {
+        switch self {
+        case .start: .end
+        case .center: .center
+        case .end: .start
+        }
+    }
+}
+
 extension AxisAlign: CustomStringConvertible {
     var description: String {
         switch self {

@@ -1,5 +1,7 @@
 import SwiftUI
 
+private let debug: Bool = false
+
 // MARK: - FloatingPanelWrapper
 
 struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHolder {
@@ -14,8 +16,8 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
         @Selected({ global.panel.floatingAlign(id: $0.panelId) }) var align
         @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
         @Selected({ global.panel.moving(id: $0.panelId)?.ended ?? false }) var ended
-        @Selected(configs: .init(animation: .faster), { global.panel.floatingGap(id: $0.panelId) }) var gap
-        @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
+        @Selected(configs: .init(animation: .fast), { global.panel.floatingPadding(id: $0.panelId) }) var padding
+        @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
     }
 
     @SelectorWrapper var selector
@@ -80,12 +82,13 @@ private extension FloatingPanelWrapper {
         if let panel = selector.panel {
             PanelView(panel: panel)
                 .frame(width: selector.width)
-                .geometryReader { global.panel.setFrame(panelId: panelId, $0.frame(in: .global)) }
                 .offset(.init(selector.offset))
                 .scaleEffect(scale, anchor: selector.align.unitPoint)
                 .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)
-                .padding(size: .init(selector.gap))
+                .geometryReader { global.panel.setFrame(panelId: panelId, $0.frame(in: .global)) }
+                .padding(size: selector.padding)
                 .offset(.init(secondaryOffset))
+                .background(debug ? .blue.opacity(0.1) : .clear)
                 .innerAligned(selector.align)
                 .opacity(selector.appearance == .floatingHidden ? 0 : 1)
         }
@@ -116,5 +119,6 @@ private extension FloatingPanelRoot {
             ForEach(selector.floatingPanelIds) { FloatingPanelWrapper(panelId: $0) }
         }
         .geometryReader { global.panel.setRootFrame($0.frame(in: .global)) }
+        .background(debug ? .yellow.opacity(0.2) : .clear)
     }
 }

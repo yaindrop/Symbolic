@@ -54,6 +54,12 @@ extension PanelStore {
     var floatingPanelWidth: Scalar { 320 }
 
     var floatingPanelMinHeight: Scalar { 240 }
+
+    var floatingPanelPadding: CGSize { .init(squared: 12) }
+
+    var floatingPanelPaddingLarge: CGSize { .init(squared: 24) }
+
+    var floatingPanelSafeArea: Scalar { 36 }
 }
 
 extension PanelStore {
@@ -83,15 +89,32 @@ extension PanelStore {
         let align = floatingAlign(id: id)
         let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
         if peers.last?.id == id {
-            return .floatingPrimary
-        } else if peers.dropLast().last?.id == id {
-            return .floatingSecondary
+            return squeezed(id: id) ? .floatingSecondary : .floatingPrimary
+        } else {
+            return peers.dropLast().last?.id == id ? .floatingSecondary : .floatingHidden
         }
-        return .floatingHidden
+    }
+
+    private func squeezed(id: UUID) -> Bool {
+        guard floatingPanelIds.contains(id) else { return false }
+        let align = floatingAlign(id: id)
+        let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
+
+        let index = floatingPanelIds.firstIndex { $0 == id }
+        guard let index else { return false }
+
+        let neighbor = floatingPanels.filter { floatingAlign(id: $0.id) == neighborAlign }.last
+        guard let neighbor else { return false }
+
+        let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
+        guard let neighborIndex, neighborIndex > index else { return false }
+
+        guard let frame = panelFrameMap.value(key: id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
+        return frame.height + neighborFrame.height + floatingPanelSafeArea * 2 > rootFrame.height
     }
 
     func floatingHeight(id: UUID) -> Scalar {
-        let maxHeight = rootFrame.height - 24 * 2
+        let maxHeight = rootFrame.height - floatingPanelSafeArea * 2
         guard let panel = get(id: id) else { return maxHeight }
         return min(panel.maxHeight, maxHeight)
     }
@@ -101,11 +124,12 @@ extension PanelStore {
         return moving(id: id)?.align ?? panel.align
     }
 
-    func floatingGap(id: UUID) -> Vector2 {
-        guard moving(id: id) == nil else { return .init(12, 12) }
+    func floatingPadding(id: UUID) -> CGSize {
+        guard moving(id: id) == nil else { return floatingPanelPadding }
+        guard !squeezed(id: id) else { return floatingPanelPaddingLarge }
         let align = floatingAlign(id: id)
         let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
-        return peers.count > 1 ? .init(24, 24) : .init(12, 12)
+        return peers.count > 1 ? floatingPanelPaddingLarge : floatingPanelPadding
     }
 }
 
@@ -153,15 +177,19 @@ extension PanelStore {
 // MARK: moving
 
 extension PanelStore {
-    func spin(on panelId: UUID) {
+    func tap(on panelId: UUID) {
         guard appearance(id: panelId) == .floatingSecondary else { return }
-        let align = floatingAlign(id: panelId)
-        let peers = panelMap.values.filter { floatingAlign(id: $0.id) == align }
-        guard let primary = peers.last else { return }
-        update(panelMap: panelMap.cloned {
-            $0.removeValue(forKey: primary.id)
-            $0.insert((primary.id, primary), at: 0)
-        })
+        if squeezed(id: panelId) {
+            focus(panelId: panelId)
+        } else {
+            let align = floatingAlign(id: panelId)
+            let peers = panelMap.values.filter { floatingAlign(id: $0.id) == align }
+            guard let primary = peers.last else { return }
+            update(panelMap: panelMap.cloned {
+                $0.removeValue(forKey: primary.id)
+                $0.insert((primary.id, primary), at: 0)
+            })
+        }
     }
 
     func onMoving(panelId: UUID, _ v: DragGesture.Value) {
@@ -219,7 +247,7 @@ extension PanelStore {
 
     func rect(of panel: PanelData) -> CGRect {
         let size = panelFrameMap.value(key: panel.id)?.size ?? .zero
-        return rootFrame.alignedBox(at: panel.align, size: size, gap: .init(12, 12))
+        return rootFrame.alignedBox(at: panel.align, size: size, gap: floatingPanelPadding)
     }
 
     func rect(of moving: MovingPanelData) -> CGRect {

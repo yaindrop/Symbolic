@@ -8,7 +8,7 @@ struct PanelView: View, TracedView, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
         @Selected({ global.panel.panelFrameMap.value(key: $0.panelId) ?? .zero }) var frame
-        @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
+        @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
         @Selected(configs: .init(animation: .fast), { global.panel.floatingAlign(id: $0.panelId) }) var floatingAlign
         @Selected({ global.panel.floatingHeight(id: $0.panelId) }) var floatingHeight
     }
@@ -185,7 +185,7 @@ private extension PanelView {
     var floatingTapOverlay: some View {
         Rectangle()
             .fill(isSecondary ? Color.invisibleSolid : Color.clear)
-            .onTapGesture { global.panel.spin(on: panel.id) }
+            .onTapGesture { global.panel.tap(on: panel.id) }
             .transaction { $0.animation = nil }
     }
 }

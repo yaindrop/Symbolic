@@ -6,99 +6,78 @@ import SwiftUI
 private let subtracer = tracer.tagged("store", enabled: true)
 
 private extension Tracer {
-    struct Tracking: Message {
+    // MARK: manager
+
+    struct Tracking: ReflectedStringMessage {
         let subscriptionId: Int
-        var message: String { "tracking, subscriptionId=\(subscriptionId)" }
     }
 
-    struct Updating: Message {
+    struct Updating: ReflectedStringMessage {
         let configs: PartialSelectorConfigs
-        var message: String { "updating, configs=\(configs)" }
     }
 
-    struct NotifyingAppend: Message {
+    struct NotifyingAppend: ReflectedStringMessage {
         let subscriptionIds: [Int]
-        var message: String { "append \(subscriptionIds)" }
     }
 
-    struct NotifyingCallback: Message {
+    struct NotifyingCallback: ReflectedStringMessage {
         let subscriptionId: Int
-        var message: String { "callback \(subscriptionId)" }
     }
 
-    struct NotifyingAll: Message {
+    struct NotifyingAll: ReflectedStringMessage {
         let subscriptionIds: [Int]
-        var message: String { "notifying all \(subscriptionIds)" }
     }
 
-    struct DerivingResult: Message {
+    struct DerivingResult: ReflectedStringMessage {
         let trackableIds: Set<Int>
-        var message: String { "result trackableIds=\(trackableIds)" }
     }
 
-    struct StoreOnTrack: Message {
-        let trackableId: Int, subscriptionId: Int
-        var message: String { "on track of \(trackableId) in subscription \(subscriptionId)" }
-    }
+    // MARK: store
 
-    struct StoreOnChange: Message {
-        let trackableId: Int, subscriptionIds: Set<Int>?
-        var message: String { "on change of \(trackableId), \(subscriptionIds.map { "with \($0.count) subscriptions" } ?? "without subscription")" }
-    }
-
-    struct StoreAccess<S: _StoreProtocol, T: Equatable>: Message {
+    struct StoreAccess<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
         let keyPath: ReferenceWritableKeyPath<S, _Trackable<S, T>>
-        var message: String { "access trackable \(keyPath)" }
     }
 
-    struct StoreAccessDerived<S: _StoreProtocol, T: Equatable>: Message {
+    struct StoreAccessDerived<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
         let keyPath: ReferenceWritableKeyPath<S, _Derived<S, T>>
-        var message: String { "access derived \(keyPath)" }
     }
 
-    struct StoreUpdate<S: _StoreProtocol, T: Equatable>: Message {
+    struct StoreUpdate<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
         let keyPath: ReferenceWritableKeyPath<S, _Trackable<S, T>>, newValue: T
-        var message: String { "update trackable \(keyPath) with \(newValue)" }
     }
 
-    struct StoreUpdateDerived<S: _StoreProtocol, T: Equatable>: Message {
+    struct StoreUpdateDerived<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
         let keyPath: ReferenceWritableKeyPath<S, _Derived<S, T>>
-        var message: String { "update derived \(keyPath)" }
     }
 
-    struct SelectorSetup: Message {
+    // MARK: selector
+
+    struct SelectorSetup: ReflectedStringMessage {
         let name: String
-        var message: String { "setup selector \(name)" }
     }
 
-    struct SelectorAccess<S: _SelectorProtocol, T: Equatable>: Message {
+    struct SelectorAccess<S: _SelectorProtocol, T: Equatable>: ReflectedStringMessage {
         let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>
-        var message: String { "access selector \(name) \(keyPath)" }
     }
 
-    struct SelectorTrack<S: _SelectorProtocol, T: Equatable>: Message {
+    struct SelectorTrack<S: _SelectorProtocol, T: Equatable>: ReflectedStringMessage {
         let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>, configs: SelectorConfigs
-        var message: String { "track selector \(name) \(keyPath) \(configs)" }
     }
 
-    struct SelectorTrackSetup<T: Equatable>: Message {
+    struct SelectorTrackSetup<T: Equatable>: ReflectedStringMessage {
         let newValue: T
-        var message: String { "setup \(newValue)" }
     }
 
-    struct SelectorTrackUpdate<T: Equatable>: Message {
-        let newValue: T, animation: AnimationPreset?
-        var message: String { "update selector with \(newValue), animation=\(animation?.description ?? "nil")" }
+    struct SelectorTrackUpdate<T: Equatable>: ReflectedStringMessage {
+        let newValue: T
     }
 
-    struct SelectorRetrack<S: _SelectorProtocol, T: Equatable>: Message {
+    struct SelectorRetrack<S: _SelectorProtocol, T: Equatable>: ReflectedStringMessage {
         let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>
-        var message: String { "retrack selector \(name) \(keyPath)" }
     }
 
-    struct SelectorNotify<S: _SelectorProtocol, T: Equatable>: Message {
-        let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>, configs: SelectorConfigs
-        var message: String { "notify selector \(name) \(keyPath), configs=\(configs)" }
+    struct SelectorNotify: ReflectedStringMessage {
+        let notifyingId: Int?
     }
 }
 
@@ -295,7 +274,6 @@ private extension Store {
     func generateTrackableId() -> Int { trackableIdGen.generate() }
 
     func onTrack(of trackableId: Int, in subscriptionId: Int) {
-        let _r = subtracer.range(.init(Tracer.StoreOnTrack(trackableId: trackableId, subscriptionId: subscriptionId))); defer { _r() }
         var ids = trackableIdToSubscriptionIds[trackableId] ?? []
         ids.insert(subscriptionId)
         trackableIdToSubscriptionIds[trackableId] = ids
@@ -303,7 +281,6 @@ private extension Store {
 
     func onChange(of trackableId: Int) {
         let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: trackableId)
-        let _r = subtracer.range(.init(Tracer.StoreOnChange(trackableId: trackableId, subscriptionIds: subscriptionIds))); defer { _r() }
         guard let subscriptionIds else { return }
         manager.notify(subscriptionIds: subscriptionIds)
     }
@@ -319,10 +296,11 @@ protocol _StoreProtocol: Store {
 extension Store: _StoreProtocol {}
 
 private extension _StoreProtocol {
+    var name: String { .init(describing: type(of: self)) }
+
     // MARK: access trackable
 
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>) -> T {
-        let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
@@ -332,9 +310,11 @@ private extension _StoreProtocol {
             wrapper.id = id
         }
         if let trackingId = manager.trackingId {
+            let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
             onTrack(of: id, in: trackingId)
         }
         if let deriving, !deriving.trackableIds.contains(id) {
+            let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
             deriving.trackableIds.insert(id)
             deriving.publishers.append(wrapper.willNotifySubject.map { _ in () }.eraseToAnyPublisher())
         }
@@ -363,7 +343,6 @@ private extension _StoreProtocol {
     // MARK: update trackable
 
     func update<T>(keyPath: ReferenceWritableKeyPath<Self, Trackable<T>>, _ newValue: T, forced: Bool) {
-        let _r = subtracer.range(.init(Tracer.StoreUpdate(keyPath: keyPath, newValue: newValue))); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let id: Int
         if let wrapperId = wrapper.id {
@@ -373,6 +352,7 @@ private extension _StoreProtocol {
             wrapper.id = id
         }
         guard forced || wrapper.value != newValue else { return }
+        let _r = subtracer.range(.init(Tracer.StoreUpdate(keyPath: keyPath, newValue: newValue))); defer { _r() }
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
 
@@ -604,14 +584,15 @@ private extension _SelectorProtocol {
             if configs.syncNotify {
                 if let animation { withAnimation(animation.animation) { notify() } } else { notify() }
             } else {
+                let notifyingId = manager.notifyingId
                 asyncNotifyTask = Task(priority: .high) { @MainActor [weak self] in
                     guard let self, !Task.isCancelled else { return }
-                    let _r = subtracer.range(.init(Tracer.SelectorNotify(name: self.name!, keyPath: keyPath, configs: configs))); defer { _r() }
+                    let _r = subtracer.range(.init(Tracer.SelectorNotify(notifyingId: notifyingId))); defer { _r() }
                     asyncNotifyTask = nil
                     if let animation { withAnimation(animation.animation) { self.notify() } } else { self.notify() }
                 }
             }
-            subtracer.instant(.init(Tracer.SelectorTrackUpdate(newValue: newValue, animation: animation)))
+            subtracer.instant(.init(Tracer.SelectorTrackUpdate(newValue: newValue)))
         } else {
             subtracer.instant("unchanged")
         }

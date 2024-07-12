@@ -5,7 +5,7 @@ let tracerQueue = DispatchQueue(label: "com.example.tracerQueue", qos: .backgrou
 // MARK: - Message
 
 extension Tracer {
-    protocol Message: CustomStringConvertible {
+    protocol Message {
         var message: String { get }
     }
 
@@ -35,10 +35,14 @@ extension Tracer {
 
         var message: String { "\(tags.map { "[\($0)]" }.joined(separator: " ")) \(wrapped.message)" }
     }
+
+    protocol CustomStringMessage: Message, CustomStringConvertible {}
+
+    protocol ReflectedStringMessage: CustomStringMessage, ReflectedStringConvertible {}
 }
 
-extension Tracer.Message {
-    var description: String { message }
+extension Tracer.CustomStringMessage {
+    var message: String { description }
 }
 
 // MARK: - Node
@@ -138,14 +142,14 @@ extension Tracer.Node.Range {
     func buildTreeLines(asRoot: Bool = true) -> [String] {
         var lines: [String] = []
         if asRoot {
-            lines.append("\(message) (\(duration.readable))")
+            lines.append("\(message.message) (\(duration.readable))")
         }
         for node in nodes {
             switch node {
             case let .instant(i):
-                lines.append("\\_(+\(start.duration(to: i.time).readable)) \(i.message)")
+                lines.append("\\_(+\(start.duration(to: i.time).readable)) \(i.message.message)")
             case let .range(r):
-                lines.append("\\_(+\(start.duration(to: r.start).readable)) \(r.message) (\(r.duration.readable))")
+                lines.append("\\_(+\(start.duration(to: r.start).readable)) \(r.message.message) (\(r.duration.readable))")
                 lines += r.buildTreeLines(asRoot: false).map { "\t" + $0 }
             }
         }

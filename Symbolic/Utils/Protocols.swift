@@ -65,11 +65,15 @@ extension ReflectedStringConvertible {
     }
 }
 
+// MARK: - SelfIdentifiable
+
 protocol SelfIdentifiable: Identifiable {}
 
 extension SelfIdentifiable {
     var id: Self { self }
 }
+
+// MARK: - UniqueEquatable
 
 protocol UniqueEquatable: Equatable {}
 

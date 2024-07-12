@@ -12,6 +12,8 @@ struct PanelPopover: View, SelectorHolder {
 
     @SelectorWrapper var selector
 
+    @StateObject private var scrollViewModel = ManagedScrollViewModel()
+
     @State private var isSettings = false
 
     var body: some View {
@@ -27,25 +29,8 @@ private extension PanelPopover {
     @ViewBuilder var content: some View {
         if selector.visible {
             VStack(spacing: 0) {
-                Picker("", selection: $isSettings.animation()) {
-                    Text("Panels").tag(false)
-                    Text("Settings").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .padding(12)
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if isSettings {
-                            settings
-                        } else {
-                            panels
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-                .frame(maxWidth: .infinity, maxHeight: selector.viewSize.height - 240)
-                .fixedSize(horizontal: false, vertical: true)
+                tab
+                scrollView
             }
             .frame(width: 320)
             .background(.ultraThinMaterial)
@@ -56,6 +41,32 @@ private extension PanelPopover {
         }
     }
 
+    var tab: some View {
+        Picker("", selection: $isSettings.animation()) {
+            Text("Panels").tag(false)
+            Text("Settings").tag(true)
+        }
+        .pickerStyle(.segmented)
+        .padding(12)
+    }
+
+    var scrollView: some View {
+        ManagedScrollView(model: scrollViewModel) { proxy in
+            VStack(spacing: 0) {
+                if isSettings {
+                    settings
+                } else {
+                    panels
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .environment(\.panelScrollProxy, proxy)
+        }
+        .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+        .frame(maxWidth: .infinity, maxHeight: selector.viewSize.height - 240)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
     @ViewBuilder var panels: some View {
         if selector.popoverPanels.isEmpty {
             Text("No panels")
@@ -63,8 +74,7 @@ private extension PanelPopover {
                 .padding()
         }
         ForEach(selector.popoverPanels) {
-            $0.view
-                .environment(\.panelId, $0.id)
+            PanelView(panel: $0)
         }
     }
 

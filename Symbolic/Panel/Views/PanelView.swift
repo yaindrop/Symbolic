@@ -1,15 +1,13 @@
 import SwiftUI
 
-// MARK: - PanelBody
+// MARK: - PanelView
 
-struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
-    @Environment(\.panelId) var panelId
-
-    let name: String
-    @ViewBuilder let bodyContent: (ScrollViewProxy?) -> Content
+struct PanelView: View, TracedView, ComputedSelectorHolder {
+    let panel: PanelData
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
+        @Selected({ global.panel.panelFrameMap.value(key: $0.panelId) ?? .zero }) var frame
         @Selected(configs: .init(animation: .normal), { global.panel.appearance(id: $0.panelId) }) var appearance
         @Selected(configs: .init(animation: .fastest), { global.panel.floatingAlign(id: $0.panelId) }) var floatingAlign
         @Selected({ global.panel.floatingHeight(id: $0.panelId) }) var floatingHeight
@@ -18,23 +16,22 @@ struct PanelBody<Content: View>: View, TracedView, ComputedSelectorHolder {
     @SelectorWrapper var selector
 
     @State private var titleSize: CGSize = .zero
-    @State private var bodyFrame: CGRect = .zero
 
-    @State private var originY: Scalar?
+    @State private var resizing: Bool = false
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
     var body: some View { trace {
-        setupSelector(.init(panelId: panelId)) {
+        setupSelector(.init(panelId: panel.id)) {
             content
-                .id(panelId)
+                .id(panel.id)
         }
     } }
 }
 
 // MARK: private
 
-private extension PanelBody {
+private extension PanelView {
     var isPrimary: Bool { selector.appearance == .floatingPrimary }
 
     var isSecondary: Bool { selector.appearance == .floatingSecondary }
@@ -52,24 +49,25 @@ private extension PanelBody {
 
 // MARK: popover section
 
-private extension PanelBody {
+private extension PanelView {
     var sectionContent: some View {
         Section(header: sectionTitle) {
             VStack(spacing: 12) {
-                bodyContent(nil)
+                panel.view
             }
             .padding(.leading, 24)
             .padding(.trailing.union(.bottom), 12)
+            .environment(\.panelId, panel.id)
         }
     }
 
     var sectionTitle: some View {
         HStack {
-            Text(name)
+            Text(panel.name)
                 .font(.title2)
             Spacer()
             Button {
-                global.panel.setFloating(panelId: panelId)
+                global.panel.setFloating(panelId: panel.id)
             } label: {
                 Image(systemName: "rectangle.inset.topright.filled")
                     .tint(.label)
@@ -84,22 +82,12 @@ private extension PanelBody {
 
 // MARK: floating
 
-private extension PanelBody {
+private extension PanelView {
     var floatingContent: some View {
         VStack(spacing: 0) {
             title
-                .sizeReader { titleSize = $0 }
-            ManagedScrollView(model: scrollViewModel) { proxy in
-                VStack(spacing: 12) {
-                    bodyContent(proxy)
-                }
-                .padding(.all.subtracting(.top), 12)
-            }
-            .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-            .frame(maxWidth: .infinity, maxHeight: max(0, selector.floatingHeight - titleSize.height))
-            .fixedSize(horizontal: false, vertical: true)
+            scrollView
         }
-        .geometryReader { bodyFrame = $0.frame(in: .global) }
         .background { background }
         .overlay { floatingTapOverlay }
         .clipRounded(radius: 18)
@@ -108,15 +96,30 @@ private extension PanelBody {
     }
 
     var title: some View {
-        Text(name)
+        Text(panel.name)
             .font(.headline)
             .padding(.vertical, 8)
             .aligned(axis: .horizontal, .center)
             .padding(.horizontal, 12)
             .invisibleSoildOverlay()
-            .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
+            .multipleGesture(global.panel.floatingPanelDrag(panelId: panel.id))
             .padding(.vertical, 12)
             .background { titleBackground }
+            .sizeReader { titleSize = $0 }
+    }
+
+    var scrollView: some View {
+        ManagedScrollView(model: scrollViewModel) { proxy in
+            VStack(spacing: 12) {
+                panel.view
+            }
+            .padding(.all.subtracting(.top), 12)
+            .environment(\.panelId, panel.id)
+            .environment(\.panelScrollProxy, proxy)
+        }
+        .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
+        .frame(maxWidth: .infinity, maxHeight: max(0, selector.floatingHeight - titleSize.height))
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     var background: some View {
@@ -137,28 +140,25 @@ private extension PanelBody {
             }
     }
 
-    var draggingHeightControl: Bool { originY != nil }
-
     func onDragHeightControlBar(y: Scalar) {
-        if let originY {
-            global.panel.onTargetHeight(panelId: panelId, height: abs(y - originY))
-        }
+        let oppositeY = selector.floatingAlign.isTop ? selector.frame.minY : selector.frame.maxY
+        global.panel.onResize(panelId: panel.id, maxHeight: abs(y - oppositeY))
     }
 
     var heightControlBar: some View {
         RoundedRectangle(cornerSize: .init(squared: 2))
-            .fill(isPrimary ? Color.label.opacity(draggingHeightControl ? 1 : 0.5) : Color.clear)
+            .fill(isPrimary ? Color.label.opacity(resizing ? 1 : 0.5) : Color.clear)
             .frame(width: 32, height: 4)
             .padding(4)
             .invisibleSoildOverlay(disabled: !isPrimary)
             .multipleGesture(.init(
                 configs: .init(coordinateSpace: .global),
-                onPress: { originY = selector.floatingAlign.isTop ? bodyFrame.minY : bodyFrame.maxY },
-                onPressEnd: { _ in originY = nil },
+                onPress: { resizing = true },
+                onPressEnd: { _ in resizing = false },
                 onDrag: { onDragHeightControlBar(y: $0.location.y) },
                 onDragEnd: { onDragHeightControlBar(y: $0.location.y) }
             ))
-            .animation(.fast, value: draggingHeightControl)
+            .animation(.fast, value: resizing)
     }
 
     var heightControl: some View {
@@ -178,14 +178,14 @@ private extension PanelBody {
                 .frame(size: $0.frame(in: .global).outset(by: 8).size)
                 .offset(-.init(squared: 8))
         }
-        .opacity(draggingHeightControl ? 1 : 0)
-        .animation(.fast, value: draggingHeightControl)
+        .opacity(resizing ? 0.5 : 0)
+        .animation(.fast, value: resizing)
     }
 
     var floatingTapOverlay: some View {
         Rectangle()
             .fill(isSecondary ? Color.invisibleSolid : Color.clear)
-            .onTapGesture { global.panel.spin(on: panelId) }
+            .onTapGesture { global.panel.spin(on: panel.id) }
             .transaction { $0.animation = nil }
     }
 }

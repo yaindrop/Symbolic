@@ -132,11 +132,11 @@ struct CanvasView: View, TracedView {
             }
             .onAppear {
                 global.panel.clear()
-                global.panel.register(align: .bottomTrailing) { PathPanel() }
-                global.panel.register(align: .bottomLeading) { HistoryPanel() }
-                global.panel.register(align: .bottomLeading) { ItemPanel() }
-                global.panel.register(align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
-                global.panel.register(align: .bottomTrailing) { GridPanel() }
+                global.panel.register(name: "Path", align: .bottomTrailing) { PathPanel() }
+                global.panel.register(name: "History", align: .bottomLeading) { HistoryPanel() }
+                global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
+                global.panel.register(name: "Debug", align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
+                global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
             }
             .onAppear {
                 global.contextMenu.clear()

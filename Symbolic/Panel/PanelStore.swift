@@ -8,9 +8,10 @@ typealias PanelMap = OrderedMap<UUID, PanelData>
 
 class PanelStore: Store {
     @Trackable var panelMap = PanelMap()
-    @Trackable var rootRect: CGRect = .zero
-
     @Trackable var movingPanelMap: [UUID: MovingPanelData] = [:]
+
+    @Trackable var rootFrame: CGRect = .zero
+    @Trackable var panelFrameMap: [UUID: CGRect] = [:]
 
     @Trackable var popoverActive: Bool = false
     @Trackable var popoverButtonFrame: CGRect = .zero
@@ -22,12 +23,16 @@ private extension PanelStore {
         update { $0(\._panelMap, panelMap) }
     }
 
-    func update(rootRect: CGRect) {
-        update { $0(\._rootRect, rootRect) }
+    func update(rootFrame: CGRect) {
+        update { $0(\._rootFrame, rootFrame) }
     }
 
     func update(movingPanelMap: [UUID: MovingPanelData]) {
         update { $0(\._movingPanelMap, movingPanelMap) }
+    }
+
+    func update(panelFrameMap: [UUID: CGRect]) {
+        update { $0(\._panelFrameMap, panelFrameMap) }
     }
 
     func update(popoverActive: Bool) {
@@ -44,6 +49,12 @@ private extension PanelStore {
 }
 
 // MARK: selectors
+
+extension PanelStore {
+    var floatingPanelWidth: Scalar { 320 }
+
+    var floatingPanelMinHeight: Scalar { 240 }
+}
 
 extension PanelStore {
     func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
@@ -80,9 +91,9 @@ extension PanelStore {
     }
 
     func floatingHeight(id: UUID) -> Scalar {
-        let maxHeight = rootRect.height - 24 * 2
+        let maxHeight = rootFrame.height - 24 * 2
         guard let panel = get(id: id) else { return maxHeight }
-        return min(panel.targetHeight, maxHeight)
+        return min(panel.maxHeight, maxHeight)
     }
 
     func floatingAlign(id: UUID) -> PlaneInnerAlign {
@@ -101,8 +112,8 @@ extension PanelStore {
 // MARK: actions
 
 extension PanelStore {
-    func register(align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
-        let panel = PanelData(view: AnyView(panel()))
+    func register(name: String, align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
+        let panel = PanelData(name: name, view: AnyView(panel()), align: align)
         update(panelMap: panelMap.cloned { $0[panel.id] = panel })
     }
 
@@ -112,6 +123,12 @@ extension PanelStore {
 
     func clear() {
         update(panelMap: [:])
+    }
+}
+
+private extension PanelStore {
+    func focus(panelId: UUID) {
+        update(panelMap: panelMap.cloned { $0[panelId] = $0.removeValue(forKey: panelId) })
     }
 }
 
@@ -164,7 +181,7 @@ extension PanelStore {
         moving.offset = moveTarget.offset
         withStoreUpdating {
             update(popoverActive: false)
-            update(panelMap: panelMap.cloned { $0[panelId] = $0.removeValue(forKey: panelId) })
+            focus(panelId: panelId)
             update(movingPanelMap: movingPanelMap.cloned { $0[panelId] = moving })
         }
     }
@@ -198,7 +215,8 @@ extension PanelStore {
     }
 
     func rect(of panel: PanelData) -> CGRect {
-        rootRect.alignedBox(at: panel.align, size: panel.size, gap: .init(12, 12))
+        let size = panelFrameMap.value(key: panel.id)?.size ?? .zero
+        return rootFrame.alignedBox(at: panel.align, size: size, gap: .init(12, 12))
     }
 
     func rect(of moving: MovingPanelData) -> CGRect {
@@ -214,13 +232,13 @@ extension PanelStore {
         if inertiaOffset.length > moving.offset.length * 2 {
             inertiaOffset = inertiaOffset.with(length: moving.offset.length)
         }
-        subtracer.instant("inertiaOffset \(inertiaOffset) \(rect(of: moving) + inertiaOffset) \(rootRect)")
+        subtracer.instant("inertiaOffset \(inertiaOffset) \(rect(of: moving) + inertiaOffset) \(rootFrame)")
 
-        let clampingOffset = (rect(of: moving) + inertiaOffset).clampingOffset(by: rootRect)
+        let clampingOffset = (rect(of: moving) + inertiaOffset).clampingOffset(by: rootFrame)
         subtracer.instant("clampingOffset \(clampingOffset)")
 
         let clamped = rect(of: moving) + inertiaOffset + clampingOffset
-        let align = rootRect.nearestInnerAlign(of: clamped.center, isCorner: true)
+        let align = rootFrame.nearestInnerAlign(of: clamped.center, isCorner: true)
         subtracer.instant("align \(align)")
 
         guard var aligned = get(id: moving.id) else { return (.zero, .topLeading) }
@@ -256,24 +274,48 @@ extension PanelStore {
 // MARK: resizing
 
 extension PanelStore {
-    func onTargetHeight(panelId: UUID, height: Scalar) {
+    func onResize(panelId: UUID, maxHeight: Scalar) {
         guard let panel = get(id: panelId) else { return }
-        update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.targetHeight = height } })
-    }
-
-    func onResized(panelId: UUID, size: CGSize) {
-        let _r = subtracer.range("resize \(panelId) to \(size)"); defer { _r() }
-        guard let panel = get(id: panelId) else { return }
-        withStoreUpdating(configs: .init(animation: .faster)) {
-            update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.size = size } })
+        let maxHeight = max(floatingPanelMinHeight, maxHeight)
+        withStoreUpdating {
+            focus(panelId: panelId)
+            update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.maxHeight = maxHeight } })
         }
     }
 
-    func setRootRect(_ rect: CGRect) {
-        let _r = subtracer.range("set root rect \(rect)"); defer { _r() }
+    func setFrame(panelId: UUID, _ frame: CGRect) {
+        let _r = subtracer.range("set panel \(panelId) frame \(frame)"); defer { _r() }
+        guard let panel = get(id: panelId) else { return }
+        withStoreUpdating(configs: .init(animation: .faster)) {
+            update(panelFrameMap: panelFrameMap.cloned { $0[panel.id] = frame })
+        }
+    }
+
+    func setRootFrame(_ frame: CGRect) {
+        let _r = subtracer.range("set root frame \(frame)"); defer { _r() }
 
         withStoreUpdating(configs: .init(animation: .faster)) {
-            update(rootRect: rect)
+            update(rootFrame: frame)
         }
+    }
+
+    func floatingPanelResize(panelId: UUID) -> MultipleGesture? {
+        if popoverPanelIds.contains(panelId) {
+            return nil
+        }
+        return .init(
+            configs: .init(coordinateSpace: .global),
+            onPressEnd: { cancelled in
+                if cancelled {
+                    self.update(movingPanelMap: self.movingPanelMap.cloned { $0[panelId] = nil })
+                }
+            },
+            onDrag: {
+                self.onMoving(panelId: panelId, $0)
+            },
+            onDragEnd: {
+                self.onMoved(panelId: panelId, $0)
+            }
+        )
     }
 }

@@ -39,6 +39,8 @@ extension Set: Cloneable {}
 
 extension UUID: TriviallyCloneable {}
 
+extension CGRect: TriviallyCloneable {}
+
 extension Dictionary: Cloneable where Key: Cloneable, Value: Cloneable {
     init(_ map: [Key: Value]) {
         self.init()

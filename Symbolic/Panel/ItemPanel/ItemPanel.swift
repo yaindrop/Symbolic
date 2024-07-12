@@ -20,9 +20,7 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 
 extension ItemPanel {
     @ViewBuilder private var content: some View {
-        PanelBody(name: "Items") { _ in
-            items
-        }
+        items
     }
 
     @ViewBuilder private var items: some View {

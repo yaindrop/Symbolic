@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - FloatingPanelView
+// MARK: - FloatingPanelWrapper
 
-struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder {
+struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHolder {
     let panelId: UUID
 
     var equatableBy: some Equatable { panelId }
@@ -10,6 +10,7 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
         @Selected({ global.panel.get(id: $0.panelId) }) var panel
+        @Selected({ global.panel.floatingPanelWidth }) var width
         @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
         @Selected({ global.panel.floatingAlign(id: $0.panelId) }) var align
         @Selected(configs: .init(animation: .faster), { global.panel.floatingGap(id: $0.panelId) }) var gap
@@ -27,9 +28,7 @@ struct FloatingPanelView: View, TracedView, EquatableBy, ComputedSelectorHolder 
 
 // MARK: private
 
-private extension FloatingPanelView {
-    var width: Scalar { 320 }
-
+private extension FloatingPanelWrapper {
     var secondaryOffset: Vector2 {
         let size: Vector2 = .init(20, 20)
         switch selector.appearance {
@@ -73,10 +72,9 @@ private extension FloatingPanelView {
 
     @ViewBuilder var content: some View {
         if let panel = selector.panel {
-            panel.view
-                .environment(\.panelId, panelId)
-                .frame(width: width)
-                .sizeReader { global.panel.onResized(panelId: panel.id, size: $0) }
+            PanelView(panel: panel)
+                .frame(width: selector.width)
+                .geometryReader { global.panel.setFrame(panelId: panelId, $0.frame(in: .global)) }
                 .offset(.init(selector.offset))
                 .scaleEffect(scale, anchor: selector.align.unitPoint)
                 .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)
@@ -109,8 +107,8 @@ struct FloatingPanelRoot: View, TracedView, SelectorHolder {
 private extension FloatingPanelRoot {
     var content: some View {
         ZStack {
-            ForEach(selector.floatingPanelIds) { FloatingPanelView(panelId: $0) }
+            ForEach(selector.floatingPanelIds) { FloatingPanelWrapper(panelId: $0) }
         }
-        .geometryReader { global.panel.setRootRect($0.frame(in: .global)) }
+        .geometryReader { global.panel.setRootFrame($0.frame(in: .global)) }
     }
 }

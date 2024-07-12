@@ -21,10 +21,8 @@ private extension DebugPanel {
     var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
     @ViewBuilder var content: some View {
-        PanelBody(name: "Debug") { _ in
-            touch
-            viewport
-        }
+        touch
+        viewport
     }
 
     @ViewBuilder var touch: some View {

@@ -11,16 +11,16 @@ enum PanelAppearance: Equatable {
 
 struct PanelData: Identifiable {
     let id: UUID = .init()
+    let name: String
     let view: AnyView
 
-    var targetHeight: Scalar = 400
-    var size: CGSize = .zero
+    var maxHeight: Scalar = 400
     var align: PlaneInnerAlign = .topLeading
 }
 
 extension PanelData: EquatableBy {
     var equatableBy: some Equatable {
-        id; targetHeight; size; align
+        id; maxHeight; align
     }
 }
 
@@ -37,7 +37,7 @@ struct MovingPanelData: Equatable {
 
 extension MovingPanelData: TriviallyCloneable {}
 
-// MARK: - PanelIdKey
+// MARK: - enviroments
 
 private struct PanelIdKey: EnvironmentKey {
     static let defaultValue: UUID = .init()
@@ -47,5 +47,16 @@ extension EnvironmentValues {
     var panelId: UUID {
         get { self[PanelIdKey.self] }
         set { self[PanelIdKey.self] = newValue }
+    }
+}
+
+private struct PanelScrollProxy: EnvironmentKey {
+    static let defaultValue: ScrollViewProxy? = nil
+}
+
+extension EnvironmentValues {
+    var panelScrollProxy: ScrollViewProxy? {
+        get { self[PanelScrollProxy.self] }
+        set { self[PanelScrollProxy.self] = newValue }
     }
 }

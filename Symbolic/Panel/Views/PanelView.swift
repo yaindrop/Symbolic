@@ -53,7 +53,9 @@ private extension PanelView {
     var sectionContent: some View {
         Section(header: sectionTitle) {
             VStack(spacing: 12) {
-                panel.view
+                Memo {
+                    panel.view
+                }
             }
             .padding(.leading, 24)
             .padding(.trailing.union(.bottom), 12)
@@ -111,7 +113,9 @@ private extension PanelView {
     var scrollView: some View {
         ManagedScrollView(model: scrollViewModel) { proxy in
             VStack(spacing: 12) {
-                panel.view
+                Memo {
+                    panel.view
+                }
             }
             .padding(.all.subtracting(.top), 12)
             .environment(\.panelId, panel.id)

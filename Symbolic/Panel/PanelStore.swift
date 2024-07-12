@@ -88,10 +88,11 @@ extension PanelStore {
         guard floatingPanelIds.contains(id) else { return .popoverSection }
         let align = floatingAlign(id: id)
         let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
+        let squeezed = squeezed(id: id)
         if peers.last?.id == id {
-            return squeezed(id: id) ? .floatingSecondary : .floatingPrimary
+            return squeezed ? .floatingSecondary : .floatingPrimary
         } else {
-            return peers.dropLast().last?.id == id ? .floatingSecondary : .floatingHidden
+            return peers.dropLast().last?.id == id && !squeezed ? .floatingSecondary : .floatingHidden
         }
     }
 
@@ -100,7 +101,10 @@ extension PanelStore {
         let align = floatingAlign(id: id)
         let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
 
-        let index = floatingPanelIds.firstIndex { $0 == id }
+        let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
+        guard let front = peers.last else { return false }
+
+        let index = floatingPanelIds.firstIndex { $0 == front.id }
         guard let index else { return false }
 
         let neighbor = floatingPanels.filter { floatingAlign(id: $0.id) == neighborAlign }.last
@@ -109,8 +113,8 @@ extension PanelStore {
         let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
         guard let neighborIndex, neighborIndex > index else { return false }
 
-        guard let frame = panelFrameMap.value(key: id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
-        return frame.height + neighborFrame.height + floatingPanelSafeArea * 2 > rootFrame.height
+        guard let frontFrame = panelFrameMap.value(key: front.id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
+        return frontFrame.height + neighborFrame.height + floatingPanelSafeArea * 2 > rootFrame.height
     }
 
     func floatingHeight(id: UUID) -> Scalar {
@@ -184,10 +188,12 @@ extension PanelStore {
         } else {
             let align = floatingAlign(id: panelId)
             let peers = panelMap.values.filter { floatingAlign(id: $0.id) == align }
-            guard let primary = peers.last else { return }
+            guard let primary = peers.last, let secondary = peers.dropLast().last else { return }
             update(panelMap: panelMap.cloned {
                 $0.removeValue(forKey: primary.id)
+                $0.removeValue(forKey: secondary.id)
                 $0.insert((primary.id, primary), at: 0)
+                $0.append((secondary.id, secondary))
             })
         }
     }

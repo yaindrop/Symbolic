@@ -11,7 +11,7 @@ struct FloatingPanelView: View, TracedView, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
         @Selected({ global.panel.get(id: $0.panelId)?.name ?? "" }) var panelName
-        @Selected({ global.panel.floatingPanelWidth }) var width
+        @Selected({ global.panel.floatingWidth }) var width
         @Selected({ global.panel.style(id: $0.panelId)?.maxHeight ?? 0 }) var maxHeight
     }
 
@@ -35,7 +35,9 @@ private extension FloatingPanelView {
     var content: some View {
         VStack(spacing: 0) {
             title
+                .zIndex(2)
             scrollView
+                .zIndex(1)
         }
         .frame(width: selector.width)
         .background { background }
@@ -43,6 +45,8 @@ private extension FloatingPanelView {
         .clipRounded(radius: 18)
         .overlay { HeightControl() }
     }
+
+    var titleBackgroundOpacity: Scalar { min(scrollViewModel.offset, 12) / 12.0 }
 
     @ViewBuilder var title: some View {
         Text(selector.panelName)
@@ -53,8 +57,10 @@ private extension FloatingPanelView {
             .invisibleSoildOverlay()
             .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
             .padding(.vertical, 12)
-            .background { titleBackground }
+            .background(.ultraThinMaterial.opacity(titleBackgroundOpacity))
             .sizeReader { titleSize = $0 }
+        Divider()
+            .opacity(titleBackgroundOpacity)
     }
 
     @ViewBuilder var scrollView: some View {
@@ -70,6 +76,7 @@ private extension FloatingPanelView {
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
         .frame(maxWidth: .infinity, maxHeight: max(0, selector.maxHeight - titleSize.height))
         .fixedSize(horizontal: false, vertical: true)
+        .scrollClipDisabled()
     }
 
     var background: some View {
@@ -83,8 +90,8 @@ private extension FloatingPanelView {
 
     var titleBackground: some View {
         Rectangle()
-            .if(appearance == .floatingPrimary && scrollViewModel.scrolled) {
-                $0.fill(.ultraThinMaterial)
+            .if(appearance == .floatingPrimary) {
+                $0.fill(.ultraThinMaterial.opacity(titleBackgroundOpacity))
             } else: {
                 $0.fill(.clear)
             }

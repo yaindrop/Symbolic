@@ -47,7 +47,7 @@ private extension PanelStore {
                 guard let neighborIndex, neighborIndex > index else { return false }
 
                 guard let frontFrame = panelFrameMap.value(key: front.id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
-                return frontFrame.height + neighborFrame.height + floatingPanelSafeArea * 2 > rootFrame.height
+                return frontFrame.height + neighborFrame.height + floatingSafeArea * 2 > rootFrame.height
             }()
         }
 
@@ -69,12 +69,12 @@ private extension PanelStore {
 
         let paddingMap = panelMap.keys.reduce(into: [UUID: CGSize]()) { dict, id in
             dict[id] = {
-                guard moving(id: id) == nil else { return floatingPanelPadding }
+                guard moving(id: id) == nil else { return floatingPadding }
                 let squeezed = squeezedMap[id] ?? false
-                guard !squeezed else { return floatingPanelPaddingLarge }
+                guard !squeezed else { return floatingPaddingLarge }
                 let align = alignMap[id]
                 let peers = floatingPanels.filter { alignMap[$0.id] == align }
-                return peers.count > 1 ? floatingPanelPaddingLarge : floatingPanelPadding
+                return peers.count > 1 ? floatingPaddingLarge : floatingPadding
             }()
         }
 
@@ -127,17 +127,17 @@ private extension PanelStore {
 // MARK: selectors
 
 extension PanelStore {
-    var floatingPanelWidth: Scalar { 320 }
+    var floatingWidth: Scalar { 320 }
 
-    var floatingPanelMinHeight: Scalar { 240 }
+    var floatingMinHeight: Scalar { 240 }
 
-    var floatingPanelPadding: CGSize { .init(squared: 12) }
+    var floatingMaxHeight: Scalar { rootFrame.height - floatingSafeArea * 2 }
 
-    var floatingPanelPaddingLarge: CGSize { .init(squared: 24) }
+    var floatingPadding: CGSize { .init(squared: 12) }
 
-    var floatingPanelSafeArea: Scalar { 36 }
+    var floatingPaddingLarge: CGSize { .init(squared: 24) }
 
-    var floatingMaxHeight: Scalar { rootFrame.height - floatingPanelSafeArea * 2 }
+    var floatingSafeArea: Scalar { 36 }
 }
 
 extension PanelStore {
@@ -278,7 +278,7 @@ extension PanelStore {
 
     func rect(of panel: PanelData) -> CGRect {
         let size = panelFrameMap.value(key: panel.id)?.size ?? .zero
-        return rootFrame.alignedBox(at: panel.align, size: size, gap: floatingPanelPadding)
+        return rootFrame.alignedBox(at: panel.align, size: size, gap: floatingPadding)
     }
 
     func rect(of moving: MovingPanelData) -> CGRect {
@@ -338,7 +338,7 @@ extension PanelStore {
 extension PanelStore {
     func onResize(panelId: UUID, maxHeight: Scalar) {
         guard let panel = get(id: panelId) else { return }
-        let maxHeight = max(floatingPanelMinHeight, maxHeight)
+        let maxHeight = max(floatingMinHeight, maxHeight)
         withStoreUpdating {
             focus(panelId: panelId)
             update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.maxHeight = maxHeight } })

@@ -47,7 +47,7 @@ private extension Tracer {
     }
 
     struct StoreUpdateDerived<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
-        let keyPath: ReferenceWritableKeyPath<S, _Derived<S, T>>
+        let keyPath: ReferenceWritableKeyPath<S, _Derived<S, T>>, newValue: T
     }
 
     // MARK: selector
@@ -254,7 +254,7 @@ private extension Store {
         var publishers: [AnyPublisher<Void, Never>] = []
     }
 
-    func withDeriving<T>(_ apply: () -> T) -> (value: T, DerivingContext) {
+    func withDeriving<T>(_ apply: () -> T) -> (newValue: T, DerivingContext) {
         guard deriving == nil else {
             fatalError("Nested deriving of store properties is not supported.")
         }
@@ -368,12 +368,12 @@ private extension _StoreProtocol {
     // MARK: update derived
 
     @discardableResult func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = subtracer.range(.init(Tracer.StoreUpdateDerived(keyPath: keyPath))); defer { _r() }
         @Ref(self, keyPath) var wrapper
-        let (value, context) = withDeriving { wrapper.derive(self) }
+        let (newValue, context) = withDeriving { wrapper.derive(self) }
+        let _r = subtracer.range(.init(Tracer.StoreUpdateDerived(keyPath: keyPath, newValue: newValue))); defer { _r() }
 
-        wrapper.value = value
-        wrapper.willNotifySubject.send(value)
+        wrapper.value = newValue
+        wrapper.willNotifySubject.send(newValue)
 
         wrapper.trackableIds = context.trackableIds
         wrapper.cancellables.removeAll()
@@ -382,7 +382,7 @@ private extension _StoreProtocol {
                 .sink { self.update(keyPath: keyPath) }
                 .store(in: &wrapper.cancellables)
         }
-        return value
+        return newValue
     }
 }
 

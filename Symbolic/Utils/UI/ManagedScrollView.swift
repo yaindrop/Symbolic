@@ -39,7 +39,7 @@ private struct ScrollOffsetSetterModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.coordinateSpace(name: model.coordinateSpaceName)
-            .onPreferenceChange(ScrollOffsetKey.self) { value in withAnimation { model.offset = value } }
+            .onPreferenceChange(ScrollOffsetKey.self) { model.offset = $0 }
     }
 }
 

@@ -87,16 +87,14 @@ extension ItemStoreProtocol {
         rootIds.flatMap { leafItems(rootItemId: $0) }.compactMap { $0.pathId }
     }
 
-    private var idToParentId: [UUID: UUID] {
-        allGroups.reduce(into: .init()) { dict, group in
+    fileprivate var calcAncestorMap: AncestorMap {
+        let parentIdMap = allGroups.reduce(into: [UUID: UUID]()) { dict, group in
             for member in group.members {
                 dict[member] = group.id
             }
         }
-    }
 
-    fileprivate var idToAncestorIds: AncestorMap {
-        idToParentId.reduce(into: [UUID: [UUID]]()) { dict, pair in
+        return parentIdMap.reduce(into: [UUID: [UUID]]()) { dict, pair in
             let (id, parentId) = pair
             var ancestors: [UUID] = []
             var current: UUID? = parentId
@@ -106,7 +104,7 @@ extension ItemStoreProtocol {
                     break
                 } else {
                     ancestors.append(currentId)
-                    current = idToParentId[currentId]
+                    current = parentIdMap[currentId]
                 }
             }
             dict[id] = ancestors
@@ -120,7 +118,7 @@ class ItemStore: Store, ItemStoreProtocol {
     @Trackable var map = ItemMap()
     @Trackable var rootIds: [UUID] = []
 
-    @Derived({ $0.idToAncestorIds }) var ancestorMap
+    @Derived({ $0.calcAncestorMap }) var ancestorMap
 }
 
 private extension ItemStore {

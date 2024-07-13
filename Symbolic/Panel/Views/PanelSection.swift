@@ -37,27 +37,18 @@ private extension PanelSection {
 
 // MARK: - Background
 
-private struct PanelSectionBackground: View, TracedView, ComputedSelectorHolder {
-    @Environment(\.panelId) var panelId
-
-    struct SelectorProps: Equatable { let panelId: UUID }
-    class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
-    }
-
-    @SelectorWrapper var selector
+private struct PanelSectionBackground: View, TracedView {
+    @Environment(\.panelAppearance) var panelAppearance
 
     var body: some View { trace {
-        setupSelector(.init(panelId: panelId)) {
-            content
-        }
+        content
     } }
 }
 
 private extension PanelSectionBackground {
     var content: some View {
         Rectangle()
-            .if(selector.appearance == .floatingSecondary) {
+            .if(panelAppearance == .floatingSecondary) {
                 $0.fill(.background.secondary.opacity(0.8))
             } else: {
                 $0.fill(.ultraThinMaterial)

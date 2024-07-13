@@ -14,8 +14,8 @@ struct PanelData: Identifiable {
     let name: String
     let view: AnyView
 
-    var maxHeight: Scalar = 400
     var align: PlaneInnerAlign = .topLeading
+    var maxHeight: Scalar = 400
 }
 
 extension PanelData: EquatableBy {
@@ -25,6 +25,17 @@ extension PanelData: EquatableBy {
 }
 
 extension PanelData: TriviallyCloneable {}
+
+// MARK: - PanelStyle
+
+struct PanelStyle: Equatable {
+    var appearance: PanelAppearance
+    var squeezed: Bool
+
+    var padding: CGSize
+    var align: PlaneInnerAlign
+    var maxHeight: Scalar
+}
 
 // MARK: - MovingPanelData
 
@@ -51,13 +62,24 @@ extension EnvironmentValues {
     }
 }
 
-private struct PanelScrollProxy: EnvironmentKey {
+private struct PanelScrollProxyKey: EnvironmentKey {
     static let defaultValue: ScrollViewProxy? = nil
 }
 
 extension EnvironmentValues {
     var panelScrollProxy: ScrollViewProxy? {
-        get { self[PanelScrollProxy.self] }
-        set { self[PanelScrollProxy.self] = newValue }
+        get { self[PanelScrollProxyKey.self] }
+        set { self[PanelScrollProxyKey.self] = newValue }
+    }
+}
+
+private struct PanelAppearanceKey: EnvironmentKey {
+    static let defaultValue: PanelAppearance = .floatingPrimary
+}
+
+extension EnvironmentValues {
+    var panelAppearance: PanelAppearance {
+        get { self[PanelAppearanceKey.self] }
+        set { self[PanelAppearanceKey.self] = newValue }
     }
 }

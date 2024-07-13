@@ -16,6 +16,82 @@ class PanelStore: Store {
     @Trackable var popoverActive: Bool = false
     @Trackable var popoverButtonFrame: CGRect = .zero
     @Trackable var popoverPanelIds: Set<UUID> = []
+
+    @Derived({ $0.calcStyleMap }) var styleMap
+}
+
+private extension PanelStore {
+    var calcStyleMap: [UUID: PanelStyle] {
+        let alignMap = panelMap.values.reduce(into: [UUID: PlaneInnerAlign]()) { dict, panel in
+            dict[panel.id] = moving(id: panel.id)?.align ?? panel.align
+        }
+
+        let squeezedMap = panelMap.keys.reduce(into: [UUID: Bool]()) { dict, id in
+            dict[id] = {
+                let floatingPanelIds = floatingPanelIds, floatingPanels = floatingPanels
+
+                guard floatingPanelIds.contains(id) else { return false }
+                guard let align = alignMap[id] else { return false }
+                let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
+
+                let front = floatingPanels.last { alignMap[$0.id] == align }
+                guard let front else { return false }
+
+                let index = floatingPanelIds.firstIndex { $0 == front.id }
+                guard let index else { return false }
+
+                let neighbor = floatingPanels.last { alignMap[$0.id] == neighborAlign }
+                guard let neighbor else { return false }
+
+                let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
+                guard let neighborIndex, neighborIndex > index else { return false }
+
+                guard let frontFrame = panelFrameMap.value(key: front.id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
+                return frontFrame.height + neighborFrame.height + floatingPanelSafeArea * 2 > rootFrame.height
+            }()
+        }
+
+        let appearanceMap = panelMap.keys.reduce(into: [UUID: PanelAppearance]()) { dict, id in
+            dict[id] = {
+                if popoverPanelIds.contains(id) {
+                    return .popoverSection
+                }
+                guard let align = alignMap[id] else { return .floatingPrimary }
+                let peers = floatingPanels.filter { alignMap[$0.id] == align }
+                let squeezed = squeezedMap[id] ?? false
+                if peers.last?.id == id {
+                    return squeezed ? .floatingSecondary : .floatingPrimary
+                } else {
+                    return peers.dropLast().last?.id == id && !squeezed ? .floatingSecondary : .floatingHidden
+                }
+            }()
+        }
+
+        let paddingMap = panelMap.keys.reduce(into: [UUID: CGSize]()) { dict, id in
+            dict[id] = {
+                guard moving(id: id) == nil else { return floatingPanelPadding }
+                let squeezed = squeezedMap[id] ?? false
+                guard !squeezed else { return floatingPanelPaddingLarge }
+                let align = alignMap[id]
+                let peers = floatingPanels.filter { alignMap[$0.id] == align }
+                return peers.count > 1 ? floatingPanelPaddingLarge : floatingPanelPadding
+            }()
+        }
+
+        let maxHeightMap = panelMap.values.reduce(into: [UUID: Scalar]()) { dict, panel in
+            dict[panel.id] = min(panel.maxHeight, floatingMaxHeight)
+        }
+
+        return panelMap.keys.reduce(into: [UUID: PanelStyle]()) { dict, id in
+            dict[id] = .init(
+                appearance: appearanceMap[id] ?? .floatingPrimary,
+                squeezed: squeezedMap[id] ?? false,
+                padding: paddingMap[id] ?? .zero,
+                align: alignMap[id] ?? .topLeading,
+                maxHeight: maxHeightMap[id] ?? floatingMaxHeight
+            )
+        }
+    }
 }
 
 private extension PanelStore {
@@ -60,11 +136,14 @@ extension PanelStore {
     var floatingPanelPaddingLarge: CGSize { .init(squared: 24) }
 
     var floatingPanelSafeArea: Scalar { 36 }
+
+    var floatingMaxHeight: Scalar { rootFrame.height - floatingPanelSafeArea * 2 }
 }
 
 extension PanelStore {
     func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
     func moving(id: UUID) -> MovingPanelData? { movingPanelMap.value(key: id) }
+    func style(id: UUID) -> PanelStyle? { styleMap.value(key: id) }
 
     var panelIds: [UUID] { panelMap.keys }
     var panels: [PanelData] { panelMap.values }
@@ -80,64 +159,6 @@ extension PanelStore {
 
     var popoverButtonHovering: Bool {
         movingPanelMap.contains { popoverButtonFrame.contains($0.value.globalDragPosition) }
-    }
-}
-
-extension PanelStore {
-    func appearance(id: UUID) -> PanelAppearance {
-        if popoverPanelIds.contains(id) {
-            return .popoverSection
-        }
-        let align = floatingAlign(id: id)
-        let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
-        let squeezed = squeezed(id: id)
-        if peers.last?.id == id {
-            return squeezed ? .floatingSecondary : .floatingPrimary
-        } else {
-            return peers.dropLast().last?.id == id && !squeezed ? .floatingSecondary : .floatingHidden
-        }
-    }
-
-    private func squeezed(id: UUID) -> Bool {
-        let floatingPanelIds = floatingPanelIds, floatingPanels = floatingPanels
-
-        guard floatingPanelIds.contains(id) else { return false }
-        let align = floatingAlign(id: id)
-        let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
-
-        let front = floatingPanels.last { floatingAlign(id: $0.id) == align }
-        guard let front else { return false }
-
-        let index = floatingPanelIds.firstIndex { $0 == front.id }
-        guard let index else { return false }
-
-        let neighbor = floatingPanels.last { floatingAlign(id: $0.id) == neighborAlign }
-        guard let neighbor else { return false }
-
-        let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
-        guard let neighborIndex, neighborIndex > index else { return false }
-
-        guard let frontFrame = panelFrameMap.value(key: front.id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
-        return frontFrame.height + neighborFrame.height + floatingPanelSafeArea * 2 > rootFrame.height
-    }
-
-    func floatingHeight(id: UUID) -> Scalar {
-        let maxHeight = rootFrame.height - floatingPanelSafeArea * 2
-        guard let panel = get(id: id) else { return maxHeight }
-        return min(panel.maxHeight, maxHeight)
-    }
-
-    func floatingAlign(id: UUID) -> PlaneInnerAlign {
-        guard let panel = get(id: id) else { return .topLeading }
-        return moving(id: id)?.align ?? panel.align
-    }
-
-    func floatingPadding(id: UUID) -> CGSize {
-        guard moving(id: id) == nil else { return floatingPanelPadding }
-        guard !squeezed(id: id) else { return floatingPanelPaddingLarge }
-        let align = floatingAlign(id: id)
-        let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
-        return peers.count > 1 ? floatingPanelPaddingLarge : floatingPanelPadding
     }
 }
 
@@ -186,12 +207,12 @@ extension PanelStore {
 
 extension PanelStore {
     func tap(on panelId: UUID) {
-        guard appearance(id: panelId) == .floatingSecondary else { return }
-        if squeezed(id: panelId) {
+        guard let style = styleMap.value(key: panelId) else { return }
+        guard style.appearance == .floatingSecondary else { return }
+        if style.squeezed {
             focus(panelId: panelId)
         } else {
-            let align = floatingAlign(id: panelId)
-            let peers = panelMap.values.filter { floatingAlign(id: $0.id) == align }
+            let peers = panelMap.values.filter { styleMap.value(key: $0.id)?.align == style.align }
             guard let primary = peers.last, let secondary = peers.dropLast().last else { return }
             update(panelMap: panelMap.cloned {
                 $0.removeValue(forKey: primary.id)

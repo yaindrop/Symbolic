@@ -4,17 +4,15 @@ private let debug: Bool = false
 
 // MARK: - FloatingPanelView
 
-struct FloatingPanelView: View, EquatableBy, TracedView, ComputedSelectorHolder {
-    let panelId: UUID
-
-    var equatableBy: some Equatable { panelId }
+struct FloatingPanelView: View, TracedView, ComputedSelectorHolder {
+    @Environment(\.panelId) var panelId
+    @Environment(\.panelAppearance) var appearance
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
         @Selected({ global.panel.get(id: $0.panelId)?.name ?? "" }) var panelName
         @Selected({ global.panel.floatingPanelWidth }) var width
-        @Selected({ global.panel.floatingHeight(id: $0.panelId) }) var height
-        @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
+        @Selected({ global.panel.style(id: $0.panelId)?.maxHeight ?? 0 }) var maxHeight
     }
 
     @SelectorWrapper var selector
@@ -43,7 +41,7 @@ private extension FloatingPanelView {
         .background { background }
         .overlay { tapOverlay }
         .clipRounded(radius: 18)
-        .overlay { HeightControl(panelId: panelId, appearance: selector.appearance) }
+        .overlay { HeightControl() }
     }
 
     @ViewBuilder var title: some View {
@@ -67,17 +65,16 @@ private extension FloatingPanelView {
                 }
             }
             .padding(.all.subtracting(.top), 12)
-            .environment(\.panelId, panelId)
             .environment(\.panelScrollProxy, proxy)
         }
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
-        .frame(maxWidth: .infinity, maxHeight: max(0, selector.height - titleSize.height))
+        .frame(maxWidth: .infinity, maxHeight: max(0, selector.maxHeight - titleSize.height))
         .fixedSize(horizontal: false, vertical: true)
     }
 
     var background: some View {
         Rectangle()
-            .if(selector.appearance == .floatingPrimary) {
+            .if(appearance == .floatingPrimary) {
                 $0.fill(.ultraThinMaterial)
             } else: {
                 $0.fill(.background.secondary.opacity(0.8))
@@ -86,7 +83,7 @@ private extension FloatingPanelView {
 
     var titleBackground: some View {
         Rectangle()
-            .if(selector.appearance == .floatingPrimary && scrollViewModel.scrolled) {
+            .if(appearance == .floatingPrimary && scrollViewModel.scrolled) {
                 $0.fill(.ultraThinMaterial)
             } else: {
                 $0.fill(.clear)
@@ -95,7 +92,7 @@ private extension FloatingPanelView {
 
     var tapOverlay: some View {
         Rectangle()
-            .fill(selector.appearance == .floatingSecondary ? Color.invisibleSolid : Color.clear)
+            .fill(appearance == .floatingSecondary ? Color.invisibleSolid : Color.clear)
             .onTapGesture { global.panel.tap(on: panelId) }
             .transaction { $0.animation = nil }
     }
@@ -105,12 +102,12 @@ private extension FloatingPanelView {
 
 private extension FloatingPanelView {
     struct HeightControl: View, TracedView, ComputedSelectorHolder {
-        let panelId: UUID
-        let appearance: PanelAppearance
+        @Environment(\.panelId) var panelId
+        @Environment(\.panelAppearance) var appearance
 
         struct SelectorProps: Equatable { let panelId: UUID }
         class Selector: SelectorBase {
-            @Selected(configs: .init(animation: .fast), { global.panel.floatingAlign(id: $0.panelId) }) var align
+            @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.align ?? .topLeading }) var align
         }
 
         @SelectorWrapper var selector
@@ -181,11 +178,11 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected({ global.panel.floatingAlign(id: $0.panelId) }) var align
         @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
         @Selected({ global.panel.moving(id: $0.panelId)?.ended ?? false }) var ended
-        @Selected(configs: .init(animation: .fast), { global.panel.floatingPadding(id: $0.panelId) }) var padding
-        @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
+        @Selected({ global.panel.style(id: $0.panelId)?.align ?? .topLeading }) var align
+        @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.padding ?? .zero }) var padding
+        @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.appearance ?? .floatingPrimary }) var appearance
     }
 
     @SelectorWrapper var selector
@@ -247,7 +244,9 @@ private extension FloatingPanelWrapper {
     }
 
     @ViewBuilder var content: some View {
-        FloatingPanelView(panelId: panelId)
+        FloatingPanelView()
+            .environment(\.panelId, panelId)
+            .environment(\.panelAppearance, selector.appearance)
             .offset(.init(selector.offset))
             .scaleEffect(scale, anchor: selector.align.unitPoint)
             .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)

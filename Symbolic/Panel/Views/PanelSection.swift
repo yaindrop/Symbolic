@@ -20,7 +20,7 @@ private extension PanelSection {
             VStack(spacing: 0) {
                 sectionContent()
             }
-            .background { Background() }
+            .background { PanelSectionBackground() }
         }
     }
 
@@ -37,26 +37,24 @@ private extension PanelSection {
 
 // MARK: - Background
 
-private extension PanelSection {
-    struct Background: View, TracedView, ComputedSelectorHolder {
-        @Environment(\.panelId) var panelId
+private struct PanelSectionBackground: View, TracedView, ComputedSelectorHolder {
+    @Environment(\.panelId) var panelId
 
-        struct SelectorProps: Equatable { let panelId: UUID }
-        class Selector: SelectorBase {
-            @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
-        }
-
-        @SelectorWrapper var selector
-
-        var body: some View { trace {
-            setupSelector(.init(panelId: panelId)) {
-                content
-            }
-        } }
+    struct SelectorProps: Equatable { let panelId: UUID }
+    class Selector: SelectorBase {
+        @Selected(configs: .init(animation: .fast), { global.panel.appearance(id: $0.panelId) }) var appearance
     }
+
+    @SelectorWrapper var selector
+
+    var body: some View { trace {
+        setupSelector(.init(panelId: panelId)) {
+            content
+        }
+    } }
 }
 
-private extension PanelSection.Background {
+private extension PanelSectionBackground {
     var content: some View {
         Rectangle()
             .if(selector.appearance == .floatingSecondary) {

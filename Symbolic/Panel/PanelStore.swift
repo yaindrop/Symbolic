@@ -85,7 +85,9 @@ extension PanelStore {
 
 extension PanelStore {
     func appearance(id: UUID) -> PanelAppearance {
-        guard floatingPanelIds.contains(id) else { return .popoverSection }
+        if popoverPanelIds.contains(id) {
+            return .popoverSection
+        }
         let align = floatingAlign(id: id)
         let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
         let squeezed = squeezed(id: id)
@@ -97,17 +99,19 @@ extension PanelStore {
     }
 
     private func squeezed(id: UUID) -> Bool {
+        let floatingPanelIds = floatingPanelIds, floatingPanels = floatingPanels
+
         guard floatingPanelIds.contains(id) else { return false }
         let align = floatingAlign(id: id)
         let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
 
-        let peers = floatingPanels.filter { floatingAlign(id: $0.id) == align }
-        guard let front = peers.last else { return false }
+        let front = floatingPanels.last { floatingAlign(id: $0.id) == align }
+        guard let front else { return false }
 
         let index = floatingPanelIds.firstIndex { $0 == front.id }
         guard let index else { return false }
 
-        let neighbor = floatingPanels.filter { floatingAlign(id: $0.id) == neighborAlign }.last
+        let neighbor = floatingPanels.last { floatingAlign(id: $0.id) == neighborAlign }
         guard let neighbor else { return false }
 
         let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
@@ -323,17 +327,12 @@ extension PanelStore {
     func setFrame(panelId: UUID, _ frame: CGRect) {
         let _r = subtracer.range("set panel \(panelId) frame \(frame)"); defer { _r() }
         guard let panel = get(id: panelId) else { return }
-        withStoreUpdating(configs: .init(animation: .faster)) {
-            update(panelFrameMap: panelFrameMap.cloned { $0[panel.id] = frame })
-        }
+        update(panelFrameMap: panelFrameMap.cloned { $0[panel.id] = frame })
     }
 
     func setRootFrame(_ frame: CGRect) {
         let _r = subtracer.range("set root frame \(frame)"); defer { _r() }
-
-        withStoreUpdating(configs: .init(animation: .faster)) {
-            update(rootFrame: frame)
-        }
+        update(rootFrame: frame)
     }
 
     func floatingPanelResize(panelId: UUID) -> MultipleGesture? {

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5700C2C42BEB5AAF00481FA7 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C32BEB5AAF00481FA7 /* PanelView.swift */; };
 		5700C2C62BEB5B0A00481FA7 /* PanelSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */; };
 		5700C2C82BEBC4A800481FA7 /* FloatingPanelRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C72BEBC4A800481FA7 /* FloatingPanelRoot.swift */; };
 		5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5700C2C92BED162000481FA7 /* PanelStore.swift */; };
@@ -146,7 +145,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5700C2C32BEB5AAF00481FA7 /* PanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
 		5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelSection.swift; sourceTree = "<group>"; };
 		5700C2C72BEBC4A800481FA7 /* FloatingPanelRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPanelRoot.swift; sourceTree = "<group>"; };
 		5700C2C92BED162000481FA7 /* PanelStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelStore.swift; sourceTree = "<group>"; };
@@ -316,7 +314,6 @@
 			isa = PBXGroup;
 			children = (
 				5700C2C72BEBC4A800481FA7 /* FloatingPanelRoot.swift */,
-				5700C2C32BEB5AAF00481FA7 /* PanelView.swift */,
 				57241FA22C228A3400FB0E29 /* PanelPopover.swift */,
 				5700C2C52BEB5B0A00481FA7 /* PanelSection.swift */,
 			);
@@ -865,7 +862,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5700C2C42BEB5AAF00481FA7 /* PanelView.swift in Sources */,
 				57DD2A212C02DB850046931C /* Item.swift in Sources */,
 				5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */,
 				574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */,

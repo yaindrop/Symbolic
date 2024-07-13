@@ -1,5 +1,52 @@
 import SwiftUI
 
+// MARK: - PanelPopoverSectionView
+
+struct PanelPopoverSectionView: View, TracedView {
+    let panel: PanelData
+
+    var body: some View { trace {
+        content
+            .id(panel.id)
+
+    } }
+}
+
+// MARK: private
+
+private extension PanelPopoverSectionView {
+    var content: some View {
+        Section(header: sectionTitle) {
+            VStack(spacing: 12) {
+                Memo {
+                    panel.view
+                }
+            }
+            .padding(.leading, 24)
+            .padding(.trailing.union(.bottom), 12)
+            .environment(\.panelId, panel.id)
+        }
+    }
+
+    var sectionTitle: some View {
+        HStack {
+            Text(panel.name)
+                .font(.title2)
+            Spacer()
+            Button {
+                global.panel.setFloating(panelId: panel.id)
+            } label: {
+                Image(systemName: "rectangle.inset.topright.filled")
+                    .tint(.label)
+            }
+        }
+        .padding(12)
+        .background(.ultraThinMaterial)
+        .clipRounded(radius: 12)
+        .padding(12)
+    }
+}
+
 // MARK: - PanelPopover
 
 struct PanelPopover: View, SelectorHolder {
@@ -74,7 +121,7 @@ private extension PanelPopover {
                 .padding()
         }
         ForEach(selector.popoverPanels) {
-            PanelView(panel: $0)
+            PanelPopoverSectionView(panel: $0)
         }
     }
 

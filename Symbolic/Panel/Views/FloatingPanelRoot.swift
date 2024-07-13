@@ -13,6 +13,7 @@ struct FloatingPanelView: View, TracedView, ComputedSelectorHolder {
         @Selected({ global.panel.get(id: $0.panelId)?.name ?? "" }) var panelName
         @Selected({ global.panel.floatingWidth }) var width
         @Selected({ global.panel.style(id: $0.panelId)?.maxHeight ?? 0 }) var maxHeight
+        @Selected({ global.panel.movable(of: $0.panelId) }) var movable
     }
 
     @SelectorWrapper var selector
@@ -41,7 +42,7 @@ private extension FloatingPanelView {
         }
         .frame(width: selector.width)
         .background { background }
-        .overlay { tapOverlay }
+        .overlay { secondaryOverlay }
         .clipRounded(radius: 18)
         .overlay { HeightControl() }
     }
@@ -55,7 +56,7 @@ private extension FloatingPanelView {
             .aligned(axis: .horizontal, .center)
             .padding(.horizontal, 12)
             .invisibleSoildOverlay()
-            .multipleGesture(global.panel.floatingPanelDrag(panelId: panelId))
+            .multipleGesture(selector.movable ? global.panel.movingGesture(of: panelId) : nil)
             .padding(.vertical, 12)
             .background(.ultraThinMaterial.opacity(titleBackgroundOpacity))
             .sizeReader { titleSize = $0 }
@@ -97,10 +98,10 @@ private extension FloatingPanelView {
             }
     }
 
-    var tapOverlay: some View {
+    var secondaryOverlay: some View {
         Rectangle()
             .fill(appearance == .floatingSecondary ? Color.invisibleSolid : Color.clear)
-            .onTapGesture { global.panel.tap(on: panelId) }
+            .multipleGesture(selector.movable ? global.panel.movingGesture(of: panelId) : nil)
             .transaction { $0.animation = nil }
     }
 }
@@ -114,12 +115,12 @@ private extension FloatingPanelView {
 
         struct SelectorProps: Equatable { let panelId: UUID }
         class Selector: SelectorBase {
+            @Selected({ global.panel.resizable(of: $0.panelId) }) var resizable
+            @Selected({ global.panel.resizing == $0.panelId }) var resizing
             @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.align ?? .topLeading }) var align
         }
 
         @SelectorWrapper var selector
-
-        @State private var resizing: Bool = false
 
         var body: some View { trace {
             setupSelector(.init(panelId: panelId)) {
@@ -144,24 +145,12 @@ private extension FloatingPanelView.HeightControl {
 
     var bar: some View {
         RoundedRectangle(cornerSize: .init(squared: 2))
-            .fill(appearance == .floatingPrimary ? Color.label.opacity(resizing ? 1 : 0.5) : Color.clear)
+            .fill(appearance == .floatingPrimary ? Color.label.opacity(selector.resizing ? 1 : 0.5) : Color.clear)
             .frame(width: 32, height: 4)
             .padding(4)
             .invisibleSoildOverlay(disabled: appearance != .floatingPrimary)
-            .multipleGesture(.init(
-                configs: .init(coordinateSpace: .global),
-                onPress: { resizing = true },
-                onPressEnd: { _ in resizing = false },
-                onDrag: { onDrag(y: $0.location.y) },
-                onDragEnd: { onDrag(y: $0.location.y) }
-            ))
-            .animation(.fast, value: resizing)
-    }
-
-    func onDrag(y: Scalar) {
-        let frame = global.panel.panelFrameMap.value(key: panelId) ?? .zero
-        let oppositeY = selector.align.isTop ? frame.minY : frame.maxY
-        global.panel.onResize(panelId: panelId, maxHeight: abs(y - oppositeY))
+            .multipleGesture(selector.resizable ? global.panel.resizingGesture(of: panelId) : nil)
+            .animation(.fast, value: selector.resizing)
     }
 
     var indicator: some View {
@@ -171,8 +160,8 @@ private extension FloatingPanelView.HeightControl {
                 .frame(size: $0.frame(in: .global).outset(by: 8).size)
                 .offset(-.init(squared: 8))
         }
-        .opacity(resizing ? 0.5 : 0)
-        .animation(.fast, value: resizing)
+        .opacity(selector.resizing ? 0.5 : 0)
+        .animation(.fast, value: selector.resizing)
     }
 }
 
@@ -185,8 +174,8 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected({ global.panel.moving(id: $0.panelId)?.offset ?? .zero }) var offset
-        @Selected({ global.panel.moving(id: $0.panelId)?.ended ?? false }) var ended
+        @Selected({ global.panel.movingOffset(of: $0.panelId) }) var movingOffset
+        @Selected({ global.panel.movingEnded(of: $0.panelId) }) var movingEnded
         @Selected({ global.panel.style(id: $0.panelId)?.align ?? .topLeading }) var align
         @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.padding ?? .zero }) var padding
         @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.appearance ?? .floatingPrimary }) var appearance
@@ -197,9 +186,9 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
     var body: some View { trace {
         setupSelector(.init(panelId: panelId)) {
             content
-                .onChange(of: selector.ended) {
-                    if selector.ended {
-                        global.panel.resetMoving(panelId: panelId)
+                .onChange(of: selector.movingEnded) {
+                    if selector.movingEnded {
+                        global.panel.resetMoving(of: panelId)
                     }
                 }
         }
@@ -254,10 +243,10 @@ private extension FloatingPanelWrapper {
         FloatingPanelView()
             .environment(\.panelId, panelId)
             .environment(\.panelAppearance, selector.appearance)
-            .offset(.init(selector.offset))
+            .offset(.init(selector.movingOffset))
             .scaleEffect(scale, anchor: selector.align.unitPoint)
             .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)
-            .geometryReader { global.panel.setFrame(panelId: panelId, $0.frame(in: .global)) }
+            .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
             .padding(size: selector.padding)
             .offset(.init(secondaryOffset))
             .background(debug ? .blue.opacity(0.1) : .clear)

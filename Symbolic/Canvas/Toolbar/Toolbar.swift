@@ -145,7 +145,7 @@ private struct ToolbarButton: View {
 struct PanelPopoverButton: View, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.panel.popoverActive }) var active
-        @Selected({ !global.panel.movingPanelMap.isEmpty }) var moving
+        @Selected({ global.panel.moving != nil }) var moving
         @Selected({ global.panel.popoverButtonHovering }) var hovering
     }
 

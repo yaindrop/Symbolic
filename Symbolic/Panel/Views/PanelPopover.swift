@@ -34,7 +34,7 @@ private extension PanelPopoverSectionView {
                 .font(.title2)
             Spacer()
             Button {
-                global.panel.setFloating(panelId: panel.id)
+                global.panel.setFloating(id: panel.id)
             } label: {
                 Image(systemName: "rectangle.inset.topright.filled")
                     .tint(.label)
@@ -52,7 +52,7 @@ private extension PanelPopoverSectionView {
 struct PanelPopover: View, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
-        @Selected(configs: .init(animation: .faster), { global.panel.popoverActive && global.panel.movingPanelMap.isEmpty }) var visible
+        @Selected(configs: .init(animation: .faster), { global.panel.popoverActive && global.panel.moving == nil }) var visible
         @Selected({ global.viewport.viewSize }) var viewSize
         @Selected({ global.panel.popoverPanels }) var popoverPanels
     }

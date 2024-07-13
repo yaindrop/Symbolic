@@ -56,9 +56,9 @@ private extension CanvasActionView {
     var content: some View {
         HStack {
             if empty {
-                Text("")
+                Text(" ")
                     .padding(size: .init(6, 3))
-                    .allowsHitTesting(false)
+                    .opacity(0)
             }
             if !selector.continuousHints.isEmpty {
                 Text(selector.continuousHints.joined(separator: " "))

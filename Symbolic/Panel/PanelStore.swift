@@ -8,12 +8,14 @@ typealias PanelMap = OrderedMap<UUID, PanelData>
 
 class PanelStore: Store {
     @Trackable var panelMap = PanelMap()
+
+    // floating
     @Trackable var moving: MovingPanelData?
     @Trackable var resizing: UUID?
-
     @Trackable var rootFrame: CGRect = .zero
     @Trackable var panelFrameMap: [UUID: CGRect] = [:]
 
+    // popover
     @Trackable var popoverActive: Bool = false
     @Trackable var popoverButtonFrame: CGRect = .zero
     @Trackable var popoverPanelIds: Set<UUID> = []
@@ -83,18 +85,7 @@ extension PanelStore {
     var floatingPanelIds: [UUID] { panelIds.filter { !popoverPanelIds.contains($0) } }
 
     var floatingPanels: [PanelData] { floatingPanelIds.compactMap { get(id: $0) } }
-}
 
-extension PanelStore {
-    var popoverPanels: [PanelData] { panels.filter { popoverPanelIds.contains($0.id) } }
-
-    var popoverButtonHovering: Bool {
-        guard let moving else { return false }
-        return popoverButtonFrame.contains(moving.globalDragPosition)
-    }
-}
-
-extension PanelStore {
     func movingOffset(of id: UUID) -> Vector2 {
         guard let moving, moving.id == id else { return .zero }
         return moving.offset
@@ -113,6 +104,15 @@ extension PanelStore {
     func resizable(of id: UUID) -> Bool {
         guard let resizing else { return true }
         return resizing == id
+    }
+}
+
+extension PanelStore {
+    var popoverPanels: [PanelData] { panels.filter { popoverPanelIds.contains($0.id) } }
+
+    var popoverButtonHovering: Bool {
+        guard let moving else { return false }
+        return popoverButtonFrame.contains(moving.globalDragPosition)
     }
 }
 

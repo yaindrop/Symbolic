@@ -5,11 +5,16 @@ private let subtracer = tracer.tagged("viewport")
 // MARK: - ViewportUpdateStore
 
 class ViewportUpdateStore: Store {
+    @Trackable var updating: Bool = false
     @Trackable var blocked: Bool = false
     @Trackable var previousInfo: ViewportInfo = .init()
 }
 
 private extension ViewportUpdateStore {
+    func update(updating: Bool) {
+        update { $0(\._updating, updating) }
+    }
+
     func update(blocked: Bool) {
         update { $0(\._blocked, blocked) }
     }
@@ -42,7 +47,10 @@ extension ViewportUpdater {
         let previousInfo = store.previousInfo
         let scale = previousInfo.scale
         let origin = previousInfo.origin - pan.offset / scale
-        viewport.setInfo(origin: origin, scale: scale)
+        withStoreUpdating {
+            store.update(updating: true)
+            viewport.setInfo(origin: origin, scale: scale)
+        }
     }
 
     func onPinchInfo(_ pinch: PinchInfo?) {
@@ -55,7 +63,10 @@ extension ViewportUpdater {
         let transformedOrigin = Point2.zero.applying(pinchTransform) // in view reference frame
         let scale = previousInfo.scale * pinch.scale
         let origin = previousInfo.origin - Vector2(transformedOrigin) / scale
-        viewport.setInfo(origin: origin, scale: scale)
+        withStoreUpdating {
+            store.update(updating: true)
+            viewport.setInfo(origin: origin, scale: scale)
+        }
     }
 
     func zoomTo(rect: CGRect) {
@@ -80,6 +91,9 @@ private extension ViewportUpdater {
         global.canvasAction.end(continuous: .pinchViewport)
         global.canvasAction.end(continuous: .pinchViewport)
         let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
-        store.update(previousInfo: viewport.info)
+        withStoreUpdating {
+            store.update(updating: false)
+            store.update(previousInfo: viewport.info)
+        }
     }
 }

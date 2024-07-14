@@ -116,35 +116,43 @@ private extension GlobalStores {
 
 // MARK: - CanvasView
 
-struct CanvasView: View, TracedView {
-    @State var multipleTouch = MultipleTouchModel()
-    @State var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+struct CanvasView: View, TracedView, SelectorHolder {
+    class Selector: SelectorBase {
+        @Selected({ global.viewportUpdater.store.updating }) var viewportUpdating
+    }
+
+    @SelectorWrapper var selector
+
+    @State private var multipleTouch = MultipleTouchModel()
+    @State private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
 
     @State private var longPressPosition: Point2?
 
     var body: some View { trace {
-        content
-            .onAppear {
-                global.setupViewportFlow(multipleTouch: multipleTouch)
+        setupSelector {
+            content
+                .onAppear {
+                    global.setupViewportFlow(multipleTouch: multipleTouch)
 
-                pressDetector.subscribe()
-                global.setupMultipleTouchPress(multipleTouchPress)
-            }
-            .onAppear {
-                global.panel.clear()
-                global.panel.register(name: "Path", align: .bottomTrailing) { PathPanel() }
-                global.panel.register(name: "History", align: .bottomLeading) { HistoryPanel() }
-                global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
-                global.panel.register(name: "Debug", align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
-                global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
-            }
-            .onAppear {
-                global.contextMenu.clear()
-                global.contextMenu.register(.pathFocusedPart)
-                global.contextMenu.register(.focusedPath)
-                global.contextMenu.register(.focusedGroup)
-                global.contextMenu.register(.selection)
-            }
+                    pressDetector.subscribe()
+                    global.setupMultipleTouchPress(multipleTouchPress)
+                }
+                .onAppear {
+                    global.panel.clear()
+                    global.panel.register(name: "Path", align: .bottomTrailing) { PathPanel() }
+                    global.panel.register(name: "History", align: .bottomLeading) { HistoryPanel() }
+                    global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
+                    global.panel.register(name: "Debug", align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
+                    global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
+                }
+                .onAppear {
+                    global.contextMenu.clear()
+                    global.contextMenu.register(.pathFocusedPart)
+                    global.contextMenu.register(.focusedPath)
+                    global.contextMenu.register(.focusedGroup)
+                    global.contextMenu.register(.selection)
+                }
+        }
     }}
 }
 
@@ -175,7 +183,7 @@ private extension CanvasView {
     } }
 
     @ViewBuilder var foreground: some View { trace("foreground") {
-        Color.white.opacity(0.1)
+        Color.invisibleSolid
             .modifier(MultipleTouchModifier(model: multipleTouch))
     } }
 
@@ -217,7 +225,7 @@ private extension CanvasView {
                     .zIndex(0)
             }
         }
-        .allowsHitTesting(!multipleTouch.active)
+        .allowsHitTesting(!selector.viewportUpdating)
     } }
 }
 

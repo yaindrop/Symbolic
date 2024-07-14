@@ -1,103 +1,104 @@
 import Combine
 import SwiftUI
 
+let debugCanvasOverlay: Bool = false
+
 // MARK: - global actions
 
 private extension GlobalStores {
-    func setupViewportFlow(multipleTouch: MultipleTouchModel) {
-        viewportUpdater.store.holdCancellables {
-            multipleTouch.$panInfo
-                .sink { viewportUpdater.onPanInfo($0) }
-            multipleTouch.$pinchInfo
-                .sink { viewportUpdater.onPinchInfo($0) }
-        }
+    var canvasGesture: MultipleTouchGesture {
+        .init(
+            onPress: {
+                switch toolbar.mode {
+                case .select: canvasAction.start(triggering: .select)
+                case .addPath: canvasAction.start(triggering: .addPath)
+                }
+            },
+            onPressEnd: { cancelled in
+                canvasAction.end(triggering: .select)
+                canvasAction.end(triggering: .addPath)
+                if cancelled {
+                    viewportUpdater.setBlocked(false)
+                    canvasAction.end(continuous: .draggingSelection)
+                    canvasAction.end(continuous: .addingPath)
+
+                    draggingSelection.cancel()
+                    addingPath.cancel()
+                }
+            },
+            onTap: { info in
+                let worldLocation = info.location.applying(viewport.toWorld)
+                let _r = tracer.range(type: .intent, "On tap \(worldLocation)"); defer { _r() }
+                let pathId = path.hitTest(position: worldLocation)?.id
+                if toolbar.multiSelect {
+                    if let pathId {
+                        activeItem.selectAdd(itemId: pathId)
+                    } else {
+                        activeItem.blur()
+                    }
+                } else {
+                    if let pathId {
+                        canvasAction.on(instant: .activatePath)
+                        activeItem.focus(itemId: pathId)
+                    } else if !activeItem.store.activeItemIds.isEmpty {
+                        canvasAction.on(instant: .deactivatePath)
+                        activeItem.blur()
+                    }
+                }
+            },
+            onLongPress: { info in
+                let worldLocation = info.current.applying(viewport.toWorld)
+                let _r = tracer.range(type: .intent, "On long press \(worldLocation)"); defer { _r() }
+
+                viewportUpdater.setBlocked(true)
+                canvasAction.end(continuous: .panViewport)
+
+                canvasAction.end(triggering: .select)
+                canvasAction.end(triggering: .addPath)
+
+                switch toolbar.mode {
+                case .select:
+                    if !draggingSelection.active {
+                        canvasAction.start(continuous: .draggingSelection)
+                        draggingSelection.onStart(from: info.current)
+                    }
+                case .addPath:
+                    if !addingPath.active {
+                        canvasAction.start(continuous: .addingPath)
+                        addingPath.onStart(from: info.current)
+                    }
+                }
+            },
+            onLongPressEnd: { _ in
+                let _r = tracer.range(type: .intent, "On long press end"); defer { _r() }
+                viewportUpdater.setBlocked(false)
+
+                draggingSelection.onEnd()
+                canvasAction.end(continuous: .draggingSelection)
+
+                if let path = addingPath.addingPath {
+                    documentUpdater.update(path: .create(.init(path: path)))
+                    activeItem.focus(itemId: path.id)
+                    canvasAction.on(instant: .addPath)
+                }
+                addingPath.onEnd()
+                canvasAction.end(continuous: .addingPath)
+            },
+            onDrag: {
+                canvasAction.end(triggering: .select)
+                canvasAction.end(triggering: .addPath)
+
+                draggingSelection.onDrag($0)
+                addingPath.onDrag($0)
+            },
+            onPan: { viewportUpdater.onPan($0) },
+            onPanEnd: { _ in viewportUpdater.onCommit() },
+            onPinch: { viewportUpdater.onPinch($0) },
+            onPinchEnd: { _ in viewportUpdater.onCommit() }
+        )
     }
 
-    func setupMultipleTouchPress(_ multipleTouchPress: MultipleTouchPressModel) {
-        var toolbarMode: ToolbarMode { toolbar.mode }
-        var toWorld: CGAffineTransform { viewport.toWorld }
-        var draggingSelectionActive: Bool { draggingSelection.active }
-        multipleTouchPress.onPress {
-            if case .select = toolbarMode {
-                canvasAction.start(triggering: .select)
-            } else if case .addPath = toolbarMode {
-                canvasAction.start(triggering: .addPath)
-            }
-        }
-        multipleTouchPress.onPressEnd { cancelled in
-            canvasAction.end(triggering: .select)
-            canvasAction.end(triggering: .addPath)
-            if cancelled {
-                viewportUpdater.setBlocked(false)
-                canvasAction.end(continuous: .draggingSelection)
-                canvasAction.end(continuous: .addingPath)
-
-                draggingSelection.cancel()
-                addingPath.cancel()
-            }
-        }
-        multipleTouchPress.onTap { info in
-            let worldLocation = info.location.applying(toWorld)
-            let _r = tracer.range(type: .intent, "On tap \(worldLocation)"); defer { _r() }
-            let pathId = path.hitTest(position: worldLocation)?.id
-            if toolbar.multiSelect {
-                if let pathId {
-                    activeItem.selectAdd(itemId: pathId)
-                } else {
-                    activeItem.blur()
-                }
-            } else {
-                if let pathId {
-                    canvasAction.on(instant: .activatePath)
-                    activeItem.focus(itemId: pathId)
-                } else if !activeItem.store.activeItemIds.isEmpty {
-                    canvasAction.on(instant: .deactivatePath)
-                    activeItem.blur()
-                }
-            }
-        }
-        multipleTouchPress.onLongPress { info in
-            let worldLocation = info.current.applying(toWorld)
-            let _r = tracer.range(type: .intent, "On long press \(worldLocation)"); defer { _r() }
-
-            viewportUpdater.setBlocked(true)
-            canvasAction.end(continuous: .panViewport)
-
-            canvasAction.end(triggering: .select)
-            canvasAction.end(triggering: .addPath)
-
-            if case .select = toolbarMode, !draggingSelectionActive {
-                canvasAction.start(continuous: .draggingSelection)
-                draggingSelection.onStart(from: info.current)
-            } else if case .addPath = toolbarMode {
-                canvasAction.start(continuous: .addingPath)
-                addingPath.onStart(from: info.current)
-            }
-        }
-        multipleTouchPress.onLongPressEnd { _ in
-            let _r = tracer.range(type: .intent, "On long press end"); defer { _r() }
-            viewportUpdater.setBlocked(false)
-
-            draggingSelection.onEnd()
-            canvasAction.end(continuous: .draggingSelection)
-
-            if let path = addingPath.addingPath {
-                documentUpdater.update(path: .create(.init(path: path)))
-                activeItem.focus(itemId: path.id)
-                canvasAction.on(instant: .addPath)
-            }
-            addingPath.onEnd()
-            canvasAction.end(continuous: .addingPath)
-        }
-
-        multipleTouchPress.onDrag {
-            canvasAction.end(triggering: .select)
-            canvasAction.end(triggering: .addPath)
-
-            draggingSelection.onDrag($0)
-            addingPath.onDrag($0)
-        }
-
+    func setupDraggingFlow() {
         draggingSelection.store.holdCancellables {
             draggingSelection.store.$intersectedItems.willNotify
                 .sink {
@@ -132,17 +133,14 @@ struct CanvasView: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onAppear {
-                    global.setupViewportFlow(multipleTouch: multipleTouch)
-
-                    pressDetector.subscribe()
-                    global.setupMultipleTouchPress(multipleTouchPress)
+                    global.setupDraggingFlow()
                 }
                 .onAppear {
                     global.panel.clear()
                     global.panel.register(name: "Path", align: .bottomTrailing) { PathPanel() }
                     global.panel.register(name: "History", align: .bottomLeading) { HistoryPanel() }
                     global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
-                    global.panel.register(name: "Debug", align: .topTrailing) { DebugPanel(multipleTouch: multipleTouch, multipleTouchPress: multipleTouchPress) }
+                    global.panel.register(name: "Debug", align: .topTrailing) { DebugPanel() }
                     global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
                 }
                 .onAppear {
@@ -184,7 +182,7 @@ private extension CanvasView {
 
     @ViewBuilder var foreground: some View { trace("foreground") {
         Color.invisibleSolid
-            .modifier(MultipleTouchModifier(model: multipleTouch))
+            .multipleTouchGesture(global.canvasGesture)
     } }
 
     @ViewBuilder var canvas: some View { trace("canvas") {
@@ -207,9 +205,6 @@ private extension CanvasView {
 
             VStack(spacing: 0) {
                 Toolbar()
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 20)
                     .zIndex(2)
                 ZStack {
                     FloatingPanelRoot()
@@ -218,10 +213,6 @@ private extension CanvasView {
                 }
                 .zIndex(1)
                 CanvasActionView()
-                    .aligned(axis: .horizontal, .start)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 12)
                     .zIndex(0)
             }
         }

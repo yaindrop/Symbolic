@@ -1,9 +1,6 @@
 import SwiftUI
 
 struct DebugPanel: View, SelectorHolder {
-    @ObservedObject var multipleTouch: MultipleTouchModel
-    var multipleTouchPress: MultipleTouchPressModel
-
     class Selector: SelectorBase {
         @Selected({ global.viewport.info }) var viewportInfo
     }
@@ -18,23 +15,8 @@ struct DebugPanel: View, SelectorHolder {
 }
 
 private extension DebugPanel {
-    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
-
     @ViewBuilder var content: some View {
-        touch
         viewport
-    }
-
-    @ViewBuilder var touch: some View {
-        PanelSection(name: "Multiple Touch") {
-            Row(name: "Pan", value: multipleTouch.panInfo?.description ?? "nil")
-            Divider()
-                .padding(.leading, 12)
-            Row(name: "Pinch", value: multipleTouch.pinchInfo?.description ?? "nil")
-            Divider()
-                .padding(.leading, 12)
-            Row(name: "Press", value: pressDetector.pressLocation?.shortDescription ?? "nil")
-        }
     }
 
     @ViewBuilder var viewport: some View {

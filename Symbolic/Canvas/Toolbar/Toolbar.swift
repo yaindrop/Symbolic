@@ -37,6 +37,10 @@ private extension Toolbar {
                 Spacer()
             }
         }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 12)
+        .padding(.top, 20)
+        .background { Color.blue.opacity(debugCanvasOverlay ? 0.2 : 0).allowsHitTesting(false) }
     }
 
     @ViewBuilder var documentMenu: some View {

@@ -25,7 +25,7 @@ struct ContextMenuModifier: ViewModifier, SelectorHolder {
 
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
-        @Selected({ global.viewport.store.viewSize }) var viewSize
+        @Selected({ global.panel.rootFrame }) var rootFrame
     }
 
     @SelectorWrapper var selector
@@ -33,8 +33,8 @@ struct ContextMenuModifier: ViewModifier, SelectorHolder {
     @State private var size: CGSize = .zero
 
     private var menuBox: CGRect {
-        let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(selector.viewSize).midY ? .topCenter : .bottomCenter
-        return bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(selector.viewSize).inset(by: 12))
+        let menuAlign: PlaneOuterAlign = bounds.midY > CGRect(selector.rootFrame).midY ? .topCenter : .bottomCenter
+        return bounds.alignedBox(at: menuAlign, size: size, gap: .init(squared: 12)).clamped(by: CGRect(selector.rootFrame).inset(by: 12))
     }
 
     func body(content: Content) -> some View {

@@ -1,7 +1,5 @@
 import SwiftUI
 
-private let debug: Bool = false
-
 // MARK: - FloatingPanelView
 
 struct FloatingPanelView: View, TracedView, ComputedSelectorHolder {
@@ -249,7 +247,7 @@ private extension FloatingPanelWrapper {
             .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
             .padding(size: selector.padding)
             .offset(.init(secondaryOffset))
-            .background { Color.blue.opacity(debug ? 0.1 : 0).allowsHitTesting(false) }
+            .background { Color.blue.opacity(debugCanvasOverlay ? 0.1 : 0).allowsHitTesting(false) }
             .innerAligned(selector.align)
             .opacity(selector.appearance == .floatingHidden ? 0 : 1)
     }
@@ -279,6 +277,6 @@ private extension FloatingPanelRoot {
             ForEach(selector.floatingPanelIds) { FloatingPanelWrapper(panelId: $0) }
         }
         .geometryReader { global.panel.setRootFrame($0.frame(in: .global)) }
-        .background { Color.yellow.opacity(debug ? 0.2 : 0).allowsHitTesting(false) }
+        .background { Color.yellow.opacity(debugCanvasOverlay ? 0.2 : 0).allowsHitTesting(false) }
     }
 }

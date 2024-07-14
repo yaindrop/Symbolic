@@ -30,6 +30,8 @@ struct MultipleTouchGesture {
     var onDrag: ((PanInfo) -> Void)?
     var onDragEnd: ((PanInfo) -> Void)?
 
+    var onPan: ((PanInfo) -> Void)?
+    var onPanEnd: ((PanInfo) -> Void)?
     var onPinch: ((PinchInfo) -> Void)?
     var onPinchEnd: ((PinchInfo) -> Void)?
 }
@@ -270,6 +272,13 @@ struct MultipleTouchGestureModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .modifier(MultipleTouchModifier(model: multipleTouch))
+            .onReceive(multipleTouch.$panInfo) { info in
+                if let info {
+                    gesture.onPan?(info)
+                } else if let info = multipleTouch.panInfo {
+                    gesture.onPanEnd?(info)
+                }
+            }
             .onReceive(multipleTouch.$pinchInfo) { info in
                 if let info {
                     gesture.onPinch?(info)

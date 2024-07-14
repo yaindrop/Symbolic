@@ -60,7 +60,12 @@ extension ActiveItemView.PathBounds {
                         },
                         onTap: { _ in global.onTap(pathId: pathId) },
                         onDrag: { updateDrag($0, pending: true) },
-                        onDragEnd: { updateDrag($0) }
+                        onDragEnd: { updateDrag($0) },
+                        onPinch: {
+                            global.documentUpdater.cancel()
+                            global.viewportUpdater.onPinch($0)
+                        },
+                        onPinchEnd: { _ in global.viewportUpdater.onCommit() }
                     ))
                     .framePosition(rect: bounds.applying($0.worldToView))
             }

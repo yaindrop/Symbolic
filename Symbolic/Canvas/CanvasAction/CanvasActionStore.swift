@@ -80,6 +80,11 @@ private extension CanvasActionView {
             }
         }
         .font(.system(size: 12))
+        .aligned(axis: .horizontal, .start)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 12)
+        .background { Color.green.opacity(debugCanvasOverlay ? 0.2 : 0).allowsHitTesting(false) }
     }
 
     var empty: Bool {

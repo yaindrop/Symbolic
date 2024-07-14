@@ -110,8 +110,8 @@ private extension DraggingSelectionView {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.gray.opacity(0.2))
                 .stroke(.gray.opacity(0.5))
-                .frame(width: rect.width, height: rect.height)
-                .position(rect.center)
+                .framePosition(rect: rect)
+                .allowsHitTesting(false)
         }
     }
 }

@@ -159,11 +159,10 @@ struct CanvasView: View, TracedView, SelectorHolder {
 private extension CanvasView {
     var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 
-    // MARK: view builders
-
     @ViewBuilder var content: some View {
         ZStack {
-            canvas
+            staticObjects
+            activeObjects
             overlay
         }
         .clipped()
@@ -172,35 +171,27 @@ private extension CanvasView {
         .toolbar(.hidden)
     }
 
-    @ViewBuilder var background: some View { trace("background") {
-        Background()
-    } }
-
-    @ViewBuilder var items: some View { trace("items") {
-        ItemsView()
-    } }
-
-    @ViewBuilder var foreground: some View { trace("foreground") {
-        Color.invisibleSolid
-            .multipleTouchGesture(global.canvasGesture)
-    } }
-
-    @ViewBuilder var canvas: some View { trace("canvas") {
+    @ViewBuilder var staticObjects: some View { trace("canvas") {
         ZStack {
-            background
-            items
-            foreground
+            Background()
+            ItemsView()
         }
+        .multipleTouchGesture(global.canvasGesture)
     } }
 
-    @ViewBuilder var overlay: some View { trace("overlay") {
+    @ViewBuilder var activeObjects: some View {
         ZStack {
             ActiveItemView()
             FocusedPathView()
 
             DraggingSelectionView()
             AddingPathView()
+        }
+        .allowsHitTesting(!selector.viewportUpdating)
+    }
 
+    @ViewBuilder var overlay: some View { trace("overlay") {
+        ZStack {
             ContextMenuRoot()
 
             VStack(spacing: 0) {
@@ -216,7 +207,6 @@ private extension CanvasView {
                     .zIndex(0)
             }
         }
-        .allowsHitTesting(!selector.viewportUpdating)
     } }
 }
 

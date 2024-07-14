@@ -178,6 +178,10 @@ extension ItemService: ItemStoreProtocol {
         }
         return nil
     }
+
+    var allPathsBounds: CGRect? {
+        .init(union: allPaths.map { $0.boundingRect })
+    }
 }
 
 // MARK: - modify item map

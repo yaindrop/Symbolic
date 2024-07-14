@@ -105,6 +105,21 @@ extension PanelStore {
         guard let resizing else { return true }
         return resizing == id
     }
+
+    var freeSpace: CGRect {
+        let floatingPanels = floatingPanels
+        var minX = rootFrame.minX + floatingPaddingLarge.width, maxX = rootFrame.maxX - floatingPaddingLarge.width
+        if floatingPanels.contains(where: { $0.align.isLeading }) {
+            minX += floatingWidth
+        }
+        if floatingPanels.contains(where: { $0.align.isTrailing }) {
+            maxX -= floatingWidth
+        }
+        if maxX - minX > floatingWidth {
+            return .init(x: minX, y: rootFrame.minY, width: maxX - minX, height: rootFrame.height)
+        }
+        return rootFrame
+    }
 }
 
 extension PanelStore {

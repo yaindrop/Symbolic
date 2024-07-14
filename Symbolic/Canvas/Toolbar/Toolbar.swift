@@ -115,6 +115,11 @@ private extension Toolbar {
             ToolbarButton(systemName: selector.toolbarMode.addPath != nil ? "plus.circle.fill" : "plus.circle") {
                 global.toolbar.setMode(.addPath(.init()))
             }
+
+            ToolbarButton(systemName: "arrow.up.left.and.arrow.down.right") {
+                guard let bounds = global.item.allPathsBounds else { return }
+                global.viewportUpdater.zoomTo(rect: bounds)
+            }
         }
     }
 }

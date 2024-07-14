@@ -12,6 +12,34 @@ private extension GlobalStores {
             focusedPath.clear()
         }
     }
+
+    func onDrag(pathId: UUID, _ v: PanInfo, pending: Bool = false) {
+        if activeItem.selected(itemId: pathId) {
+            let selectedPathIds = activeItem.selectedPaths.map { $0.id }
+            documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+        } else {
+            documentUpdater.updateInView(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
+        }
+    }
+
+    func gesture(pathId: UUID) -> MultipleTouchGesture {
+        .init(
+            onPress: {
+                canvasAction.start(continuous: .moveSelection)
+            },
+            onPressEnd: { cancelled in
+                canvasAction.end(continuous: .moveSelection)
+                if cancelled { documentUpdater.cancel() }
+            },
+
+            onTap: { _ in onTap(pathId: pathId) },
+            onDrag: { onDrag(pathId: pathId, $0, pending: true) },
+            onDragEnd: { onDrag(pathId: pathId, $0) },
+
+            onPinch: { viewportUpdater.onPinch($0) },
+            onPinchEnd: { _ in viewportUpdater.onCommit() }
+        )
+    }
 }
 
 // MARK: - PathBounds
@@ -50,23 +78,7 @@ extension ActiveItemView.PathBounds {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
-                    .multipleTouchGesture(.init(
-                        onPress: {
-                            global.canvasAction.start(continuous: .moveSelection)
-                        },
-                        onPressEnd: { cancelled in
-                            global.canvasAction.end(continuous: .moveSelection)
-                            if cancelled { global.documentUpdater.cancel() }
-                        },
-                        onTap: { _ in global.onTap(pathId: pathId) },
-                        onDrag: { updateDrag($0, pending: true) },
-                        onDragEnd: { updateDrag($0) },
-                        onPinch: {
-                            global.documentUpdater.cancel()
-                            global.viewportUpdater.onPinch($0)
-                        },
-                        onPinchEnd: { _ in global.viewportUpdater.onCommit() }
-                    ))
+                    .multipleTouchGesture(global.gesture(pathId: pathId))
                     .framePosition(rect: bounds.applying($0.worldToView))
             }
         }

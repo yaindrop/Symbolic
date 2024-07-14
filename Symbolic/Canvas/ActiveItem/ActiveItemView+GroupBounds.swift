@@ -29,6 +29,37 @@ private extension GlobalStores {
             }
         }
     }
+
+    func onDrag(group: ItemGroup, _ v: PanInfo, pending: Bool = false) {
+        if activeItem.selected(itemId: group.id) {
+            let selectedPathIds = activeItem.selectedPaths.map { $0.id }
+            documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+        } else {
+            let groupedPathIds = item.groupedPaths(groupId: group.id).map { $0.id }
+            documentUpdater.updateInView(path: .move(.init(pathIds: groupedPathIds, offset: v.offset)), pending: pending)
+        }
+    }
+
+    func gesture(group: ItemGroup) -> MultipleTouchGesture {
+        .init(
+            onPress: {
+                canvasAction.start(continuous: .moveSelection)
+            },
+            onPressEnd: { cancelled in
+                canvasAction.end(continuous: .moveSelection)
+                if cancelled {
+                    documentUpdater.cancel()
+                }
+            },
+
+            onTap: { onTap(group: group, position: $0.location) },
+            onDrag: { onDrag(group: group, $0, pending: true) },
+            onDragEnd: { onDrag(group: group, $0) },
+
+            onPinch: { viewportUpdater.onPinch($0) },
+            onPinchEnd: { _ in viewportUpdater.onCommit() }
+        )
+    }
 }
 
 // MARK: - GroupBounds
@@ -68,33 +99,9 @@ private extension ActiveItemView.GroupBounds {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
+                    .multipleTouchGesture(global.gesture(group: group))
                     .framePosition(rect: bounds.applying($0.worldToView).outset(by: selector.outset))
-                    .multipleGesture(.init(
-                        onPress: {
-                            global.canvasAction.start(continuous: .moveSelection)
-                        },
-                        onPressEnd: { cancelled in
-                            global.canvasAction.end(continuous: .moveSelection)
-                            if cancelled {
-                                global.documentUpdater.cancel()
-                            }
-                        },
-
-                        onTap: { global.onTap(group: group, position: $0.location) },
-                        onDrag: { updateDrag($0, pending: true) },
-                        onDragEnd: { updateDrag($0) }
-                    ))
             }
-        }
-    }
-
-    func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-        if selector.selected {
-            let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
-            global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
-        } else {
-            let groupedPathIds = global.item.groupedPaths(groupId: group.id).map { $0.id }
-            global.documentUpdater.updateInView(path: .move(.init(pathIds: groupedPathIds, offset: v.offset)), pending: pending)
         }
     }
 }

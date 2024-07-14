@@ -276,6 +276,7 @@ private extension FloatingPanelRoot {
         ZStack {
             ForEach(selector.floatingPanelIds) { FloatingPanelWrapper(panelId: $0) }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .geometryReader { global.panel.setRootFrame($0.frame(in: .global)) }
         .background { Color.yellow.opacity(debugCanvasOverlay ? 0.2 : 0).allowsHitTesting(false) }
     }

@@ -124,26 +124,19 @@ struct CanvasView: View, TracedView, SelectorHolder {
 
     @SelectorWrapper var selector
 
-    @State private var multipleTouch = MultipleTouchModel()
-    @State private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
-
-    @State private var longPressPosition: Point2?
-
     var body: some View { trace {
         setupSelector {
             content
                 .onAppear {
                     global.setupDraggingFlow()
-                }
-                .onAppear {
+
                     global.panel.clear()
                     global.panel.register(name: "Path", align: .bottomTrailing) { PathPanel() }
                     global.panel.register(name: "History", align: .bottomLeading) { HistoryPanel() }
                     global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
-                    global.panel.register(name: "Debug", align: .topTrailing) { DebugPanel() }
+                    global.panel.register(name: "Debug", align: .bottomTrailing) { DebugPanel() }
                     global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
-                }
-                .onAppear {
+
                     global.contextMenu.clear()
                     global.contextMenu.register(.pathFocusedPart)
                     global.contextMenu.register(.focusedPath)
@@ -157,8 +150,6 @@ struct CanvasView: View, TracedView, SelectorHolder {
 // MARK: private
 
 private extension CanvasView {
-    var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
-
     @ViewBuilder var content: some View {
         ZStack {
             staticObjects

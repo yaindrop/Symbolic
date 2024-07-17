@@ -103,11 +103,14 @@ extension FocusedPathView {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
+            @Formula({ path($0)?.node(id: $0.nodeId) }) static var node
+
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ path($0)?.node(id: $0.nodeId)?.position }) var position
+            @Selected({ node($0)?.position }) var position
             @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
             @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected({ node($0).map { global.grid.snapped($0.position) } != nil }) var snapped
         }
 
         @SelectorWrapper var selector
@@ -131,12 +134,13 @@ extension FocusedPathView.NodeHandle {
 
     @ViewBuilder var content: some View {
         if let position = selector.position {
-            AnimatableReader(selector.viewport) {
+            AnimatableReader(selector.viewport) { viewport in
                 nodeShape
                     .padding(touchablePadding)
                     .invisibleSoildOverlay()
-                    .position(position.applying($0.worldToView))
+                    .position(position.applying(viewport.worldToView))
                     .multipleGesture(global.nodeGesture(nodeId: nodeId, context: gestureContext))
+                    .overlay { snappedMark(viewport) }
             }
         }
     }
@@ -163,6 +167,19 @@ extension FocusedPathView.NodeHandle {
                 .fill(.blue)
                 .scaleEffect(0.5)
                 .allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder func snappedMark(_ viewport: SizedViewportInfo) -> some View {
+        let position = selector.position?.applying(viewport.worldToView)
+        if let position, selector.snapped {
+            SUPath { path in
+                path.move(to: position - .init(9, 0))
+                path.addLine(to: position + .init(9, 0))
+                path.move(to: position - .init(0, 9))
+                path.addLine(to: position + .init(0, 9))
+            }
+            .stroke(.blue.opacity(0.8), style: StrokeStyle(lineWidth: 1, lineCap: .round))
         }
     }
 }

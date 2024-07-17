@@ -14,6 +14,7 @@ extension FocusedPathView {
             @Formula({ global.path.get(id: $0.pathId) }) static var path
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
             @Formula({ path($0)?.node(after: $0.fromNodeId)?.id }) static var nextNodeId
+
             @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var segmentFocused

@@ -93,6 +93,7 @@ private struct NodeDetailView: View, TracedView, EquatableBy, ComputedSelectorHo
     class Selector: SelectorBase {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
+
         @Selected({ path($0)?.pair(before: $0.nodeId) }) var prevPair
         @Selected({ path($0)?.pair(id: $0.nodeId) }) var pair
         @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
@@ -233,6 +234,7 @@ private struct NodeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
     class Selector: SelectorBase {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
+
         @Selected({ path($0)?.mergableNode(id: $0.nodeId) }) var mergableNode
         @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
         @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
@@ -321,6 +323,7 @@ private struct EdgeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
     class Selector: SelectorBase {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
+
         @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
         @Selected({ property($0)?.edgeType(id: $0.fromNodeId) }) var edgeType
         @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused

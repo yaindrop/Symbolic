@@ -12,6 +12,12 @@ extension GridStore {
         active.snap(point)
     }
 
+    func snapped(_ point: Point2) -> Int? {
+        gridStack.firstIndex { $0.snapped(point) }
+    }
+}
+
+extension GridStore {
     func setActive(_ index: Int) {
         guard gridStack.indices.contains(index) else { return }
         update { $0(\._activeIndex, index) }

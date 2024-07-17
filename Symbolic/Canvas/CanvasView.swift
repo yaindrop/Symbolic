@@ -150,7 +150,7 @@ struct CanvasView: View, TracedView, SelectorHolder {
 // MARK: private
 
 private extension CanvasView {
-    @ViewBuilder var content: some View {
+    @ViewBuilder var content: some View { trace("content") {
         ZStack {
             staticObjects
             activeObjects
@@ -160,9 +160,9 @@ private extension CanvasView {
         .sizeReader { global.viewport.setViewSize($0) }
         .edgesIgnoringSafeArea(.all)
         .toolbar(.hidden)
-    }
+    } }
 
-    @ViewBuilder var staticObjects: some View { trace("canvas") {
+    @ViewBuilder var staticObjects: some View { trace("staticObjects") {
         ZStack {
             Background()
             ItemsView()
@@ -170,7 +170,7 @@ private extension CanvasView {
         .multipleTouchGesture(global.canvasGesture)
     } }
 
-    @ViewBuilder var activeObjects: some View {
+    @ViewBuilder var activeObjects: some View { trace("activeObjects") {
         ZStack {
             ActiveItemView()
             FocusedPathView()
@@ -179,7 +179,7 @@ private extension CanvasView {
             AddingPathView()
         }
         .allowsHitTesting(!selector.viewportUpdating)
-    }
+    } }
 
     @ViewBuilder var overlay: some View { trace("overlay") {
         ZStack {

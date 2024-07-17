@@ -110,6 +110,7 @@ extension FocusedPathView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
+
             @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
         }
@@ -166,6 +167,7 @@ extension FocusedPathView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
+
             @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused

@@ -12,8 +12,8 @@ extension GridStore {
         active.snap(point)
     }
 
-    func snapped(_ point: Point2) -> Int? {
-        gridStack.firstIndex { $0.snapped(point) }
+    func snapped(_ point: Point2) -> Grid? {
+        gridStack.first { $0.snapped(point) }
     }
 }
 

@@ -110,7 +110,7 @@ extension FocusedPathView {
             @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
             @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
             @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ node($0).map { global.grid.snapped($0.position) } != nil }) var snapped
+            @Selected({ node($0).map { global.grid.snapped($0.position) } }) var snappedGrid
         }
 
         @SelectorWrapper var selector
@@ -140,7 +140,7 @@ extension FocusedPathView.NodeHandle {
                     .invisibleSoildOverlay()
                     .position(position.applying(viewport.worldToView))
                     .multipleGesture(global.nodeGesture(nodeId: nodeId, context: gestureContext))
-                    .overlay { snappedMark(viewport) }
+                    .background { snappedMark(viewport) }
             }
         }
     }
@@ -172,14 +172,14 @@ extension FocusedPathView.NodeHandle {
 
     @ViewBuilder func snappedMark(_ viewport: SizedViewportInfo) -> some View {
         let position = selector.position?.applying(viewport.worldToView)
-        if let position, selector.snapped {
+        if let position, let grid = selector.snappedGrid, !selector.selectingNodes, selector.active {
             SUPath { path in
                 path.move(to: position - .init(9, 0))
                 path.addLine(to: position + .init(9, 0))
                 path.move(to: position - .init(0, 9))
                 path.addLine(to: position + .init(0, 9))
             }
-            .stroke(.blue.opacity(0.8), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            .stroke(grid.tintColor, style: StrokeStyle(lineWidth: 1, lineCap: .round))
         }
     }
 }

@@ -238,7 +238,7 @@ extension Path {
             guard let prev = nodeIndex(id: prevNodeId) else { return }
             i = prev + 1
         }
-        nodeMap.insert((nodeId, nodeCreate.node), at: i)
+        nodeMap.insert((nodeId, node), at: i)
     }
 
     func update(nodeDelete: PathEvent.Update.NodeDelete) {

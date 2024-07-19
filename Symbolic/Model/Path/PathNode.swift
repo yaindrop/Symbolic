@@ -25,7 +25,7 @@ extension PathNode: TriviallyCloneable {}
 
 extension PathNode: CustomStringConvertible {
     var description: String {
-        "Node(position: \(position), in: \(controlIn), out: \(controlOut)"
+        "Node(position: \(position), in: \(controlIn), out: \(controlOut))"
     }
 }
 
@@ -71,7 +71,7 @@ extension PathSegment {
 
 extension PathSegment: CustomStringConvertible {
     var description: String {
-        "Segment(from: \(from), to: \(to), out: \(fromControlOut), in: \(toControlIn)"
+        "Segment(from: \(from), to: \(to), out: \(fromControlOut), in: \(toControlIn))"
     }
 }
 

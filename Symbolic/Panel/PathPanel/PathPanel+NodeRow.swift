@@ -76,10 +76,6 @@ private extension PathPanel.NodeRow {
     func toggleFocus() {
         selector.focused ? global.focusedPath.clear() : global.focusedPath.setFocus(node: nodeId)
     }
-
-    func updatePosition(pending: Bool = false) -> (Point2) -> Void {
-        { global.documentUpdater.update(focusedPath: .setNodePosition(.init(nodeId: nodeId, position: $0)), pending: pending) }
-    }
 }
 
 // MARK: - NodeDetailPanel
@@ -93,12 +89,12 @@ private struct NodeDetailView: View, TracedView, EquatableBy, ComputedSelectorHo
     class Selector: SelectorBase {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
+        @Formula({ path($0)?.nodeId(before: $0.nodeId) }) static var prevNodeId
 
-        @Selected({ path($0)?.pair(before: $0.nodeId) }) var prevPair
-        @Selected({ path($0)?.pair(id: $0.nodeId) }) var pair
+        @Selected({ path($0)?.node(id: $0.nodeId) }) var node
         @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
-        @Selected({ property($0)?.edgeType(id: $0.nodeId) }) var edgeType
-        @Selected({ props in path(props)?.node(before: props.nodeId).map { property(props)?.edgeType(id: $0.id) } }) var prevEdgeType
+        @Selected({ property($0)?.segmentType(id: $0.nodeId) }) var segmentType
+        @Selected({ props in prevNodeId(props).map { property(props)?.segmentType(id: $0.id) } }) var prevSegmentType
     }
 
     @SelectorWrapper var selector
@@ -115,16 +111,16 @@ private struct NodeDetailView: View, TracedView, EquatableBy, ComputedSelectorHo
 private extension NodeDetailView {
     var content: some View {
         VStack(spacing: 0) {
-            prevEdgeRow
+            controlInRow
             positionRow
-            edgeRow
+            controlOutRow
         }
         .background(.background.secondary)
         .clipRounded(radius: 12)
     }
 
     @ViewBuilder var positionRow: some View {
-        if let node = selector.pair?.node {
+        if let node = selector.node {
             Divider()
             HStack {
                 Menu { NodeMenu(pathId: pathId, nodeId: nodeId) } label: {
@@ -136,59 +132,52 @@ private extension NodeDetailView {
                 .tint(.label)
                 .foregroundStyle(selector.focused ? .blue.opacity(0.8) : .label)
                 Spacer(minLength: 12)
-                PositionPicker(position: node.position) { updatePosition(position: $0, pending: true) } onDone: { updatePosition(position: $0) }
+                PositionPicker(position: node.position) { updateNode(position: $0, pending: true) } onDone: { updateNode(position: $0) }
                     .padding(12)
             }
         }
     }
 
-    @ViewBuilder var prevEdgeRow: some View {
-        if let prevPair = selector.prevPair {
-            let prevNode = prevPair.node, prevEdge = prevPair.edge
-            let isCubic = selector.prevEdgeType == .cubic || (selector.prevEdgeType == .auto && prevEdge.control1 != .zero)
-            let isLine = selector.prevEdgeType == .line || (selector.prevEdgeType == .auto && prevEdge.control1 == .zero)
+    @ViewBuilder var controlInRow: some View {
+        if let node = selector.node {
+            let segmentType = selector.prevSegmentType
+            let isCubic = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
+            let isLine = segmentType == .line || (segmentType == .auto && node.controlIn == .zero)
             HStack {
-                let menu = EdgeMenu(pathId: pathId, fromNodeId: prevNode.id)
+                let menu = EmptyView()
                 if isCubic {
-                    Menu { menu } label: { rowTitle(name: "Cubic", subname: "Before") }
-                        .menuOrder(.fixed)
-                        .tint(.label)
+                    rowTitle(name: "Cubic", subname: "In")
                         .foregroundStyle(selector.focused ? .orange.opacity(0.8) : .label)
                 } else if isLine {
-                    Menu { menu } label: { rowTitle(name: "Line", subname: "Before") }
-                        .menuOrder(.fixed)
+                    rowTitle(name: "Line", subname: "In")
                         .tint(.label)
                 }
                 Spacer(minLength: 12)
                 if isCubic {
-                    PositionPicker(position: Point2(prevEdge.control1)) { updatePrevEdge(position: $0, pending: true) } onDone: { updatePrevEdge(position: $0) }
+                    PositionPicker(position: Point2(node.controlIn)) { updateNode(controlIn: .init($0), pending: true) } onDone: { updateNode(controlIn: .init($0)) }
                         .padding(12)
                 }
             }
         }
     }
 
-    @ViewBuilder var edgeRow: some View {
-        if let pair = selector.pair {
-            let node = pair.node, edge = pair.edge
-            let isCubic = selector.edgeType == .cubic || (selector.edgeType == .auto && edge.control0 != .zero)
-            let isLine = selector.edgeType == .line || (selector.edgeType == .auto && edge.control0 == .zero)
+    @ViewBuilder var controlOutRow: some View {
+        if let node = selector.node {
+            let segmentType = selector.segmentType
+            let isCubic = segmentType == .cubic || (segmentType == .auto && node.controlOut != .zero)
+            let isLine = segmentType == .line || (segmentType == .auto && node.controlOut == .zero)
             Divider()
             HStack {
-                let menu = EdgeMenu(pathId: pathId, fromNodeId: node.id)
                 if isCubic {
-                    Menu { menu } label: { rowTitle(name: "Cubic", subname: "After") }
-                        .menuOrder(.fixed)
-                        .tint(.label)
+                    rowTitle(name: "Cubic", subname: "Out")
                         .foregroundStyle(selector.focused ? .green.opacity(0.8) : .label)
                 } else if isLine {
-                    Menu { menu } label: { rowTitle(name: "Line", subname: "After") }
-                        .menuOrder(.fixed)
+                    rowTitle(name: "Line", subname: "Out")
                         .tint(.label)
                 }
                 Spacer(minLength: 12)
                 if isCubic {
-                    PositionPicker(position: Point2(edge.control0)) { updateEdge(position: $0, pending: true) } onDone: { updateEdge(position: $0) }
+                    PositionPicker(position: Point2(node.controlOut)) { updateNode(controlOut: .init($0), pending: true) } onDone: { updateNode(controlOut: .init($0)) }
                         .padding(12)
                 }
             }
@@ -206,19 +195,12 @@ private extension NodeDetailView {
         .padding(12)
     }
 
-    func updatePosition(position: Point2, pending: Bool = false) {
-        global.documentUpdater.update(focusedPath: .setNodePosition(.init(nodeId: nodeId, position: position)), pending: pending)
-    }
-
-    func updatePrevEdge(position: Point2, pending: Bool = false) {
-        if let prevPair = selector.prevPair {
-            global.documentUpdater.update(focusedPath: .setEdge(.init(fromNodeId: prevPair.node.id, edge: prevPair.edge.with(control0: .init(position)))), pending: pending)
-        }
-    }
-
-    func updateEdge(position: Point2, pending: Bool = false) {
-        if let edge = selector.pair?.edge {
-            global.documentUpdater.update(focusedPath: .setEdge(.init(fromNodeId: nodeId, edge: edge.with(control1: .init(position)))), pending: pending)
+    func updateNode(position: Point2? = nil, controlIn: Vector2? = nil, controlOut: Vector2? = nil, pending: Bool = false) {
+        if var node = selector.node {
+            position.map { node.position = $0 }
+            controlIn.map { node.controlIn = $0 }
+            controlOut.map { node.controlOut = $0 }
+            global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
         }
     }
 }
@@ -235,7 +217,7 @@ private struct NodeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
 
-        @Selected({ path($0)?.mergableNode(id: $0.nodeId) }) var mergableNode
+        @Selected({ path($0)?.mergableNodeId(id: $0.nodeId) }) var mergableNodeId
         @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
         @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var focused
     }
@@ -256,7 +238,7 @@ private extension NodeMenu {
         Label("\(nodeId)", systemImage: "number")
 
         Button(selector.focused ? "Unfocus" : "Focus", systemImage: selector.focused ? "circle.slash" : "scope") { toggleFocus() }
-        if selector.mergableNode != nil {
+        if selector.mergableNodeId != nil {
             Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
         }
 
@@ -294,8 +276,8 @@ private extension NodeMenu {
     }
 
     func mergeNode() {
-        if let mergableNode = selector.mergableNode {
-            global.documentUpdater.update(path: .merge(.init(pathId: pathId, endingNodeId: nodeId, mergedPathId: pathId, mergedEndingNodeId: mergableNode.id)))
+        if let mergableNodeId = selector.mergableNodeId {
+            global.documentUpdater.update(path: .merge(.init(pathId: pathId, endingNodeId: nodeId, mergedPathId: pathId, mergedEndingNodeId: mergableNodeId)))
         }
     }
 
@@ -312,9 +294,9 @@ private extension NodeMenu {
     }
 }
 
-// MARK: - EdgeMenu
+// MARK: - SegmentMenu
 
-private struct EdgeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
+private struct SegmentMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
     let pathId: UUID, fromNodeId: UUID
 
     var equatableBy: some Equatable { pathId; fromNodeId }
@@ -324,8 +306,8 @@ private struct EdgeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
         @Formula({ global.path.get(id: $0.pathId) }) static var path
         @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
 
-        @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
-        @Selected({ property($0)?.edgeType(id: $0.fromNodeId) }) var edgeType
+        @Selected({ path($0)?.segment(fromId: $0.fromNodeId) }) var segment
+        @Selected({ property($0)?.segmentType(id: $0.fromNodeId) }) var segmentType
         @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
     }
 
@@ -340,52 +322,52 @@ private struct EdgeMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
 
 // MARK: private
 
-private extension EdgeMenu {
+private extension SegmentMenu {
     @ViewBuilder var content: some View {
         Label("\(fromNodeId)", systemImage: "number")
         Button(selector.focused ? "Unfocus" : "Focus", systemImage: selector.focused ? "circle.slash" : "scope") { toggleFocus() }
 
         Divider()
 
-        ControlGroup { edgeTypeButtons } label: { Text("Edge Type") }
+        ControlGroup { segmentTypeButtons } label: { Text("Segment Type") }
 
         Divider()
 
-        Button("Split", systemImage: "square.and.line.vertical.and.square") { splitEdge() }
+        Button("Split", systemImage: "square.and.line.vertical.and.square") { splitSegment() }
 
         Divider()
 
-        Button("Break", systemImage: "scissors.circle", role: .destructive) { breakEdge() }
+        Button("Break", systemImage: "scissors.circle", role: .destructive) { breakSegment() }
     }
 
-    @ViewBuilder var edgeTypeButtons: some View {
-        edgeTypeButton(.line)
-        edgeTypeButton(.cubic)
-        edgeTypeButton(.quadratic)
+    @ViewBuilder var segmentTypeButtons: some View {
+        segmentTypeButton(.line)
+        segmentTypeButton(.cubic)
+        segmentTypeButton(.quadratic)
     }
 
-    @ViewBuilder func edgeTypeButton(_ edgeType: PathEdgeType) -> some View {
+    @ViewBuilder func segmentTypeButton(_ segmentType: PathSegmentType) -> some View {
         var name: String {
-            switch edgeType {
+            switch segmentType {
             case .line: "Line"
             case .cubic: "Cubic Bezier"
             case .quadratic: "Quadratic Bezier"
             case .auto: ""
             }
         }
-        let selected = selector.edgeType == edgeType
-        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setEdgeType(.auto) : setEdgeType(edgeType) }
+        let selected = selector.segmentType == segmentType
+        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setSegmentType(.auto) : setSegmentType(segmentType) }
     }
 
     func toggleFocus() {
         selector.focused ? global.focusedPath.clear() : global.focusedPath.setFocus(segment: fromNodeId)
     }
 
-    func setEdgeType(_ edgeType: PathEdgeType) {
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setEdgeType(.init(fromNodeIds: [fromNodeId], edgeType: edgeType)))))
+    func setSegmentType(_ segmentType: PathSegmentType) {
+        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: [fromNodeId], segmentType: segmentType)))))
     }
 
-    func splitEdge() {
+    func splitSegment() {
         guard let segment = selector.segment else { return }
         let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
         let id = UUID()
@@ -393,9 +375,9 @@ private extension EdgeMenu {
         global.focusedPath.setFocus(node: id)
     }
 
-    func breakEdge() {
+    func breakSegment() {
         if let pathId = global.activeItem.focusedItemId {
-            global.documentUpdater.update(path: .breakAtEdge(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
+            global.documentUpdater.update(path: .breakAtSegment(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
         }
     }
 }

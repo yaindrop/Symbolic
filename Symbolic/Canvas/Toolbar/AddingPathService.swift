@@ -41,19 +41,16 @@ extension AddingPathService {
         guard let from = store.from else { return nil }
         let mid = from.midPoint(to: to)
         let offset = mid.offset(to: to)
-        return .init(edge: .init(control0: from.offset(to: mid + offset.normalLeft / 2), control1: to.offset(to: mid + offset.normalRight / 2)), from: from, to: to)
+        return .init(from: from, to: to, fromControlOut: from.offset(to: mid + offset.normalLeft / 2), toControlIn: to.offset(to: mid + offset.normalRight / 2))
     }
 
     var addingPath: Path? {
         guard let segment else { return nil }
         let segmentInWorld = segment.applying(viewport.toWorld)
-        let fromNode = PathNode(id: UUID(), position: segmentInWorld.from)
-        let toNode = PathNode(id: UUID(), position: segmentInWorld.to)
-        let pairs: Path.PairMap = [
-            fromNode.id: .init(fromNode, segmentInWorld.edge),
-            toNode.id: .init(toNode, .init()),
-        ]
-        return .init(id: UUID(), pairs: pairs, isClosed: false)
+        let fromNode = PathNode(position: segmentInWorld.from, controlOut: segmentInWorld.fromControlOut)
+        let toNode = PathNode(position: segmentInWorld.to, controlIn: segmentInWorld.toControlIn)
+        let nodeMap = Path.NodeMap(values: [fromNode, toNode]) { _ in UUID() }
+        return .init(id: UUID(), nodeMap: nodeMap, isClosed: false)
     }
 }
 

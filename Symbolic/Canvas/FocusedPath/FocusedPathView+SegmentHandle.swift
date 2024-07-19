@@ -10,7 +10,7 @@ private class GestureContext {
 private extension GlobalStores {
     func onTap(segment fromId: UUID) {
         if focusedPath.selectingNodes {
-            guard let path = activeItem.focusedPath, let toId = path.node(after: fromId)?.id else { return }
+            guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromId) else { return }
             let nodeIds = [fromId, toId]
             if focusedPath.activeNodeIds.isSuperset(of: nodeIds) {
                 focusedPath.selectRemove(node: nodeIds)
@@ -23,7 +23,7 @@ private extension GlobalStores {
         }
     }
 
-    func edgeGesture(fromId: UUID, segment: PathSegment, context: GestureContext) -> MultipleGesture {
+    func segmentGesture(fromId: UUID, segment: PathSegment, context: GestureContext) -> MultipleGesture {
         func split(at paramT: Scalar) {
             context.longPressParamT = paramT
             let id = UUID()
@@ -53,10 +53,10 @@ private extension GlobalStores {
             configs: .init(durationThreshold: 0.2),
             onPress: {
                 canvasAction.start(continuous: .movePath)
-                canvasAction.start(triggering: .splitPathEdge)
+                canvasAction.start(triggering: .splitPathSegment)
             },
             onPressEnd: { cancelled in
-                canvasAction.end(triggering: .splitPathEdge)
+                canvasAction.end(triggering: .splitPathSegment)
                 canvasAction.end(continuous: .splitAndMovePathNode)
                 canvasAction.end(continuous: .movePath)
                 if cancelled { documentUpdater.cancel() }
@@ -67,27 +67,27 @@ private extension GlobalStores {
                 split(at: segment.paramT(closestTo: $0.location).t)
                 updateLongPress(segment: segment, pending: true)
                 canvasAction.end(continuous: .movePath)
-                canvasAction.end(triggering: .splitPathEdge)
+                canvasAction.end(triggering: .splitPathSegment)
                 canvasAction.start(continuous: .splitAndMovePathNode)
             },
             onLongPressEnd: { _ in updateLongPress(segment: segment) },
             onDrag: {
                 updateDrag($0, pending: true)
-                canvasAction.end(triggering: .splitPathEdge)
+                canvasAction.end(triggering: .splitPathSegment)
             },
             onDragEnd: { updateDrag($0) }
         )
     }
 
-    func focusedEdgeGesture(fromId: UUID) -> MultipleGesture {
+    func focusedSegmentGesture(fromId: UUID) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            guard let toId = activeItem.focusedPath?.node(after: fromId)?.id else { return }
+            guard let toId = activeItem.focusedPath?.nodeId(after: fromId) else { return }
             documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: v.offset)), pending: pending)
         }
         return .init(
-            onPress: { canvasAction.start(continuous: .movePathEdge) },
+            onPress: { canvasAction.start(continuous: .movePathSegment) },
             onPressEnd: { cancelled in
-                canvasAction.end(continuous: .movePathEdge)
+                canvasAction.end(continuous: .movePathSegment)
                 if cancelled { documentUpdater.cancel() }
             },
 
@@ -98,10 +98,10 @@ private extension GlobalStores {
     }
 }
 
-// MARK: - EdgeHandle
+// MARK: - SegmentHandle
 
 extension FocusedPathView {
-    struct EdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+    struct SegmentHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         let pathId: UUID, fromNodeId: UUID
 
         var equatableBy: some Equatable { pathId; fromNodeId }
@@ -112,7 +112,7 @@ extension FocusedPathView {
             @Formula({ global.path.get(id: $0.pathId) }) static var path
 
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
+            @Selected({ path($0)?.segment(fromId: $0.fromNodeId) }) var segment
         }
 
         @SelectorWrapper var selector
@@ -129,7 +129,7 @@ extension FocusedPathView {
 
 // MARK: private
 
-private extension FocusedPathView.EdgeHandle {
+private extension FocusedPathView.SegmentHandle {
     @ViewBuilder var content: some View {
         if let segment = selector.segment {
             AnimatableReader(selector.viewport) {
@@ -137,7 +137,7 @@ private extension FocusedPathView.EdgeHandle {
                 SUPath { p in segment.append(to: &p) }
                     .strokedPath(StrokeStyle(lineWidth: 24, lineCap: .round))
                     .fill(Color.invisibleSolid)
-                    .multipleGesture(global.edgeGesture(fromId: fromNodeId, segment: segment, context: gestureContext))
+                    .multipleGesture(global.segmentGesture(fromId: fromNodeId, segment: segment, context: gestureContext))
             }
         }
     }
@@ -155,10 +155,10 @@ private extension FocusedPathView.EdgeHandle {
     }
 }
 
-// MARK: - FocusedEdgeHandle
+// MARK: - FocusedSegmentHandle
 
 extension FocusedPathView {
-    struct FocusedEdgeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+    struct FocusedSegmentHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
         let pathId: UUID, fromNodeId: UUID
 
         var equatableBy: some Equatable { pathId; fromNodeId }
@@ -169,7 +169,7 @@ extension FocusedPathView {
             @Formula({ global.path.get(id: $0.pathId) }) static var path
 
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ path($0)?.segment(from: $0.fromNodeId) }) var segment
+            @Selected({ path($0)?.segment(fromId: $0.fromNodeId) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
         }
 
@@ -185,7 +185,7 @@ extension FocusedPathView {
 
 // MARK: private
 
-private extension FocusedPathView.FocusedEdgeHandle {
+private extension FocusedPathView.FocusedSegmentHandle {
     var color: Color { .cyan }
     var lineWidth: Scalar { 1 }
     var circleSize: Scalar { 12 }
@@ -213,7 +213,7 @@ private extension FocusedPathView.FocusedEdgeHandle {
                     .padding(touchablePadding)
                     .invisibleSoildOverlay()
                     .position(circlePosition)
-                    .multipleGesture(global.focusedEdgeGesture(fromId: fromNodeId))
+                    .multipleGesture(global.focusedSegmentGesture(fromId: fromNodeId))
                     .overlay {
                         SUPath { p in
                             let tessellated = segment.tessellated()

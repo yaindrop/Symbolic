@@ -24,54 +24,57 @@ extension SVGPathCommand.ArcTo {
 }
 
 extension SVGPathCommand.BezierTo {
-    func toEdge(current: Point2) -> PathEdge {
-        .init(control0: current.offset(to: control0), control1: position.offset(to: control1))
+    func toControls(current: Point2) -> (controlOut: Vector2, controlIn: Vector2) {
+        (controlOut: current.offset(to: control0), controlIn: position.offset(to: control1))
     }
 }
 
 extension SVGPathCommand {
-    func toEdge(current: Point2) -> PathEdge {
+    func toControls(current: Point2) -> (controlOut: Vector2, controlIn: Vector2) {
         switch self {
         case .arcTo:
             logError("Arc should have been approximated")
-            return .init()
+            return (.zero, .zero)
         case let .bezierTo(bezierTo):
-            return bezierTo.toEdge(current: current)
+            return bezierTo.toControls(current: current)
         case .lineTo:
-            return .init()
+            return (.zero, .zero)
         case let .quadraticBezierTo(quadraticBezierTo):
             let bezierTo = quadraticBezierTo.toCubic(current: current)
-            return bezierTo.toEdge(current: current)
+            return bezierTo.toControls(current: current)
         }
     }
 }
 
 extension Path {
     convenience init(from svgPath: SVGPath) {
-        var pairs = PairMap()
-        var arcApproximatedCommands: [SVGPathCommand] = []
+        var approximatedCommands: [SVGPathCommand] = []
 
         var current = svgPath.initial
         for command in svgPath.commands {
             if case let .arcTo(arcTo) = command {
-                arcApproximatedCommands += arcTo.approximate(current: current)
+                approximatedCommands += arcTo.approximate(current: current)
             } else {
-                arcApproximatedCommands.append(command)
+                approximatedCommands.append(command)
             }
             current = command.position
         }
 
+        var nodes: [PathNode] = []
         current = svgPath.initial
-        for command in arcApproximatedCommands {
-            let node = PathNode(id: UUID(), position: current)
-            pairs.append((node.id, .init(node, command.toEdge(current: current))))
+        var prevControlIn: Vector2?
+        for command in approximatedCommands {
+            let (controlOut, controlIn) = command.toControls(current: current)
+            nodes.append(.init(position: current, controlIn: prevControlIn ?? .zero, controlOut: controlOut))
             current = command.position
+            prevControlIn = controlIn
         }
 
         if svgPath.initial != svgPath.last {
-            let node = PathNode(id: UUID(), position: svgPath.last)
-            pairs.append((node.id, .init(node, .init())))
+            nodes.append(.init(position: svgPath.last))
         }
-        self.init(id: UUID(), pairs: pairs, isClosed: svgPath.isClosed)
+
+        let nodeMap = NodeMap(values: nodes) { _ in UUID() }
+        self.init(id: UUID(), nodeMap: nodeMap, isClosed: svgPath.isClosed)
     }
 }

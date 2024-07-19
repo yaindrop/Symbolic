@@ -40,7 +40,7 @@
 		572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* DocumentUpdater.swift */; };
 		5724877C2BDF80000096DDE4 /* PathPanel+NodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */; };
 		572487832BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */; };
-		572487852BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift */; };
+		572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift */; };
 		572487872BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */; };
 		5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487892BDF84070096DDE4 /* PositionPicker.swift */; };
 		5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878B2BDF841E0096DDE4 /* SizePicker.swift */; };
@@ -61,7 +61,7 @@
 		573204DA2C15D8BF008E0DED /* ItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D92C15D8BF008E0DED /* ItemsView.swift */; };
 		573204DC2C15DDA2008E0DED /* ItemPanel+ItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204DB2C15DDA2008E0DED /* ItemPanel+ItemRow.swift */; };
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
-		57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathSegment.swift */; };
+		57416E3F2BE12A9500C73434 /* PathNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathNode.swift */; };
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
 		57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E462BE2851D00C73434 /* MultipleGesture.swift */; };
 		57416E492BE5252000C73434 /* FlagInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E482BE5252000C73434 /* FlagInput.swift */; };
@@ -120,7 +120,6 @@
 		57DD2A212C02DB850046931C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A202C02DB850046931C /* Item.swift */; };
 		57DD2A282C0321110046931C /* ItemPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* ItemPanel.swift */; };
 		57E082062C230526008CC67B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082052C230526008CC67B /* RootView.swift */; };
-		57E082082C25B9BA008CC67B /* DocumentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082072C25B9BA008CC67B /* DocumentModel.swift */; };
 		57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0820D2C27A7F9008CC67B /* FileDirectoryView.swift */; };
 		57E082132C27A8EC008CC67B /* FileTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082122C27A8EC008CC67B /* FileTree.swift */; };
 		57E082152C27B1F7008CC67B /* CancellablesHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082142C27B1F7008CC67B /* CancellablesHolder.swift */; };
@@ -181,7 +180,7 @@
 		572487752BDBAF860096DDE4 /* DocumentUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentUpdater.swift; sourceTree = "<group>"; };
 		5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+NodeRow.swift"; sourceTree = "<group>"; };
 		572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+NodeHandle.swift"; sourceTree = "<group>"; };
-		572487842BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+EdgeHandle.swift"; sourceTree = "<group>"; };
+		572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SegmentHandle.swift"; sourceTree = "<group>"; };
 		572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+BezierHandle.swift"; sourceTree = "<group>"; };
 		572487892BDF84070096DDE4 /* PositionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPicker.swift; sourceTree = "<group>"; };
 		5724878B2BDF841E0096DDE4 /* SizePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SizePicker.swift; sourceTree = "<group>"; };
@@ -202,7 +201,7 @@
 		573204D92C15D8BF008E0DED /* ItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsView.swift; sourceTree = "<group>"; };
 		573204DB2C15DDA2008E0DED /* ItemPanel+ItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+ItemRow.swift"; sourceTree = "<group>"; };
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
-		57416E3E2BE12A9500C73434 /* PathSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegment.swift; sourceTree = "<group>"; };
+		57416E3E2BE12A9500C73434 /* PathNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNode.swift; sourceTree = "<group>"; };
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		57416E462BE2851D00C73434 /* MultipleGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleGesture.swift; sourceTree = "<group>"; };
 		57416E482BE5252000C73434 /* FlagInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagInput.swift; sourceTree = "<group>"; };
@@ -261,7 +260,6 @@
 		57DD2A202C02DB850046931C /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		57DD2A272C0321110046931C /* ItemPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPanel.swift; sourceTree = "<group>"; };
 		57E082052C230526008CC67B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		57E082072C25B9BA008CC67B /* DocumentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentModel.swift; sourceTree = "<group>"; };
 		57E082092C26C75A008CC67B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		57E0820D2C27A7F9008CC67B /* FileDirectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDirectoryView.swift; sourceTree = "<group>"; };
 		57E082122C27A8EC008CC67B /* FileTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTree.swift; sourceTree = "<group>"; };
@@ -422,8 +420,8 @@
 				571B9B292C148B0800AAD516 /* FocusedPathService.swift */,
 				575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */,
 				572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */,
-				572487842BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift */,
 				572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */,
+				572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift */,
 				573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */,
 				574CC7E92BFA53310042FEE3 /* FocusedPathView+Stroke.swift */,
 			);
@@ -561,7 +559,7 @@
 				57416E422BE12D7100C73434 /* LineSegment.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
-				57416E3E2BE12A9500C73434 /* PathSegment.swift */,
+				57416E3E2BE12A9500C73434 /* PathNode.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
 			);
 			path = Path;
@@ -606,7 +604,6 @@
 				57B5F14A2BD54AA5001E1B2E /* Document.swift */,
 				572487912BDFA7B80096DDE4 /* DocumentAction.swift */,
 				57B5F1482BD54279001E1B2E /* DocumentEvent.swift */,
-				57E082072C25B9BA008CC67B /* DocumentModel.swift */,
 				57B703F12C366B0300B60F36 /* DocumentService.swift */,
 				572487752BDBAF860096DDE4 /* DocumentUpdater.swift */,
 			);
@@ -926,7 +923,7 @@
 				574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */,
 				574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */,
 				5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */,
-				57416E3F2BE12A9500C73434 /* PathSegment.swift in Sources */,
+				57416E3F2BE12A9500C73434 /* PathNode.swift in Sources */,
 				57B5F1442BD4A621001E1B2E /* MiscUtils.swift in Sources */,
 				572CA9D52C319B8B003760B7 /* FileBrowserView.swift in Sources */,
 				571B9B362C14A77500AAD516 /* ActiveItemView+PathBounds.swift in Sources */,
@@ -969,11 +966,10 @@
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,
 				5774B1602BFD864300C53CDD /* Background.swift in Sources */,
 				57B703F42C366B8100B60F36 /* ToolbarStore.swift in Sources */,
-				57E082082C25B9BA008CC67B /* DocumentModel.swift in Sources */,
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
-				572487852BDF832D0096DDE4 /* FocusedPathView+EdgeHandle.swift in Sources */,
+				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

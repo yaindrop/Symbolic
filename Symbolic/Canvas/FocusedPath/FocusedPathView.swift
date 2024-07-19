@@ -22,14 +22,13 @@ struct FocusedPathView: View, TracedView, SelectorHolder {
 private extension FocusedPathView {
     @ViewBuilder var content: some View {
         if let path = selector.path {
-            let nodeIds = path.nodes.map { $0.id }
-            let segmentIds = path.nodes.filter { path.segment(from: $0.id) != nil }.map { $0.id }
+            let nodeIds = path.nodeIds
             ZStack {
                 Stroke(pathId: path.id)
-                ForEach(segmentIds) { EdgeHandle(pathId: path.id, fromNodeId: $0) }
+                ForEach(nodeIds) { SegmentHandle(pathId: path.id, fromNodeId: $0) }
                 ForEach(nodeIds) { NodeHandle(pathId: path.id, nodeId: $0) }
-                ForEach(segmentIds) { FocusedEdgeHandle(pathId: path.id, fromNodeId: $0) }
-                ForEach(segmentIds) { BezierHandle(pathId: path.id, fromNodeId: $0) }
+                ForEach(nodeIds) { FocusedSegmentHandle(pathId: path.id, fromNodeId: $0) }
+                ForEach(nodeIds) { BezierHandle(pathId: path.id, nodeId: $0) }
             }
             if selector.selectingNodes {
                 SelectionBounds()

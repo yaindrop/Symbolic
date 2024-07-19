@@ -20,7 +20,7 @@ enum PathEvent: Equatable, Codable {
     // multi update
     struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
-    struct EdgeBreak: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at edge, creating a new path when the current path is not closed
+    struct SegmentBreak: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at segment, creating a new path when the current path is not closed
 
     case create(Create)
     case delete(Delete)
@@ -30,22 +30,20 @@ enum PathEvent: Equatable, Codable {
     // multi update
     case merge(Merge)
     case nodeBreak(NodeBreak)
-    case edgeBreak(EdgeBreak)
+    case segmentBreak(SegmentBreak)
 }
 
 // MARK: Update
 
 extension PathEvent.Update {
-    struct NodeCreate: Equatable, Codable { let prevNodeId: UUID?, node: PathNode }
-    struct NodeUpdate: Equatable, Codable { let node: PathNode }
+    struct NodeCreate: Equatable, Codable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
+    struct NodeUpdate: Equatable, Codable { let nodeId: UUID, node: PathNode }
     struct NodeDelete: Equatable, Codable { let nodeId: UUID }
-    struct EdgeUpdate: Equatable, Codable { let fromNodeId: UUID, edge: PathEdge }
 
     enum Kind: Equatable, Codable {
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
-        case edgeUpdate(EdgeUpdate)
     }
 }
 
@@ -60,12 +58,12 @@ enum PathPropertyEvent: Equatable, Codable {
 extension PathPropertyEvent.Update {
     struct SetName: Equatable, Codable { let name: String? }
     struct SetNodeType: Equatable, Codable { let nodeIds: [UUID], nodeType: PathNodeType? }
-    struct SetEdgeType: Equatable, Codable { let fromNodeIds: [UUID], edgeType: PathEdgeType? }
+    struct SetSegmentType: Equatable, Codable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
     enum Kind: Equatable, Codable {
         case setName(SetName)
         case setNodeType(SetNodeType)
-        case setEdgeType(SetEdgeType)
+        case setSegmentType(SetSegmentType)
     }
 }
 
@@ -119,7 +117,7 @@ extension PathEvent {
             [event.pathId, event.mergedPathId]
         case let .nodeBreak(event):
             [event.pathId, event.newPathId]
-        case let .edgeBreak(event):
+        case let .segmentBreak(event):
             [event.pathId, event.newPathId]
         }
     }

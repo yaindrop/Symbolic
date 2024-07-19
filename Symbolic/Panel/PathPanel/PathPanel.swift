@@ -41,9 +41,9 @@ private extension PathPanel {
     @ViewBuilder var nodes: some View {
         if let path = selector.path {
             PanelSection(name: "Nodes") {
-                ForEach(path.nodes) { node in
-                    NodeRow(pathId: path.id, nodeId: node.id)
-                    if node.id != path.nodes.last?.id {
+                ForEach(path.nodeIds) { nodeId in
+                    NodeRow(pathId: path.id, nodeId: nodeId)
+                    if nodeId != path.nodeIds.last {
                         Divider().padding(.leading, 12)
                     }
                 }

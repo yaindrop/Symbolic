@@ -28,10 +28,8 @@ private extension DocumentAction {
                 switch update.kind {
                 case let .deleteNode(action):
                     "In path \(update.pathId.shortDescription) delete node \(action.nodeId.shortDescription)"
-                case let .setNodePosition(action):
-                    "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.position.shortDescription)"
-                case let .setEdge(action):
-                    "In path \(update.pathId.shortDescription) set edge from \(action.fromNodeId.shortDescription)"
+                case let .setNode(action):
+                    "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.node)"
 
                 case let .addEndingNode(action):
                     "In path \(update.pathId.shortDescription) add ending node from \(action.endingNodeId.shortDescription) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
@@ -40,16 +38,16 @@ private extension DocumentAction {
 
                 case let .moveNodes(action):
                     "In path \(update.pathId.shortDescription) move node \(action.nodeIds.map { $0.id.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
-                case let .moveEdgeControl(action):
-                    "In path \(update.pathId.shortDescription) move edge control from \(action.fromNodeId.shortDescription) by \(action.offset0.shortDescription) and \(action.offset1.shortDescription)"
+                case let .moveNodeControl(action):
+                    "In path \(update.pathId.shortDescription) move node control from \(action.nodeId.shortDescription) by \(action.controlInOffset.shortDescription) and \(action.controlOutOffset.shortDescription)"
                 }
 
             case let .merge(action):
                 "Merge path \(action.pathId.shortDescription) node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
             case let .breakAtNode(action):
                 "Break path \(action.pathId.shortDescription) at node \(action.nodeId.shortDescription)"
-            case let .breakAtEdge(action):
-                "Break path \(action.pathId.shortDescription) at edge from \(action.fromNodeId.shortDescription)"
+            case let .breakAtSegment(action):
+                "Break path \(action.pathId.shortDescription) at segment from \(action.fromNodeId.shortDescription)"
             }
 
         case let .pathProperty(action):
@@ -60,8 +58,8 @@ private extension DocumentAction {
                     "Set path \(update.pathId.shortDescription) name \(action.name ?? "nil")"
                 case let .setNodeType(action):
                     "Set path \(update.pathId.shortDescription) node \(action.nodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.nodeType?.description ?? "nil")"
-                case let .setEdgeType(action):
-                    "Set path \(update.pathId.shortDescription) edge from \(action.fromNodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.edgeType?.description ?? "nil")"
+                case let .setSegmentType(action):
+                    "Set path \(update.pathId.shortDescription) segment from \(action.fromNodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.segmentType?.description ?? "nil")"
                 }
             }
         }

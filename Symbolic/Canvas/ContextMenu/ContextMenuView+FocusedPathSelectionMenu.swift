@@ -11,7 +11,7 @@ extension ContextMenuView {
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeSegmentIds }) var activeSegmentIds
             @Selected({ global.focusedPath.activeNodeIds.map { global.activeItem.focusedPathProperty?.nodeType(id: $0) }.allSame() }) var activeNodeType
-            @Selected({ global.focusedPath.activeSegmentIds.map { global.activeItem.focusedPathProperty?.edgeType(id: $0) }.allSame() }) var activeEdgeType
+            @Selected({ global.focusedPath.activeSegmentIds.map { global.activeItem.focusedPathProperty?.segmentType(id: $0) }.allSame() }) var activeSegmentType
         }
 
         @SelectorWrapper var selector
@@ -57,7 +57,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
                 .tint(.label)
 
             if !selector.activeSegmentIds.isEmpty {
-                Menu { edgeTypeMenu } label: { Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath") }
+                Menu { segmentTypeMenu } label: { Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath") }
                     .menuOrder(.fixed)
                     .frame(minWidth: 32)
                     .tint(.label)
@@ -93,23 +93,23 @@ extension ContextMenuView.FocusedPathSelectionMenu {
             .disabled(selected)
     }
 
-    @ViewBuilder var edgeTypeMenu: some View {
-        edgeTypeButton(.line)
-        edgeTypeButton(.cubic)
-        edgeTypeButton(.quadratic)
+    @ViewBuilder var segmentTypeMenu: some View {
+        segmentTypeButton(.line)
+        segmentTypeButton(.cubic)
+        segmentTypeButton(.quadratic)
     }
 
-    @ViewBuilder func edgeTypeButton(_ edgeType: PathEdgeType) -> some View {
+    @ViewBuilder func segmentTypeButton(_ segmentType: PathSegmentType) -> some View {
         var name: String {
-            switch edgeType {
+            switch segmentType {
             case .line: "Line"
             case .cubic: "Cubic Bezier"
             case .quadratic: "Quadratic Bezier"
             case .auto: ""
             }
         }
-        let selected = selector.activeEdgeType == edgeType
-        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setEdgeType(.auto) : setEdgeType(edgeType) }
+        let selected = selector.activeSegmentType == segmentType
+        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setSegmentType(.auto) : setSegmentType(segmentType) }
     }
 
     @ViewBuilder var copyMenu: some View {
@@ -128,10 +128,10 @@ extension ContextMenuView.FocusedPathSelectionMenu {
         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
     }
 
-    func setEdgeType(_ edgeType: PathEdgeType) {
+    func setSegmentType(_ segmentType: PathSegmentType) {
         guard let pathId = global.activeItem.focusedPath?.id else { return }
         let fromNodeIds = Array(global.focusedPath.activeSegmentIds)
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setEdgeType(.init(fromNodeIds: fromNodeIds, edgeType: edgeType)))))
+        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
     }
 
     func onUngroup() {}

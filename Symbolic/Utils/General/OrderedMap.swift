@@ -5,7 +5,7 @@ import Foundation
 struct OrderedMap<Key: Hashable, Value> {
     private(set) var dict: [Key: Value] = [:]
     private(set) var keys: [Key] = []
-    private(set) var indexOf: [Key: Int] = [:]
+    private var indexOf: [Key: Int] = [:]
 
     init(_ dict: [Key: Value]) {
         self.dict = dict
@@ -13,7 +13,15 @@ struct OrderedMap<Key: Hashable, Value> {
         refreshIndexOf()
     }
 
-    init(_ values: [Value], _ getKey: (Value) -> Key) {
+    init(keys: [Key], getValue: (Key) -> Value) {
+        for key in keys {
+            dict[key] = getValue(key)
+            self.keys.append(key)
+        }
+        refreshIndexOf()
+    }
+
+    init(values: [Value], getKey: (Value) -> Key) {
         for value in values {
             let key = getKey(value)
             dict[key] = value
@@ -29,6 +37,8 @@ extension OrderedMap {
     var values: [Value] { keys.map { dict[$0]! } }
 
     func value(key: Key) -> Value? { dict[key] }
+
+    func index(of key: Key) -> Int? { indexOf[key] }
 
     mutating func removeAll() {
         dict.removeAll()

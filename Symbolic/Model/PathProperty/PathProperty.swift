@@ -16,14 +16,14 @@ extension PathNodeType: CustomStringConvertible {
     }
 }
 
-enum PathEdgeType: Codable {
+enum PathSegmentType: Codable {
     case auto
     case cubic
     case line
     case quadratic
 }
 
-extension PathEdgeType: CustomStringConvertible {
+extension PathSegmentType: CustomStringConvertible {
     var description: String {
         switch self {
         case .auto: "auto"
@@ -39,7 +39,7 @@ struct PathProperty: Identifiable, Equatable, Codable, TriviallyCloneable {
     var name: String?
 
     var nodeTypeMap: [UUID: PathNodeType] = [:]
-    var edgeTypeMap: [UUID: PathEdgeType] = [:]
+    var segmentTypeMap: [UUID: PathSegmentType] = [:]
 }
 
 extension PathProperty {
@@ -47,7 +47,7 @@ extension PathProperty {
         nodeTypeMap[id] ?? .corner
     }
 
-    func edgeType(id: UUID) -> PathEdgeType {
-        edgeTypeMap[id] ?? .auto
+    func segmentType(id: UUID) -> PathSegmentType {
+        segmentTypeMap[id] ?? .auto
     }
 }

@@ -118,9 +118,6 @@
     "Duplicate" : {
 
     },
-    "Edge Type" : {
-
-    },
     "False" : {
 
     },
@@ -191,6 +188,9 @@
 
     },
     "Secondary" : {
+
+    },
+    "Segment Type" : {
 
     },
     "Settings" : {

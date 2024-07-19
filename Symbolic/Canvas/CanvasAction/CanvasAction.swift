@@ -5,7 +5,7 @@ enum CanvasAction: Equatable {
         case select
         case addPath
         case addEndingNode
-        case splitPathEdge
+        case splitPathSegment
     }
 
     enum Continuous: Equatable {
@@ -18,7 +18,7 @@ enum CanvasAction: Equatable {
         case movePath
         case moveSelection
         case movePathNode
-        case movePathEdge
+        case movePathSegment
         case movePathBezierControl
         case movePathArcControl
 
@@ -31,8 +31,8 @@ enum CanvasAction: Equatable {
         case deactivatePath
         case focusPathNode
         case blurPathNode
-        case focusPathEdge
-        case blurPathEdge
+        case focusPathSegment
+        case blurPathSegment
 
         case selectPaths
         case cancelSelection
@@ -53,7 +53,7 @@ extension CanvasAction.Triggering {
         case .select: "Hold to select"
 
         case .addEndingNode: "Hold to add node"
-        case .splitPathEdge: "Hold to split"
+        case .splitPathSegment: "Hold to split"
         }
     }
 }
@@ -70,7 +70,7 @@ extension CanvasAction.Continuous {
         case .movePath: "Drag to move path"
         case .moveSelection: "Drag to move selection"
         case .movePathNode: "Drag to move node"
-        case .movePathEdge: "Drag to move edge"
+        case .movePathSegment: "Drag to move segment"
         case .movePathBezierControl: "Drag to move control"
         case .movePathArcControl: "Drag to move control"
 
@@ -87,8 +87,8 @@ extension CanvasAction.Instant {
         case .deactivatePath: "Unfocus path"
         case .focusPathNode: "Focus node"
         case .blurPathNode: "Unfocus node"
-        case .focusPathEdge: "Focus edge"
-        case .blurPathEdge: "Unfocus edge"
+        case .focusPathSegment: "Focus segment"
+        case .blurPathSegment: "Unfocus segment"
 
         case .selectPaths: "Select paths"
         case .cancelSelection: "Cancel selection"

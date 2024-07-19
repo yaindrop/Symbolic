@@ -35,7 +35,7 @@ extension FocusedPathService {
     var activeSegmentIds: Set<UUID> {
         guard let path = activeItem.focusedPath else { return [] }
         return activeNodeIds.filter {
-            guard let nextId = path.node(after: $0)?.id else { return false }
+            guard let nextId = path.nodeId(after: $0) else { return false }
             return activeNodeIds.contains(nextId)
         }
     }
@@ -83,7 +83,7 @@ extension FocusedPathService {
 
     func setFocus(segment fromNodeId: UUID) {
         let _r = subtracer.range(type: .intent, "set focus segment from \(fromNodeId)"); defer { _r() }
-        guard let path = activeItem.focusedPath, let toId = path.node(after: fromNodeId)?.id else { return }
+        guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromNodeId) else { return }
         store.update(activeNodeIds: [fromNodeId, toId])
     }
 

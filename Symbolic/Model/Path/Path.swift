@@ -6,80 +6,18 @@ protocol SUPathAppendable {
     func append(to: inout SUPath)
 }
 
-// MARK: - PathEdge
-
-struct PathEdge: Equatable, Codable {
-    let control0: Vector2
-    let control1: Vector2
-
-    var isLine: Bool { control0 == .zero && control1 == .zero }
-
-    func with(control0: Vector2) -> Self { .init(control0: control0, control1: control1) }
-    func with(control1: Vector2) -> Self { .init(control0: control0, control1: control1) }
-
-    init(control0: Vector2 = .zero, control1: Vector2 = .zero) {
-        self.control0 = control0
-        self.control1 = control1
-    }
-}
-
-// MARK: CustomStringConvertible
-
-extension PathEdge: CustomStringConvertible {
-    var description: String {
-        "Edge(c0: \(control0.shortDescription), c1: \(control1.shortDescription))"
-    }
-}
-
-// MARK: Transformable
-
-extension PathEdge: Transformable {
-    func applying(_ t: CGAffineTransform) -> Self { .init(control0: control0.applying(t), control1: control1.applying(t)) }
-}
-
-// MARK: - PathNode
-
-struct PathNode: Identifiable, Equatable, Codable {
-    let id: UUID
-    let position: Point2
-
-    func with(position: Point2) -> Self { .init(id: id, position: position) }
-    func with(offset: Vector2) -> Self { .init(id: id, position: position + offset) }
-}
-
-extension PathNode: TriviallyCloneable {}
-
-// MARK: CustomStringConvertible
-
-extension PathNode: CustomStringConvertible {
-    var description: String {
-        "Node(id: \(id), position: \(position))"
-    }
-}
-
 // MARK: - Path
 
 class Path: Identifiable, Cloneable, Codable {
-    struct NodeEdgePair: Equatable, TriviallyCloneable, Codable {
-        var node: PathNode, edge: PathEdge
-
-        var id: UUID { node.id }
-
-        init(_ node: PathNode, _ edge: PathEdge) {
-            self.node = node
-            self.edge = edge
-        }
-    }
-
-    typealias PairMap = OrderedMap<UUID, NodeEdgePair>
+    typealias NodeMap = OrderedMap<UUID, PathNode>
 
     let id: UUID
-    private(set) var pairs: PairMap
+    private(set) var nodeMap: NodeMap
     private(set) var isClosed: Bool
 
-    required init(id: UUID, pairs: PairMap, isClosed: Bool) {
+    required init(id: UUID, nodeMap: NodeMap, isClosed: Bool) {
         self.id = id
-        self.pairs = pairs
+        self.nodeMap = nodeMap
         self.isClosed = isClosed
     }
 
@@ -87,35 +25,43 @@ class Path: Identifiable, Cloneable, Codable {
 
     required init(_ path: Path) {
         id = path.id
-        pairs = path.pairs
+        nodeMap = path.nodeMap
         isClosed = path.isClosed
     }
 
     // MARK: Codable
 
     private enum CodingKeys: String, CodingKey {
-        case id, pairs, isClosed
+        case id, nodeIds, nodes, isClosed
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
-        try container.encode(pairs.values, forKey: .pairs)
+        try container.encode(nodeIds, forKey: .nodeIds)
+        try container.encode(nodes, forKey: .nodes)
         try container.encode(isClosed, forKey: .isClosed)
     }
 
     required init(from decoder: any Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         id = try values.decode(UUID.self, forKey: .id)
-        pairs = try .init(values.decode([NodeEdgePair].self, forKey: .pairs)) { $0.id }
+        nodeMap = .init()
         isClosed = try values.decode(Bool.self, forKey: .isClosed)
+
+        let nodeIds = try values.decode([UUID].self, forKey: .nodeIds)
+        let nodes = try values.decode([PathNode].self, forKey: .nodes)
+        assert(nodeIds.count == nodes.count)
+        for i in nodeIds.indices {
+            nodeMap[nodeIds[i]] = nodes[i]
+        }
     }
 }
 
 extension Path: ReflectedStringConvertible {}
 
 extension Path {
-    var count: Int { pairs.count }
+    var count: Int { nodeMap.count }
 
     var path: SUPath {
         SUPath { p in
@@ -133,83 +79,64 @@ extension Path {
     }
 }
 
-// MARK: node getters
+// MARK: node
 
 extension Path {
-    func nodeIndex(id: UUID) -> Int? { pairs.keys.firstIndex(of: id) }
+    var nodeIds: [UUID] { nodeMap.keys }
 
-    var nodes: [PathNode] { pairs.values.map { $0.node } }
+    var nodes: [PathNode] { nodeMap.values }
 
-    var firstNode: PathNode { pairs.first!.node }
+    var firstNode: PathNode { nodeMap.first! }
 
-    var lastNode: PathNode { pairs.last!.node }
+    var lastNode: PathNode { nodeMap.last! }
 
-    func node(at i: Int) -> PathNode? { pair(at: i)?.node }
+    func node(at i: Int) -> PathNode? { nodeMap[i] }
 
-    func node(id: UUID) -> PathNode? { pair(id: id)?.node }
+    func node(id: UUID) -> PathNode? { nodeMap[id] }
 
-    func node(before: UUID) -> PathNode? { pair(before: before)?.node }
+    func nodeIndex(id: UUID) -> Int? { nodeMap.index(of: id) }
 
-    func node(after: UUID) -> PathNode? { pair(after: after)?.node }
+    func nodeId(at i: Int) -> UUID? { nodeIds.indices.contains(i) ? nodeIds[i] : nil }
+
+    func nodeId(before: UUID) -> UUID? {
+        guard let i = nodeIndex(id: before) else { return nil }
+        return i > 0
+            ? nodeIds[i - 1]
+            : isClosed ? nodeIds.last : nil
+    }
+
+    func nodeId(after: UUID) -> UUID? {
+        guard let i = nodeIndex(id: after) else { return nil }
+        return i < nodeMap.count - 1
+            ? nodeIds[i + 1]
+            : isClosed ? nodeIds.first : nil
+    }
+
+    var segments: [PathSegment] { nodeIds.compactMap { segment(fromId: $0) } }
+
+    func segment(fromId: UUID) -> PathSegment? {
+        guard let toId = nodeId(after: fromId),
+              let from = node(id: fromId),
+              let to = node(id: toId) else { return nil }
+        return PathSegment(from: from, to: to)
+    }
 
     // predicates
 
-    func isFirstEndingNode(id: UUID) -> Bool { !isClosed && firstNode.id == id }
+    func isFirstEndingNode(id: UUID) -> Bool { !isClosed && nodeIds.first == id }
 
-    func isLastEndingNode(id: UUID) -> Bool { !isClosed && lastNode.id == id }
+    func isLastEndingNode(id: UUID) -> Bool { !isClosed && nodeIds.last == id }
 
     func isEndingNode(id: UUID) -> Bool { isFirstEndingNode(id: id) || isLastEndingNode(id: id) }
 
-    func mergableNode(id: UUID) -> PathNode? {
+    func mergableNodeId(id: UUID) -> UUID? {
         guard let node = node(id: id) else { return nil }
         if isFirstEndingNode(id: id) {
-            return node.position == lastNode.position ? lastNode : nil
+            return node.position == lastNode.position ? nodeIds.last : nil
         } else if isLastEndingNode(id: id) {
-            return node.position == firstNode.position ? firstNode : nil
+            return node.position == firstNode.position ? nodeIds.first : nil
         }
         return nil
-    }
-}
-
-// MARK: segment and pair getters
-
-extension Path {
-    var segments: [PathSegment] { pairs.values.compactMap { segment(from: $0.node.id) } }
-
-    func segment(from id: UUID) -> PathSegment? {
-        guard let i = nodeIndex(id: id) else { return nil }
-        let isLast = i + 1 == pairs.count
-        if isLast, !isClosed {
-            return nil
-        }
-        guard let curr = pairs[i], let next = pairs[isLast ? 0 : i + 1] else { return nil }
-        return PathSegment(edge: curr.edge, from: curr.node.position, to: next.node.position)
-    }
-
-    func pair(at i: Int) -> NodeEdgePair? {
-        guard pairs.indices.contains(i) else { return nil }
-        return pairs[i]
-    }
-
-    func pair(id: UUID) -> NodeEdgePair? {
-        guard let i = nodeIndex(id: id) else { return nil }
-        return pairs[i]
-    }
-
-    func pair(before: UUID) -> NodeEdgePair? {
-        guard let i = nodeIndex(id: before) else { return nil }
-        if i == 0 {
-            return isClosed ? pairs.last : nil
-        }
-        return pairs[i - 1]
-    }
-
-    func pair(after: UUID) -> NodeEdgePair? {
-        guard let i = nodeIndex(id: after) else { return nil }
-        if i + 1 == pairs.count {
-            return isClosed ? pairs.first : nil
-        }
-        return pairs[i + 1]
     }
 }
 
@@ -217,12 +144,12 @@ extension Path {
 
 extension Path {
     func indices(from i: Int, to j: Int? = nil) -> [Int] {
-        guard pairs.indices.contains(i) else { return [] }
+        guard nodeMap.indices.contains(i) else { return [] }
         var result: [Int] = []
         var curr = i
         repeat {
             var next: Int? = curr + 1
-            if next == pairs.count {
+            if next == nodeMap.count {
                 next = isClosed ? 0 : nil
             }
             result.append(curr)
@@ -234,28 +161,29 @@ extension Path {
     }
 
     func subpath(from i: Int, to j: Int) -> Self? {
-        guard let pairs = indices(from: i, to: j).completeMap({ pairs[$0] }) else { return nil }
-        guard pairs.count > 1 else { return nil }
-        return .init(id: UUID(), pairs: .init(pairs) { $0.id }, isClosed: isClosed && pairs.count == self.pairs.count)
+        guard let nodeIds = indices(from: i, to: j).completeMap({ nodeIds[$0] }) else { return nil }
+        guard nodeIds.count > 1 else { return nil }
+        let nodeMap = NodeMap(keys: nodeIds) { self.nodeMap[$0]! }
+        return .init(id: UUID(), nodeMap: nodeMap, isClosed: isClosed && nodeMap.count == self.nodeMap.count)
     }
 
     func continuousNodeIndexPairs(nodeIds: Set<UUID>) -> [Pair<Int, Int>] {
         guard !nodeIds.isEmpty else { return [] }
-        let initial = isClosed ? pairs.values.firstIndex { !nodeIds.contains($0.id) } : 0
+        let initial = isClosed ? self.nodeIds.firstIndex { !nodeIds.contains($0) } : 0
         guard let initial else { return [.init(first: 0, second: count - 1)] }
         var result: [Pair<Int, Int>] = []
         var startIndex: Int?
 
         let indices = indices(from: initial)
         for (i, next) in zip(indices, indices.shifted(by: 1)) {
-            guard let pair = pairs[i] else { return [] }
-            if nodeIds.contains(pair.id) {
+            let nodeId = self.nodeIds[i]
+            if nodeIds.contains(nodeId) {
                 let start = startIndex ?? i
                 if startIndex == nil {
                     startIndex = i
                 }
-                let nextPair = next.map { pairs[$0] }
-                if nextPair == nil || !nodeIds.contains(nextPair!.id) {
+                let nextNodeId = next.map { self.nodeIds[$0] }
+                if nextNodeId == nil || !nodeIds.contains(nextNodeId!) {
                     result.append(.init(first: start, second: i))
                     startIndex = nil
                 }
@@ -282,58 +210,45 @@ extension Path: SUPathAppendable {
 
 // MARK: CustomStringConvertible
 
-extension Path.NodeEdgePair: CustomStringConvertible {
-    var description: String {
-        "(\(node), \(edge))"
-    }
-}
-
 extension Path: CustomStringConvertible {
     var description: String {
-        "Path(id: \(id), pairs: \(pairs.values), isClosed: \(isClosed))"
+        "Path(id: \(id), nodes: \(nodes), isClosed: \(isClosed))"
     }
 }
 
 // MARK: - handle events
 
 extension Path {
-    func with(pairs: PairMap, isClosed: Bool? = nil) -> Self {
-        .init(id: id, pairs: pairs, isClosed: isClosed ?? self.isClosed)
+    func with(nodeMap: NodeMap, isClosed: Bool? = nil) -> Self {
+        .init(id: id, nodeMap: nodeMap, isClosed: isClosed ?? self.isClosed)
     }
 
     func update(moveOffset: Vector2) {
         let _r = tracer.range("Path.update move"); defer { _r() }
-        for id in pairs.keys {
-            guard var pair = pairs[id] else { return }
-            pair.node = pair.node.with(offset: moveOffset)
-            pairs[id] = pair
+        for id in nodeIds {
+            nodeMap[id]?.position += moveOffset
         }
     }
 
     func update(nodeCreate: PathEvent.Update.NodeCreate) {
         let _r = tracer.range("Path.update nodeCreate"); defer { _r() }
-        let prevNodeId = nodeCreate.prevNodeId, node = nodeCreate.node
+        let prevNodeId = nodeCreate.prevNodeId, nodeId = nodeCreate.nodeId, node = nodeCreate.node
         var i = 0
         if let prevNodeId {
             guard let prev = nodeIndex(id: prevNodeId) else { return }
             i = prev + 1
         }
-        pairs.insert((node.id, .init(nodeCreate.node, .init(control0: .zero, control1: .zero))), at: i)
+        nodeMap.insert((nodeId, nodeCreate.node), at: i)
     }
 
     func update(nodeDelete: PathEvent.Update.NodeDelete) {
         let _r = tracer.range("Path.update nodeDelete"); defer { _r() }
-        pairs.removeValue(forKey: nodeDelete.nodeId)
+        nodeMap.removeValue(forKey: nodeDelete.nodeId)
     }
 
     func update(nodeUpdate: PathEvent.Update.NodeUpdate) {
         let _r = tracer.range("Path.update nodeUpdate"); defer { _r() }
-        pairs[nodeUpdate.node.id]?.node = nodeUpdate.node
-    }
-
-    func update(edgeUpdate: PathEvent.Update.EdgeUpdate) {
-        let _r = tracer.range("Path.update edgeUpdate"); defer { _r() }
-        pairs[edgeUpdate.fromNodeId]?.edge = edgeUpdate.edge
+        nodeMap[nodeUpdate.nodeId] = nodeUpdate.node
     }
 
     func update(merge: PathEvent.Merge, mergedPath: Path) {
@@ -347,7 +262,7 @@ extension Path {
         let mergePosition = endingNode.position == mergedEndingNode.position
         if mergedPath == self {
             if mergePosition {
-                pairs.removeValue(forKey: lastNode.id)
+                nodeMap.removeValue(forKey: nodeIds.last!)
             }
             isClosed = true
             return
@@ -369,57 +284,58 @@ extension Path {
         let nodeId = nodeBreak.nodeId, newNodeId = nodeBreak.newNodeId, newPathId = nodeBreak.newPathId
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
-              let node = node(id: nodeId),
-              let edge = segment(from: nodeId)?.edge else { return nil }
-        let newPair = NodeEdgePair(.init(id: newNodeId, position: node.position), edge)
+              let node = node(id: nodeId) else { return nil }
+        let newNode = PathNode(position: node.position, controlOut: node.controlOut)
         if isClosed {
-            pairs.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
-            pairs.insert((newNodeId, newPair), at: 0)
+            nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
+            nodeMap.insert((newNodeId, newNode), at: 0)
             isClosed = false
             return nil
         } else {
-            var newPathPairs = pairs
-            pairs.mutateKeys { $0 = Array($0[...i]) }
-            newPathPairs.mutateKeys { $0 = Array($0[(i + 1)...]) }
-            newPathPairs.insert((newNodeId, newPair), at: 0)
-            return .init(id: newPathId, pairs: newPathPairs, isClosed: false)
+            var newNodeMap = nodeMap
+            nodeMap.mutateKeys { $0 = Array($0[...i]) }
+            newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
+            newNodeMap.insert((newNodeId, newNode), at: 0)
+            return .init(id: newPathId, nodeMap: newNodeMap, isClosed: false)
         }
     }
 
-    func update(edgeBreak: PathEvent.EdgeBreak) -> Path? {
-        let nodeId = edgeBreak.fromNodeId, newPathId = edgeBreak.newPathId
-        let _r = tracer.range("Path.update edgeBreak"); defer { _r() }
+    func update(segmentBreak: PathEvent.SegmentBreak) -> Path? {
+        let nodeId = segmentBreak.fromNodeId, newPathId = segmentBreak.newPathId
+        let _r = tracer.range("Path.update segmentBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId) else { return nil }
         if isClosed {
-            pairs.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
+            nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
             isClosed = false
             return nil
         } else {
-            var newPathPairs = pairs
-            pairs.mutateKeys { $0 = Array($0[...i]) }
-            newPathPairs.mutateKeys { $0 = Array($0[(i + 1)...]) }
-            return .init(id: newPathId, pairs: newPathPairs, isClosed: false)
+            var newNodeMap = nodeMap
+            nodeMap.mutateKeys { $0 = Array($0[...i]) }
+            newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
+            return .init(id: newPathId, nodeMap: newNodeMap, isClosed: false)
         }
     }
 
     func update(setNodeType: PathPropertyEvent.Update.SetNodeType) {
         for nodeId in setNodeType.nodeIds {
-            guard let prev = pair(before: nodeId), let curr = pair(id: nodeId) else { continue }
+            guard let node = node(id: nodeId) else { continue }
             switch setNodeType.nodeType {
             case .locked:
-                pairs[nodeId]?.edge = curr.edge.with(control0: prev.edge.control1.with(length: -curr.edge.control0.length))
+                nodeMap[nodeId]?.controlOut = node.controlIn.with(length: -node.controlOut.length)
             case .mirrored:
-                pairs[nodeId]?.edge = curr.edge.with(control0: -prev.edge.control1)
+                nodeMap[nodeId]?.controlOut = -node.controlIn
             default: break
             }
         }
     }
 
-    func update(setEdgeType: PathPropertyEvent.Update.SetEdgeType) {
-        for fromNodeId in setEdgeType.fromNodeIds {
-            switch setEdgeType.edgeType {
+    func update(setSegmentType: PathPropertyEvent.Update.SetSegmentType) {
+        for fromNodeId in setSegmentType.fromNodeIds {
+            switch setSegmentType.segmentType {
             case .line:
-                pairs[fromNodeId]?.edge = .init(control0: .zero, control1: .zero)
+                guard let toNodeId = nodeId(after: fromNodeId) else { return }
+                nodeMap[fromNodeId]?.controlOut = .zero
+                nodeMap[toNodeId]?.controlIn = .zero
             default: break
             }
         }

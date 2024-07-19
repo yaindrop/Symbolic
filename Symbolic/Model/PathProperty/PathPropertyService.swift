@@ -168,9 +168,9 @@ extension PathPropertyService {
                 for nodeId in event.nodeIds {
                     property.nodeTypeMap[nodeId] = event.nodeType
                 }
-            case let .setEdgeType(event):
+            case let .setSegmentType(event):
                 for fromNodeId in event.fromNodeIds {
-                    property.edgeTypeMap[fromNodeId] = event.edgeType
+                    property.segmentTypeMap[fromNodeId] = event.segmentType
                 }
             }
         }

@@ -25,7 +25,7 @@ enum PathAction: Equatable, Codable {
     // multi update
     struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     struct BreakAtNode: Equatable, Codable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
-    struct BreakAtEdge: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
+    struct BreakAtSegment: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
 
     case load(Load)
 
@@ -36,7 +36,7 @@ enum PathAction: Equatable, Codable {
 
     case merge(Merge)
     case breakAtNode(BreakAtNode)
-    case breakAtEdge(BreakAtEdge)
+    case breakAtSegment(BreakAtSegment)
 }
 
 // MARK: Update
@@ -44,27 +44,25 @@ enum PathAction: Equatable, Codable {
 extension PathAction.Update {
     struct DeleteNode: Equatable, Codable { let nodeId: UUID }
 
-    struct SetNodePosition: Equatable, Codable { let nodeId: UUID, position: Point2 }
-    struct SetEdge: Equatable, Codable { let fromNodeId: UUID, edge: PathEdge }
+    struct SetNode: Equatable, Codable { let nodeId: UUID, node: PathNode }
 
     struct AddEndingNode: Equatable, Codable { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
     struct SplitSegment: Equatable, Codable { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
     struct MoveNodes: Equatable, Codable { let nodeIds: [UUID], offset: Vector2 }
-    struct MoveEdgeControl: Equatable, Codable { let fromNodeId: UUID, offset0: Vector2, offset1: Vector2 }
+    struct MoveNodeControl: Equatable, Codable { let nodeId: UUID, controlInOffset: Vector2, controlOutOffset: Vector2 }
 
     enum Kind: Equatable, Codable {
         case deleteNode(DeleteNode)
 
-        case setNodePosition(SetNodePosition)
-        case setEdge(SetEdge)
+        case setNode(SetNode)
 
         // handle actions
         case addEndingNode(AddEndingNode)
         case splitSegment(SplitSegment)
 
         case moveNodes(MoveNodes)
-        case moveEdgeControl(MoveEdgeControl)
+        case moveNodeControl(MoveNodeControl)
     }
 }
 
@@ -79,12 +77,12 @@ enum PathPropertyAction: Equatable, Codable {
 extension PathPropertyAction.Update {
     struct SetName: Equatable, Codable { let name: String? }
     struct SetNodeType: Equatable, Codable { let nodeIds: [UUID], nodeType: PathNodeType? }
-    struct SetEdgeType: Equatable, Codable { let fromNodeIds: [UUID], edgeType: PathEdgeType? }
+    struct SetSegmentType: Equatable, Codable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
     enum Kind: Equatable, Codable {
         case setName(SetName)
         case setNodeType(SetNodeType)
-        case setEdgeType(SetEdgeType)
+        case setSegmentType(SetSegmentType)
     }
 }
 

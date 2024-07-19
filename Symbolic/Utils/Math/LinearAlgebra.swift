@@ -21,6 +21,11 @@ extension Vector2 {
         }
     }
 
+    subscript(i: Int) -> Scalar {
+        get { i <= 0 ? dx : dy }
+        set { if i <= 0 { dx = newValue } else { dy = newValue } }
+    }
+
     var isZero: Bool { self == .zero }
 
     var length: Scalar { hypot(dx, dy) }
@@ -104,6 +109,8 @@ extension Point2 {
 
     public static func - (lhs: Self, rhs: Vector2) -> Self { .init(Vector2(lhs) - rhs) }
 
+    public static func - (lhs: Self, rhs: Point2) -> Vector2 { Vector2(lhs) - Vector2(rhs) }
+
     public static func += (lhs: inout Self, rhs: Vector2) { lhs = lhs + rhs }
 
     public static func -= (lhs: inout Self, rhs: Vector2) { lhs = lhs - rhs }
@@ -121,6 +128,11 @@ struct Matrix2 {
     var c: Scalar
     var d: Scalar
 
+    subscript(i: Int) -> Vector2 {
+        get { i <= 0 ? .init(a, b) : .init(c, d) }
+        set { if i <= 0 { a = newValue.dx; b = newValue.dy } else { c = newValue.dx; d = newValue.dy } }
+    }
+
     var rows: (Vector2, Vector2) { (Vector2(a, b), Vector2(c, d)) }
     var cols: (Vector2, Vector2) { (Vector2(a, c), Vector2(b, d)) }
 
@@ -133,6 +145,8 @@ struct Matrix2 {
         let cols = rhs.cols
         return .init(col0: lhs * cols.0, col1: lhs * cols.1)
     }
+
+    static var zero: Self { .init(a: 0, b: 0, c: 0, d: 0) }
 
     init(a: Scalar, b: Scalar, c: Scalar, d: Scalar) {
         self.a = a

@@ -124,6 +124,7 @@
 		57E082132C27A8EC008CC67B /* FileTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082122C27A8EC008CC67B /* FileTree.swift */; };
 		57E082152C27B1F7008CC67B /* CancellablesHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082142C27B1F7008CC67B /* CancellablesHolder.swift */; };
 		57E082192C28FD26008CC67B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 57E082182C28FD26008CC67B /* Localizable.xcstrings */; };
+		57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -265,6 +266,7 @@
 		57E082122C27A8EC008CC67B /* FileTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTree.swift; sourceTree = "<group>"; };
 		57E082142C27B1F7008CC67B /* CancellablesHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellablesHolder.swift; sourceTree = "<group>"; };
 		57E082182C28FD26008CC67B /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Polyline+PathFitter.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -561,6 +563,7 @@
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathNode.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
+				57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -961,6 +964,7 @@
 				5700C2C82BEBC4A800481FA7 /* FloatingPanelRoot.swift in Sources */,
 				57B703EE2C366A7500B60F36 /* ViewportInfo.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
+				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectionService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,

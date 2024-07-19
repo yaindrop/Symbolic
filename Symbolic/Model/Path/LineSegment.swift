@@ -149,7 +149,7 @@ extension Line {
 
 // MARK: - Polyline
 
-struct Polyline {
+struct Polyline: Equatable {
     let points: [Point2]
     let segments: [LineSegment]
     let length: Scalar
@@ -192,7 +192,7 @@ extension Polyline: Parametrizable {
             let curr = cumulated + s.length
             if curr > target {
                 let t = s.length != 0 ? (target - cumulated) / s.length : 0
-                return SegmentParam(i: i, t: 0)
+                return SegmentParam(i: i, t: t)
             }
             cumulated = curr
         }
@@ -256,5 +256,17 @@ extension Polyline {
 
     func approxPathParamT(lineParamT t: Scalar) -> (t: Scalar, distance: Scalar) {
         approxPathParamT(closestTo: position(paramT: t))
+    }
+}
+
+// MARK: SUPathAppendable
+
+extension Polyline: SUPathAppendable {
+    func append(to path: inout SUPath) {
+        guard points.count > 1 else { return }
+        path.move(to: points[0])
+        for i in 1 ..< points.count {
+            path.addLine(to: points[i])
+        }
     }
 }

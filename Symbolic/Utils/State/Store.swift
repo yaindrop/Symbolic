@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - tracer
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private extension Tracer {
     // MARK: manager

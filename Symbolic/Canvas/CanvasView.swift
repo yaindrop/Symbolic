@@ -76,7 +76,7 @@ private extension GlobalStores {
                 draggingSelection.onEnd()
                 canvasAction.end(continuous: .draggingSelection)
 
-                if let path = addingPath.polyline {
+                if let path = addingPath.path {
                     documentUpdater.update(path: .create(.init(path: path)))
                     activeItem.focus(itemId: path.id)
                     canvasAction.on(instant: .addPath)

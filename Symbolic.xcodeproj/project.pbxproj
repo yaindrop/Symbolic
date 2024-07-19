@@ -125,6 +125,7 @@
 		57E082152C27B1F7008CC67B /* CancellablesHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082142C27B1F7008CC67B /* CancellablesHolder.swift */; };
 		57E082192C28FD26008CC67B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 57E082182C28FD26008CC67B /* Localizable.xcstrings */; };
 		57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */; };
+		57FC32FB2C4ACACF00DF7DBF /* Polyline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -267,6 +268,7 @@
 		57E082142C27B1F7008CC67B /* CancellablesHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellablesHolder.swift; sourceTree = "<group>"; };
 		57E082182C28FD26008CC67B /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Polyline+PathFitter.swift"; sourceTree = "<group>"; };
+		57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Polyline.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -563,6 +565,7 @@
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathNode.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
+				57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */,
 				57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */,
 			);
 			path = Path;
@@ -922,6 +925,7 @@
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
 				571B9B2C2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */,
+				57FC32FB2C4ACACF00DF7DBF /* Polyline.swift in Sources */,
 				573204D62C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift in Sources */,
 				574CC7C42BF44DB00042FEE3 /* AxisAlign.swift in Sources */,
 				574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */,

@@ -27,25 +27,20 @@ extension AddingPathService {
     var to: Point2 { store.points.last ?? .zero }
     var active: Bool { !store.points.isEmpty }
 
-    var segment: PathSegment? {
-        guard let from else { return nil }
-        let mid = from.midPoint(to: to)
-        let offset = mid.offset(to: to)
-        return .init(from: from, to: to, fromControlOut: from.offset(to: mid + offset.normalLeft / 2), toControlIn: to.offset(to: mid + offset.normalRight / 2))
-    }
+//    var segment: PathSegment? {
+//        guard let from else { return nil }
+//        let mid = from.midPoint(to: to)
+//        let offset = mid.offset(to: to)
+//        return .init(from: from, to: to, fromControlOut: from.offset(to: mid + offset.normalLeft / 2), toControlIn: to.offset(to: mid + offset.normalRight / 2))
+//    }
 
-    var addingPath: Path? {
-        guard let segment else { return nil }
-        let segmentInWorld = segment.applying(viewport.toWorld)
-        let fromNode = PathNode(position: segmentInWorld.from, controlOut: segmentInWorld.fromControlOut)
-        let toNode = PathNode(position: segmentInWorld.to, controlIn: segmentInWorld.toControlIn)
-        let nodeMap = Path.NodeMap(values: [fromNode, toNode]) { _ in UUID() }
-        return .init(id: UUID(), nodeMap: nodeMap, isClosed: false)
-    }
-
-    var polyline: Path? {
+    var polyline: Polyline? {
         guard store.points.count > 1 else { return nil }
-        let polyline = Polyline(points: store.points.map { $0.applying(viewport.toWorld) })
+        return .init(points: store.points).applying(viewport.toWorld)
+    }
+
+    var path: Path? {
+        guard let polyline else { return nil }
         let nodes = polyline.fit(error: 1)
         return .init(id: UUID(), nodeMap: .init(values: nodes) { _ in UUID() }, isClosed: false)
     }

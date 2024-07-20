@@ -1,6 +1,7 @@
 import SwiftUI
 
 private class GestureContext {
+    var nodeId: UUID?
     var longPressAddedNodeId: UUID?
 }
 
@@ -25,25 +26,28 @@ private extension GlobalStores {
         return focusedPath.isEndingNode(id: nodeId)
     }
 
-    func nodeGesture(nodeId: UUID, context: GestureContext) -> MultipleGesture {
+    func nodesGesture(path: Path, context: GestureContext) -> MultipleGesture {
         func addEndingNode() {
-            guard canAddEndingNode(nodeId: nodeId) else { return }
+            guard let nodeId = context.nodeId,
+                  canAddEndingNode(nodeId: nodeId) else { return }
             let id = UUID()
             context.longPressAddedNodeId = id
             focusedPath.setFocus(node: id)
         }
         func moveAddedNode(newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+            guard let nodeId = context.nodeId else { return }
             documentUpdater.updateInView(focusedPath: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: newNodeId, offset: offset)), pending: pending)
             if !pending {
                 context.longPressAddedNodeId = nil
             }
         }
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            guard let nodeId = context.nodeId else { return }
             if let newNodeId = context.longPressAddedNodeId {
                 moveAddedNode(newNodeId: newNodeId, offset: v.offset, pending: pending)
             } else {
                 let multiDrag = focusedPath.selectingNodes && focusedPath.activeNodeIds.contains(nodeId)
-                let nodeIds = multiDrag ? .init(global.focusedPath.activeNodeIds) : [nodeId]
+                let nodeIds = multiDrag ? .init(focusedPath.activeNodeIds) : [nodeId]
                 documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: nodeIds, offset: v.offset)), pending: pending)
             }
         }
@@ -54,13 +58,17 @@ private extension GlobalStores {
 
         return .init(
             configs: .init(durationThreshold: 0.2),
-            onPress: {
+            onPress: { info in
+                let location = info.location.applying(viewport.toWorld)
+                guard let nodeId = path.nodeId(closestTo: location) else { return }
+                context.nodeId = nodeId
                 canvasAction.start(continuous: .movePathNode)
                 if canAddEndingNode(nodeId: nodeId) {
                     canvasAction.start(triggering: .addEndingNode)
                 }
             },
-            onPressEnd: { cancelled in
+            onPressEnd: { _, cancelled in
+                context.nodeId = nil
                 canvasAction.end(triggering: .addEndingNode)
                 canvasAction.end(continuous: .addAndMoveEndingNode)
                 canvasAction.end(continuous: .movePathNode)
@@ -68,9 +76,13 @@ private extension GlobalStores {
 
             },
 
-            onTap: { _ in onTap(node: nodeId) },
+            onTap: { _ in
+                guard let nodeId = context.nodeId else { return }
+                onTap(node: nodeId)
+            },
 
             onLongPress: { _ in
+                guard let nodeId = context.nodeId else { return }
                 addEndingNode()
                 updateLongPress(pending: true)
                 if canAddEndingNode(nodeId: nodeId) {
@@ -85,32 +97,25 @@ private extension GlobalStores {
                 updateDrag($0, pending: true)
                 canvasAction.end(triggering: .addEndingNode)
             },
-            onDragEnd: { updateDrag($0) }
+            onDragEnd: {
+                updateDrag($0)
+            }
         )
     }
 }
 
-// MARK: - NodeHandle
+// MARK: - NodeHandles
 
 extension FocusedPathView {
-    struct NodeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        let pathId: UUID, nodeId: UUID
-
-        var equatableBy: some Equatable { pathId; nodeId }
-
+    struct NodeHandles: View, TracedView, SelectorHolder {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Formula({ global.path.get(id: $0.pathId) }) static var path
-            @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
-            @Formula({ path($0)?.node(id: $0.nodeId) }) static var node
-
-            @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ node($0)?.position }) var position
-            @Selected({ property($0)?.nodeType(id: $0.nodeId) }) var nodeType
-            @Selected({ global.focusedPath.activeNodeIds.contains($0.nodeId) }) var active
+            @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
+            @Selected(configs: .init(syncNotify: true), { global.activeItem.focusedPath }) var path
+            @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
+            @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
             @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ node($0).map { global.grid.snapped($0.position) } }) var snappedGrid
+            @Selected({ global.grid.gridStack }) var gridStack
         }
 
         @SelectorWrapper var selector
@@ -118,68 +123,94 @@ extension FocusedPathView {
         @State private var gestureContext = GestureContext()
 
         var body: some View { trace {
-            setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
+            setupSelector {
                 content
             }
         } }
     }
 }
 
-// MARK: private
+private extension FocusedPathView.NodeHandles {
+    @ViewBuilder var content: some View {
+        if let path = selector.path {
+            AnimatableReader(selector.viewport) { viewport in
+                snappedMarks(path: path, viewport: viewport)
+                shapes(path: path, nodeType: .corner, viewport: viewport)
+                shapes(path: path, nodeType: .locked, viewport: viewport)
+                shapes(path: path, nodeType: .mirrored, viewport: viewport)
+                activeMarks(path: path, viewport: viewport)
+                touchables(path: path, viewport: viewport)
+            }
+        }
+    }
 
-extension FocusedPathView.NodeHandle {
     var circleSize: Scalar { 12 }
     var rectSize: Scalar { circleSize / 2 * 1.7725 } // sqrt of pi
     var touchablePadding: Scalar { 20 }
 
-    @ViewBuilder var content: some View {
-        if let position = selector.position {
-            AnimatableReader(selector.viewport) { viewport in
-                nodeShape
-                    .padding(touchablePadding)
-                    .invisibleSoildOverlay()
-                    .position(position.applying(viewport.worldToView))
-                    .multipleGesture(global.nodeGesture(nodeId: nodeId, context: gestureContext))
-                    .background { snappedMark(viewport) }
+    func shapes(path: Path, nodeType: PathNodeType, viewport: SizedViewportInfo) -> some View {
+        SUPath { p in
+            for nodeId in path.nodeIds {
+                guard selector.pathProperty?.nodeType(id: nodeId) == nodeType,
+                      let node = selector.path?.node(id: nodeId) else { continue }
+                let position = node.position.applying(viewport.worldToView)
+                if nodeType == .corner {
+                    let size = rectSize * (selector.selectingNodes ? 1.5 : 1)
+                    p.addRoundedRect(in: .init(center: position, size: .init(squared: size)), cornerSize: .init(2, 2))
+                } else {
+                    let size = circleSize * (selector.selectingNodes ? 1.5 : 1)
+                    p.addEllipse(in: .init(center: position, size: .init(squared: size)))
+                }
             }
         }
+        .stroke(.blue, style: StrokeStyle(lineWidth: nodeType == .mirrored ? 2 : 1))
+        .fill(.blue.opacity(0.3))
+        .allowsHitTesting(false)
     }
 
-    @ViewBuilder var nodeShape: some View {
-        if selector.nodeType == .corner {
-            RoundedRectangle(cornerRadius: 2)
-                .stroke(.blue, style: StrokeStyle(lineWidth: 1))
-                .fill(.blue.opacity(0.3))
-                .overlay { focusMark }
-                .frame(size: .init(squared: rectSize * (selector.selectingNodes ? 1.5 : 1)))
-        } else {
-            Circle()
-                .stroke(.blue, style: StrokeStyle(lineWidth: selector.nodeType == .mirrored ? 2 : 1))
-                .fill(.blue.opacity(0.3))
-                .overlay { focusMark }
-                .frame(size: .init(squared: circleSize * (selector.selectingNodes ? 1.5 : 1)))
-        }
-    }
-
-    @ViewBuilder var focusMark: some View {
-        if !selector.selectingNodes && selector.active {
-            Circle()
-                .fill(.blue)
-                .scaleEffect(0.5)
-                .allowsHitTesting(false)
-        }
-    }
-
-    @ViewBuilder func snappedMark(_ viewport: SizedViewportInfo) -> some View {
-        let position = selector.position?.applying(viewport.worldToView)
-        if let position, let grid = selector.snappedGrid, !selector.selectingNodes, selector.active {
-            SUPath { path in
-                path.move(to: position - .init(9, 0))
-                path.addLine(to: position + .init(9, 0))
-                path.move(to: position - .init(0, 9))
-                path.addLine(to: position + .init(0, 9))
+    func touchables(path: Path, viewport: SizedViewportInfo) -> some View {
+        SUPath { p in
+            for nodeId in path.nodeIds {
+                guard let node = selector.path?.node(id: nodeId) else { continue }
+                let position = node.position.applying(viewport.worldToView),
+                    size = CGSize(squared: 40)
+                p.addRect(.init(center: position, size: size))
             }
-            .stroke(grid.tintColor, style: StrokeStyle(lineWidth: 1, lineCap: .round))
         }
+        .fill(.blue.opacity(0.1))
+        .multipleGesture(global.nodesGesture(path: path, context: gestureContext))
+    }
+
+    func activeMarks(path: Path, viewport: SizedViewportInfo) -> some View {
+        SUPath { p in
+            for nodeId in path.nodeIds {
+                guard !selector.selectingNodes,
+                      selector.activeNodeIds.contains(nodeId),
+                      let node = selector.path?.node(id: nodeId) else { continue }
+                let position = node.position.applying(viewport.worldToView),
+                    size = CGSize(squared: circleSize / 2)
+                p.addEllipse(in: .init(center: position, size: size))
+            }
+        }
+        .fill(.blue)
+        .allowsHitTesting(false)
+    }
+
+    func snappedMarks(path: Path, viewport: SizedViewportInfo) -> some View {
+        SUPath { p in
+            for nodeId in path.nodeIds {
+                guard !selector.selectingNodes,
+                      selector.activeNodeIds.contains(nodeId),
+                      let node = selector.path?.node(id: nodeId),
+                      let grid = selector.gridStack.first(where: { $0.snapped(node.position) }) else { continue }
+                let position = node.position.applying(viewport.worldToView)
+                p.move(to: position - .init(9, 0))
+                p.addLine(to: position + .init(9, 0))
+                p.move(to: position - .init(0, 9))
+                p.addLine(to: position + .init(0, 9))
+            }
+        }
+        .stroke(.blue.opacity(0.5))
+        .allowsHitTesting(false)
     }
 }

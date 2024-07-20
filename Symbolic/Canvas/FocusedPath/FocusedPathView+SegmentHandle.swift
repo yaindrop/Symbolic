@@ -51,11 +51,11 @@ private extension GlobalStores {
 
         return .init(
             configs: .init(durationThreshold: 0.2),
-            onPress: {
+            onPress: { _ in
                 canvasAction.start(continuous: .movePath)
                 canvasAction.start(triggering: .splitPathSegment)
             },
-            onPressEnd: { cancelled in
+            onPressEnd: { _, cancelled in
                 canvasAction.end(triggering: .splitPathSegment)
                 canvasAction.end(continuous: .splitAndMovePathNode)
                 canvasAction.end(continuous: .movePath)
@@ -85,8 +85,8 @@ private extension GlobalStores {
             documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: v.offset)), pending: pending)
         }
         return .init(
-            onPress: { canvasAction.start(continuous: .movePathSegment) },
-            onPressEnd: { cancelled in
+            onPress: { _ in canvasAction.start(continuous: .movePathSegment) },
+            onPressEnd: { _, cancelled in
                 canvasAction.end(continuous: .movePathSegment)
                 if cancelled { documentUpdater.cancel() }
             },
@@ -111,7 +111,7 @@ extension FocusedPathView {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
 
-            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.viewportUpdater.referenceSizedInfo }) var viewport
             @Selected({ path($0)?.segment(fromId: $0.fromNodeId) }) var segment
         }
 
@@ -141,24 +141,13 @@ private extension FocusedPathView.SegmentHandle {
             }
         }
     }
-
-    var circleSize: Scalar { 16 }
-    var lineWidth: Scalar { 2 }
-
-    @ViewBuilder func circle(at point: Point2, color: Color) -> some View {
-        Circle()
-            .stroke(color, style: StrokeStyle(lineWidth: lineWidth))
-            .fill(color)
-            .frame(size: .init(squared: circleSize))
-            .invisibleSoildOverlay()
-            .position(point)
-    }
 }
 
 // MARK: - FocusedSegmentHandle
 
 extension FocusedPathView {
     struct FocusedSegmentHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        @ObservedObject var env: FocusedPathView.Selector
         let pathId: UUID, fromNodeId: UUID
 
         var equatableBy: some Equatable { pathId; fromNodeId }
@@ -168,7 +157,6 @@ extension FocusedPathView {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Formula({ global.path.get(id: $0.pathId) }) static var path
 
-            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ path($0)?.segment(fromId: $0.fromNodeId) }) var segment
             @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
         }
@@ -203,7 +191,7 @@ private extension FocusedPathView.FocusedSegmentHandle {
 
     @ViewBuilder var content: some View {
         if let segment = selector.segment, selector.focused {
-            AnimatableReader(selector.viewport) {
+            AnimatableReader(env.viewport) {
                 let segment = segment.applying($0.worldToView)
                 let circlePosition = circlePosition(segment: segment)
                 Circle()

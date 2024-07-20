@@ -112,6 +112,18 @@ extension Path {
             : isClosed ? nodeIds.first : nil
     }
 
+    func nodeId(closestTo point: Point2) -> UUID? {
+        var result: (id: UUID, distance: Scalar)?
+        for nodeId in nodeIds {
+            guard let node = node(id: nodeId) else { continue }
+            let distance = node.position.distance(to: point)
+            if distance < result?.distance ?? .infinity {
+                result = (nodeId, distance)
+            }
+        }
+        return result?.id
+    }
+
     var segments: [PathSegment] { nodeIds.compactMap { segment(fromId: $0) } }
 
     func segment(fromId: UUID) -> PathSegment? {

@@ -1,9 +1,14 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {}
+
 // MARK: - BezierHandle
 
 extension FocusedPathView {
     struct BezierHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        @ObservedObject var env: FocusedPathView.Selector
         let pathId: UUID, nodeId: UUID
 
         var equatableBy: some Equatable { pathId; nodeId }
@@ -15,7 +20,6 @@ extension FocusedPathView {
             @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
             @Formula({ path($0)?.nodeId(before: $0.nodeId) }) static var prevNodeId
 
-            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ path($0)?.node(id: $0.nodeId) }) var node
             @Selected({ global.focusedPath.focusedNodeId == $0.nodeId }) var nodeFocused
             @Selected({ global.focusedPath.focusedSegmentId == $0.nodeId }) var segmentFocused
@@ -47,45 +51,47 @@ private extension FocusedPathView.BezierHandle {
     var touchablePadding: Scalar { 16 }
 
     @ViewBuilder var content: some View {
-        if let node = selector.node {
-            AnimatableReader(selector.viewport) {
+        let showControlOut = showControlOut
+        let showControlIn = showControlIn
+        if let node = selector.node, showControlOut || showControlIn {
+            AnimatableReader(env.viewport) {
                 let node = node.applying($0.worldToView)
                 ZStack {
                     controlOut(node: node)
+                        .opacity(showControlOut ? 1 : 0)
                     controlIn(node: node)
+                        .opacity(showControlIn ? 1 : 0)
                 }
             }
         }
     }
 
-    func showControlOut(node: PathNode) -> Bool {
+    var showControlOut: Bool {
+        guard let node = selector.node else { return false }
         let segmentType = selector.segmentType
         let focused = selector.segmentFocused || selector.nodeFocused
         let valid = segmentType == .cubic || (segmentType == .auto && node.controlOut != .zero)
         return draggingOut || focused && valid
     }
 
-    @ViewBuilder func controlOut(node: PathNode) -> some View {
-        if showControlOut(node: node) {
-            line(from: node.position, to: node.positionOut, color: controlOutColor)
-            circle(at: node.positionOut, color: controlOutColor)
-                .multipleGesture(bezierGesture(isControlOut: true))
-        }
-    }
-
-    func showControlIn(node: PathNode) -> Bool {
+    var showControlIn: Bool {
+        guard let node = selector.node else { return false }
         let segmentType = selector.prevSegmentType
         let focused = selector.prevSegmentFocused || selector.nodeFocused
         let valid = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
         return draggingIn || focused && valid
     }
 
+    @ViewBuilder func controlOut(node: PathNode) -> some View {
+        line(from: node.position, to: node.positionOut, color: controlOutColor)
+        circle(at: node.positionOut, color: controlOutColor)
+            .multipleGesture(bezierGesture(isControlOut: true))
+    }
+
     @ViewBuilder func controlIn(node: PathNode) -> some View {
-        if showControlIn(node: node) {
-            line(from: node.position, to: node.positionIn, color: controlInColor)
-            circle(at: node.positionIn, color: controlInColor)
-                .multipleGesture(bezierGesture(isControlOut: false))
-        }
+        line(from: node.position, to: node.positionIn, color: controlInColor)
+        circle(at: node.positionIn, color: controlInColor)
+            .multipleGesture(bezierGesture(isControlOut: false))
     }
 
     func bezierGesture(isControlOut: Bool) -> MultipleGesture {
@@ -95,8 +101,8 @@ private extension FocusedPathView.BezierHandle {
             global.documentUpdater.updateInView(focusedPath: .moveNodeControl(.init(nodeId: nodeId, controlInOffset: controlInOffset, controlOutOffset: controlOutOffset)), pending: pending)
         }
         return .init(
-            onPress: { global.canvasAction.start(continuous: .movePathBezierControl) },
-            onPressEnd: { cancelled in
+            onPress: { _ in global.canvasAction.start(continuous: .movePathBezierControl) },
+            onPressEnd: { _, cancelled in
                 global.canvasAction.end(continuous: .movePathBezierControl)
                 if cancelled { global.documentUpdater.cancel() }
             },
@@ -128,5 +134,80 @@ private extension FocusedPathView.BezierHandle {
             .padding(touchablePadding)
             .invisibleSoildOverlay()
             .position(point)
+    }
+}
+
+extension FocusedPathView {
+    struct BezierHandles: View, TracedView, SelectorHolder {
+        class Selector: SelectorBase {
+            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            @Selected({ global.activeItem.focusedPath }) var path
+            @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
+            @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
+            @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
+        }
+
+        @SelectorWrapper var selector
+
+        @State private var draggingIn = false
+        @State private var draggingOut = false
+
+        var body: some View { trace {
+            setupSelector {
+                content
+            }
+        } }
+    }
+}
+
+private extension FocusedPathView.BezierHandles {
+    @ViewBuilder var content: some View {
+        EmptyView()
+//        let showControlOut = showControlOut
+//        let showControlIn = showControlIn
+//        if let node = selector.node, showControlOut || showControlIn {
+//            AnimatableReader(env.viewport) {
+//                let node = node.applying($0.worldToView)
+//                ZStack {
+//                    controlOut(node: node)
+//                        .opacity(showControlOut ? 1 : 0)
+//                    controlIn(node: node)
+//                        .opacity(showControlIn ? 1 : 0)
+//                }
+//            }
+//        }
+    }
+
+    var controlOutColor: Color { .green }
+    var controlInColor: Color { .orange }
+    var lineWidth: Scalar { 1 }
+    var circleSize: Scalar { 8 }
+    var touchablePadding: Scalar { 16 }
+
+    func showControlIn(nodeId: UUID) -> Bool {
+        guard let prevId = selector.path?.nodeId(before: nodeId),
+              let segmentType = selector.pathProperty?.segmentType(id: prevId),
+              let node = selector.path?.node(id: nodeId) else { return false }
+        let focused = selector.focusedSegmentId == prevId || selector.focusedNodeId == nodeId
+        let valid = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
+        return draggingIn || focused && valid
+    }
+
+    var controlIn: some View {
+        EmptyView()
+//        SUPath {
+//            for a in
+//        }
+    }
+
+    func appendLine(to path: inout SUPath, from: Point2, to: Point2, color _: Color) {
+        var delta = to - from
+        delta = delta.with(length: delta.length - circleSize / 2)
+        path.move(to: from)
+        path.addLine(to: from + delta)
+    }
+
+    func appendCircle(to path: inout SUPath, at point: Point2, color _: Color) {
+        path.addEllipse(in: .init(center: point, size: .init(squared: circleSize)))
     }
 }

@@ -274,8 +274,8 @@ extension PanelStore {
     func movingGesture(of id: UUID) -> MultipleGesture {
         .init(
             configs: .init(coordinateSpace: .global),
-            onPress: { self.onPress(of: id) },
-            onPressEnd: { cancelled in
+            onPress: { _ in self.onPress(of: id) },
+            onPressEnd: { _, cancelled in
                 guard cancelled else { return }
                 self.resetMoving(of: id)
             },
@@ -391,8 +391,8 @@ extension PanelStore {
     func resizingGesture(of id: UUID) -> MultipleGesture {
         .init(
             configs: .init(coordinateSpace: .global),
-            onPress: { self.update(resizing: id) },
-            onPressEnd: { _ in self.update(resizing: nil) },
+            onPress: { _ in self.update(resizing: id) },
+            onPressEnd: { _, _ in self.update(resizing: nil) },
             onDrag: { self.onDragResize(of: id, $0) },
             onDragEnd: { self.onDragResize(of: id, $0) }
         )

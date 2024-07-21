@@ -24,7 +24,8 @@ struct ItemsView: View, TracedView, SelectorHolder {
 private extension ItemsView {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
-            ForEach(selector.allPaths.filter { $0.id != selector.focusedItemId }) { p in
+            let focusedItemId = selector.focusedItemId
+            ForEach(selector.allPaths.filter { $0.id != focusedItemId }) { p in
                 SUPath { path in p.append(to: &path) }
                     .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
             }

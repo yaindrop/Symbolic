@@ -56,11 +56,13 @@ extension ActiveItemService {
     }
 
     var activePaths: [Path] {
-        item.allPaths.filter { activeItemIds.contains($0.id) }
+        let activeItemIds = activeItemIds
+        return item.allPaths.filter { activeItemIds.contains($0.id) }
     }
 
     var activeGroups: [ItemGroup] {
-        item.allGroups.filter { activeItemIds.contains($0.id) }
+        let activeItemIds = activeItemIds
+        return item.allGroups.filter { activeItemIds.contains($0.id) }
     }
 
     var selectedItems: [Item] {

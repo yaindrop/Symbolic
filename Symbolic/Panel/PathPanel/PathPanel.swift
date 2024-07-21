@@ -24,30 +24,18 @@ struct PathPanel: View, TracedView, SelectorHolder {
 
 private extension PathPanel {
     @ViewBuilder var content: some View {
-        nodes
-            .onChange(of: selector.focusedNodeId) {
-                guard let id = selector.focusedNodeId else { return }
-                withAnimation(.easeInOut(duration: 0.2)) { panelScrollProxy?.scrollTo(id, anchor: .center) }
-            }
-            .onChange(of: selector.focusedSegmentId) {
-                guard let id = selector.focusedSegmentId else { return }
-                withAnimation(.easeInOut(duration: 0.2)) { panelScrollProxy?.scrollTo(id, anchor: .center) }
-            }
-        if selector.path == nil {
-            placeholder
-        }
-    }
-
-    @ViewBuilder var nodes: some View {
         if let path = selector.path {
-            PanelSection(name: "Nodes") {
-                ForEach(path.nodeIds) { nodeId in
-                    NodeRow(pathId: path.id, nodeId: nodeId)
-                    if nodeId != path.nodeIds.last {
-                        Divider().padding(.leading, 12)
-                    }
+            Nodes(pathId: path.id)
+                .onChange(of: selector.focusedNodeId) {
+                    guard let id = selector.focusedNodeId else { return }
+                    withAnimation(.easeInOut(duration: 0.2)) { panelScrollProxy?.scrollTo(id, anchor: .center) }
                 }
-            }
+                .onChange(of: selector.focusedSegmentId) {
+                    guard let id = selector.focusedSegmentId else { return }
+                    withAnimation(.easeInOut(duration: 0.2)) { panelScrollProxy?.scrollTo(id, anchor: .center) }
+                }
+        } else {
+            placeholder
         }
     }
 

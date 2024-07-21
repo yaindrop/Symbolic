@@ -148,15 +148,17 @@ private extension FocusedPathView.NodeHandles {
     @ViewBuilder func shapes(nodeType: PathNodeType, viewport: SizedViewportInfo) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
+            let pathProperty = selector.pathProperty,
+                selectingNodes = selector.selectingNodes
             for nodeId in path.nodeIds {
-                guard selector.pathProperty?.nodeType(id: nodeId) == nodeType,
-                      let node = selector.path?.node(id: nodeId) else { continue }
+                guard pathProperty?.nodeType(id: nodeId) == nodeType,
+                      let node = path.node(id: nodeId) else { continue }
                 let position = node.position.applying(viewport.worldToView)
                 if nodeType == .corner {
-                    let size = rectSize * (selector.selectingNodes ? 1.5 : 1)
+                    let size = rectSize * (selectingNodes ? 1.5 : 1)
                     p.addRoundedRect(in: .init(center: position, size: .init(squared: size)), cornerSize: .init(2, 2))
                 } else {
-                    let size = circleSize * (selector.selectingNodes ? 1.5 : 1)
+                    let size = circleSize * (selectingNodes ? 1.5 : 1)
                     p.addEllipse(in: .init(center: position, size: .init(squared: size)))
                 }
             }
@@ -170,7 +172,7 @@ private extension FocusedPathView.NodeHandles {
         SUPath { p in
             guard let path = selector.path else { return }
             for nodeId in path.nodeIds {
-                guard let node = selector.path?.node(id: nodeId) else { continue }
+                guard let node = path.node(id: nodeId) else { continue }
                 let position = node.position.applying(viewport.worldToView),
                     size = CGSize(squared: touchableSize)
                 p.addRect(.init(center: position, size: size))
@@ -183,10 +185,12 @@ private extension FocusedPathView.NodeHandles {
     @ViewBuilder func activeMarks(viewport: SizedViewportInfo) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
+            let activeNodeIds = selector.activeNodeIds,
+                selectingNodes = selector.selectingNodes
             for nodeId in path.nodeIds {
-                guard !selector.selectingNodes,
-                      selector.activeNodeIds.contains(nodeId),
-                      let node = selector.path?.node(id: nodeId) else { continue }
+                guard !selectingNodes,
+                      activeNodeIds.contains(nodeId),
+                      let node = path.node(id: nodeId) else { continue }
                 let position = node.position.applying(viewport.worldToView),
                     size = CGSize(squared: circleSize / 2)
                 p.addEllipse(in: .init(center: position, size: size))
@@ -199,11 +203,14 @@ private extension FocusedPathView.NodeHandles {
     @ViewBuilder func snappedMarks(viewport: SizedViewportInfo) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
+            let activeNodeIds = selector.activeNodeIds,
+                selectingNodes = selector.selectingNodes,
+                gridStack = selector.gridStack
             for nodeId in path.nodeIds {
-                guard !selector.selectingNodes,
-                      selector.activeNodeIds.contains(nodeId),
-                      let node = selector.path?.node(id: nodeId),
-                      let grid = selector.gridStack.first(where: { $0.snapped(node.position) }) else { continue }
+                guard !selectingNodes,
+                      activeNodeIds.contains(nodeId),
+                      let node = path.node(id: nodeId),
+                      let grid = gridStack.first(where: { $0.snapped(node.position) }) else { continue }
                 let position = node.position.applying(viewport.worldToView)
                 p.move(to: position - .init(9, 0))
                 p.addLine(to: position + .init(9, 0))

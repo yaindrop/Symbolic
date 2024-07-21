@@ -79,6 +79,8 @@ extension FocusedPathService {
     var controlInNodeIds: [UUID] {
         guard let path = activeItem.focusedPath,
               let pathProperty = activeItem.focusedPathProperty else { return [] }
+        let focusedSegmentId = focusedSegmentId,
+            focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
             guard let prevId = path.nodeId(before: $0),
                   let node = path.node(id: $0) else { return false }
@@ -92,6 +94,8 @@ extension FocusedPathService {
     var controlOutNodeIds: [UUID] {
         guard let path = activeItem.focusedPath,
               let pathProperty = activeItem.focusedPathProperty else { return [] }
+        let focusedSegmentId = focusedSegmentId,
+            focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
             guard let node = path.node(id: $0) else { return false }
             let segmentType = pathProperty.segmentType(id: $0),

@@ -158,17 +158,23 @@ extension ItemService: ItemStoreProtocol {
     var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
     var ancestorMap: AncestorMap { pendingStore.active ? pendingStore.ancestorMap : store.ancestorMap }
 
-    var allPaths: [Path] { allPathIds.compactMap { path.get(id: $0) } }
+    var allPaths: [Path] {
+        let pathMap = path.map
+        return allPathIds.compactMap { pathMap.value(key: $0) }
+    }
 
     func groupedPaths(groupId: UUID) -> [Path] {
-        leafItems(rootItemId: groupId)
-            .compactMap { $0.pathId.map { path.get(id: $0) } }
+        let pathMap = path.map
+        return leafItems(rootItemId: groupId)
+            .compactMap { $0.pathId.map { pathMap.value(key: $0) } }
     }
 
     func boundingRect(itemId: UUID) -> CGRect? {
-        guard let item = get(id: itemId) else { return nil }
+        let itemMap = map,
+            pathMap = path.map
+        guard let item = itemMap.value(key: itemId) else { return nil }
         if let pathId = item.pathId {
-            return path.get(id: pathId)?.boundingRect
+            return pathMap.value(key: pathId)?.boundingRect
         }
         if let group = item.group {
             let rects = group.members

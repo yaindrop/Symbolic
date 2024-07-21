@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - tracer
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private extension Tracer {
     // MARK: manager
@@ -240,8 +240,8 @@ private var manager: StoreManager {
 class Store: CancellablesHolder {
     var cancellables = Set<AnyCancellable>()
 
-    private var trackableIdGen = IncrementalIdGenerator()
-    private var trackableIdToSubscriptionIds: [Int: Set<Int>] = [:]
+    fileprivate var trackableIdGen = IncrementalIdGenerator()
+    fileprivate var trackableIdToSubscriptionIds: [Int: Set<Int>] = [:]
 
     fileprivate private(set) var deriving: DerivingContext?
 }
@@ -270,22 +270,6 @@ private extension Store {
     }
 }
 
-private extension Store {
-    func generateTrackableId() -> Int { trackableIdGen.generate() }
-
-    func onTrack(of trackableId: Int, in subscriptionId: Int) {
-        var ids = trackableIdToSubscriptionIds[trackableId] ?? []
-        ids.insert(subscriptionId)
-        trackableIdToSubscriptionIds[trackableId] = ids
-    }
-
-    func onChange(of trackableId: Int) {
-        let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: trackableId)
-        guard let subscriptionIds else { return }
-        manager.notify(subscriptionIds: subscriptionIds)
-    }
-}
-
 // MARK: - StoreProtocol
 
 protocol _StoreProtocol: Store {
@@ -306,12 +290,16 @@ private extension _StoreProtocol {
         if let wrapperId = wrapper.id {
             id = wrapperId
         } else {
-            id = generateTrackableId()
+            id = trackableIdGen.generate()
             wrapper.id = id
         }
         if let trackingId = manager.trackingId {
-            let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
-            onTrack(of: id, in: trackingId)
+            var ids = trackableIdToSubscriptionIds[id] ?? []
+            if !ids.contains(trackingId) {
+                let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
+                ids.insert(trackingId)
+                trackableIdToSubscriptionIds[id] = ids
+            }
         }
         if let deriving, !deriving.trackableIds.contains(id) {
             let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
@@ -330,7 +318,11 @@ private extension _StoreProtocol {
 
         if let trackingId = manager.trackingId {
             for id in wrapper.trackableIds {
-                onTrack(of: id, in: trackingId)
+                var ids = trackableIdToSubscriptionIds[id] ?? []
+                if !ids.contains(trackingId) {
+                    ids.insert(trackingId)
+                    trackableIdToSubscriptionIds[id] = ids
+                }
             }
         }
         if let deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
@@ -348,7 +340,7 @@ private extension _StoreProtocol {
         if let wrapperId = wrapper.id {
             id = wrapperId
         } else {
-            id = generateTrackableId()
+            id = trackableIdGen.generate()
             wrapper.id = id
         }
         guard forced || wrapper.value != newValue else { return }
@@ -356,7 +348,10 @@ private extension _StoreProtocol {
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
 
-        onChange(of: id)
+        if let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: id) {
+            manager.notify(subscriptionIds: subscriptionIds)
+        }
+
         if wrapper.willNotifyCancellable == nil {
             wrapper.willNotifyCancellable = manager.updatingWillNotify?.sink {
                 wrapper.willNotifySubject.send(wrapper.value)

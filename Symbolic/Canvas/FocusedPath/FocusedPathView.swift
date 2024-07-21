@@ -24,13 +24,12 @@ struct FocusedPathView: View, TracedView, SelectorHolder {
 
 private extension FocusedPathView {
     @ViewBuilder var content: some View {
-        if let path = selector.path {
+        if selector.path != nil {
             ZStack {
-                Stroke(pathId: path.id)
-//                ForEach(nodeIds) { SegmentHandle(pathId: path.id, fromNodeId: $0) }
+                Stroke()
                 NodeHandles()
                 BezierHandles()
-//                ForEach(nodeIds) { FocusedSegmentHandle(env: selector, pathId: path.id, fromNodeId: $0) }
+                SegmentHandles()
             }
             if selector.selectingNodes {
                 SelectionBounds()

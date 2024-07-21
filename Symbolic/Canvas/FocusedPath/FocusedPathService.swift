@@ -166,4 +166,32 @@ extension FocusedPathService {
             store.update(selectingNodes: true)
         }
     }
+
+    func onTap(node nodeId: UUID) {
+        if selectingNodes {
+            if activeNodeIds.contains(nodeId) {
+                selectRemove(node: [nodeId])
+            } else {
+                selectAdd(node: [nodeId])
+            }
+        } else {
+            let focused = focusedNodeId == nodeId
+            focused ? clear() : setFocus(node: nodeId)
+        }
+    }
+
+    func onTap(segment fromId: UUID) {
+        if selectingNodes {
+            guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromId) else { return }
+            let nodeIds = [fromId, toId]
+            if activeNodeIds.isSuperset(of: nodeIds) {
+                selectRemove(node: nodeIds)
+            } else {
+                selectAdd(node: nodeIds)
+            }
+        } else {
+            let focused = focusedSegmentId == fromId
+            focused ? clear() : setFocus(segment: fromId)
+        }
+    }
 }

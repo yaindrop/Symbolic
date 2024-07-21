@@ -13,7 +13,6 @@ private extension GlobalStores {
             guard let nodeId = context.nodeId else { return }
             let isControlOut = context.isControlOut
             let (controlOutOffset, controlInOffset) = isControlOut ? (v.offset, .zero) : (.zero, v.offset)
-//            if isControlOut { draggingOut = pending } else { draggingIn = pending }
             documentUpdater.updateInView(focusedPath: .moveNodeControl(.init(nodeId: nodeId, controlInOffset: controlInOffset, controlOutOffset: controlOutOffset)), pending: pending)
         }
         return .init(
@@ -50,9 +49,6 @@ extension FocusedPathView {
         @SelectorWrapper var selector
 
         @State private var gestureContext = GestureContext()
-
-        @State private var draggingIn = false
-        @State private var draggingOut = false
 
         var body: some View { trace {
             setupSelector {

@@ -39,9 +39,9 @@
 		57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57241FA22C228A3400FB0E29 /* PanelPopover.swift */; };
 		572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* DocumentUpdater.swift */; };
 		5724877C2BDF80000096DDE4 /* PathPanel+NodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */; };
-		572487832BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */; };
-		572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift */; };
-		572487872BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */; };
+		572487832BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift */; };
+		572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift */; };
+		572487872BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift */; };
 		5724878A2BDF84070096DDE4 /* PositionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487892BDF84070096DDE4 /* PositionPicker.swift */; };
 		5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878B2BDF841E0096DDE4 /* SizePicker.swift */; };
 		5724878E2BDF84310096DDE4 /* AnglePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878D2BDF84310096DDE4 /* AnglePicker.swift */; };
@@ -181,9 +181,9 @@
 		57241FA22C228A3400FB0E29 /* PanelPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPopover.swift; sourceTree = "<group>"; };
 		572487752BDBAF860096DDE4 /* DocumentUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentUpdater.swift; sourceTree = "<group>"; };
 		5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+NodeRow.swift"; sourceTree = "<group>"; };
-		572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+NodeHandle.swift"; sourceTree = "<group>"; };
-		572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SegmentHandle.swift"; sourceTree = "<group>"; };
-		572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+BezierHandle.swift"; sourceTree = "<group>"; };
+		572487822BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+NodeHandles.swift"; sourceTree = "<group>"; };
+		572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SegmentHandles.swift"; sourceTree = "<group>"; };
+		572487862BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+BezierHandles.swift"; sourceTree = "<group>"; };
 		572487892BDF84070096DDE4 /* PositionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionPicker.swift; sourceTree = "<group>"; };
 		5724878B2BDF841E0096DDE4 /* SizePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SizePicker.swift; sourceTree = "<group>"; };
 		5724878D2BDF84310096DDE4 /* AnglePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnglePicker.swift; sourceTree = "<group>"; };
@@ -423,9 +423,9 @@
 			children = (
 				571B9B292C148B0800AAD516 /* FocusedPathService.swift */,
 				575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */,
-				572487862BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift */,
-				572487822BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift */,
-				572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift */,
+				572487862BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift */,
+				572487822BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift */,
+				572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift */,
 				573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */,
 				574CC7E92BFA53310042FEE3 /* FocusedPathView+Stroke.swift */,
 			);
@@ -892,7 +892,7 @@
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,
 				575C3CF82BD808560035B758 /* DecimalInput.swift in Sources */,
-				572487872BDF83620096DDE4 /* FocusedPathView+BezierHandle.swift in Sources */,
+				572487872BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift in Sources */,
 				574CC7D82BF757630042FEE3 /* Store.swift in Sources */,
 				57B5F12A2BCD02F3001E1B2E /* Path+SVG.swift in Sources */,
 				575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */,
@@ -944,7 +944,7 @@
 				574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,
 				575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */,
-				572487832BDF82420096DDE4 /* FocusedPathView+NodeHandle.swift in Sources */,
+				572487832BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift in Sources */,
 				57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */,
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
@@ -977,7 +977,7 @@
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
-				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandle.swift in Sources */,
+				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

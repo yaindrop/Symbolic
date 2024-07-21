@@ -9,20 +9,6 @@ private class GestureContext {
 
 private extension GlobalStores {
     func nodesGesture(context: GestureContext) -> MultipleGesture {
-        func onTap() {
-            guard let nodeId = context.nodeId else { return }
-            if focusedPath.selectingNodes {
-                if focusedPath.activeNodeIds.contains(nodeId) {
-                    focusedPath.selectRemove(node: [nodeId])
-                } else {
-                    focusedPath.selectAdd(node: [nodeId])
-                }
-            } else {
-                let focused = focusedPath.focusedNodeId == nodeId
-                focused ? focusedPath.clear() : focusedPath.setFocus(node: nodeId)
-            }
-        }
-
         var canAddEndingNode: Bool {
             guard let nodeId = context.nodeId,
                   let focusedPath = activeItem.focusedPath else { return false }
@@ -77,7 +63,10 @@ private extension GlobalStores {
 
             },
 
-            onTap: { _ in onTap() },
+            onTap: { _ in
+                guard let nodeId = context.nodeId else { return }
+                focusedPath.onTap(node: nodeId)
+            },
 
             onLongPress: { _ in
                 addEndingNode()

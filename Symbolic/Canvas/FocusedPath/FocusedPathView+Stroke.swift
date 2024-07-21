@@ -9,21 +9,6 @@ private class GestureContext {
 // MARK: - global actions
 
 private extension GlobalStores {
-    func onTap(segment fromId: UUID) {
-        if focusedPath.selectingNodes {
-            guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromId) else { return }
-            let nodeIds = [fromId, toId]
-            if focusedPath.activeNodeIds.isSuperset(of: nodeIds) {
-                focusedPath.selectRemove(node: nodeIds)
-            } else {
-                focusedPath.selectAdd(node: nodeIds)
-            }
-        } else {
-            let focused = focusedPath.focusedSegmentId == fromId
-            focused ? focusedPath.clear() : focusedPath.setFocus(segment: fromId)
-        }
-    }
-
     func segmentGesture(context: GestureContext) -> MultipleGesture {
         func split(_ v: DragGesture.Value) {
             guard let segmentId = context.segmentId,
@@ -74,7 +59,7 @@ private extension GlobalStores {
             },
             onTap: { _ in
                 guard let segmentId = context.segmentId else { return }
-                onTap(segment: segmentId)
+                focusedPath.onTap(segment: segmentId)
             },
             onLongPress: {
                 split($0)
@@ -91,39 +76,16 @@ private extension GlobalStores {
             onDragEnd: { updateDrag($0) }
         )
     }
-
-    func focusedSegmentGesture(fromId: UUID) -> MultipleGesture {
-        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            guard let toId = activeItem.focusedPath?.nodeId(after: fromId) else { return }
-            documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: v.offset)), pending: pending)
-        }
-        return .init(
-            onPress: { _ in canvasAction.start(continuous: .movePathSegment) },
-            onPressEnd: { _, cancelled in
-                canvasAction.end(continuous: .movePathSegment)
-                if cancelled { documentUpdater.cancel() }
-            },
-
-            onTap: { _ in onTap(segment: fromId) },
-            onDrag: { updateDrag($0, pending: true) },
-            onDragEnd: { updateDrag($0) }
-        )
-    }
 }
 
 // MARK: - Stroke
 
 extension FocusedPathView {
-    struct Stroke: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        let pathId: UUID
-
-        var equatableBy: some Equatable { pathId }
-
-        struct SelectorProps: Equatable { let pathId: UUID }
+    struct Stroke: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ global.path.get(id: $0.pathId) }) var path
+            @Selected({ global.activeItem.focusedPath }) var path
         }
 
         @SelectorWrapper var selector
@@ -131,7 +93,7 @@ extension FocusedPathView {
         @State private var gestureContext = GestureContext()
 
         var body: some View { trace {
-            setupSelector(.init(pathId: pathId)) {
+            setupSelector {
                 content
             }
         } }

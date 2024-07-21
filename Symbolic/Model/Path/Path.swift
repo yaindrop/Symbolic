@@ -133,6 +133,19 @@ extension Path {
         return PathSegment(from: from, to: to)
     }
 
+    func segmentId(closestTo point: Point2) -> UUID? {
+        var result: (id: UUID, distance: Scalar)?
+        for nodeId in nodeIds {
+            guard let segment = segment(fromId: nodeId) else { continue }
+            let polyline = segment.tessellated()
+            let (_, distance) = polyline.approxPathParamT(closestTo: point)
+            if distance < result?.distance ?? .infinity {
+                result = (nodeId, distance)
+            }
+        }
+        return result?.id
+    }
+
     // predicates
 
     func isFirstEndingNode(id: UUID) -> Bool { !isClosed && nodeIds.first == id }

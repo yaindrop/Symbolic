@@ -1,5 +1,116 @@
 import SwiftUI
 
+private class GestureContext {
+    var segmentId: UUID?
+    var longPressParamT: Scalar?
+    var longPressSplitNodeId: UUID?
+}
+
+// MARK: - global actions
+
+private extension GlobalStores {
+    func onTap(segment fromId: UUID) {
+        if focusedPath.selectingNodes {
+            guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromId) else { return }
+            let nodeIds = [fromId, toId]
+            if focusedPath.activeNodeIds.isSuperset(of: nodeIds) {
+                focusedPath.selectRemove(node: nodeIds)
+            } else {
+                focusedPath.selectAdd(node: nodeIds)
+            }
+        } else {
+            let focused = focusedPath.focusedSegmentId == fromId
+            focused ? focusedPath.clear() : focusedPath.setFocus(segment: fromId)
+        }
+    }
+
+    func segmentGesture(context: GestureContext) -> MultipleGesture {
+        func split(_ v: DragGesture.Value) {
+            guard let segmentId = context.segmentId,
+                  let segment = activeItem.focusedPath?.segment(fromId: segmentId) else { return }
+            let location = v.location.applying(viewport.toWorld)
+            let paramT = segment.paramT(closestTo: location).t
+            context.longPressParamT = paramT
+            let id = UUID()
+            context.longPressSplitNodeId = id
+            focusedPath.setFocus(node: id)
+        }
+        func moveSplitNode(paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
+            guard let segmentId = context.segmentId else { return }
+            documentUpdater.updateInView(focusedPath: .splitSegment(.init(fromNodeId: segmentId, paramT: paramT, newNodeId: newNodeId, offset: offset)), pending: pending)
+            if !pending {
+                context.longPressParamT = nil
+            }
+        }
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
+                moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
+            } else if let pathId = activeItem.focusedPath?.id {
+                documentUpdater.updateInView(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
+            }
+        }
+        func updateLongPress(pending: Bool = false) {
+            guard let paramT = context.longPressParamT,
+                  let newNodeId = context.longPressSplitNodeId else { return }
+            moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: .zero, pending: pending)
+        }
+
+        return .init(
+            configs: .init(durationThreshold: 0.2),
+            onPress: { info in
+                let location = info.location.applying(viewport.toWorld)
+                guard let segmentId = activeItem.focusedPath?.segmentId(closestTo: location) else { return }
+                context.segmentId = segmentId
+                canvasAction.start(continuous: .movePath)
+                canvasAction.start(triggering: .splitPathSegment)
+            },
+            onPressEnd: { _, cancelled in
+                context.segmentId = nil
+                canvasAction.end(triggering: .splitPathSegment)
+                canvasAction.end(continuous: .splitAndMovePathNode)
+                canvasAction.end(continuous: .movePath)
+                if cancelled { documentUpdater.cancel() }
+
+            },
+            onTap: { _ in
+                guard let segmentId = context.segmentId else { return }
+                onTap(segment: segmentId)
+            },
+            onLongPress: {
+                split($0)
+                updateLongPress(pending: true)
+                canvasAction.end(continuous: .movePath)
+                canvasAction.end(triggering: .splitPathSegment)
+                canvasAction.start(continuous: .splitAndMovePathNode)
+            },
+            onLongPressEnd: { _ in updateLongPress() },
+            onDrag: {
+                updateDrag($0, pending: true)
+                canvasAction.end(triggering: .splitPathSegment)
+            },
+            onDragEnd: { updateDrag($0) }
+        )
+    }
+
+    func focusedSegmentGesture(fromId: UUID) -> MultipleGesture {
+        func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            guard let toId = activeItem.focusedPath?.nodeId(after: fromId) else { return }
+            documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: v.offset)), pending: pending)
+        }
+        return .init(
+            onPress: { _ in canvasAction.start(continuous: .movePathSegment) },
+            onPressEnd: { _, cancelled in
+                canvasAction.end(continuous: .movePathSegment)
+                if cancelled { documentUpdater.cancel() }
+            },
+
+            onTap: { _ in onTap(segment: fromId) },
+            onDrag: { updateDrag($0, pending: true) },
+            onDragEnd: { updateDrag($0) }
+        )
+    }
+}
+
 // MARK: - Stroke
 
 extension FocusedPathView {
@@ -17,6 +128,8 @@ extension FocusedPathView {
 
         @SelectorWrapper var selector
 
+        @State private var gestureContext = GestureContext()
+
         var body: some View { trace {
             setupSelector(.init(pathId: pathId)) {
                 content
@@ -29,14 +142,29 @@ extension FocusedPathView {
 
 private extension FocusedPathView.Stroke {
     @ViewBuilder var content: some View {
-        if let path = selector.path {
-            AnimatableReader(selector.viewport) {
-                SUPath { path.append(to: &$0) }
-                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                    .allowsHitTesting(false)
-                    .transformEffect($0.worldToView)
-                    .id(path.id)
-            }
+        AnimatableReader(selector.viewport) {
+            outline(viewport: $0)
+            touchable(viewport: $0)
         }
+    }
+
+    @ViewBuilder func outline(viewport: SizedViewportInfo) -> some View {
+        SUPath { p in
+            guard let path = selector.path else { return }
+            path.append(to: &p)
+        }
+        .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        .transformEffect(viewport.worldToView)
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder func touchable(viewport: SizedViewportInfo) -> some View {
+        SUPath { p in
+            guard let path = selector.path else { return }
+            path.append(to: &p)
+        }
+        .transform(viewport.worldToView)
+        .stroke(.yellow.opacity(0.05), style: StrokeStyle(lineWidth: 24, lineCap: .round))
+        .multipleGesture(global.segmentGesture(context: gestureContext))
     }
 }

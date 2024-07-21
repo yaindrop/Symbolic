@@ -73,6 +73,55 @@ extension FocusedPathService {
     }
 }
 
+// MARK: bezier control
+
+extension FocusedPathService {
+    var controlInNodeIds: [UUID] {
+        guard let path = activeItem.focusedPath,
+              let pathProperty = activeItem.focusedPathProperty else { return [] }
+        return path.nodeIds.filter {
+            guard let prevId = path.nodeId(before: $0),
+                  let node = path.node(id: $0) else { return false }
+            let segmentType = pathProperty.segmentType(id: prevId),
+                focused = focusedSegmentId == prevId || focusedNodeId == $0,
+                valid = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
+            return focused && valid
+        }
+    }
+
+    var controlOutNodeIds: [UUID] {
+        guard let path = activeItem.focusedPath,
+              let pathProperty = activeItem.focusedPathProperty else { return [] }
+        return path.nodeIds.filter {
+            guard let node = path.node(id: $0) else { return false }
+            let segmentType = pathProperty.segmentType(id: $0),
+                focused = focusedSegmentId == $0 || focusedNodeId == $0,
+                valid = segmentType == .cubic || (segmentType == .auto && node.controlOut != .zero)
+            return focused && valid
+        }
+    }
+
+    func controlNodeId(closestTo point: Point2) -> (nodeId: UUID, isControlOut: Bool)? {
+        var result: (id: UUID, isControlOut: Bool, distance: Scalar)?
+        guard let path = activeItem.focusedPath else { return nil }
+        for nodeId in controlInNodeIds {
+            guard let node = path.node(id: nodeId) else { continue }
+            let distance = node.positionIn.distance(to: point)
+            if distance < result?.distance ?? .infinity {
+                result = (nodeId, false, distance)
+            }
+        }
+        for nodeId in controlOutNodeIds {
+            guard let node = path.node(id: nodeId) else { continue }
+            let distance = node.positionOut.distance(to: point)
+            if distance < result?.distance ?? .infinity {
+                result = (nodeId, true, distance)
+            }
+        }
+        return result.map { ($0.id, $0.isControlOut) }
+    }
+}
+
 // MARK: actions
 
 extension FocusedPathService {

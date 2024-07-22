@@ -285,8 +285,8 @@ extension PanelStore {
     }
 
     func onPress(of id: UUID) {
-        guard let style = styleMap.value(key: id) else { return }
-        guard style.appearance == .floatingSecondary else { return }
+        guard let style = styleMap.value(key: id),
+              style.appearance == .floatingSecondary else { return }
         if style.squeezed {
             focus(on: id)
         } else {

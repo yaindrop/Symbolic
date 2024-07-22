@@ -193,7 +193,8 @@ struct MultipleTouchPressDetector {
     }
 
     private func onPressChange() {
-        guard let context, let value = context.lastValue else { return }
+        guard let context,
+              let value = context.lastValue else { return }
         let _r = subtracer.range(type: .intent, "press change"); defer { _r() }
         if !isPress {
             if !context.longPressStarted || !configs.holdLongPressOnDrag {
@@ -204,7 +205,8 @@ struct MultipleTouchPressDetector {
     }
 
     private func onPressEnd() {
-        guard let context, let value = context.lastValue else { return }
+        guard let context,
+              let value = context.lastValue else { return }
         let _r = subtracer.range(type: .intent, "press end"); defer { _r() }
         if isPress {
             resetLongPress()

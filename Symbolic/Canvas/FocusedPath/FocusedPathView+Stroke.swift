@@ -111,22 +111,16 @@ private extension FocusedPathView.Stroke {
     }
 
     @ViewBuilder func outline(viewport: SizedViewportInfo) -> some View {
-        SUPath { p in
-            guard let path = selector.path else { return }
-            path.append(to: &p)
-        }
-        .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-        .transformEffect(viewport.worldToView)
-        .allowsHitTesting(false)
+        SUPath { p in selector.path?.append(to: &p) }
+            .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+            .transformEffect(viewport.worldToView)
+            .allowsHitTesting(false)
     }
 
     @ViewBuilder func touchable(viewport: SizedViewportInfo) -> some View {
-        SUPath { p in
-            guard let path = selector.path else { return }
-            path.append(to: &p)
-        }
-        .transform(viewport.worldToView)
-        .stroke(.yellow.opacity(0.05), style: StrokeStyle(lineWidth: 24, lineCap: .round))
-        .multipleGesture(global.segmentGesture(context: gestureContext))
+        SUPath { p in selector.path?.append(to: &p) }
+            .transform(viewport.worldToView)
+            .stroke(.yellow.opacity(0.05), style: StrokeStyle(lineWidth: 24, lineCap: .round))
+            .multipleGesture(global.segmentGesture(context: gestureContext))
     }
 }

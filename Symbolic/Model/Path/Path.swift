@@ -224,6 +224,15 @@ extension Path: EquatableBy {
     var equatableBy: some Equatable { ObjectIdentifier(self) }
 }
 
+// MARK: EquatableBy
+
+extension Path: Transformable {
+    func applying(_ t: CGAffineTransform) -> Self {
+        let nodes = nodes.map { $0.applying(t) }
+        return .init(id: UUID(), nodeMap: .init(values: nodes) { _ in UUID() }, isClosed: isClosed)
+    }
+}
+
 // MARK: SUPathAppendable
 
 extension Path: SUPathAppendable {

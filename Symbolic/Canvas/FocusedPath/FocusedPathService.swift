@@ -49,18 +49,13 @@ extension FocusedPathService {
         return path.continuousNodeIndexPairs(nodeIds: activeNodeIds)
     }
 
-    func subpath(from: Int, to: Int) -> Path? {
-        guard let path = activeItem.focusedPath else { return nil }
-        return path.subpath(from: from, to: to)
-    }
-
     func nodesBounds(from: Int, to: Int) -> CGRect? {
         guard let path = activeItem.focusedPath else { return nil }
         if from == to {
             guard let node = path.node(at: from) else { return nil }
             return CGRect(center: node.position, size: .zero)
         } else {
-            guard let subpath = subpath(from: from, to: to) else { return nil }
+            guard let subpath = path.subpath(from: from, to: to) else { return nil }
             return subpath.boundingRect
         }
     }
@@ -136,7 +131,8 @@ extension FocusedPathService {
 
     func setFocus(segment fromNodeId: UUID) {
         let _r = subtracer.range(type: .intent, "set focus segment from \(fromNodeId)"); defer { _r() }
-        guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromNodeId) else { return }
+        guard let path = activeItem.focusedPath,
+              let toId = path.nodeId(after: fromNodeId) else { return }
         store.update(activeNodeIds: [fromNodeId, toId])
     }
 
@@ -182,7 +178,8 @@ extension FocusedPathService {
 
     func onTap(segment fromId: UUID) {
         if selectingNodes {
-            guard let path = activeItem.focusedPath, let toId = path.nodeId(after: fromId) else { return }
+            guard let path = activeItem.focusedPath,
+                  let toId = path.nodeId(after: fromId) else { return }
             let nodeIds = [fromId, toId]
             if activeNodeIds.isSuperset(of: nodeIds) {
                 selectRemove(node: nodeIds)

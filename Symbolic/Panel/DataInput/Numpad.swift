@@ -6,17 +6,20 @@ import SwiftUI
 extension Numpad {
     struct Configs {
         var range: ClosedRange<Double>?
-        var maxDecimalLength: Int?
+        var maxDecimalLength: Int
 
         fileprivate func validate(_ decomposed: Decomposed) -> Warning? {
             guard let value = Double(decomposed.composed) else { return .unknown }
             if let range {
                 guard range.contains(value) else { return .range(range) }
             }
-            if let maxDecimalLength {
-                guard decomposed.decimal?.count ?? 0 <= maxDecimalLength else { return .maxDecimalLength(maxDecimalLength) }
-            }
+            guard decomposed.decimal?.count ?? 0 <= maxDecimalLength else { return .maxDecimalLength(maxDecimalLength) }
             return nil
+        }
+
+        init(range: ClosedRange<Double>? = -1e6 ... 1e6, maxDecimalLength: Int = 3) {
+            self.range = range
+            self.maxDecimalLength = (0 ... 6).clamp(maxDecimalLength)
         }
     }
 
@@ -54,11 +57,33 @@ private extension Numpad {
         var decimal: String?
 
         var composed: String { "\(negated ? "-" : "")\(integer)\(decimal.map { ".\($0)" } ?? "")" }
+
+        init(negated: Bool, integer: String, decimal: String?) {
+            self.negated = negated
+            self.integer = integer
+            self.decimal = decimal
+        }
+
+        init(value: Double, configs: Configs) {
+            let value = configs.range?.clamp(value) ?? value
+            negated = value < 0
+
+            let absValue = abs(value)
+            let floorValue = floor(absValue)
+            integer = "\(Int(floorValue))"
+
+            let decimalPart = absValue - floorValue
+            let decimalValue = round(decimalPart * pow(10, Double(configs.maxDecimalLength)))
+            let decimalString = "\(Int(decimalValue))"
+            let leadingZeros = String(repeating: "0", count: configs.maxDecimalLength - decimalString.count)
+            let zeroTrimmed = decimalString.trimmingCharacters(in: .init(charactersIn: "0"))
+            decimal = leadingZeros + zeroTrimmed
+        }
     }
 
     class Model: ObservableObject {
         let configs: Configs
-        @Published var decomposed = Decomposed()
+        @Published var decomposed: Decomposed
         @Published var lastWarning: Warning?
 
         var negated: Bool { decomposed.negated }
@@ -70,11 +95,17 @@ private extension Numpad {
         var value: Double? { .init(decomposed.composed) }
 
         var displayValue: String {
-            var formatted = value!.formatted(FloatingPointFormatStyle())
-            if let decimal, decimal.allSatisfy({ $0 == "0" }) {
-                formatted += ".\(decimal)"
-            }
-            return formatted
+            let formatted = value!.formatted(FloatingPointFormatStyle())
+            guard let decimal else { return formatted }
+
+            let arr = Array(decimal)
+            let lastNonZeroIndex = arr.lastIndex { $0 != "0" }
+            guard let lastNonZeroIndex else { return formatted + ".\(decimal)" }
+
+            guard lastNonZeroIndex != arr.count - 1 else { return formatted }
+
+            let zerosCount = arr.count - 1 - lastNonZeroIndex
+            return formatted + .init(repeating: "0", count: zerosCount)
         }
 
         func onKey(_ kind: Numpad.KeyKind) {
@@ -121,8 +152,9 @@ private extension Numpad {
             }
         }
 
-        init(configs: Configs) {
+        init(initialValue: Double, configs: Configs) {
             self.configs = configs
+            decomposed = .init(value: initialValue, configs: configs)
         }
     }
 }
@@ -130,11 +162,26 @@ private extension Numpad {
 // MARK: - Numpad
 
 struct Numpad: View {
-    @StateObject private var model = Model(configs: .init(range: -1000 ... 2000, maxDecimalLength: 555))
+    let configs: Configs
+    var onChange: ((Double) -> Void)?
+    var onDone: ((Double) -> Void)?
+
+    @StateObject private var model: Model
+
+    init(initialValue: Double, configs: Configs = .init(), onChange: ((Double) -> Void)? = nil, onDone: ((Double) -> Void)? = nil) {
+        self.configs = configs
+        self.onChange = onChange
+        self.onDone = onDone
+        _model = .init(wrappedValue: .init(initialValue: initialValue, configs: configs))
+    }
 
     var body: some View {
         content
             .environmentObject(model)
+            .onChange(of: model.value) {
+                guard let v = model.value else { return }
+                onChange?(v)
+            }
     }
 }
 
@@ -297,7 +344,7 @@ private extension Numpad.Key {
     var disabled: Bool {
         switch kind {
         case .number: false
-        case .dot: model.configs.maxDecimalLength.map { $0 <= 0 } ?? false
+        case .dot: model.configs.maxDecimalLength <= 0
         case .delete: false
         case .negate: model.configs.range.map { $0.lowerBound >= 0 } ?? false
         case .done: false

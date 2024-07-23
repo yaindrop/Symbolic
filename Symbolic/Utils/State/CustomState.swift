@@ -39,6 +39,7 @@ struct ThrottledState<Value>: DynamicProperty {
             task = .init { @MainActor [weak self] in
                 guard let self else { return }
                 try? await Task.sleep(for: .milliseconds(UInt64(configs.duration * Double(MSEC_PER_SEC))))
+                guard !Task.isCancelled else { return }
                 throttleEnd()
             }
         }
@@ -126,5 +127,51 @@ struct DelayedState<Value>: DynamicProperty {
 
     init(wrappedValue: Value, configs: Configs) {
         _storage = .init(wrappedValue: .init(value: wrappedValue, configs: configs))
+    }
+}
+
+// MARK: - AutoResetState
+
+@propertyWrapper
+struct AutoResetState<Value>: DynamicProperty {
+    struct Configs {
+        var duration: Double
+    }
+
+    private class Storage: ObservableObject {
+        @Published var value: Value?
+
+        private let configs: Configs
+        private var task: DispatchWorkItem?
+
+        func on(newValue: Value?) {
+            value = newValue
+            setupTask()
+        }
+
+        func setupTask() {
+            task?.cancel()
+            let task = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                value = nil
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + configs.duration, execute: task)
+            self.task = task
+        }
+
+        init(configs: Configs) {
+            self.configs = configs
+        }
+    }
+
+    @StateObject private var storage: Storage
+
+    var wrappedValue: Value? {
+        get { storage.value }
+        nonmutating set { storage.on(newValue: newValue) }
+    }
+
+    init(configs: Configs) {
+        _storage = .init(wrappedValue: .init(configs: configs))
     }
 }

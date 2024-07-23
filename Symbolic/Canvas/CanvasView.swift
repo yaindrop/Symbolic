@@ -197,6 +197,8 @@ private extension CanvasView {
                 CanvasActionView()
                     .zIndex(0)
             }
+
+            PortalRoot()
         }
     } }
 }

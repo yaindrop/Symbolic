@@ -126,6 +126,10 @@
 		57E082192C28FD26008CC67B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 57E082182C28FD26008CC67B /* Localizable.xcstrings */; };
 		57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */; };
 		57FC32FB2C4ACACF00DF7DBF /* Polyline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */; };
+		57FC32FF2C4E147400DF7DBF /* PortalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC32FE2C4E147400DF7DBF /* PortalStore.swift */; };
+		57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC33002C4E149600DF7DBF /* PortalData.swift */; };
+		57FC33032C4E157300DF7DBF /* PortalRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC33022C4E157300DF7DBF /* PortalRoot.swift */; };
+		57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC33042C4E4A1000DF7DBF /* Numpad.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -269,6 +273,10 @@
 		57E082182C28FD26008CC67B /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Polyline+PathFitter.swift"; sourceTree = "<group>"; };
 		57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Polyline.swift; sourceTree = "<group>"; };
+		57FC32FE2C4E147400DF7DBF /* PortalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortalStore.swift; sourceTree = "<group>"; };
+		57FC33002C4E149600DF7DBF /* PortalData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortalData.swift; sourceTree = "<group>"; };
+		57FC33022C4E157300DF7DBF /* PortalRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortalRoot.swift; sourceTree = "<group>"; };
+		57FC33042C4E4A1000DF7DBF /* Numpad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Numpad.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -377,6 +385,7 @@
 				572CA9D32C319B32003760B7 /* FileBrowser */,
 				57DD2A292C0432D50046931C /* Model */,
 				5700C2C22BEB5A6800481FA7 /* Panel */,
+				57FC32FC2C4E143A00DF7DBF /* Portal */,
 				5723BF812BC39846002209F2 /* Preview Content */,
 				57E0820C2C27A7E3008CC67B /* Root */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
@@ -440,6 +449,7 @@
 				572487892BDF84070096DDE4 /* PositionPicker.swift */,
 				5724878B2BDF841E0096DDE4 /* SizePicker.swift */,
 				57416E482BE5252000C73434 /* FlagInput.swift */,
+				57FC33042C4E4A1000DF7DBF /* Numpad.swift */,
 			);
 			path = DataInput;
 			sourceTree = "<group>";
@@ -729,6 +739,16 @@
 			path = File;
 			sourceTree = "<group>";
 		};
+		57FC32FC2C4E143A00DF7DBF /* Portal */ = {
+			isa = PBXGroup;
+			children = (
+				57FC32FE2C4E147400DF7DBF /* PortalStore.swift */,
+				57FC33002C4E149600DF7DBF /* PortalData.swift */,
+				57FC33022C4E157300DF7DBF /* PortalRoot.swift */,
+			);
+			path = Portal;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -922,6 +942,7 @@
 				574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* ViewportService.swift in Sources */,
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
+				57FC33032C4E157300DF7DBF /* PortalRoot.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
 				571B9B2C2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */,
@@ -937,6 +958,7 @@
 				574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */,
 				574CC7EA2BFA53310042FEE3 /* FocusedPathView+Stroke.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
+				57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */,
 				571B9B472C14AA5F00AAD516 /* Container+Extension.swift in Sources */,
 				572CA9E02C31A0CA003760B7 /* RootStore.swift in Sources */,
 				57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */,
@@ -948,8 +970,10 @@
 				57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */,
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
+				57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */,
 				5724878C2BDF841E0096DDE4 /* SizePicker.swift in Sources */,
+				57FC32FF2C4E147400DF7DBF /* PortalStore.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
 				571B9B412C14A9B600AAD516 /* Operators.swift in Sources */,
 				57B703FF2C38F18500B60F36 /* GridView.swift in Sources */,

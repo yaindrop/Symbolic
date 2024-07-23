@@ -5,15 +5,26 @@ import SwiftUI
 struct PositionPicker: View {
     var body: some View {
         HStack {
-            if isInputMode {
-                content.onChange(of: inputPosition) { onChange(inputPosition) }
-            } else {
-                Menu {
-                    Button { startInput() } label: { Text("Input") }
-                } label: {
-                    content
-                }
+//            if isInputMode {
+//                content.onChange(of: inputPosition) { onChange(inputPosition) }
+//            } else {
+//                Menu {
+            Button {
+                isInputMode.toggle()
+            } label: { content }
                 .tint(.label)
+
+//                } label: {
+//                    content
+//                }
+//                .tint(.label)
+//            }
+        }
+        .overlay {
+            if isInputMode {
+                PortalReference(align: .topLeading) {
+                    Numpad()
+                }
             }
         }
         .frame(height: 20)
@@ -45,22 +56,21 @@ struct PositionPicker: View {
 
     private var content: some View {
         HStack(spacing: 0) {
-            if isInputMode {
-                Button { endInput() } label: { Image(systemName: "checkmark.circle") }
-            }
-            Image(systemName: "arrow.right")
-            if isInputMode {
-                DecimalInput(title: "X", inputNumber: $inputX)
-            } else {
-                Text(position.x.decimalFormatted())
-            }
+            Image(systemName: "arrow.up.right.square")
+//            if isInputMode {
+//                Button { endInput() } label: { Image(systemName: "checkmark.circle") }
+//            }
+//            if isInputMode {
+//                DecimalInput(title: "X", inputNumber: $inputX)
+//            } else {
+            Text(position.x.decimalFormatted())
+//            }
             Rectangle().frame(width: 1).background(Color.label).padding(.horizontal, 4)
-            Image(systemName: "arrow.down")
-            if isInputMode {
-                DecimalInput(title: "Y", inputNumber: $inputY)
-            } else {
-                Text(position.y.decimalFormatted())
-            }
+//            if isInputMode {
+//                DecimalInput(title: "Y", inputNumber: $inputY)
+//            } else {
+            Text(position.y.decimalFormatted())
+//            }
         }
         .font(.footnote.monospacedDigit())
     }

@@ -35,11 +35,13 @@ private extension PathPanel.Nodes {
     @ViewBuilder var content: some View {
         if let context {
             let nodeIds = context.path.nodeIds
-            LazyVStack(spacing: 0) {
-                ForEach(nodeIds) { nodeId in
-                    NodeRow(context: context, nodeId: nodeId)
-                    if nodeId != nodeIds.last {
-                        Divider().padding(.leading, 12)
+            PanelSection(name: "Nodes") {
+                VStack(spacing: 0) {
+                    ForEach(nodeIds) { nodeId in
+                        NodeRow(context: context, nodeId: nodeId)
+                        if nodeId != nodeIds.last {
+                            Divider().padding(.leading, 12)
+                        }
                     }
                 }
             }
@@ -73,14 +75,12 @@ private extension NodeRow {
     var content: some View {
         VStack(spacing: 0) {
             row
-            NodeDetailView(context: context, nodeId: nodeId)
-                .padding(12)
+            detail
                 .frame(height: expanded ? nil : 0, alignment: .top)
-                .allowsHitTesting(expanded)
                 .clipped()
         }
         .onChange(of: focused) {
-            withAnimation { expanded = focused }
+            withAnimation(.fast) { expanded = focused }
         }
     }
 
@@ -111,7 +111,7 @@ private extension NodeRow {
     @ViewBuilder var expandButton: some View {
         Memo {
             Button {
-                withAnimation { expanded.toggle() }
+                withAnimation(.fast) { expanded.toggle() }
             } label: {
                 expandIcon
             }
@@ -127,6 +127,13 @@ private extension NodeRow {
 
     func toggleFocus() {
         focused ? global.focusedPath.clear() : global.focusedPath.setFocus(node: nodeId)
+    }
+
+    @ViewBuilder var detail: some View {
+        if expanded {
+            NodeDetailView(context: context, nodeId: nodeId)
+                .padding(12)
+        }
     }
 }
 
@@ -186,7 +193,6 @@ private extension NodeDetailView {
             let isCubic = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
             let isLine = segmentType == .line || (segmentType == .auto && node.controlIn == .zero)
             HStack {
-                let menu = EmptyView()
                 if isCubic {
                     rowTitle(name: "Cubic", subname: "In")
                         .foregroundStyle(focused ? .orange.opacity(0.8) : .label)

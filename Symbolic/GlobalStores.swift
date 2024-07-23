@@ -9,6 +9,8 @@ struct GlobalStores {
 
     let panel = PanelStore()
 
+    let portal = PortalStore()
+
     let toolbar = ToolbarStore()
 
     let canvasAction = CanvasActionStore()

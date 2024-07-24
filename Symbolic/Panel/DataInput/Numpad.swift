@@ -301,7 +301,8 @@ private extension Numpad.Display {
             HStack(spacing: 0) {
                 if let label = model.configs.label {
                     Text("\(label)=")
-                        .font(.callout.monospaced())
+                        .font(.footnote.monospaced())
+                        .padding(.trailing, 4)
                         .opacity(0.5)
                 }
                 Text(model.displayValue)
@@ -349,34 +350,39 @@ private extension Numpad.Key {
             .animation(.fast, value: down)
             .multipleGesture(disabled ? nil : .init(
                 onPress: { _ in down = true },
-                onPressEnd: { _, _ in down = false },
-                onTap: { _ in model.onKey(kind) }
+                onPressEnd: { _, _ in model.onKey(kind); down = false }
             ))
             .opacity(disabled ? 0.5 : 1)
     }
 
     @ViewBuilder var label: some View {
-        switch kind {
-        case let .number(n):
-            Text("\(n)")
-        case .dot:
-            Text(".")
-        case .delete:
-            Image(systemName: "delete.backward")
-        case .negate:
-            Image(systemName: "plusminus")
-        case .done:
-            Image(systemName: "checkmark.circle")
+        var text: String? {
+            switch kind {
+            case let .number(n): "\(n)"
+            case .dot: "."
+            default: nil
+            }
+        }
+        var image: String? {
+            switch kind {
+            case .delete: "delete.backward"
+            case .negate: "plusminus"
+            case .done: "checkmark.circle"
+            default: nil
+            }
+        }
+        if let text {
+            Text(text)
+        } else if let image {
+            Image(systemName: image)
         }
     }
 
     var disabled: Bool {
         switch kind {
-        case .number: false
         case .dot: model.configs.maxDecimalLength <= 0
-        case .delete: false
         case .negate: model.configs.range.lowerBound >= 0
-        case .done: false
+        default: false
         }
     }
 }

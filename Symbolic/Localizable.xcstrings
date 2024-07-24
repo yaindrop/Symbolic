@@ -24,9 +24,6 @@
         }
       }
     },
-    "." : {
-
-    },
     "%@" : {
       "localizations" : {
         "zh-Hans" : {

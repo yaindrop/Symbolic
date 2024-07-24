@@ -17,8 +17,8 @@ private extension PortalStore {
 }
 
 extension PortalStore {
-    func register(reference: CGRect, align: PlaneOuterAlign = .topLeading, @ViewBuilder _ view: @escaping () -> any View) -> UUID {
-        let portal = PortalData(view: AnyView(view()), reference: reference, align: align)
+    func register(isModal: Bool = false, reference: CGRect, align: PlaneOuterAlign = .topLeading, @ViewBuilder _ view: @escaping () -> any View) -> UUID {
+        let portal = PortalData(view: AnyView(view()), isModal: isModal, reference: reference, align: align)
         update(portalMap: portalMap.cloned { $0[portal.id] = portal })
         return portal.id
     }
@@ -32,19 +32,42 @@ extension PortalStore {
     }
 }
 
-struct PortalReference<Content: View>: View {
+struct PortalReference<Content: View>: View, SelectorHolder {
+    @Binding var isPresented: Bool
+    var isModal: Bool = false
     var align: PlaneOuterAlign = .topLeading
     @ViewBuilder var content: () -> Content
+
+    class Selector: SelectorBase {
+        @Selected({ global.portal.portalMap }) var portalMap
+    }
+
+    @SelectorWrapper var selector
 
     @State private var frame: CGRect = .zero
     @State private var portalId: UUID?
 
+    private var deregistered: Bool {
+        guard let portalId else { return false }
+        return selector.portalMap.value(key: portalId) == nil
+    }
+
     var body: some View {
-        Color.invisibleSolid
-            .allowsHitTesting(false)
-            .geometryReader { frame = $0.frame(in: .global) }
-            .onAppear { portalId = global.portal.register(reference: frame, align: align, content) }
-            .onChange(of: frame) { portalId.map { global.portal.setFrame(of: $0, frame) } }
-            .onDisappear { portalId.map { global.portal.deregister(id: $0) } }
+        setupSelector {
+            if isPresented {
+                Color.clear
+                    .geometryReader { frame = $0.frame(in: .global) }
+                    .onChange(of: deregistered) { _, deregistered in if deregistered { isPresented = false } }
+                    .onChange(of: frame) { portalId.map { global.portal.setFrame(of: $0, frame) } }
+                    .onAppear { portalId = global.portal.register(isModal: isModal, reference: frame, align: align, content) }
+                    .onDisappear { portalId.map { global.portal.deregister(id: $0) } }
+            }
+        }
+    }
+}
+
+extension View {
+    func portal<Content: View>(isPresented: Binding<Bool>, isModal: Bool = false, align: PlaneOuterAlign = .topLeading, @ViewBuilder content: @escaping () -> Content) -> some View {
+        overlay { PortalReference(isPresented: isPresented, isModal: isModal, align: align, content: content) }
     }
 }

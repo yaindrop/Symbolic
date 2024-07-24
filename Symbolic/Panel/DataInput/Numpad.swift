@@ -5,26 +5,34 @@ import SwiftUI
 
 extension Numpad {
     struct Configs {
-        var range: ClosedRange<Double>?
+        var label: String?
+        var range: ClosedRange<Double>
         var maxDecimalLength: Int
 
-        fileprivate func validate(_ decomposed: Decomposed) -> Warning? {
-            guard let value = Double(decomposed.composed) else { return .unknown }
-            if let range {
-                guard range.contains(value) else { return .range(range) }
-            }
-            guard decomposed.decimal?.count ?? 0 <= maxDecimalLength else { return .maxDecimalLength(maxDecimalLength) }
-            return nil
-        }
-
-        init(range: ClosedRange<Double>? = -1e6 ... 1e6, maxDecimalLength: Int = 3) {
+        init(label: String? = nil, range: ClosedRange<Double> = -1e6 ... 1e6, maxDecimalLength: Int = 3) {
+            self.label = label
             self.range = range
             self.maxDecimalLength = (0 ... 6).clamp(maxDecimalLength)
         }
     }
+}
 
-    fileprivate enum Warning: Equatable {
-        case unknown, range(ClosedRange<Double>), maxDecimalLength(Int)
+private extension Numpad.Configs {
+    func validate(_ decomposed: Numpad.Decomposed) -> Numpad.Warning? {
+        guard let value = Double(decomposed.composed) else { return .unknown }
+        guard range.contains(value) else { return .range(range) }
+        guard decomposed.decimal?.count ?? 0 <= maxDecimalLength else { return .maxDecimalLength(maxDecimalLength) }
+        return nil
+    }
+}
+
+// MARK: - KeyKind
+
+private extension Numpad {
+    enum Warning: Equatable {
+        case unknown
+        case range(ClosedRange<Double>)
+        case maxDecimalLength(Int)
 
         var message: String {
             switch self {
@@ -34,11 +42,7 @@ extension Numpad {
             }
         }
     }
-}
 
-// MARK: - KeyKind
-
-private extension Numpad {
     enum KeyKind {
         case number(Int)
         case dot
@@ -48,7 +52,7 @@ private extension Numpad {
     }
 }
 
-// MARK: - Model
+// MARK: - Decomposed
 
 private extension Numpad {
     struct Decomposed: Equatable {
@@ -65,92 +69,33 @@ private extension Numpad {
         }
 
         init(value: Double, configs: Configs) {
-            let value = configs.range?.clamp(value) ?? value
             negated = value < 0
 
+            let value = configs.range.clamp(value)
             let absValue = abs(value)
-            let floorValue = floor(absValue)
-            integer = "\(Int(floorValue))"
+            let integerValue = floor(absValue)
+            integer = "\(Int(integerValue))"
 
-            let decimalPart = absValue - floorValue
-            let decimalValue = round(decimalPart * pow(10, Double(configs.maxDecimalLength)))
-            let decimalString = "\(Int(decimalValue))"
+            let decimalValue = absValue - integerValue
+            let decimalDigits = round(decimalValue * pow(10, Double(configs.maxDecimalLength)))
+            let decimalString = "\(Int(decimalDigits))"
             let leadingZeros = String(repeating: "0", count: configs.maxDecimalLength - decimalString.count)
             let zeroTrimmed = decimalString.trimmingCharacters(in: .init(charactersIn: "0"))
             decimal = leadingZeros + zeroTrimmed
         }
     }
+}
 
+// MARK: - Model
+
+private extension Numpad {
     class Model: ObservableObject {
         let configs: Configs
+
         @Published var decomposed: Decomposed
-        @Published var lastWarning: Warning?
 
-        var negated: Bool { decomposed.negated }
-
-        var integer: String { decomposed.integer }
-
-        var decimal: String? { decomposed.decimal }
-
-        var value: Double? { .init(decomposed.composed) }
-
-        var displayValue: String {
-            let formatted = value!.formatted(FloatingPointFormatStyle())
-            guard let decimal else { return formatted }
-
-            let arr = Array(decimal)
-            let lastNonZeroIndex = arr.lastIndex { $0 != "0" }
-            guard let lastNonZeroIndex else { return formatted + ".\(decimal)" }
-
-            guard lastNonZeroIndex != arr.count - 1 else { return formatted }
-
-            let zerosCount = arr.count - 1 - lastNonZeroIndex
-            return formatted + .init(repeating: "0", count: zerosCount)
-        }
-
-        func onKey(_ kind: Numpad.KeyKind) {
-            var tmp = decomposed
-            switch kind {
-            case let .number(n):
-                if let decimal = decimal {
-                    tmp.decimal = decimal + "\(n)"
-                } else if integer == "0" {
-                    tmp.integer = "\(n)"
-                } else {
-                    tmp.integer += "\(n)"
-                }
-            case .dot:
-                if decimal == nil {
-                    tmp.decimal = ""
-                }
-            case .delete:
-                if let decimal = decimal {
-                    if decimal.isEmpty {
-                        tmp.decimal = nil
-                    } else {
-                        tmp.decimal = .init(decimal.dropLast())
-                    }
-                } else {
-                    if integer == "0" && negated {
-                        tmp.negated = false
-                    } else if integer.count == 1 {
-                        tmp.integer = "0"
-                    } else {
-                        tmp.integer = .init(integer.dropLast())
-                    }
-                }
-            case .negate:
-                tmp.negated.toggle()
-            case .done:
-                break
-            }
-            if let warning = configs.validate(tmp) {
-                lastWarning = warning
-            } else {
-                decomposed = tmp
-                lastWarning = nil
-            }
-        }
+        private let doneSubject = PassthroughSubject<Void, Never>()
+        private let warningSubject = PassthroughSubject<Warning?, Never>()
 
         init(initialValue: Double, configs: Configs) {
             self.configs = configs
@@ -159,12 +104,86 @@ private extension Numpad {
     }
 }
 
+// MARK: private
+
+private extension Numpad.Model {
+    var donePublisher: AnyPublisher<Void, Never> { doneSubject.eraseToAnyPublisher() }
+    var warningPublisher: AnyPublisher<Numpad.Warning?, Never> { warningSubject.eraseToAnyPublisher() }
+
+    var negated: Bool { decomposed.negated }
+
+    var integer: String { decomposed.integer }
+
+    var decimal: String? { decomposed.decimal }
+
+    var value: Double? { .init(decomposed.composed) }
+
+    var displayValue: String {
+        guard let value else { return "NaN" }
+        let formatted = value.formatted(FloatingPointFormatStyle())
+        guard let decimal else { return formatted }
+
+        let arr = Array(decimal)
+        let lastNonZeroIndex = arr.lastIndex { $0 != "0" }
+        guard let lastNonZeroIndex else { return formatted + ".\(decimal)" }
+
+        guard lastNonZeroIndex != arr.count - 1 else { return formatted }
+
+        let zerosCount = arr.count - 1 - lastNonZeroIndex
+        return formatted + .init(repeating: "0", count: zerosCount)
+    }
+
+    func onKey(_ kind: Numpad.KeyKind) {
+        var tmp = decomposed
+        switch kind {
+        case let .number(n):
+            if let decimal = decimal {
+                tmp.decimal = decimal + "\(n)"
+            } else if integer == "0" {
+                tmp.integer = "\(n)"
+            } else {
+                tmp.integer += "\(n)"
+            }
+        case .dot:
+            if decimal == nil {
+                tmp.decimal = ""
+            }
+        case .delete:
+            if let decimal = decimal {
+                if decimal.isEmpty {
+                    tmp.decimal = nil
+                } else {
+                    tmp.decimal = .init(decimal.dropLast())
+                }
+            } else {
+                if integer == "0" && negated {
+                    tmp.negated = false
+                } else if integer.count == 1 {
+                    tmp.integer = "0"
+                } else {
+                    tmp.integer = .init(integer.dropLast())
+                }
+            }
+        case .negate:
+            tmp.negated.toggle()
+        case .done:
+            doneSubject.send()
+            return
+        }
+        let warning = configs.validate(tmp)
+        warningSubject.send(warning)
+        if warning == nil {
+            decomposed = tmp
+        }
+    }
+}
+
 // MARK: - Numpad
 
 struct Numpad: View {
     let configs: Configs
-    var onChange: ((Double) -> Void)?
-    var onDone: ((Double) -> Void)?
+    let onChange: ((Double) -> Void)?
+    let onDone: ((Double) -> Void)?
 
     @StateObject private var model: Model
 
@@ -181,6 +200,10 @@ struct Numpad: View {
             .onChange(of: model.value) {
                 guard let v = model.value else { return }
                 onChange?(v)
+            }
+            .onReceive(model.donePublisher) {
+                guard let v = model.value else { return }
+                onDone?(v)
             }
     }
 }
@@ -257,9 +280,9 @@ private extension Numpad {
         var body: some View {
             content
                 .animation(.normal, value: activeWarning)
-                .onReceive(model.$lastWarning) { warning in
-                    if let warning {
-                        activeWarning = warning
+                .onReceive(model.warningPublisher) { warning in
+                    activeWarning = warning
+                    if warning != nil {
                         shaking = true
                         withAnimation(Animation.spring(response: 0.2, dampingFraction: 0.2, blendDuration: 0.2)) {
                             shaking = false
@@ -276,12 +299,17 @@ private extension Numpad.Display {
     var content: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
+                if let label = model.configs.label {
+                    Text("\(label)=")
+                        .font(.callout.monospaced())
+                        .opacity(0.5)
+                }
                 Text(model.displayValue)
                     .font(.body)
                     .offset(y: shaking ? 3 : 0)
-                    .padding(.horizontal, 12)
                 Spacer()
             }
+            .padding(.horizontal, 12)
             .frame(maxHeight: .infinity)
             if let activeWarning {
                 Text(activeWarning.message)
@@ -316,6 +344,7 @@ private extension Numpad.Key {
             .fill(.regularMaterial)
             .padding(1)
             .overlay { label }
+            .clipRounded(radius: 6)
             .scaleEffect(down ? 0.8 : 1)
             .animation(.fast, value: down)
             .multipleGesture(disabled ? nil : .init(
@@ -346,8 +375,26 @@ private extension Numpad.Key {
         case .number: false
         case .dot: model.configs.maxDecimalLength <= 0
         case .delete: false
-        case .negate: model.configs.range.map { $0.lowerBound >= 0 } ?? false
+        case .negate: model.configs.range.lowerBound >= 0
         case .done: false
         }
+    }
+}
+
+// MARK: - NumpadPortal
+
+struct NumpadPortal: View {
+    @Environment(\.portalId) var portalId
+
+    let initialValue: Double
+    var configs: Numpad.Configs = .init()
+    var onChange: ((Double) -> Void)?
+    var onDone: ((Double) -> Void)?
+
+    var body: some View {
+        Numpad(initialValue: initialValue, configs: configs, onChange: onChange, onDone: {
+            onDone?($0)
+            global.portal.deregister(id: portalId)
+        })
     }
 }

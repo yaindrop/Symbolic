@@ -10,6 +10,15 @@ struct PortalWrapper: View, TracedView {
         portal.view
             .sizeReader { size = $0 }
             .position(box.center)
+            .background {
+                if portal.isModal {
+                    Color.invisibleSolid
+                        .multipleGesture(.init(
+                            onPress: { _ in global.portal.deregister(id: portal.id) }
+                        ))
+                }
+            }
+            .environment(\.portalId, portal.id)
     } }
 }
 

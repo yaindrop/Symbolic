@@ -45,16 +45,14 @@ struct PositionPicker: View {
                     .frame(maxHeight: .infinity)
             }
             .tint(.label)
-            .overlay {
-                if isInputMode {
-                    PortalReference(align: .topLeading) {
-                        Numpad(initialValue: position.x) {
-                            inputX = $0
-                            onChange(inputPosition)
-                        } onDone: {
-                            inputX = $0
-                        }
-                    }
+            .background(isInputMode ? .red.opacity(0.1) : .clear)
+            .portal(isPresented: $isInputMode, isModal: true) {
+                NumpadPortal(initialValue: position.x, configs: .init(label: "x")) {
+                    inputX = $0
+                    onChange(inputPosition)
+                } onDone: {
+                    inputX = $0
+                    onDone(inputPosition)
                 }
             }
 

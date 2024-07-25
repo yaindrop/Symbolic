@@ -3,34 +3,16 @@ import SwiftUI
 // MARK: - PositionPicker
 
 struct PositionPicker: View {
+    let position: Point2
+    var onChange: ((Point2) -> Void)?
+    var onDone: ((Point2) -> Void)?
+
     var body: some View {
         content
-//        .frame(height: 20)
-//        .padding(6)
-            .background(Color.tertiarySystemBackground)
-            .clipRounded(radius: 6)
     }
 
-    init(position: Point2,
-         onChange: @escaping (Point2) -> Void = { _ in },
-         onDone: @escaping (Point2) -> Void = { _ in })
-    {
-        self.position = position
-        self.onChange = onChange
-        self.onDone = onDone
-    }
-
-    // MARK: private
-
-    private let position: Point2
-    private let onChange: (Point2) -> Void
-    private let onDone: (Point2) -> Void
-
-    @State private var isInputMode: Bool = false
-    @State private var inputX: Double = 0
-    @State private var inputY: Double = 0
-
-    private var inputPosition: Point2 { Point2(inputX, inputY) }
+    @State private var showNumpadX: Bool = false
+    @State private var showNumpadY: Bool = false
 
     private var content: some View {
         HStack(spacing: 0) {
@@ -38,28 +20,19 @@ struct PositionPicker: View {
                 .padding(.leading, 6)
 
             Button {
-                isInputMode.toggle()
+                showNumpadX.toggle()
             } label: {
                 Text(position.x.decimalFormatted())
                     .padding(.horizontal, 6)
                     .frame(maxHeight: .infinity)
             }
             .tint(.label)
-            .background(isInputMode ? .red.opacity(0.1) : .clear)
-            .portal(isPresented: $isInputMode, isModal: true) {
-                NumpadPortal(initialValue: position.x, configs: .init(label: "x")) {
-                    inputX = $0
-                    onChange(inputPosition)
-                } onDone: {
-                    inputX = $0
-                    onDone(inputPosition)
-                }
-            }
 
-            Rectangle().frame(width: 1).background(Color.label)
+            Divider()
+                .padding(.vertical, 6)
 
             Button {
-                isInputMode.toggle()
+                showNumpadY.toggle()
             } label: {
                 Text(position.y.decimalFormatted())
                     .padding(.horizontal, 6)
@@ -69,16 +42,21 @@ struct PositionPicker: View {
         }
         .font(.footnote.monospacedDigit())
         .frame(height: 32)
-    }
-
-    private func startInput() {
-        isInputMode = true
-        inputX = position.x
-        inputY = position.y
-    }
-
-    private func endInput() {
-        isInputMode = false
-        onDone(inputPosition)
+        .background(Color.tertiarySystemBackground)
+        .clipRounded(radius: 6)
+        .portal(isPresented: $showNumpadX, isModal: true, align: .topInnerTrailing) {
+            NumpadPortal(initialValue: position.x, configs: .init(label: "x")) {
+                onChange?(position.with(x: $0))
+            } onDone: {
+                onDone?(position.with(x: $0))
+            }
+        }
+        .portal(isPresented: $showNumpadY, isModal: true, align: .topInnerTrailing) {
+            NumpadPortal(initialValue: position.y, configs: .init(label: "y")) {
+                onChange?(position.with(y: $0))
+            } onDone: {
+                onDone?(position.with(y: $0))
+            }
+        }
     }
 }

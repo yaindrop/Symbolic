@@ -446,10 +446,10 @@
 			children = (
 				5724878D2BDF84310096DDE4 /* AnglePicker.swift */,
 				575C3CF72BD808560035B758 /* DecimalInput.swift */,
-				572487892BDF84070096DDE4 /* PositionPicker.swift */,
-				5724878B2BDF841E0096DDE4 /* SizePicker.swift */,
 				57416E482BE5252000C73434 /* FlagInput.swift */,
 				57FC33042C4E4A1000DF7DBF /* Numpad.swift */,
+				572487892BDF84070096DDE4 /* PositionPicker.swift */,
+				5724878B2BDF841E0096DDE4 /* SizePicker.swift */,
 			);
 			path = DataInput;
 			sourceTree = "<group>";

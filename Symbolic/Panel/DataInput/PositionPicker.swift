@@ -31,9 +31,11 @@ private extension PositionPicker {
         .frame(height: 32)
         .background(Color.tertiarySystemBackground)
         .clipRounded(radius: 6)
-        .portal(isPresented: $showNumpadX, isModal: true, align: .topInnerTrailing) { numpadX }
-        .portal(isPresented: $showNumpadY, isModal: true, align: .topInnerTrailing) { numpadY }
+        .portal(isPresented: $showNumpadX, configs: portalConfigs) { numpadX }
+        .portal(isPresented: $showNumpadY, configs: portalConfigs) { numpadY }
     }
+
+    var portalConfigs: PortalConfigs { .init(isModal: true, align: .topInnerTrailing, gap: .init(squared: 6)) }
 
     var buttonX: some View {
         Button {

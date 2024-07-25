@@ -1,19 +1,24 @@
 import SwiftUI
 
+struct PortalConfigs: Equatable {
+    var isModal: Bool = false
+    var align: PlaneOuterAlign = .topLeading
+    var gap: CGSize = .zero
+}
+
 // MARK: - PanelData
 
 struct PortalData: Identifiable {
+    let configs: PortalConfigs
     let id: UUID = .init()
     let view: AnyView
 
-    var isModal: Bool
     var reference: CGRect
-    var align: PlaneOuterAlign = .topLeading
 }
 
 extension PortalData: EquatableBy {
     var equatableBy: some Equatable {
-        id; reference; align
+        configs; id; reference
     }
 }
 

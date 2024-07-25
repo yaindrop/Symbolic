@@ -79,9 +79,13 @@ private extension Numpad {
             let decimalValue = absValue - integerValue
             let decimalDigits = round(decimalValue * pow(10, Double(configs.maxDecimalLength)))
             let decimalString = "\(Int(decimalDigits))"
-            let leadingZeros = String(repeating: "0", count: configs.maxDecimalLength - decimalString.count)
-            let zeroTrimmed = decimalString.trimmingCharacters(in: .init(charactersIn: "0"))
-            decimal = leadingZeros + zeroTrimmed
+            if decimalString.allSatisfy({ $0 == "0" }) {
+                decimal = nil
+            } else {
+                let leadingZeros = String(repeating: "0", count: configs.maxDecimalLength - decimalString.count)
+                let zeroTrimmed = decimalString.trimmingCharacters(in: .init(charactersIn: "0"))
+                decimal = leadingZeros + zeroTrimmed
+            }
         }
     }
 }

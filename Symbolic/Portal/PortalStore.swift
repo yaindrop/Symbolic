@@ -17,8 +17,8 @@ private extension PortalStore {
 }
 
 extension PortalStore {
-    func register(isModal: Bool = false, reference: CGRect, align: PlaneOuterAlign = .topLeading, @ViewBuilder _ view: @escaping () -> any View) -> UUID {
-        let portal = PortalData(view: AnyView(view()), isModal: isModal, reference: reference, align: align)
+    func register(configs: PortalConfigs = .init(), reference: CGRect, @ViewBuilder _ view: @escaping () -> any View) -> UUID {
+        let portal = PortalData(configs: configs, view: AnyView(view()), reference: reference)
         update(portalMap: portalMap.cloned { $0[portal.id] = portal })
         return portal.id
     }
@@ -34,8 +34,7 @@ extension PortalStore {
 
 struct PortalReference<Content: View>: View, SelectorHolder {
     @Binding var isPresented: Bool
-    var isModal: Bool = false
-    var align: PlaneOuterAlign = .topLeading
+    var configs: PortalConfigs = .init()
     @ViewBuilder var content: () -> Content
 
     class Selector: SelectorBase {
@@ -59,7 +58,7 @@ struct PortalReference<Content: View>: View, SelectorHolder {
                     .geometryReader { frame = $0.frame(in: .global) }
                     .onChange(of: deregistered) { _, deregistered in if deregistered { isPresented = false } }
                     .onChange(of: frame) { portalId.map { global.portal.setFrame(of: $0, frame) } }
-                    .onAppear { portalId = global.portal.register(isModal: isModal, reference: frame, align: align, content) }
+                    .onAppear { portalId = global.portal.register(configs: configs, reference: frame, content) }
                     .onDisappear { portalId.map { global.portal.deregister(id: $0) } }
             }
         }
@@ -67,7 +66,7 @@ struct PortalReference<Content: View>: View, SelectorHolder {
 }
 
 extension View {
-    func portal<Content: View>(isPresented: Binding<Bool>, isModal: Bool = false, align: PlaneOuterAlign = .topLeading, @ViewBuilder content: @escaping () -> Content) -> some View {
-        overlay { PortalReference(isPresented: isPresented, isModal: isModal, align: align, content: content) }
+    func portal<Content: View>(isPresented: Binding<Bool>, configs: PortalConfigs = .init(), @ViewBuilder content: @escaping () -> Content) -> some View {
+        overlay { PortalReference(isPresented: isPresented, configs: configs, content: content) }
     }
 }

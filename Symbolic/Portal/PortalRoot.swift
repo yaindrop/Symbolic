@@ -6,12 +6,12 @@ struct PortalWrapper: View, TracedView {
     @State private var size: CGSize = .zero
 
     var body: some View { trace {
-        let box = portal.reference.alignedBox(at: portal.align, size: size)
+        let box = portal.reference.alignedBox(at: portal.configs.align, size: size, gap: portal.configs.gap)
         portal.view
             .sizeReader { size = $0 }
             .position(box.center)
             .background {
-                if portal.isModal {
+                if portal.configs.isModal {
                     Color.invisibleSolid
                         .multipleGesture(.init(
                             onPress: { _ in global.portal.deregister(id: portal.id) }

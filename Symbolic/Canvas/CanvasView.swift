@@ -143,6 +143,7 @@ struct CanvasView: View, TracedView, SelectorHolder {
                     global.contextMenu.register(.focusedGroup)
                     global.contextMenu.register(.selection)
                 }
+                .persistentSystemOverlays(.hidden)
         }
     }}
 }

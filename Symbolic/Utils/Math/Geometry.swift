@@ -29,13 +29,17 @@ extension CGRect {
     var maxXminYPoint: Point2 { .init(maxX, minY) }
 
     func clampingOffset(by rect: CGRect) -> Vector2 {
+        guard !rect.contains(self) else { return .zero }
         let offsetMax = maxPoint.offset(to: maxPoint.clamped(by: rect))
         let r = self + offsetMax
         let offsetMin = r.minPoint.offset(to: r.minPoint.clamped(by: rect))
         return offsetMax + offsetMin
     }
 
-    func clamped(by rect: CGRect) -> Self { self + clampingOffset(by: rect) }
+    func clamped(by rect: CGRect) -> Self {
+        guard !rect.contains(self) else { return self }
+        return self + clampingOffset(by: rect)
+    }
 
     func inset(by size: Scalar) -> Self {
         let dx = min(width / 2, size)

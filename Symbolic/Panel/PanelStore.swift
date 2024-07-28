@@ -7,7 +7,7 @@ typealias PanelMap = OrderedMap<UUID, PanelData>
 // MARK: - PanelStore
 
 class PanelStore: Store {
-    @Trackable var panelMap = PanelMap()
+    @Trackable var map = PanelMap()
 
     // floating
     @Trackable var moving: MovingPanelData?
@@ -24,8 +24,8 @@ class PanelStore: Store {
 }
 
 private extension PanelStore {
-    func update(panelMap: PanelMap) {
-        update { $0(\._panelMap, panelMap) }
+    func update(map: PanelMap) {
+        update { $0(\._map, map) }
     }
 
     func update(moving: MovingPanelData?) {
@@ -74,11 +74,11 @@ extension PanelStore {
 }
 
 extension PanelStore {
-    func get(id: UUID) -> PanelData? { panelMap.value(key: id) }
+    func get(id: UUID) -> PanelData? { map.value(key: id) }
     func style(id: UUID) -> PanelStyle? { styleMap.value(key: id) }
 
-    var panelIds: [UUID] { panelMap.keys }
-    var panels: [PanelData] { panelMap.values }
+    var panelIds: [UUID] { map.keys }
+    var panels: [PanelData] { map.values }
 }
 
 extension PanelStore {
@@ -218,21 +218,21 @@ private extension PanelStore {
 extension PanelStore {
     func register(name: String, align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
         let panel = PanelData(name: name, view: AnyView(panel()), align: align)
-        update(panelMap: panelMap.cloned { $0[panel.id] = panel })
+        update(map: map.cloned { $0[panel.id] = panel })
     }
 
     func deregister(id: UUID) {
-        update(panelMap: panelMap.cloned { $0.removeValue(forKey: id) })
+        update(map: map.cloned { $0.removeValue(forKey: id) })
     }
 
     func clear() {
-        update(panelMap: [:])
+        update(map: [:])
     }
 }
 
 private extension PanelStore {
     func focus(on id: UUID) {
-        update(panelMap: panelMap.cloned { $0[id] = $0.removeValue(forKey: id) })
+        update(map: map.cloned { $0[id] = $0.removeValue(forKey: id) })
     }
 
     func spin(on id: UUID) {
@@ -241,7 +241,7 @@ private extension PanelStore {
         guard let primaryId = peers.last,
               let primary = get(id: primaryId),
               let panel = get(id: id) else { return }
-        update(panelMap: panelMap.cloned {
+        update(map: map.cloned {
             $0.removeValue(forKey: primaryId)
             $0.removeValue(forKey: id)
             $0.insert((primaryId, primary), at: 0)
@@ -262,7 +262,7 @@ extension PanelStore {
     func setFloating(id: UUID) {
         withStoreUpdating {
             update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(id) })
-            update(panelMap: panelMap.cloned { $0[id]?.align = .topTrailing })
+            update(map: map.cloned { $0[id]?.align = .topTrailing })
             update(popoverActive: false)
         }
     }
@@ -336,7 +336,7 @@ extension PanelStore {
         moving.offset = moveTarget.offset
         moving.ended = true
         withStoreUpdating(configs: .init(syncNotify: true)) {
-            update(panelMap: panelMap.cloned { $0[id] = panel.cloned { $0.align = moveTarget.align } })
+            update(map: map.cloned { $0[id] = panel.cloned { $0.align = moveTarget.align } })
             update(moving: moving)
         }
     }
@@ -410,7 +410,7 @@ extension PanelStore {
         let maxHeight = max(floatingMinHeight, maxHeight)
         withStoreUpdating {
             focus(on: id)
-            update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.maxHeight = maxHeight } })
+            update(map: map.cloned { $0[panel.id] = panel.cloned { $0.maxHeight = maxHeight } })
         }
     }
 

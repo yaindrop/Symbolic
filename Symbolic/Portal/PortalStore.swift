@@ -7,30 +7,45 @@ typealias PortalMap = OrderedMap<UUID, PortalData>
 // MARK: - PortalStore
 
 class PortalStore: Store {
-    @Trackable var portalMap = PortalMap()
+    @Trackable var map = PortalMap()
+    @Trackable var rootFrame: CGRect = .zero
 }
 
 private extension PortalStore {
     func update(portalMap: PortalMap) {
-        update { $0(\._portalMap, portalMap) }
+        update { $0(\._map, portalMap) }
+    }
+
+    func update(rootFrame: CGRect) {
+        update { $0(\._rootFrame, rootFrame) }
     }
 }
 
 extension PortalStore {
     func register(configs: PortalConfigs = .init(), reference: CGRect, @ViewBuilder _ view: @escaping () -> any View) -> UUID {
         let portal = PortalData(configs: configs, view: AnyView(view()), reference: reference)
-        update(portalMap: portalMap.cloned { $0[portal.id] = portal })
+        let _r = subtracer.range("register \(portal.id) with \(configs) reference \(reference)"); defer { _r() }
+        update(portalMap: map.cloned { $0[portal.id] = portal })
         return portal.id
     }
 
-    func setFrame(of id: UUID, _ frame: CGRect) {
-        update(portalMap: portalMap.cloned { $0[id]?.reference = frame })
+    func setReference(of id: UUID, _ frame: CGRect) {
+        let _r = subtracer.range("set reference \(frame) of \(id)"); defer { _r() }
+        update(portalMap: map.cloned { $0[id]?.reference = frame })
+    }
+
+    func setRootFrame(_ frame: CGRect) {
+        let _r = subtracer.range("set root frame \(frame)"); defer { _r() }
+        update(rootFrame: frame)
     }
 
     func deregister(id: UUID) {
-        update(portalMap: portalMap.cloned { $0.removeValue(forKey: id) })
+        let _r = subtracer.range("deregister \(id)"); defer { _r() }
+        update(portalMap: map.cloned { $0.removeValue(forKey: id) })
     }
 }
+
+// MARK: - PortalReference
 
 struct PortalReference<Content: View>: View, SelectorHolder {
     @Binding var isPresented: Bool
@@ -38,7 +53,7 @@ struct PortalReference<Content: View>: View, SelectorHolder {
     @ViewBuilder var content: () -> Content
 
     class Selector: SelectorBase {
-        @Selected({ global.portal.portalMap }) var portalMap
+        @Selected({ global.portal.map }) var map
     }
 
     @SelectorWrapper var selector
@@ -48,7 +63,7 @@ struct PortalReference<Content: View>: View, SelectorHolder {
 
     private var deregistered: Bool {
         guard let portalId else { return false }
-        return selector.portalMap.value(key: portalId) == nil
+        return selector.map.value(key: portalId) == nil
     }
 
     var body: some View {
@@ -57,7 +72,7 @@ struct PortalReference<Content: View>: View, SelectorHolder {
                 Color.clear
                     .geometryReader { frame = $0.frame(in: .global) }
                     .onChange(of: deregistered) { _, deregistered in if deregistered { isPresented = false } }
-                    .onChange(of: frame) { portalId.map { global.portal.setFrame(of: $0, frame) } }
+                    .onChange(of: frame) { portalId.map { global.portal.setReference(of: $0, frame) } }
                     .onAppear { portalId = global.portal.register(configs: configs, reference: frame, content) }
                     .onDisappear { portalId.map { global.portal.deregister(id: $0) } }
             }

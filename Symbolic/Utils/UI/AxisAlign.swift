@@ -7,7 +7,7 @@ enum AxisAlign: CaseIterable {
 }
 
 extension AxisAlign {
-    var flipped: AxisAlign {
+    var flipped: Self {
         switch self {
         case .start: .end
         case .center: .center
@@ -103,9 +103,49 @@ extension PlaneInnerAlign {
         case (.end, .end): self = .bottomTrailing
         }
     }
+
+    func flipped(axis: Axis) -> Self {
+        switch axis {
+        case .horizontal: .init(horizontal: horizontal.flipped, vertical: vertical)
+        case .vertical: .init(horizontal: horizontal, vertical: vertical.flipped)
+        }
+    }
 }
 
 // MARK: - PlaneOuterAlign
+
+enum AxisOuterAlign: CaseIterable {
+    case start, innerStart, center, innerEnd, end
+}
+
+extension AxisOuterAlign {
+    var flipped: Self {
+        switch self {
+        case .start: .end
+        case .innerStart: .innerEnd
+        case .center: .center
+        case .innerEnd: .innerStart
+        case .end: .start
+        }
+    }
+
+    var axisAlign: AxisAlign? {
+        switch self {
+        case .start: .start
+        case .center: .center
+        case .end: .end
+        default: nil
+        }
+    }
+
+    init(_ align: AxisAlign) {
+        switch align {
+        case .start: self = .start
+        case .center: self = .center
+        case .end: self = .end
+        }
+    }
+}
 
 enum PlaneOuterAlign: CaseIterable, SelfIdentifiable {
     case topLeading, topInnerLeading, topCenter, topInnerTrailing, topTrailing
@@ -116,21 +156,23 @@ enum PlaneOuterAlign: CaseIterable, SelfIdentifiable {
 }
 
 extension PlaneOuterAlign {
-    var horizontal: AxisAlign? {
+    var horizontal: AxisOuterAlign {
         switch self {
         case .topLeading, .innerTopLeading, .centerLeading, .innerBottomLeading, .bottomLeading: .start
+        case .topInnerLeading, .bottomInnerLeading: .innerStart
         case .topCenter, .bottomCenter: .center
+        case .topInnerTrailing, .bottomInnerTrailing: .innerEnd
         case .topTrailing, .innerTopTrailing, .centerTrailing, .innerBottomTrailing, .bottomTrailing: .end
-        default: nil
         }
     }
 
-    var vertical: AxisAlign? {
+    var vertical: AxisOuterAlign {
         switch self {
         case .topLeading, .topInnerLeading, .topCenter, .topInnerTrailing, .topTrailing: .start
+        case .innerTopLeading, .innerTopTrailing: .innerStart
         case .centerLeading, .centerTrailing: .center
+        case .innerBottomLeading, .innerBottomTrailing: .innerEnd
         case .bottomLeading, .bottomInnerLeading, .bottomCenter, .bottomInnerTrailing, .bottomTrailing: .end
-        default: nil
         }
     }
 
@@ -165,6 +207,35 @@ extension PlaneOuterAlign {
         case .bottomLeading: -.unitX + .unitY
         case .bottomInnerLeading, .bottomCenter, .bottomInnerTrailing: .unitY
         case .bottomTrailing: .unitXY
+        }
+    }
+
+    init?(horizontal: AxisOuterAlign, vertical: AxisOuterAlign) {
+        switch (horizontal, vertical) {
+        case (.start, .start): self = .topLeading
+        case (.start, .innerStart): self = .innerTopLeading
+        case (.start, .center): self = .centerLeading
+        case (.start, .innerEnd): self = .innerBottomLeading
+        case (.start, .end): self = .bottomLeading
+        case (.innerStart, .start): self = .topInnerLeading
+        case (.innerStart, .end): self = .bottomInnerLeading
+        case (.center, .start): self = .topCenter
+        case (.center, .end): self = .bottomCenter
+        case (.innerEnd, .start): self = .topInnerTrailing
+        case (.innerEnd, .end): self = .bottomInnerTrailing
+        case (.end, .start): self = .topTrailing
+        case (.end, .innerStart): self = .innerTopTrailing
+        case (.end, .center): self = .centerTrailing
+        case (.end, .innerEnd): self = .innerBottomTrailing
+        case (.end, .end): self = .bottomTrailing
+        default: return nil
+        }
+    }
+
+    func flipped(axis: Axis) -> Self {
+        switch axis {
+        case .horizontal: .init(horizontal: horizontal.flipped, vertical: vertical)!
+        case .vertical: .init(horizontal: horizontal, vertical: vertical.flipped)!
         }
     }
 }

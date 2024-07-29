@@ -47,13 +47,15 @@ extension PortalStore {
 
 // MARK: - PortalReference
 
-struct PortalReference<Content: View>: View, SelectorHolder {
+struct PortalReference<Content: View>: View, ComputedSelectorHolder {
     @Binding var isPresented: Bool
     var configs: PortalConfigs = .init()
     @ViewBuilder var content: () -> Content
 
+    struct SelectorProps: Equatable { let portalId: UUID? }
+
     class Selector: SelectorBase {
-        @Selected({ global.portal.map }) var map
+        @Selected({ $0.portalId.map { global.portal.map.value(key: $0) == nil } ?? false }) var deregistered
     }
 
     @SelectorWrapper var selector
@@ -61,21 +63,19 @@ struct PortalReference<Content: View>: View, SelectorHolder {
     @State private var frame: CGRect = .zero
     @State private var portalId: UUID?
 
-    private var deregistered: Bool {
-        guard let portalId else { return false }
-        return selector.map.value(key: portalId) == nil
-    }
-
     var body: some View {
-        setupSelector {
-            if isPresented {
-                Color.clear
-                    .geometryReader { frame = $0.frame(in: .global) }
-                    .onChange(of: deregistered) { _, deregistered in if deregistered { isPresented = false } }
-                    .onChange(of: frame) { portalId.map { global.portal.setReference(of: $0, frame) } }
-                    .onAppear { portalId = global.portal.register(configs: configs, reference: frame, content) }
-                    .onDisappear { portalId.map { global.portal.deregister(id: $0) } }
-            }
+        setupSelector(.init(portalId: portalId)) {
+            Color.clear
+                .geometryReader { frame = $0.frame(in: .global) }
+                .onChange(of: isPresented, initial: true) {
+                    if isPresented {
+                        portalId = global.portal.register(configs: configs, reference: frame, content)
+                    } else {
+                        portalId.map { global.portal.deregister(id: $0) }
+                    }
+                }
+                .onChange(of: frame) { portalId.map { global.portal.setReference(of: $0, frame) } }
+                .onChange(of: selector.deregistered) { if selector.deregistered { isPresented = false } }
         }
     }
 }

@@ -1,9 +1,21 @@
 import Foundation
 
+// MARK: - PathNodeType
+
 enum PathNodeType: Codable, CaseIterable {
     case corner
     case locked
     case mirrored
+}
+
+extension PathNodeType {
+    var name: String {
+        switch self {
+        case .corner: "Corner"
+        case .locked: "Locked"
+        case .mirrored: "Mirrored"
+        }
+    }
 }
 
 extension PathNodeType: CustomStringConvertible {
@@ -16,11 +28,24 @@ extension PathNodeType: CustomStringConvertible {
     }
 }
 
+// MARK: - PathSegmentType
+
 enum PathSegmentType: Codable, CaseIterable {
     case auto
     case cubic
     case line
     case quadratic
+}
+
+extension PathSegmentType {
+    var name: String {
+        switch self {
+        case .auto: "Auto"
+        case .cubic: "Cubic"
+        case .line: "Line"
+        case .quadratic: "Quad"
+        }
+    }
 }
 
 extension PathSegmentType: CustomStringConvertible {
@@ -33,6 +58,8 @@ extension PathSegmentType: CustomStringConvertible {
         }
     }
 }
+
+// MARK: - PathProperty
 
 struct PathProperty: Identifiable, Equatable, Codable, TriviallyCloneable {
     let id: UUID

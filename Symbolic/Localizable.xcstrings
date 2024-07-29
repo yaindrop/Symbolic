@@ -15,6 +15,7 @@
 
     },
     " ° " : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -103,6 +104,9 @@
     "Copy" : {
 
     },
+    "Curve %@" : {
+
+    },
     "Cut" : {
 
     },
@@ -134,9 +138,6 @@
 
     },
     "Hello node button" : {
-
-    },
-    "Input" : {
 
     },
     "Isometric" : {
@@ -178,9 +179,6 @@
     "Properties" : {
 
     },
-    "rad" : {
-
-    },
     "Radial" : {
 
     },
@@ -191,9 +189,6 @@
 
     },
     "Secondary" : {
-
-    },
-    "Segment" : {
 
     },
     "Segment Type" : {

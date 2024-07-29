@@ -164,7 +164,7 @@ private extension NodeDetailView {
             buttonDivider
             buttonOut
         }
-        .background(.background.secondary)
+        .background(.ultraThickMaterial)
         .clipRounded(radius: 12)
     }
 
@@ -182,7 +182,7 @@ private extension NodeDetailView {
             .disabled(disabled)
             .tint(.label)
             .portal(isPresented: $showPopupIn, configs: .init(isModal: true, align: .bottomInnerLeading, gap: .init(squared: 6))) {
-                SegmentPopup(pathId: context.path.id, nodeId: nodeId, isOut: false)
+                PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: false)
             }
     }
 
@@ -200,7 +200,7 @@ private extension NodeDetailView {
             .disabled(disabled)
             .tint(.label)
             .portal(isPresented: $showPopupOut, configs: .init(isModal: true, align: .bottomInnerTrailing, gap: .init(squared: 6))) {
-                SegmentPopup(pathId: context.path.id, nodeId: nodeId, isOut: true)
+                PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: true)
             }
     }
 
@@ -227,20 +227,22 @@ private extension NodeDetailView {
         let disabled = isOut ? context.path.nodeId(after: nodeId) == nil : context.path.nodeId(before: nodeId) == nil,
             color = disabled ? Color.label.opacity(0.5) : !focused ? .label : isOut ? .green : .orange,
             segmentType = isOut ? segmentType : prevSegmentType,
-            control = isOut ? node?.controlOut : node?.controlIn,
-            isCubic = segmentType == .cubic || (segmentType == .auto && control != .zero),
-            isLine = segmentType == .line || (segmentType == .auto && control == .zero),
-            isQuadratic = segmentType == .quadratic
+            control = isOut ? node?.controlOut : node?.controlIn
+        var activeSegmentType: PathSegmentType? {
+            guard let segmentType else { return nil }
+            guard segmentType != .auto else { return control == .zero ? .line : .cubic }
+            return segmentType
+        }
         var name: String {
-            if isCubic { return "Cubic" }
-            if isLine { return "Line" }
-            if isQuadratic { return "Quad" }
-            return "Terminal"
+            guard let activeSegmentType else { return "Terminal" }
+            return activeSegmentType.name
         }
         var image: String {
-            if isCubic || isQuadratic { return "point.topleft.down.to.point.bottomright.curvepath" }
-            if isLine { return "line.diagonal" }
-            return "circle.slash"
+            guard let activeSegmentType else { return "circle.slash" }
+            switch activeSegmentType {
+            case .line: return "line.diagonal"
+            default: return "point.topleft.down.to.point.bottomright.curvepath"
+            }
         }
         VStack(spacing: 0) {
             Image(systemName: image)
@@ -270,127 +272,6 @@ private extension NodeDetailView {
             controlIn.map { node.controlIn = $0 }
             controlOut.map { node.controlOut = $0 }
             global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
-        }
-    }
-}
-
-// MARK: - SegmentPopup
-
-private struct SegmentPopup: View, TracedView, ComputedSelectorHolder {
-    let pathId: UUID, nodeId: UUID, isOut: Bool
-
-    struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
-    class Selector: SelectorBase {
-        @Selected({ global.path.get(id: $0.pathId) }) var path
-        @Selected({ global.pathProperty.get(id: $0.pathId) }) var pathProperty
-    }
-
-    @SelectorWrapper var selector
-
-    var body: some View { trace {
-        setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
-            content
-        }
-    } }
-}
-
-// MARK: private
-
-private extension SegmentPopup {
-    var node: PathNode? { selector.path?.node(id: nodeId) }
-
-    var segmentType: PathSegmentType? {
-        if isOut {
-            selector.pathProperty?.segmentType(id: nodeId)
-        } else {
-            selector.path?.nodeId(before: nodeId).map { selector.pathProperty?.segmentType(id: $0) }
-        }
-    }
-
-    var fromNodeId: UUID? { isOut ? nodeId : selector.path?.nodeId(before: nodeId) }
-
-    var toNodeId: UUID? { isOut ? selector.path?.nodeId(after: nodeId) : nodeId }
-
-    @ViewBuilder var content: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Text("Segment")
-                    .font(.callout.bold())
-                Spacer()
-                segmentIcon
-            }
-            .padding(12)
-            .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.1), radius: 6)))
-            VStack(spacing: 0) {
-                PanelRow(name: "Control") {
-                    let value = isOut ? node?.controlOut : node?.controlIn
-                    VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
-                        .background(.ultraThickMaterial)
-                        .clipRounded(radius: 6)
-                }
-                Divider()
-                PanelRow(name: "Type") {
-                    CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { update(segmentType: $0) }
-                        .background(.ultraThickMaterial)
-                        .clipRounded(radius: 6)
-                        .animation(nil, value: segmentType)
-                }
-                Divider()
-                PanelRow {
-                    Button("Split", systemImage: "square.split.diagonal") {}
-                        .font(.footnote)
-                    Spacer()
-                    Button("Delete", systemImage: "trash", role: .destructive) {}
-                        .font(.footnote)
-                }
-            }
-            .padding(.horizontal, 12)
-        }
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-        .frame(maxWidth: 240)
-    }
-
-    var segmentIcon: some View {
-        HStack(spacing: 0) {
-            nodeIcon(nodeId: fromNodeId)
-                .scaleEffect(isOut ? 1 : 0.9)
-                .opacity(isOut ? 1 : 0.5)
-            Image(systemName: "arrow.forward")
-                .font(.callout)
-                .padding(6)
-            nodeIcon(nodeId: toNodeId)
-                .scaleEffect(isOut ? 0.9 : 1)
-                .opacity(isOut ? 0.5 : 1)
-        }
-    }
-
-    func nodeIcon(nodeId: UUID?) -> some View {
-        VStack(spacing: 0) {
-            Image(systemName: "smallcircle.filled.circle")
-                .font(.callout)
-            Spacer(minLength: 0)
-            Text(nodeId?.shortDescription ?? "nil")
-                .font(.system(size: 10).monospaced())
-        }
-        .frame(width: 32, height: 32)
-    }
-
-    func update(value: Vector2? = nil, pending: Bool = false) {
-        if var node {
-            if isOut {
-                value.map { node.controlOut = $0 }
-            } else {
-                value.map { node.controlIn = $0 }
-            }
-            global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
-        }
-    }
-
-    func update(segmentType: PathSegmentType) {
-        if let pathId = selector.path?.id, let fromNodeId {
-            let segmentType = segmentType == self.segmentType ? nil : segmentType
-            global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: [fromNodeId], segmentType: segmentType)))))
         }
     }
 }

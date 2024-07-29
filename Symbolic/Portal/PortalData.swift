@@ -11,16 +11,12 @@ struct PortalConfigs: Equatable {
 struct PortalData: Identifiable {
     let configs: PortalConfigs
     let id: UUID = .init()
-    let view: AnyView
 
+    var view: AnyView
     var reference: CGRect
 }
 
-extension PortalData: EquatableBy {
-    var equatableBy: some Equatable {
-        configs; id; reference
-    }
-}
+extension PortalData: UniqueEquatable {}
 
 extension PortalData: TriviallyCloneable {}
 

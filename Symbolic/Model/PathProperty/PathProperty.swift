@@ -1,6 +1,6 @@
 import Foundation
 
-enum PathNodeType: Codable {
+enum PathNodeType: Codable, CaseIterable {
     case corner
     case locked
     case mirrored
@@ -16,7 +16,7 @@ extension PathNodeType: CustomStringConvertible {
     }
 }
 
-enum PathSegmentType: Codable {
+enum PathSegmentType: Codable, CaseIterable {
     case auto
     case cubic
     case line

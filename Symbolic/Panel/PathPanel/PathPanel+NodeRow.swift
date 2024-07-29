@@ -142,6 +142,12 @@ private extension NodeRow {
 private struct NodeDetailView: View, TracedView {
     let context: Context, nodeId: UUID
 
+    @State private var showPopupIn = false
+    @State private var showPopupNode = false
+    @State private var showPopupOut = false
+
+    @State private var pathNodeType: PathNodeType = .corner
+
     var body: some View { trace {
         content
     } }
@@ -151,10 +157,12 @@ private struct NodeDetailView: View, TracedView {
 
 private extension NodeDetailView {
     var content: some View {
-        VStack(spacing: 0) {
-            controlInRow
-            positionRow
-            controlOutRow
+        HStack(spacing: 0) {
+            buttonIn
+            buttonDivider
+            buttonNode
+            buttonDivider
+            buttonOut
         }
         .background(.background.secondary)
         .clipRounded(radius: 12)
@@ -168,79 +176,92 @@ private extension NodeDetailView {
 
     var prevSegmentType: PathSegmentType? { context.path.nodeId(before: nodeId).map { context.pathProperty.segmentType(id: $0) }}
 
-    @ViewBuilder var positionRow: some View {
-        if let node {
-            Divider()
-            HStack {
-                Menu { NodeMenu(context: context, nodeId: nodeId) } label: {
-                    Text("Node")
-                        .font(.callout)
-                        .padding(12)
-                }
-                .menuOrder(.fixed)
-                .tint(.label)
-                .foregroundStyle(focused ? .blue.opacity(0.8) : .label)
-                Spacer(minLength: 12)
-                PositionPicker(position: node.position) { updateNode(position: $0, pending: true) } onDone: { updateNode(position: $0) }
-                    .padding(12)
+    @ViewBuilder var buttonIn: some View {
+        var disabled: Bool { context.path.nodeId(before: nodeId) == nil }
+        Button { showPopupIn.toggle() } label: { labelControl(isOut: false) }
+            .disabled(disabled)
+            .tint(.label)
+            .portal(isPresented: $showPopupIn, configs: .init(isModal: true, align: .bottomInnerLeading, gap: .init(squared: 6))) {
+                SegmentPopup(pathId: context.path.id, nodeId: nodeId, isOut: false)
             }
-        }
     }
 
-    @ViewBuilder var controlInRow: some View {
-        if let node = node {
-            let segmentType = prevSegmentType
-            let isCubic = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
-            let isLine = segmentType == .line || (segmentType == .auto && node.controlIn == .zero)
-            HStack {
-                if isCubic {
-                    rowTitle(name: "Cubic", subname: "In")
-                        .foregroundStyle(focused ? .orange.opacity(0.8) : .label)
-                } else if isLine {
-                    rowTitle(name: "Line", subname: "In")
-                        .tint(.label)
-                }
-                Spacer(minLength: 12)
-                if isCubic {
-                    PositionPicker(position: Point2(node.controlIn)) { updateNode(controlIn: .init($0), pending: true) } onDone: { updateNode(controlIn: .init($0)) }
-                        .padding(12)
-                }
+    @ViewBuilder var buttonNode: some View {
+        Button { showPopupNode.toggle() } label: { labelNode }
+            .tint(.label)
+            .portal(isPresented: $showPopupNode, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
+                Text("Hello node button").padding().background(.regularMaterial)
             }
-        }
     }
 
-    @ViewBuilder var controlOutRow: some View {
-        if let node = node {
-            let segmentType = segmentType
-            let isCubic = segmentType == .cubic || (segmentType == .auto && node.controlOut != .zero)
-            let isLine = segmentType == .line || (segmentType == .auto && node.controlOut == .zero)
-            Divider()
-            HStack {
-                if isCubic {
-                    rowTitle(name: "Cubic", subname: "Out")
-                        .foregroundStyle(focused ? .green.opacity(0.8) : .label)
-                } else if isLine {
-                    rowTitle(name: "Line", subname: "Out")
-                        .tint(.label)
-                }
-                Spacer(minLength: 12)
-                if isCubic {
-                    PositionPicker(position: Point2(node.controlOut)) { updateNode(controlOut: .init($0), pending: true) } onDone: { updateNode(controlOut: .init($0)) }
-                        .padding(12)
-                }
+    @ViewBuilder var buttonOut: some View {
+        var disabled: Bool { context.path.nodeId(after: nodeId) == nil }
+        Button { showPopupOut.toggle() } label: { labelControl(isOut: true) }
+            .disabled(disabled)
+            .tint(.label)
+            .portal(isPresented: $showPopupOut, configs: .init(isModal: true, align: .bottomInnerTrailing, gap: .init(squared: 6))) {
+                SegmentPopup(pathId: context.path.id, nodeId: nodeId, isOut: true)
             }
-        }
     }
 
-    func rowTitle(name: String, subname: String) -> some View {
+    @ViewBuilder var buttonDivider: some View {
+        Divider().padding(6)
+    }
+
+    @ViewBuilder var labelNode: some View {
+        let color = focused ? Color.blue : .label
+        VStack(spacing: 0) {
+            Image(systemName: "smallcircle.filled.circle")
+                .frame(size: .init(squared: 20))
+            Spacer()
+            labelTitle(name: "Node", subname: nodeId.shortDescription)
+                .font(.caption)
+        }
+        .foregroundStyle(color)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(6)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    @ViewBuilder func labelControl(isOut: Bool) -> some View {
+        let disabled = isOut ? context.path.nodeId(after: nodeId) == nil : context.path.nodeId(before: nodeId) == nil,
+            color = disabled ? Color.label.opacity(0.5) : !focused ? .label : isOut ? .green : .orange,
+            segmentType = isOut ? segmentType : prevSegmentType,
+            control = isOut ? node?.controlOut : node?.controlIn,
+            isCubic = segmentType == .cubic || (segmentType == .auto && control != .zero),
+            isLine = segmentType == .line || (segmentType == .auto && control == .zero),
+            isQuadratic = segmentType == .quadratic
+        var name: String {
+            if isCubic { return "Cubic" }
+            if isLine { return "Line" }
+            if isQuadratic { return "Quad" }
+            return "Terminal"
+        }
+        var image: String {
+            if isCubic || isQuadratic { return "point.topleft.down.to.point.bottomright.curvepath" }
+            if isLine { return "line.diagonal" }
+            return "circle.slash"
+        }
+        VStack(spacing: 0) {
+            Image(systemName: image)
+                .frame(size: .init(squared: 20))
+            Spacer()
+            labelTitle(name: name, subname: isOut ? "out" : "in")
+        }
+        .foregroundStyle(color)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(6)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    func labelTitle(name: String, subname: String) -> some View {
         HStack(spacing: 0) {
             Text(name)
-                .font(.callout)
+                .font(.caption)
             Text(subname)
-                .font(.caption2)
-                .baselineOffset(-8)
+                .font(.system(size: 8).monospaced())
+                .baselineOffset(-4)
         }
-        .padding(12)
     }
 
     func updateNode(position: Point2? = nil, controlIn: Vector2? = nil, controlOut: Vector2? = nil, pending: Bool = false) {
@@ -253,6 +274,127 @@ private extension NodeDetailView {
     }
 }
 
+// MARK: - SegmentPopup
+
+private struct SegmentPopup: View, TracedView, ComputedSelectorHolder {
+    let pathId: UUID, nodeId: UUID, isOut: Bool
+
+    struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
+    class Selector: SelectorBase {
+        @Selected({ global.path.get(id: $0.pathId) }) var path
+        @Selected({ global.pathProperty.get(id: $0.pathId) }) var pathProperty
+    }
+
+    @SelectorWrapper var selector
+
+    var body: some View { trace {
+        setupSelector(.init(pathId: pathId, nodeId: nodeId)) {
+            content
+        }
+    } }
+}
+
+// MARK: private
+
+private extension SegmentPopup {
+    var node: PathNode? { selector.path?.node(id: nodeId) }
+
+    var segmentType: PathSegmentType? {
+        if isOut {
+            selector.pathProperty?.segmentType(id: nodeId)
+        } else {
+            selector.path?.nodeId(before: nodeId).map { selector.pathProperty?.segmentType(id: $0) }
+        }
+    }
+
+    var fromNodeId: UUID? { isOut ? nodeId : selector.path?.nodeId(before: nodeId) }
+
+    var toNodeId: UUID? { isOut ? selector.path?.nodeId(after: nodeId) : nodeId }
+
+    @ViewBuilder var content: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Text("Segment")
+                    .font(.callout.bold())
+                Spacer()
+                segmentIcon
+            }
+            .padding(12)
+            .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.1), radius: 6)))
+            VStack(spacing: 0) {
+                PanelRow(name: "Control") {
+                    let value = isOut ? node?.controlOut : node?.controlIn
+                    VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
+                        .background(.ultraThickMaterial)
+                        .clipRounded(radius: 6)
+                }
+                Divider()
+                PanelRow(name: "Type") {
+                    CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { update(segmentType: $0) }
+                        .background(.ultraThickMaterial)
+                        .clipRounded(radius: 6)
+                        .animation(nil, value: segmentType)
+                }
+                Divider()
+                PanelRow {
+                    Button("Split", systemImage: "square.split.diagonal") {}
+                        .font(.footnote)
+                    Spacer()
+                    Button("Delete", systemImage: "trash", role: .destructive) {}
+                        .font(.footnote)
+                }
+            }
+            .padding(.horizontal, 12)
+        }
+        .background(.ultraThinMaterial)
+        .clipRounded(radius: 12)
+        .frame(maxWidth: 240)
+    }
+
+    var segmentIcon: some View {
+        HStack(spacing: 0) {
+            nodeIcon(nodeId: fromNodeId)
+                .scaleEffect(isOut ? 1 : 0.9)
+                .opacity(isOut ? 1 : 0.5)
+            Image(systemName: "arrow.forward")
+                .font(.callout)
+                .padding(6)
+            nodeIcon(nodeId: toNodeId)
+                .scaleEffect(isOut ? 0.9 : 1)
+                .opacity(isOut ? 0.5 : 1)
+        }
+    }
+
+    func nodeIcon(nodeId: UUID?) -> some View {
+        VStack(spacing: 0) {
+            Image(systemName: "smallcircle.filled.circle")
+                .font(.callout)
+            Spacer(minLength: 0)
+            Text(nodeId?.shortDescription ?? "nil")
+                .font(.system(size: 10).monospaced())
+        }
+        .frame(width: 32, height: 32)
+    }
+
+    func update(value: Vector2? = nil, pending: Bool = false) {
+        if var node {
+            if isOut {
+                value.map { node.controlOut = $0 }
+            } else {
+                value.map { node.controlIn = $0 }
+            }
+            global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
+        }
+    }
+
+    func update(segmentType: PathSegmentType) {
+        if let pathId = selector.path?.id, let fromNodeId {
+            let segmentType = segmentType == self.segmentType ? nil : segmentType
+            global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: [fromNodeId], segmentType: segmentType)))))
+        }
+    }
+}
+
 // MARK: - NodeMenu
 
 private struct NodeMenu: View, TracedView {
@@ -260,7 +402,6 @@ private struct NodeMenu: View, TracedView {
 
     var body: some View { trace {
         content
-
     } }
 }
 

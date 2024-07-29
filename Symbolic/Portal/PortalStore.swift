@@ -29,6 +29,11 @@ extension PortalStore {
         return portal.id
     }
 
+    func setView(of id: UUID, @ViewBuilder _ view: @escaping () -> any View) {
+        let _r = subtracer.range("set view of \(id)"); defer { _r() }
+        update(portalMap: map.cloned { $0[id]?.view = AnyView(view()) })
+    }
+
     func setReference(of id: UUID, _ frame: CGRect) {
         let _r = subtracer.range("set reference \(frame) of \(id)"); defer { _r() }
         update(portalMap: map.cloned { $0[id]?.reference = frame })
@@ -65,6 +70,7 @@ struct PortalReference<Content: View>: View, ComputedSelectorHolder {
 
     var body: some View {
         setupSelector(.init(portalId: portalId)) {
+            let _ = portalId.map { global.portal.setView(of: $0, content) }
             Color.clear
                 .geometryReader { frame = $0.frame(in: .global) }
                 .onChange(of: isPresented, initial: true) {

@@ -133,6 +133,9 @@
     "Front" : {
 
     },
+    "Hello node button" : {
+
+    },
     "Input" : {
 
     },
@@ -163,9 +166,6 @@
     "No path is focused" : {
 
     },
-    "Node" : {
-
-    },
     "Node Type" : {
 
     },
@@ -191,6 +191,9 @@
 
     },
     "Secondary" : {
+
+    },
+    "Segment" : {
 
     },
     "Segment Type" : {

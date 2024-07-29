@@ -5,11 +5,13 @@ import SwiftUI
 
 extension Numpad {
     struct Configs {
+        var size: CGSize
         var label: String?
         var range: ClosedRange<Double>
         var maxDecimalLength: Int
 
-        init(label: String? = nil, range: ClosedRange<Double> = -1e6 ... 1e6, maxDecimalLength: Int = 3) {
+        init(size: CGSize = .init(squared: 180), label: String? = nil, range: ClosedRange<Double> = -1e6 ... 1e6, maxDecimalLength: Int = 3) {
+            self.size = size
             self.label = label
             self.range = range
             self.maxDecimalLength = (0 ... 6).clamp(maxDecimalLength)
@@ -69,21 +71,21 @@ private extension Numpad {
         }
 
         init(value: Double, configs: Configs) {
+            guard value != 0 else { return }
+            let value = configs.range.clamp(value)
             negated = value < 0
 
-            let value = configs.range.clamp(value)
-            let absValue = abs(value)
-            let integerValue = floor(absValue)
-            integer = "\(Int(integerValue))"
+            let decimalMultiplier = pow(10, Double(configs.maxDecimalLength)),
+                digitsInteger = Int(round(abs(value) * decimalMultiplier)),
+                digitsString = String(digitsInteger)
+            integer = .init(digitsString.dropLast(configs.maxDecimalLength))
 
-            let decimalValue = absValue - integerValue
-            let decimalDigits = round(decimalValue * pow(10, Double(configs.maxDecimalLength)))
-            let decimalString = "\(Int(decimalDigits))"
+            let decimalString = digitsString.suffix(configs.maxDecimalLength)
             if decimalString.allSatisfy({ $0 == "0" }) {
                 decimal = nil
             } else {
-                let leadingZeros = String(repeating: "0", count: configs.maxDecimalLength - decimalString.count)
-                let zeroTrimmed = decimalString.trimmingCharacters(in: .init(charactersIn: "0"))
+                let leadingZeros = String(repeating: "0", count: configs.maxDecimalLength - decimalString.count),
+                    zeroTrimmed = decimalString.trimmingCharacters(in: .init(charactersIn: "0"))
                 decimal = leadingZeros + zeroTrimmed
             }
         }
@@ -215,7 +217,7 @@ struct Numpad: View {
 // MARK: private
 
 private extension Numpad {
-    var size: CGSize { .init(200, 200) }
+    var size: CGSize { configs.size }
 
     var content: some View {
         VStack(spacing: 0) {

@@ -21,7 +21,10 @@ extension Numpad {
 
 private extension Numpad.Configs {
     func validate(_ decomposed: Numpad.Decomposed) -> Numpad.Warning? {
-        guard let value = Double(decomposed.composed) else { return .unknown }
+        guard let value = Double(decomposed.composed) else {
+            print("dbg", decomposed, decomposed.composed, Double(decomposed.composed))
+            return .unknown
+        }
         guard range.contains(value) else { return .range(range) }
         guard decomposed.decimal?.count ?? 0 <= maxDecimalLength else { return .maxDecimalLength(maxDecimalLength) }
         return nil
@@ -64,12 +67,6 @@ private extension Numpad {
 
         var composed: String { "\(negated ? "-" : "")\(integer)\(decimal.map { ".\($0)" } ?? "")" }
 
-        init(negated: Bool, integer: String, decimal: String?) {
-            self.negated = negated
-            self.integer = integer
-            self.decimal = decimal
-        }
-
         init(value: Double, configs: Configs) {
             guard value != 0 else { return }
             let value = configs.range.clamp(value)
@@ -79,6 +76,9 @@ private extension Numpad {
                 digitsInteger = Int(round(abs(value) * decimalMultiplier)),
                 digitsString = String(digitsInteger)
             integer = .init(digitsString.dropLast(configs.maxDecimalLength))
+            if integer == "" {
+                integer = "0"
+            }
 
             let decimalString = digitsString.suffix(configs.maxDecimalLength)
             if decimalString.allSatisfy({ $0 == "0" }) {

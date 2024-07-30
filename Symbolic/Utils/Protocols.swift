@@ -80,3 +80,6 @@ protocol UniqueEquatable: Equatable {}
 extension UniqueEquatable {
     static func == (_: Self, _: Self) -> Bool { false }
 }
+
+// opposite to MonoState
+struct AnyState: UniqueEquatable {}

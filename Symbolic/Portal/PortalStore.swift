@@ -70,7 +70,9 @@ struct PortalReference<Content: View>: View, ComputedSelectorHolder {
 
     var body: some View {
         setupSelector(.init(portalId: portalId)) {
-            let _ = portalId.map { global.portal.setView(of: $0, content) }
+            if configs.attached {
+                let _ = portalId.map { global.portal.setView(of: $0, content) }
+            }
             Color.clear
                 .geometryReader { frame = $0.frame(in: .global) }
                 .onChange(of: isPresented, initial: true) {

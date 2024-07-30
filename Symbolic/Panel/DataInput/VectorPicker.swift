@@ -19,10 +19,8 @@ struct VectorPicker: View {
 private extension VectorPicker {
     var content: some View {
         button
-            .portal(isPresented: $showNumpads, configs: portalConfigs) { numpads }
+            .portal(isPresented: $showNumpads, configs: .init(attached: true, isModal: true, align: .topInnerTrailing, gap: .init(squared: 6))) { numpads }
     }
-
-    var portalConfigs: PortalConfigs { .init(isModal: true, align: .topInnerTrailing, gap: .init(squared: 6)) }
 
     var button: some View {
         Button { showNumpads.toggle() } label: { label }

@@ -1,9 +1,18 @@
 import SwiftUI
 
-struct PortalConfigs: Equatable {
+struct PortalConfigs {
+    var attached: Bool = false
     var isModal: Bool = false
     var align: PlaneOuterAlign = .topLeading
     var gap: CGSize = .zero
+}
+
+extension PortalConfigs: EquatableBy {
+    var attachedState: AnyState? { attached ? .init() : nil }
+
+    var equatableBy: some Equatable {
+        attachedState; isModal; align; gap
+    }
 }
 
 // MARK: - PanelData

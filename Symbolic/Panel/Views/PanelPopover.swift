@@ -61,6 +61,8 @@ struct PanelPopover: View, SelectorHolder {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
+    @State private var scrollFrame: CGRect = .zero
+
     @State private var isSettings = false
 
     var body: some View {
@@ -108,10 +110,12 @@ private extension PanelPopover {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .environment(\.panelScrollProxy, proxy)
+            .environment(\.panelScrollFrame, scrollFrame)
         }
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
         .frame(maxWidth: .infinity, maxHeight: selector.viewSize.height - 240)
         .fixedSize(horizontal: false, vertical: true)
+        .geometryReader { scrollFrame = $0.frame(in: .global) }
     }
 
     @ViewBuilder var panels: some View {

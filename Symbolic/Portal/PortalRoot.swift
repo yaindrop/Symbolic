@@ -73,7 +73,7 @@ extension PortalWrapper {
 
 struct PortalRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.portal.map.values }) var portals
+        @Selected(configs: .init(syncNotify: true, animation: .fast), { global.portal.map.values }) var portals
     }
 
     @SelectorWrapper var selector

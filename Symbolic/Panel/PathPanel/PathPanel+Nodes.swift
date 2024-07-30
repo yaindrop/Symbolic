@@ -145,13 +145,12 @@ private extension NodeRow {
 // MARK: - NodeDetailPanel
 
 private struct NodeDetailView: View, TracedView {
+    @Environment(\.panelScrollFrame) var panelScrollFrame
     let context: Context, nodeId: UUID
 
-    @State private var showPopupIn = false
-    @State private var showPopupNode = false
-    @State private var showPopupOut = false
+    @State private var popupState: PopupState?
 
-    @State private var pathNodeType: PathNodeType = .corner
+    @State private var frame: CGRect = .zero
 
     var body: some View { trace {
         content
@@ -161,6 +160,10 @@ private struct NodeDetailView: View, TracedView {
 // MARK: private
 
 private extension NodeDetailView {
+    enum PopupState {
+        case controlIn, node, controlOut
+    }
+
     var content: some View {
         HStack(spacing: 0) {
             controlButton(isOut: false)
@@ -171,6 +174,12 @@ private extension NodeDetailView {
         }
         .background(.ultraThickMaterial)
         .clipRounded(radius: 12)
+        .geometryReader { frame = $0.frame(in: .global) }
+        .onChange(of: panelScrollFrame.contains(frame)) { _, contains in
+            if !contains {
+                popupState = nil
+            }
+        }
     }
 
     var node: PathNode? { context.path.node(id: nodeId) }
@@ -182,20 +191,22 @@ private extension NodeDetailView {
     var prevSegmentType: PathSegmentType? { context.path.nodeId(before: nodeId).map { context.pathProperty.segmentType(id: $0) }}
 
     @ViewBuilder var nodeButton: some View {
-        Button { showPopupNode.toggle() } label: { nodeLabel }
+        let isPresented = $popupState.predicate(.node, nil)
+        Button { isPresented.wrappedValue.toggle() } label: { nodeLabel }
             .tint(.label)
-            .portal(isPresented: $showPopupNode, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
+            .portal(isPresented: isPresented, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
                 Text("Hello node button").padding().background(.regularMaterial)
             }
     }
 
     @ViewBuilder func controlButton(isOut: Bool) -> some View {
         let disabled = (isOut ? context.path.nodeId(after: nodeId) : context.path.nodeId(before: nodeId)) == nil,
-            align: PlaneOuterAlign = isOut ? .bottomInnerTrailing : .bottomInnerLeading
-        Button { isOut ? showPopupOut.toggle() : showPopupIn.toggle() } label: { controlLabel(isOut: isOut) }
+            align: PlaneOuterAlign = isOut ? .bottomInnerTrailing : .bottomInnerLeading,
+            isPresented = $popupState.predicate(isOut ? .controlOut : .controlIn, nil)
+        Button { isPresented.wrappedValue.toggle() } label: { controlLabel(isOut: isOut) }
             .disabled(disabled)
             .tint(.label)
-            .portal(isPresented: isOut ? $showPopupOut : $showPopupIn, configs: .init(isModal: true, align: align, gap: .init(squared: 6))) {
+            .portal(isPresented: isPresented, configs: .init(align: align, gap: .init(squared: 6))) {
                 PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
             }
     }

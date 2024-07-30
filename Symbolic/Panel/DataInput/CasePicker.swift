@@ -26,12 +26,16 @@ private extension CasePicker {
         HStack(spacing: 0) {
             ForEach(cases, id: \.self) { v in
                 let selected = value == v
-                Text(label(v))
-                    .font(selected ? font.bold() : font)
-                    .opacity(selected ? 1 : opacity)
-                    .padding(.horizontal, padding)
-                    .frame(maxHeight: .infinity)
-                    .onTapGesture { onValue(v) }
+                Button {
+                    onValue(v)
+                } label: {
+                    Text(label(v))
+                        .font(selected ? font.bold() : font)
+                        .opacity(selected ? 1 : opacity)
+                        .padding(.horizontal, padding)
+                        .frame(maxHeight: .infinity)
+                }
+                .tint(.label)
                 if v != cases.last {
                     Divider()
                         .padding(.vertical, padding)

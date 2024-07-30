@@ -73,6 +73,17 @@ extension EnvironmentValues {
     }
 }
 
+private struct PanelScrollFrameKey: EnvironmentKey {
+    static let defaultValue: CGRect = .zero
+}
+
+extension EnvironmentValues {
+    var panelScrollFrame: CGRect {
+        get { self[PanelScrollFrameKey.self] }
+        set { self[PanelScrollFrameKey.self] = newValue }
+    }
+}
+
 private struct PanelAppearanceKey: EnvironmentKey {
     static let defaultValue: PanelAppearance = .floatingPrimary
 }

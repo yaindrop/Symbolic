@@ -62,3 +62,19 @@ extension Duration {
 func build<Content: View>(@ViewBuilder _ builder: () -> Content) -> Content { builder() }
 
 func build<Content: ToolbarContent>(@ToolbarContentBuilder _ builder: () -> Content) -> Content { builder() }
+
+// MARK: - Binding
+
+extension Binding where Value: Equatable {
+    func predicate(_ trueValue: Value, _ falseValue: Value) -> Binding<Bool> {
+        Binding<Bool>(get: {
+            wrappedValue == trueValue
+        }, set: { newValue in
+            if wrappedValue != trueValue, newValue {
+                wrappedValue = trueValue
+            } else if wrappedValue == trueValue, !newValue {
+                wrappedValue = falseValue
+            }
+        })
+    }
+}

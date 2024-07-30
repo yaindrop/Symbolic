@@ -20,10 +20,14 @@ struct FloatingPanelView: View, TracedView, ComputedSelectorHolder {
 
     @StateObject private var scrollViewModel = ManagedScrollViewModel()
 
+    @State private var scrollFrame: CGRect = .zero
+
     var body: some View { trace {
         setupSelector(.init(panelId: panelId)) {
-            content
-                .id(panelId)
+            trace(selector.panelName) {
+                content
+                    .id(panelId)
+            }
         }
     } }
 }
@@ -71,11 +75,13 @@ private extension FloatingPanelView {
             }
             .padding(.all.subtracting(.top), 12)
             .environment(\.panelScrollProxy, proxy)
+            .environment(\.panelScrollFrame, scrollFrame)
         }
+        .scrollClipDisabled()
         .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
         .frame(maxWidth: .infinity, maxHeight: max(0, selector.maxHeight - titleSize.height))
         .fixedSize(horizontal: false, vertical: true)
-        .scrollClipDisabled()
+        .geometryReader { scrollFrame = $0.frame(in: .global) }
     }
 
     var background: some View {

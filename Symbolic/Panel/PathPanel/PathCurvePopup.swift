@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - CurvePopup
 
 struct PathCurvePopup: View, TracedView, ComputedSelectorHolder {
+    @Environment(\.portalId) var portalId
     let pathId: UUID, nodeId: UUID, isOut: Bool
 
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
@@ -45,6 +46,10 @@ private extension PathCurvePopup {
                 Text("Curve \(isOut ? "Out" : "In")")
                     .font(.callout.bold())
                 Spacer()
+                Button("Done") {
+                    global.portal.deregister(id: portalId)
+                }
+                .font(.callout)
             }
             .padding(12)
             .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.05), radius: 6)))

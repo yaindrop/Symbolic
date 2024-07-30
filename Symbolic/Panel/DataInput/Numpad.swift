@@ -21,10 +21,7 @@ extension Numpad {
 
 private extension Numpad.Configs {
     func validate(_ decomposed: Numpad.Decomposed) -> Numpad.Warning? {
-        guard let value = Double(decomposed.composed) else {
-            print("dbg", decomposed, decomposed.composed, Double(decomposed.composed))
-            return .unknown
-        }
+        guard let value = Double(decomposed.composed) else { return .unknown }
         guard range.contains(value) else { return .range(range) }
         guard decomposed.decimal?.count ?? 0 <= maxDecimalLength else { return .maxDecimalLength(maxDecimalLength) }
         return nil

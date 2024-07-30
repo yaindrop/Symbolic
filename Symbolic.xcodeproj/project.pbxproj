@@ -88,6 +88,7 @@
 		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
 		578150472C57E2540057D798 /* PathCurvePopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathCurvePopup.swift */; };
 		578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150482C5891AE0057D798 /* PathNodeThumbnail.swift */; };
+		5781504B2C5929500057D798 /* PathNodePopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504A2C5929500057D798 /* PathNodePopup.swift */; };
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PanelRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PanelRow.swift */; };
@@ -235,6 +236,7 @@
 		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		578150462C57E2540057D798 /* PathCurvePopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathCurvePopup.swift; sourceTree = "<group>"; };
 		578150482C5891AE0057D798 /* PathNodeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodeThumbnail.swift; sourceTree = "<group>"; };
+		5781504A2C5929500057D798 /* PathNodePopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodePopup.swift; sourceTree = "<group>"; };
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PanelRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRow.swift; sourceTree = "<group>"; };
@@ -425,6 +427,7 @@
 			isa = PBXGroup;
 			children = (
 				578150462C57E2540057D798 /* PathCurvePopup.swift */,
+				5781504A2C5929500057D798 /* PathNodePopup.swift */,
 				578150482C5891AE0057D798 /* PathNodeThumbnail.swift */,
 				575C3CF52BD60C200035B758 /* PathPanel.swift */,
 				5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */,
@@ -998,6 +1001,7 @@
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
+				5781504B2C5929500057D798 /* PathNodePopup.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectionService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,
 				5774B1602BFD864300C53CDD /* Background.swift in Sources */,

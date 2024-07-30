@@ -48,10 +48,9 @@ extension PortalWrapper {
         if rootFrame.contains(box) {
             return align
         }
-        let aligns = [align, align.flipped(axis: .horizontal), align.flipped(axis: .vertical)],
-            alignAndDistance = aligns.map { (align: $0, distance: reference.alignedBox(at: $0, size: size, gap: gap).center.distance(to: rootFrame.center)) },
-            closest = alignAndDistance.min(by: { $0.distance < $1.distance })!.align
-        return closest
+        let flippedAligns = [align.flipped(axis: .horizontal), align.flipped(axis: .vertical), align.flipped(axis: .horizontal).flipped(axis: .vertical)],
+            containedAlign = flippedAligns.first { rootFrame.contains(reference.alignedBox(at: $0, size: size, gap: gap)) }
+        return containedAlign ?? align
     }
 
     var box: CGRect {

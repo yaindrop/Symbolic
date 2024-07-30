@@ -140,9 +140,6 @@
     "Front" : {
 
     },
-    "Hello node button" : {
-
-    },
     "Isometric" : {
 
     },
@@ -168,6 +165,9 @@
 
     },
     "No path is focused" : {
+
+    },
+    "Node" : {
 
     },
     "Node Type" : {

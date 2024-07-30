@@ -142,7 +142,7 @@ private extension NodeRow {
     }
 }
 
-// MARK: - NodeDetailPanel
+// MARK: - NodeDetailView
 
 private struct NodeDetailView: View, TracedView {
     @Environment(\.panelScrollFrame) var panelScrollFrame
@@ -194,8 +194,8 @@ private extension NodeDetailView {
         let isPresented = $popupState.predicate(.node, nil)
         Button { isPresented.wrappedValue.toggle() } label: { nodeLabel }
             .tint(.label)
-            .portal(isPresented: isPresented, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
-                Text("Hello node button").padding().background(.regularMaterial)
+            .portal(isPresented: isPresented, configs: .init(align: .bottomCenter, gap: .init(squared: 6))) {
+                PathNodePopup(pathId: context.path.id, nodeId: nodeId)
             }
     }
 
@@ -268,176 +268,6 @@ private extension NodeDetailView {
             Text(subname)
                 .font(.system(size: 8).monospaced())
                 .baselineOffset(-4)
-        }
-    }
-}
-
-// MARK: - NodeMenu
-
-private struct NodeMenu: View, TracedView {
-    let context: Context, nodeId: UUID
-
-    var body: some View { trace {
-        content
-    } }
-}
-
-// MARK: private
-
-private extension NodeMenu {
-    @ViewBuilder var content: some View {
-        Label("\(nodeId)", systemImage: "number")
-
-        Button(focused ? "Unfocus" : "Focus", systemImage: focused ? "circle.slash" : "scope") { toggleFocus() }
-        if mergableNodeId != nil {
-            Button("Merge", systemImage: "arrow.triangle.merge", role: .destructive) { mergeNode() }
-        }
-
-        Divider()
-
-        ControlGroup { nodeTypeButtons } label: { Text("Node Type") }
-
-        Divider()
-
-        Button("Break", systemImage: "scissors.circle", role: .destructive) { breakNode() }
-        Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-    }
-
-    var mergableNodeId: UUID? { context.path.mergableNodeId(id: nodeId) }
-
-    var nodeType: PathNodeType? { context.pathProperty.nodeType(id: nodeId) }
-
-    var focused: Bool { context.focusedNodeId == nodeId }
-
-    @ViewBuilder var nodeTypeButtons: some View {
-        nodeTypeButton(.corner)
-        nodeTypeButton(.locked)
-        nodeTypeButton(.mirrored)
-    }
-
-    @ViewBuilder func nodeTypeButton(_ nodeType: PathNodeType) -> some View {
-        var name: String {
-            switch nodeType {
-            case .corner: "Corner"
-            case .locked: "Locked"
-            case .mirrored: "Mirrored"
-            }
-        }
-        let selected = self.nodeType == nodeType
-        Button(name, systemImage: selected ? "checkmark" : "") { setNodeType(nodeType) }
-            .disabled(selected)
-    }
-
-    func toggleFocus() {
-        focused ? global.focusedPath.clear() : global.focusedPath.setFocus(node: nodeId)
-    }
-
-    func mergeNode() {
-        if let mergableNodeId {
-            let pathId = context.path.id
-            global.documentUpdater.update(path: .merge(.init(pathId: pathId, endingNodeId: nodeId, mergedPathId: pathId, mergedEndingNodeId: mergableNodeId)))
-        }
-    }
-
-    func setNodeType(_ nodeType: PathNodeType) {
-        let pathId = context.path.id
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: [nodeId], nodeType: nodeType)))))
-    }
-
-    func breakNode() {
-        let pathId = context.path.id
-        global.documentUpdater.update(path: .breakAtNode(.init(pathId: pathId, nodeId: nodeId, newNodeId: UUID(), newPathId: UUID())))
-    }
-
-    func deleteNode() {
-        global.documentUpdater.update(focusedPath: .deleteNode(.init(nodeId: nodeId)))
-    }
-}
-
-// MARK: - SegmentMenu
-
-private struct SegmentMenu: View, TracedView, EquatableBy, ComputedSelectorHolder {
-    let pathId: UUID, fromNodeId: UUID
-
-    var equatableBy: some Equatable { pathId; fromNodeId }
-
-    struct SelectorProps: Equatable { let pathId: UUID, fromNodeId: UUID }
-    class Selector: SelectorBase {
-        @Formula({ global.path.get(id: $0.pathId) }) static var path
-        @Formula({ global.pathProperty.get(id: $0.pathId) }) static var property
-
-        @Selected({ path($0)?.segment(fromId: $0.fromNodeId) }) var segment
-        @Selected({ property($0)?.segmentType(id: $0.fromNodeId) }) var segmentType
-        @Selected({ global.focusedPath.focusedSegmentId == $0.fromNodeId }) var focused
-    }
-
-    @SelectorWrapper var selector
-
-    var body: some View { trace {
-        setupSelector(.init(pathId: pathId, fromNodeId: fromNodeId)) {
-            content
-        }
-    } }
-}
-
-// MARK: private
-
-private extension SegmentMenu {
-    @ViewBuilder var content: some View {
-        Label("\(fromNodeId)", systemImage: "number")
-        Button(selector.focused ? "Unfocus" : "Focus", systemImage: selector.focused ? "circle.slash" : "scope") { toggleFocus() }
-
-        Divider()
-
-        ControlGroup { segmentTypeButtons } label: { Text("Segment Type") }
-
-        Divider()
-
-        Button("Split", systemImage: "square.and.line.vertical.and.square") { splitSegment() }
-
-        Divider()
-
-        Button("Break", systemImage: "scissors.circle", role: .destructive) { breakSegment() }
-    }
-
-    @ViewBuilder var segmentTypeButtons: some View {
-        segmentTypeButton(.line)
-        segmentTypeButton(.cubic)
-        segmentTypeButton(.quadratic)
-    }
-
-    @ViewBuilder func segmentTypeButton(_ segmentType: PathSegmentType) -> some View {
-        var name: String {
-            switch segmentType {
-            case .line: "Line"
-            case .cubic: "Cubic Bezier"
-            case .quadratic: "Quadratic Bezier"
-            case .auto: ""
-            }
-        }
-        let selected = selector.segmentType == segmentType
-        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setSegmentType(.auto) : setSegmentType(segmentType) }
-    }
-
-    func toggleFocus() {
-        selector.focused ? global.focusedPath.clear() : global.focusedPath.setFocus(segment: fromNodeId)
-    }
-
-    func setSegmentType(_ segmentType: PathSegmentType) {
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: [fromNodeId], segmentType: segmentType)))))
-    }
-
-    func splitSegment() {
-        guard let segment = selector.segment else { return }
-        let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
-        let id = UUID()
-        global.documentUpdater.update(focusedPath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
-        global.focusedPath.setFocus(node: id)
-    }
-
-    func breakSegment() {
-        if let pathId = global.activeItem.focusedItemId {
-            global.documentUpdater.update(path: .breakAtSegment(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
         }
     }
 }

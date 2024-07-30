@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - CurvePopup
+// MARK: - PathCurvePopup
 
 struct PathCurvePopup: View, TracedView, ComputedSelectorHolder {
     @Environment(\.portalId) var portalId
@@ -46,10 +46,8 @@ private extension PathCurvePopup {
                 Text("Curve \(isOut ? "Out" : "In")")
                     .font(.callout.bold())
                 Spacer()
-                Button("Done") {
-                    global.portal.deregister(id: portalId)
-                }
-                .font(.callout)
+                Button("Done") { done() }
+                    .font(.callout)
             }
             .padding(12)
             .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.05), radius: 6)))
@@ -62,12 +60,7 @@ private extension PathCurvePopup {
                 }
                 Divider()
                 PanelRow(name: "Segment") {
-                    Button {
-                        guard let fromNodeId,
-                              let segment else { return }
-                        global.viewportUpdater.zoomTo(rect: segment.boundingRect.outset(by: 32))
-                        global.focusedPath.setFocus(segment: fromNodeId)
-                    } label: {
+                    Button { focusSegment() } label: {
                         segmentIcon
                     }
                 }
@@ -76,25 +69,15 @@ private extension PathCurvePopup {
                     CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
                         .background(.ultraThickMaterial)
                         .clipRounded(radius: 6)
-                        .animation(nil, value: segmentType)
+                        .transaction { $0.animation = nil }
                 }
                 Divider()
                 PanelRow {
-                    Button("Split", systemImage: "square.split.diagonal") {
-                        guard let fromNodeId,
-                              let segment else { return }
-                        let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
-                        let id = UUID()
-                        global.documentUpdater.update(focusedPath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
-                        global.focusedPath.setFocus(node: id)
-                    }
-                    .font(.footnote)
+                    Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
+                        .font(.footnote)
                     Spacer()
-                    Button("Break", systemImage: "scissors", role: .destructive) {
-                        guard let fromNodeId else { return }
-                        global.documentUpdater.update(path: .breakAtSegment(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
-                    }
-                    .font(.footnote)
+                    Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
+                        .font(.footnote)
                 }
             }
             .padding(.horizontal, 12)
@@ -129,21 +112,45 @@ private extension PathCurvePopup {
         .frame(width: 32, height: 32)
     }
 
+    func done() {
+        global.portal.deregister(id: portalId)
+    }
+
     func update(value: Vector2? = nil, pending: Bool = false) {
-        if var node {
+        if let value, var node {
             if isOut {
-                value.map { node.controlOut = $0 }
+                node.controlOut = value
             } else {
-                value.map { node.controlIn = $0 }
+                node.controlIn = value
             }
             global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
         }
     }
 
     func update(segmentType: PathSegmentType) {
-        if let pathId = selector.path?.id, let fromNodeId {
-            let segmentType = segmentType == self.segmentType ? nil : segmentType
-            global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: [fromNodeId], segmentType: segmentType)))))
-        }
+        guard let fromNodeId else { return }
+        let segmentType = segmentType == self.segmentType ? nil : segmentType
+        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: [fromNodeId], segmentType: segmentType)))))
+    }
+
+    func focusSegment() {
+        guard let fromNodeId,
+              let segment else { return }
+        global.viewportUpdater.zoomTo(rect: segment.boundingRect.outset(by: 32))
+        global.focusedPath.setFocus(segment: fromNodeId)
+    }
+
+    func splitSegment() {
+        guard let fromNodeId,
+              let segment else { return }
+        let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
+        let id = UUID()
+        global.documentUpdater.update(focusedPath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
+        global.focusedPath.setFocus(node: id)
+    }
+
+    func breakSegment() {
+        guard let fromNodeId else { return }
+        global.documentUpdater.update(path: .breakAtSegment(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
     }
 }

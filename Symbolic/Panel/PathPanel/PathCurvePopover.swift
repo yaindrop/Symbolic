@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - PathCurvePopup
+// MARK: - PathCurvePopover
 
-struct PathCurvePopup: View, TracedView, ComputedSelectorHolder {
+struct PathCurvePopover: View, TracedView, ComputedSelectorHolder {
     @Environment(\.portalId) var portalId
     let pathId: UUID, nodeId: UUID, isOut: Bool
 
@@ -23,7 +23,7 @@ struct PathCurvePopup: View, TracedView, ComputedSelectorHolder {
 
 // MARK: private
 
-private extension PathCurvePopup {
+private extension PathCurvePopover {
     var node: PathNode? { selector.path?.node(id: nodeId) }
 
     var segmentType: PathSegmentType? {
@@ -69,7 +69,6 @@ private extension PathCurvePopup {
                     CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
                         .background(.ultraThickMaterial)
                         .clipRounded(radius: 6)
-                        .transaction { $0.animation = nil }
                 }
                 Divider()
                 PanelRow {

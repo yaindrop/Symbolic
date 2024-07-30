@@ -146,9 +146,10 @@ private extension NodeRow {
 
 private struct NodeDetailView: View, TracedView {
     @Environment(\.panelScrollFrame) var panelScrollFrame
+    @Environment(\.panelAppearance) var panelAppearance
     let context: Context, nodeId: UUID
 
-    @State private var popupState: PopupState?
+    @State private var activePopover: ActivePopover?
 
     @State private var frame: CGRect = .zero
 
@@ -160,7 +161,7 @@ private struct NodeDetailView: View, TracedView {
 // MARK: private
 
 private extension NodeDetailView {
-    enum PopupState {
+    enum ActivePopover {
         case controlIn, node, controlOut
     }
 
@@ -177,7 +178,12 @@ private extension NodeDetailView {
         .geometryReader { frame = $0.frame(in: .global) }
         .onChange(of: panelScrollFrame.contains(frame)) { _, contains in
             if !contains {
-                popupState = nil
+                activePopover = nil
+            }
+        }
+        .onChange(of: panelAppearance) { _, appearance in
+            if appearance != .floatingPrimary, appearance != .popoverSection {
+                activePopover = nil
             }
         }
     }
@@ -191,23 +197,23 @@ private extension NodeDetailView {
     var prevSegmentType: PathSegmentType? { context.path.nodeId(before: nodeId).map { context.pathProperty.segmentType(id: $0) }}
 
     @ViewBuilder var nodeButton: some View {
-        let isPresented = $popupState.predicate(.node, nil)
+        let isPresented = $activePopover.predicate(.node, nil)
         Button { isPresented.wrappedValue.toggle() } label: { nodeLabel }
             .tint(.label)
             .portal(isPresented: isPresented, configs: .init(align: .bottomCenter, gap: .init(squared: 6))) {
-                PathNodePopup(pathId: context.path.id, nodeId: nodeId)
+                PathNodePopover(pathId: context.path.id, nodeId: nodeId)
             }
     }
 
     @ViewBuilder func controlButton(isOut: Bool) -> some View {
         let disabled = (isOut ? context.path.nodeId(after: nodeId) : context.path.nodeId(before: nodeId)) == nil,
             align: PlaneOuterAlign = isOut ? .bottomInnerTrailing : .bottomInnerLeading,
-            isPresented = $popupState.predicate(isOut ? .controlOut : .controlIn, nil)
+            isPresented = $activePopover.predicate(isOut ? .controlOut : .controlIn, nil)
         Button { isPresented.wrappedValue.toggle() } label: { controlLabel(isOut: isOut) }
             .disabled(disabled)
             .tint(.label)
             .portal(isPresented: isPresented, configs: .init(align: align, gap: .init(squared: 6))) {
-                PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
+                PathCurvePopover(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
             }
     }
 

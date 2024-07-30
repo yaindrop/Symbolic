@@ -86,9 +86,9 @@
 		576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2642C048F6900353912 /* ActiveItemView.swift */; };
 		576BE2672C0828A000353912 /* View+Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2662C0828A000353912 /* View+Modifiers.swift */; };
 		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
-		578150472C57E2540057D798 /* PathCurvePopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathCurvePopup.swift */; };
+		578150472C57E2540057D798 /* PathCurvePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathCurvePopover.swift */; };
 		578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150482C5891AE0057D798 /* PathNodeThumbnail.swift */; };
-		5781504B2C5929500057D798 /* PathNodePopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504A2C5929500057D798 /* PathNodePopup.swift */; };
+		5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504A2C5929500057D798 /* PathNodePopover.swift */; };
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PanelRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PanelRow.swift */; };
@@ -234,9 +234,9 @@
 		576BE2642C048F6900353912 /* ActiveItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveItemView.swift; sourceTree = "<group>"; };
 		576BE2662C0828A000353912 /* View+Modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Modifiers.swift"; sourceTree = "<group>"; };
 		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
-		578150462C57E2540057D798 /* PathCurvePopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathCurvePopup.swift; sourceTree = "<group>"; };
+		578150462C57E2540057D798 /* PathCurvePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathCurvePopover.swift; sourceTree = "<group>"; };
 		578150482C5891AE0057D798 /* PathNodeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodeThumbnail.swift; sourceTree = "<group>"; };
-		5781504A2C5929500057D798 /* PathNodePopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodePopup.swift; sourceTree = "<group>"; };
+		5781504A2C5929500057D798 /* PathNodePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodePopover.swift; sourceTree = "<group>"; };
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PanelRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRow.swift; sourceTree = "<group>"; };
@@ -426,8 +426,8 @@
 		5724877A2BDF7F5F0096DDE4 /* PathPanel */ = {
 			isa = PBXGroup;
 			children = (
-				578150462C57E2540057D798 /* PathCurvePopup.swift */,
-				5781504A2C5929500057D798 /* PathNodePopup.swift */,
+				578150462C57E2540057D798 /* PathCurvePopover.swift */,
+				5781504A2C5929500057D798 /* PathNodePopover.swift */,
 				578150482C5891AE0057D798 /* PathNodeThumbnail.swift */,
 				575C3CF52BD60C200035B758 /* PathPanel.swift */,
 				5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */,
@@ -937,7 +937,7 @@
 				572CA9DA2C319E6B003760B7 /* DeletedFileBrowserView.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathService.swift in Sources */,
 				57E082132C27A8EC008CC67B /* FileTree.swift in Sources */,
-				578150472C57E2540057D798 /* PathCurvePopup.swift in Sources */,
+				578150472C57E2540057D798 /* PathCurvePopover.swift in Sources */,
 				578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */,
 				571B9B342C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift in Sources */,
 				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,
@@ -1001,7 +1001,7 @@
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
-				5781504B2C5929500057D798 /* PathNodePopup.swift in Sources */,
+				5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectionService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,
 				5774B1602BFD864300C53CDD /* Background.swift in Sources */,

@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - PathNodePopup
+// MARK: - PathNodePopover
 
-struct PathNodePopup: View, TracedView, ComputedSelectorHolder {
+struct PathNodePopover: View, TracedView, ComputedSelectorHolder {
     @Environment(\.portalId) var portalId
     let pathId: UUID, nodeId: UUID
 
@@ -23,7 +23,7 @@ struct PathNodePopup: View, TracedView, ComputedSelectorHolder {
 
 // MARK: private
 
-private extension PathNodePopup {
+private extension PathNodePopover {
     var node: PathNode? { selector.path?.node(id: nodeId) }
 
     var nodeType: PathNodeType? { selector.pathProperty?.nodeType(id: nodeId) }

@@ -25,6 +25,7 @@ struct PortalWrapper: View, TracedView, SelectorHolder {
 extension PortalWrapper {
     var content: some View {
         portal.view
+            .transaction { $0.animation = nil }
             .sizeReader { size = $0 }
             .transition(.scale(scale: 0, anchor: anchor).combined(with: .opacity))
             .position(box.center)

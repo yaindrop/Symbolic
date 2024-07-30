@@ -34,14 +34,12 @@ extension PathPanel {
 private extension PathPanel.Nodes {
     @ViewBuilder var content: some View {
         if let context {
-            let nodeIds = context.path.nodeIds
             PanelSection(name: "Nodes") {
-                VStack(spacing: 0) {
-                    ForEach(nodeIds) { nodeId in
-                        NodeRow(context: context, nodeId: nodeId)
-                        if nodeId != nodeIds.last {
-                            Divider().padding(.leading, 12)
-                        }
+                let nodeIds = context.path.nodeIds
+                ForEach(nodeIds) { nodeId in
+                    NodeRow(context: context, nodeId: nodeId)
+                    if nodeId != nodeIds.last {
+                        Divider().padding(.leading, 12)
                     }
                 }
             }
@@ -66,6 +64,11 @@ private struct NodeRow: View, TracedView {
 
     var body: some View { trace {
         content
+            .onChange(of: focused) {
+                if focused {
+                    withAnimation(.fast) { expanded = true }
+                }
+            }
     } }
 }
 
@@ -75,12 +78,9 @@ private extension NodeRow {
     var content: some View {
         VStack(spacing: 0) {
             row
-            detail
-                .frame(height: expanded ? nil : 0, alignment: .top)
-                .clipped()
-        }
-        .onChange(of: focused) {
-            withAnimation(.fast) { expanded = focused }
+            if expanded {
+                detail
+            }
         }
     }
 
@@ -126,7 +126,12 @@ private extension NodeRow {
     }
 
     func toggleFocus() {
-        focused ? global.focusedPath.clear() : global.focusedPath.setFocus(node: nodeId)
+        if focused {
+            withAnimation(.fast) { expanded = false }
+            global.focusedPath.clear()
+        } else {
+            global.focusedPath.setFocus(node: nodeId)
+        }
     }
 
     @ViewBuilder var detail: some View {
@@ -158,11 +163,11 @@ private struct NodeDetailView: View, TracedView {
 private extension NodeDetailView {
     var content: some View {
         HStack(spacing: 0) {
-            buttonIn
+            controlButton(isOut: false)
             buttonDivider
-            buttonNode
+            nodeButton
             buttonDivider
-            buttonOut
+            controlButton(isOut: true)
         }
         .background(.ultraThickMaterial)
         .clipRounded(radius: 12)
@@ -176,43 +181,33 @@ private extension NodeDetailView {
 
     var prevSegmentType: PathSegmentType? { context.path.nodeId(before: nodeId).map { context.pathProperty.segmentType(id: $0) }}
 
-    @ViewBuilder var buttonIn: some View {
-        var disabled: Bool { context.path.nodeId(before: nodeId) == nil }
-        Button { showPopupIn.toggle() } label: { labelControl(isOut: false) }
-            .disabled(disabled)
-            .tint(.label)
-            .portal(isPresented: $showPopupIn, configs: .init(isModal: true, align: .bottomInnerLeading, gap: .init(squared: 6))) {
-                PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: false)
-            }
-    }
-
-    @ViewBuilder var buttonNode: some View {
-        Button { showPopupNode.toggle() } label: { labelNode }
+    @ViewBuilder var nodeButton: some View {
+        Button { showPopupNode.toggle() } label: { nodeLabel }
             .tint(.label)
             .portal(isPresented: $showPopupNode, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
                 Text("Hello node button").padding().background(.regularMaterial)
             }
     }
 
-    @ViewBuilder var buttonOut: some View {
-        var disabled: Bool { context.path.nodeId(after: nodeId) == nil }
-        Button { showPopupOut.toggle() } label: { labelControl(isOut: true) }
+    @ViewBuilder func controlButton(isOut: Bool) -> some View {
+        let disabled = (isOut ? context.path.nodeId(after: nodeId) : context.path.nodeId(before: nodeId)) == nil,
+            align: PlaneOuterAlign = isOut ? .bottomInnerTrailing : .bottomInnerLeading
+        Button { isOut ? showPopupOut.toggle() : showPopupIn.toggle() } label: { controlLabel(isOut: isOut) }
             .disabled(disabled)
             .tint(.label)
-            .portal(isPresented: $showPopupOut, configs: .init(isModal: true, align: .bottomInnerTrailing, gap: .init(squared: 6))) {
-                PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: true)
+            .portal(isPresented: isOut ? $showPopupOut : $showPopupIn, configs: .init(isModal: true, align: align, gap: .init(squared: 6))) {
+                PathCurvePopup(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
             }
     }
 
-    @ViewBuilder var buttonDivider: some View {
+    var buttonDivider: some View {
         Divider().padding(6)
     }
 
-    @ViewBuilder var labelNode: some View {
+    @ViewBuilder var nodeLabel: some View {
         let color = focused ? Color.blue : .label
         VStack(spacing: 0) {
-            Image(systemName: "smallcircle.filled.circle")
-                .frame(size: .init(squared: 20))
+            PathNodeThumbnail(path: context.path, pathProperty: context.pathProperty, nodeId: nodeId)
             Spacer()
             labelTitle(name: "Node", subname: nodeId.shortDescription)
                 .font(.caption)
@@ -223,23 +218,22 @@ private extension NodeDetailView {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    @ViewBuilder func labelControl(isOut: Bool) -> some View {
+    @ViewBuilder func controlLabel(isOut: Bool) -> some View {
         let disabled = isOut ? context.path.nodeId(after: nodeId) == nil : context.path.nodeId(before: nodeId) == nil,
             color = disabled ? Color.label.opacity(0.5) : !focused ? .label : isOut ? .green : .orange,
             segmentType = isOut ? segmentType : prevSegmentType,
             control = isOut ? node?.controlOut : node?.controlIn
-        var activeSegmentType: PathSegmentType? {
-            guard let segmentType else { return nil }
-            guard segmentType != .auto else { return control == .zero ? .line : .cubic }
-            return segmentType
-        }
         var name: String {
-            guard let activeSegmentType else { return "Terminal" }
-            return activeSegmentType.name
+            guard !disabled,
+                  let control,
+                  let segmentType = segmentType?.activeType(control: control) else { return "Terminal" }
+            return segmentType.name
         }
         var image: String {
-            guard let activeSegmentType else { return "circle.slash" }
-            switch activeSegmentType {
+            guard !disabled,
+                  let control,
+                  let segmentType = segmentType?.activeType(control: control) else { return "circle.slash" }
+            switch segmentType {
             case .line: return "line.diagonal"
             default: return "point.topleft.down.to.point.bottomright.curvepath"
             }
@@ -263,15 +257,6 @@ private extension NodeDetailView {
             Text(subname)
                 .font(.system(size: 8).monospaced())
                 .baselineOffset(-4)
-        }
-    }
-
-    func updateNode(position: Point2? = nil, controlIn: Vector2? = nil, controlOut: Vector2? = nil, pending: Bool = false) {
-        if var node {
-            position.map { node.position = $0 }
-            controlIn.map { node.controlIn = $0 }
-            controlOut.map { node.controlOut = $0 }
-            global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
         }
     }
 }

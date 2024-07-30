@@ -46,6 +46,10 @@ extension PathSegmentType {
         case .quadratic: "Quad"
         }
     }
+
+    func activeType(control: Vector2) -> Self {
+        self != .auto ? self : control == .zero ? .line : .cubic
+    }
 }
 
 extension PathSegmentType: CustomStringConvertible {

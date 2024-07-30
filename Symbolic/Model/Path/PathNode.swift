@@ -123,6 +123,10 @@ extension PathSegment: SUPathAppendable {
         }
         path.addCurve(to: to, control1: fromOut, control2: toIn)
     }
+
+    var boundingRect: CGRect {
+        SUPath { append(to: &$0) }.boundingRect
+    }
 }
 
 // MARK: ParamSplittable

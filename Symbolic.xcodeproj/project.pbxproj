@@ -38,7 +38,7 @@
 		5723BFA62BC39865002209F2 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5723BFA52BC39865002209F2 /* CanvasView.swift */; };
 		57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57241FA22C228A3400FB0E29 /* PanelPopover.swift */; };
 		572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487752BDBAF860096DDE4 /* DocumentUpdater.swift */; };
-		5724877C2BDF80000096DDE4 /* PathPanel+NodeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */; };
+		5724877C2BDF80000096DDE4 /* PathPanel+Nodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */; };
 		572487832BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487822BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift */; };
 		572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift */; };
 		572487872BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487862BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift */; };
@@ -87,6 +87,7 @@
 		576BE2672C0828A000353912 /* View+Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2662C0828A000353912 /* View+Modifiers.swift */; };
 		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
 		578150472C57E2540057D798 /* PathCurvePopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathCurvePopup.swift */; };
+		578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150482C5891AE0057D798 /* PathNodeThumbnail.swift */; };
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PanelRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PanelRow.swift */; };
@@ -184,7 +185,7 @@
 		5723BFA52BC39865002209F2 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		57241FA22C228A3400FB0E29 /* PanelPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelPopover.swift; sourceTree = "<group>"; };
 		572487752BDBAF860096DDE4 /* DocumentUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentUpdater.swift; sourceTree = "<group>"; };
-		5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+NodeRow.swift"; sourceTree = "<group>"; };
+		5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+Nodes.swift"; sourceTree = "<group>"; };
 		572487822BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+NodeHandles.swift"; sourceTree = "<group>"; };
 		572487842BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SegmentHandles.swift"; sourceTree = "<group>"; };
 		572487862BDF83620096DDE4 /* FocusedPathView+BezierHandles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+BezierHandles.swift"; sourceTree = "<group>"; };
@@ -233,6 +234,7 @@
 		576BE2662C0828A000353912 /* View+Modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Modifiers.swift"; sourceTree = "<group>"; };
 		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		578150462C57E2540057D798 /* PathCurvePopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathCurvePopup.swift; sourceTree = "<group>"; };
+		578150482C5891AE0057D798 /* PathNodeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodeThumbnail.swift; sourceTree = "<group>"; };
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PanelRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelRow.swift; sourceTree = "<group>"; };
@@ -423,8 +425,9 @@
 			isa = PBXGroup;
 			children = (
 				578150462C57E2540057D798 /* PathCurvePopup.swift */,
+				578150482C5891AE0057D798 /* PathNodeThumbnail.swift */,
 				575C3CF52BD60C200035B758 /* PathPanel.swift */,
-				5724877B2BDF80000096DDE4 /* PathPanel+NodeRow.swift */,
+				5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */,
 			);
 			path = PathPanel;
 			sourceTree = "<group>";
@@ -895,7 +898,7 @@
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* VectorPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
-				5724877C2BDF80000096DDE4 /* PathPanel+NodeRow.swift in Sources */,
+				5724877C2BDF80000096DDE4 /* PathPanel+Nodes.swift in Sources */,
 				571B9B322C14A71600AAD516 /* ContextMenuView.swift in Sources */,
 				573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */,
 				571B9B452C14AA4500AAD516 /* String+Extension.swift in Sources */,
@@ -908,6 +911,7 @@
 				571B9B382C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift in Sources */,
 				571B9B432C14AA1200AAD516 /* ClosedRange+Extension.swift in Sources */,
 				5700C2D12BEF0F0A00481FA7 /* AddingPathService.swift in Sources */,
+				578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */,
 				57E082152C27B1F7008CC67B /* CancellablesHolder.swift in Sources */,
 				572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */,
 				57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */,

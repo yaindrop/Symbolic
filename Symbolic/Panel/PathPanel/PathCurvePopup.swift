@@ -37,6 +37,8 @@ private extension PathCurvePopup {
 
     var toNodeId: UUID? { isOut ? selector.path?.nodeId(after: nodeId) : nodeId }
 
+    var segment: PathSegment? { fromNodeId.map { selector.path?.segment(fromId: $0) } }
+
     @ViewBuilder var content: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
@@ -45,7 +47,7 @@ private extension PathCurvePopup {
                 Spacer()
             }
             .padding(12)
-            .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.1), radius: 6)))
+            .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.05), radius: 6)))
             VStack(spacing: 0) {
                 PanelRow(name: "Control") {
                     let value = isOut ? node?.controlOut : node?.controlIn
@@ -55,7 +57,14 @@ private extension PathCurvePopup {
                 }
                 Divider()
                 PanelRow(name: "Segment") {
-                    segmentIcon
+                    Button {
+                        guard let fromNodeId,
+                              let segment else { return }
+                        global.viewportUpdater.zoomTo(rect: segment.boundingRect.outset(by: 32))
+                        global.focusedPath.setFocus(segment: fromNodeId)
+                    } label: {
+                        segmentIcon
+                    }
                 }
                 Divider()
                 PanelRow(name: "Type") {
@@ -66,11 +75,21 @@ private extension PathCurvePopup {
                 }
                 Divider()
                 PanelRow {
-                    Button("Split", systemImage: "square.split.diagonal") {}
-                        .font(.footnote)
+                    Button("Split", systemImage: "square.split.diagonal") {
+                        guard let fromNodeId,
+                              let segment else { return }
+                        let paramT = segment.tessellated().approxPathParamT(lineParamT: 0.5).t
+                        let id = UUID()
+                        global.documentUpdater.update(focusedPath: .splitSegment(.init(fromNodeId: fromNodeId, paramT: paramT, newNodeId: id, offset: .zero)))
+                        global.focusedPath.setFocus(node: id)
+                    }
+                    .font(.footnote)
                     Spacer()
-                    Button("Delete", systemImage: "trash", role: .destructive) {}
-                        .font(.footnote)
+                    Button("Break", systemImage: "scissors", role: .destructive) {
+                        guard let fromNodeId else { return }
+                        global.documentUpdater.update(path: .breakAtSegment(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
+                    }
+                    .font(.footnote)
                 }
             }
             .padding(.horizontal, 12)

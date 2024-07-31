@@ -54,11 +54,19 @@ private extension PathNodePopover {
                 }
                 Divider()
                 PanelRow {
-                    Button("Break", systemImage: "scissors", role: .destructive) { breakNode() }
+                    Button("Focus", systemImage: "scope") { focusNode() }
                         .font(.footnote)
                     Spacer()
-                    Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-                        .font(.footnote)
+                    Menu("More", systemImage: "ellipsis") {
+                        Label("\(nodeId)", systemImage: "number")
+                        Divider()
+                        Button("Break", systemImage: "scissors", role: .destructive) { breakNode() }
+                            .font(.footnote)
+                        Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
+                            .font(.footnote)
+                    }
+                    .menuOrder(.fixed)
+                    .font(.footnote)
                 }
             }
             .padding(.horizontal, 12)

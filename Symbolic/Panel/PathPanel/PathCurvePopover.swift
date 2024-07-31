@@ -72,11 +72,17 @@ private extension PathCurvePopover {
                 }
                 Divider()
                 PanelRow {
-                    Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
+                    Button("Focus", systemImage: "scope") { focusSegment() }
                         .font(.footnote)
                     Spacer()
-                    Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
-                        .font(.footnote)
+                    Menu("More", systemImage: "ellipsis") {
+                        Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
+                        Button("Merge", systemImage: "arrow.left.to.line") {}
+                        Divider()
+                        Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
+                    }
+                    .menuOrder(.fixed)
+                    .font(.footnote)
                 }
             }
             .padding(.horizontal, 12)

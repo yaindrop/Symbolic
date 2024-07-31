@@ -64,11 +64,6 @@ private struct NodeRow: View, TracedView {
 
     var body: some View { trace {
         content
-            .onChange(of: focused) {
-                if focused {
-                    withAnimation(.fast) { expanded = true }
-                }
-            }
     } }
 }
 
@@ -78,8 +73,11 @@ private extension NodeRow {
     var content: some View {
         VStack(spacing: 0) {
             row
-            if expanded {
-                detail
+            detail
+        }
+        .onChange(of: focused) {
+            if focused {
+                withAnimation(.fast) { expanded = true }
             }
         }
     }
@@ -110,12 +108,8 @@ private extension NodeRow {
 
     @ViewBuilder var expandButton: some View {
         Memo {
-            Button {
-                withAnimation(.fast) { expanded.toggle() }
-            } label: {
-                expandIcon
-            }
-            .tint(.label)
+            Button { toggleExpanded() } label: { expandIcon }
+                .tint(.label)
         } deps: { expanded }
     }
 
@@ -123,6 +117,13 @@ private extension NodeRow {
         Image(systemName: expanded ? "chevron.up" : "chevron.down")
             .padding(12)
             .frame(maxHeight: .infinity)
+    }
+
+    @ViewBuilder var detail: some View {
+        if expanded {
+            NodeDetailView(context: context, nodeId: nodeId)
+                .padding(12)
+        }
     }
 
     func toggleFocus() {
@@ -134,11 +135,8 @@ private extension NodeRow {
         }
     }
 
-    @ViewBuilder var detail: some View {
-        if expanded {
-            NodeDetailView(context: context, nodeId: nodeId)
-                .padding(12)
-        }
+    func toggleExpanded() {
+        withAnimation(.fast) { expanded.toggle() }
     }
 }
 

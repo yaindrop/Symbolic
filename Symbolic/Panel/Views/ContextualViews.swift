@@ -28,6 +28,8 @@ struct ContextualRow<Content: View>: View, TracedView {
     @Environment(\.contextualViewData) var data
 
     var label: String? = nil
+    var limited: Bool = true
+    var padding: EdgeInsets?
     @ViewBuilder let rowContent: () -> Content
 
     var body: some View { trace("body, label: \(label ?? "nil")") {
@@ -47,9 +49,9 @@ private extension ContextualRow {
             }
             rowContent()
         }
-        .frame(height: data.rowHeight)
+        .frame(height: limited ? data.rowHeight : nil)
         .border(debugContextualViews ? .blue : .clear)
-        .padding(data.rowPadding)
+        .padding(padding ?? data.rowPadding)
         .background(debugContextualViews ? .blue.opacity(0.1) : .clear)
     }
 }

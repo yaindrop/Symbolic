@@ -38,6 +38,8 @@ extension ItemPanel.ItemRow {
 // MARK: - GroupRow
 
 private struct GroupRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
+    @Environment(\.contextualViewData) var contextualViewData
+
     let group: ItemGroup
 
     var equatableBy: some Equatable { group }
@@ -62,30 +64,36 @@ private struct GroupRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
 
 private extension GroupRow {
     var content: some View {
-        VStack(spacing: 0) {
-            row
-            if expanded {
-                members
+        ContextualRow(limited: false, padding: rowPadding) {
+            VStack(spacing: 6) {
+                HStack {
+                    name
+                    Spacer()
+                    menu
+                }
+                .frame(height: rowHeight)
+                .padding(.trailing, contextualViewData.rowPadding.trailing)
+                if expanded {
+                    members
+                }
             }
         }
     }
 
-    var row: some View {
-        HStack {
-            name
-            Spacer()
-            menu
-        }
+    var rowHeight: Scalar { contextualViewData.rowHeight }
+
+    var rowPadding: EdgeInsets {
+        var rowPadding = contextualViewData.rowPadding
+        rowPadding.trailing = 0
+        return rowPadding
     }
 
     var name: some View {
-        HStack {
+        HStack(spacing: 6) {
             expandButton
-                .padding(4)
             Text(group.id.shortDescription)
-                .font(.subheadline)
         }
-        .padding(12)
+        .contextualFont()
     }
 
     var expandButton: some View {
@@ -93,7 +101,7 @@ private extension GroupRow {
             withAnimation { expanded.toggle() }
         } label: {
             Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                .frame(width: 24, height: 24)
+                .frame(maxHeight: .infinity)
         }
         .tint(.label)
     }
@@ -103,24 +111,25 @@ private extension GroupRow {
             Button("some action") {}
         } label: {
             Image(systemName: "ellipsis")
-                .padding(.horizontal, 12)
                 .frame(maxHeight: .infinity)
         }
         .tint(.label)
+        .contextualFont()
     }
 
     var members: some View {
-        HStack(spacing: 0) {
-            VStack {
-                ForEach(group.members) {
-                    ItemPanel.ItemRow(itemId: $0)
-                        .id($0)
+        VStack(spacing: 0) {
+            ForEach(group.members) {
+                ItemPanel.ItemRow(itemId: $0)
+                    .id($0)
+                if $0 != group.members.last {
+                    ContextualDivider()
                 }
             }
-            .background(selector.depth % 2 == 0 ? Color.tertiarySystemBackground : Color.secondarySystemBackground)
-            .clipRounded(radius: 12)
-            .padding(.leading, 12)
         }
+        .background(selector.depth % 2 == 0 ? Color.tertiarySystemBackground : Color.secondarySystemBackground)
+        .clipRounded(radius: 12)
+        .padding(.leading, 6)
     }
 }
 
@@ -155,7 +164,7 @@ private extension PathRow {
 
         var body: some View { trace {
             Rectangle()
-                .opacity(.zero)
+                .fill(.clear)
                 .overlay {
                     SUPath { path.append(to: &$0) }
                         .transform(.init(fit: path.boundingRect, to: .init(size)))
@@ -167,7 +176,7 @@ private extension PathRow {
     }
 
     @ViewBuilder var content: some View {
-        HStack {
+        ContextualRow {
             name
             Spacer()
             menu
@@ -176,13 +185,11 @@ private extension PathRow {
 
     @ViewBuilder var name: some View {
         if let path = selector.path {
-            HStack {
+            HStack(spacing: 6) {
                 PathThumbnail(path: path)
-                    .padding(4)
                 Text(pathId.shortDescription)
-                    .font(.subheadline)
             }
-            .padding(12)
+            .contextualFont()
         }
     }
 
@@ -191,9 +198,9 @@ private extension PathRow {
             Button("some action") {}
         } label: {
             Image(systemName: "ellipsis")
-                .padding(.horizontal, 12)
                 .frame(maxHeight: .infinity)
         }
         .tint(.label)
+        .contextualFont()
     }
 }

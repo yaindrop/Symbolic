@@ -156,14 +156,17 @@ extension FocusedPathService {
 
     func toggleSelectingNodes() {
         let _r = subtracer.range(type: .intent, "toggleSelectingNodes from \(selectingNodes)"); defer { _r() }
-        if selectingNodes {
-            clear()
-        } else {
-            store.update(selectingNodes: true)
+        withStoreUpdating(configs: .init(animation: .fast)) {
+            if selectingNodes {
+                clear()
+            } else {
+                store.update(selectingNodes: true)
+            }
         }
     }
 
     func toggleSelection(nodeIds: [UUID]) {
+        let _r = subtracer.range(type: .intent, "toggleSelection of \(nodeIds)"); defer { _r() }
         if activeNodeIds.isSuperset(of: nodeIds) {
             selectRemove(node: nodeIds)
         } else {

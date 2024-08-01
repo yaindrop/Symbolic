@@ -77,7 +77,7 @@ private extension PathNodePopover {
         global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
     }
 
-    func update(nodeType _: PathNodeType) {
+    func update(nodeType: PathNodeType) {
         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: [nodeId], nodeType: nodeType)))))
     }
 

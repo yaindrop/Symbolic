@@ -85,11 +85,9 @@ private extension NodeRow {
         }
         .onChange(of: focused) {
             if focused {
-                expanded = true
+                withAnimation(.fast) { expanded = true }
             }
         }
-        .animation(.fast, value: expanded)
-        .animation(.fast, value: context.selectingNodes)
     }
 
     var focused: Bool { context.focusedNodeId == nodeId }
@@ -141,7 +139,7 @@ private extension NodeRow {
 
     func toggleFocus() {
         if focused {
-            expanded = false
+            withAnimation(.fast) { expanded = false }
             global.focusedPath.clear()
         } else {
             global.focusedPath.setFocus(node: nodeId)
@@ -149,7 +147,7 @@ private extension NodeRow {
     }
 
     func toggleExpanded() {
-        expanded.toggle()
+        withAnimation(.fast) { expanded.toggle() }
     }
 
     func toggleSelection() {

@@ -43,6 +43,10 @@ private extension PathNodeThumbnail {
 
     var size: CGSize { .init(20, 20) }
 
+    var node: PathNode? { path.node(id: nodeId) }
+
+    var nodeType: PathNodeType { pathProperty.nodeType(id: nodeId) }
+
     var segmentsPath: SUPath {
         SUPath {
             if let prevNodeId = path.nodeId(before: nodeId) {
@@ -58,7 +62,7 @@ private extension PathNodeThumbnail {
 
     var controlInPath: SUPath {
         SUPath {
-            guard let node = path.node(id: nodeId) else { return }
+            guard let node else { return }
             $0.move(to: node.position)
             $0.addLine(to: node.positionIn)
         }
@@ -66,7 +70,7 @@ private extension PathNodeThumbnail {
 
     var controlOutPath: SUPath {
         SUPath {
-            guard let node = path.node(id: nodeId) else { return }
+            guard let node else { return }
             $0.move(to: node.position)
             $0.addLine(to: node.positionOut)
         }
@@ -74,27 +78,18 @@ private extension PathNodeThumbnail {
 
     func nodePath(_ transform: CGAffineTransform) -> SUPath {
         SUPath {
-            guard let node = path.node(id: nodeId) else { return }
+            guard let node else { return }
             let rect = CGRect(center: node.position.applying(transform), size: .init(squared: 4))
-            switch pathProperty.nodeType(id: nodeId) {
-            case .corner: $0.addRoundedRect(in: rect, cornerSize: .init(squared: 1))
-            case .locked, .mirrored: $0.addEllipse(in: rect)
-            }
+            $0.addRoundedRect(in: rect, cornerSize: .init(squared: nodeType == .corner ? 1 : 2))
         }
     }
 
     var border: AnyShape {
-        switch pathProperty.nodeType(id: nodeId) {
-        case .corner: .init(RoundedRectangle(cornerRadius: 4))
-        case .locked, .mirrored: .init(Circle())
-        }
+        .init(RoundedRectangle(cornerRadius: nodeType == .corner ? 4 : size.width / 2))
     }
 
     var borderLineWidth: Scalar {
-        switch pathProperty.nodeType(id: nodeId) {
-        case .corner, .locked: 1
-        case .mirrored: 2
-        }
+        nodeType == .mirrored ? 2 : 1
     }
 }
 

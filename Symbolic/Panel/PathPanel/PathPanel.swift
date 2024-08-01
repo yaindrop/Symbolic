@@ -25,7 +25,8 @@ struct PathPanel: View, TracedView, SelectorHolder {
 private extension PathPanel {
     @ViewBuilder var content: some View {
         if let path = selector.path {
-            Nodes(pathId: path.id)
+            Properties()
+            Nodes()
                 .onChange(of: selector.focusedNodeId) {
                     guard let id = selector.focusedNodeId else { return }
                     withAnimation(.easeInOut(duration: 0.2)) { panelScrollProxy?.scrollTo(id, anchor: .center) }

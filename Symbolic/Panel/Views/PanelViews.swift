@@ -56,3 +56,40 @@ private extension PanelSectionBackground {
             .clipRounded(radius: 12)
     }
 }
+
+// MARK: - PanelSectionRow
+
+struct PanelSectionRow<Content: View>: View, TracedView {
+    var label: String? = nil
+    @ViewBuilder let rowContent: () -> Content
+
+    var body: some View { trace {
+        content
+    } }
+}
+
+// MARK: private
+
+private extension PanelSectionRow {
+    @ViewBuilder var content: some View {
+        HStack {
+            if let label {
+                Text(label)
+                    .font(.callout)
+                Spacer()
+            }
+            rowContent()
+        }
+        .frame(height: 36)
+        .padding(size: .init(12, 6))
+    }
+}
+
+// MARK: - PanelSectionDivider
+
+struct PanelSectionDivider: View {
+    var body: some View {
+        Divider()
+            .padding(.leading, 12)
+    }
+}

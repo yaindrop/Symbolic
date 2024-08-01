@@ -9,20 +9,17 @@ private struct Context {
 // MARK: - Nodes
 
 extension PathPanel {
-    struct Nodes: View, ComputedSelectorHolder {
-        let pathId: UUID
-
-        struct SelectorProps: Equatable { let pathId: UUID }
+    struct Nodes: View, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.path.get(id: $0.pathId) }) var path
-            @Selected({ global.pathProperty.get(id: $0.pathId) }) var pathProperty
+            @Selected({ global.activeItem.focusedPath }) var path
+            @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
         }
 
         @SelectorWrapper var selector
 
         var body: some View {
-            setupSelector(.init(pathId: pathId)) {
+            setupSelector {
                 content
             }
         }
@@ -98,7 +95,7 @@ private extension NodeRow {
             HStack {
                 Image(systemName: "smallcircle.filled.circle")
                 Text("\(nodeId.shortDescription)")
-                    .font(.subheadline)
+                    .font(.callout)
             }
             .foregroundStyle(focused ? .blue : .label)
             .padding(12)

@@ -41,48 +41,39 @@ private extension PathCurvePopover {
     var segment: PathSegment? { fromNodeId.map { selector.path?.segment(fromId: $0) } }
 
     @ViewBuilder var content: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                curveIcon
-                Spacer()
-                Button("Done") { done() }
-                    .font(.callout)
+        PopoverBody {
+            curveIcon
+            Spacer()
+            Button("Done") { done() }
+                .font(.callout)
+        } popoverContent: {
+            PopoverRow(label: "Control") {
+                let value = isOut ? node?.controlOut : node?.controlIn
+                VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
+                    .background(.ultraThickMaterial)
+                    .clipRounded(radius: 6)
             }
-            .padding(12)
-            .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.05), radius: 6)))
-            VStack(spacing: 0) {
-                PanelRow(name: "Control") {
-                    let value = isOut ? node?.controlOut : node?.controlIn
-                    VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
-                        .background(.ultraThickMaterial)
-                        .clipRounded(radius: 6)
-                }
-                Divider()
-                PanelRow(name: "Type") {
-                    CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
-                        .background(.ultraThickMaterial)
-                        .clipRounded(radius: 6)
-                }
-                Divider()
-                PanelRow {
-                    Button("Focus", systemImage: "scope") { focusSegment() }
-                        .font(.footnote)
-                    Spacer()
-                    Menu("More", systemImage: "ellipsis") {
-                        Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
-                        Button("Merge", systemImage: "arrow.left.to.line") {}
-                        Divider()
-                        Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
-                    }
-                    .menuOrder(.fixed)
+            PopoverDivider()
+            PopoverRow(label: "Type") {
+                CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
+                    .background(.ultraThickMaterial)
+                    .clipRounded(radius: 6)
+            }
+            PopoverDivider()
+            PopoverRow {
+                Button("Focus", systemImage: "scope") { focusSegment() }
                     .font(.footnote)
+                Spacer()
+                Menu("More", systemImage: "ellipsis") {
+                    Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
+                    Button("Merge", systemImage: "arrow.left.to.line") {}
+                    Divider()
+                    Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
                 }
+                .menuOrder(.fixed)
+                .font(.footnote)
             }
-            .padding(.horizontal, 12)
         }
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-        .frame(maxWidth: 240)
     }
 
     @ViewBuilder var curveIcon: some View {

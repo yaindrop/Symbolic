@@ -1,30 +1,5 @@
 import SwiftUI
 
-private struct ConfigsRow<Content: View>: View {
-    var label: String? = nil
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        HStack {
-            if let label {
-                Text(label)
-                    .font(.callout)
-                Spacer()
-            }
-            content()
-        }
-        .frame(height: 36)
-        .padding(size: .init(12, 6))
-    }
-}
-
-private struct ConfigsDivider: View {
-    var body: some View {
-        Divider()
-            .padding(.leading, 12)
-    }
-}
-
 // MARK: - Configs
 
 extension GridPanel {
@@ -69,28 +44,22 @@ extension GridPanel {
 private extension GridPanel.Configs {
     @ViewBuilder var content: some View {
         colorRow
-
-        Divider()
-
+        PanelSectionDivider()
         typeRow
-
-        Divider()
-
+        PanelSectionDivider()
         kindConfigs
-
-        Divider()
-
+        PanelSectionDivider()
         editRow
     }
 
     var colorRow: some View {
-        ConfigsRow(label: "Color") {
+        PanelSectionRow(label: "Color") {
             ColorPicker("", selection: $tintColor)
         }
     }
 
     var typeRow: some View {
-        ConfigsRow(label: "Type") {
+        PanelSectionRow(label: "Type") {
             Picker("", selection: $gridCase) {
                 Text("Cartesian").tag(Grid.Case.cartesian)
                 Text("Isometric").tag(Grid.Case.isometric)
@@ -108,7 +77,7 @@ private extension GridPanel.Configs {
     }
 
     var editRow: some View {
-        ConfigsRow {
+        PanelSectionRow {
             Button(role: .destructive) {
                 global.grid.delete()
             } label: {
@@ -167,7 +136,7 @@ private extension GridPanel.Configs.Cartesian {
     }
 
     var intervalRow: some View {
-        ConfigsRow(label: "Interval") {
+        PanelSectionRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -220,18 +189,14 @@ private extension GridPanel.Configs.Isometric {
 
     @ViewBuilder var content: some View {
         intervalRow
-
-        ConfigsDivider()
-
+        PanelSectionDivider()
         angle0Row
-
-        ConfigsDivider()
-
+        PanelSectionDivider()
         angle1Row
     }
 
     var intervalRow: some View {
-        ConfigsRow(label: "Interval") {
+        PanelSectionRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -244,7 +209,7 @@ private extension GridPanel.Configs.Isometric {
     }
 
     var angle0Row: some View {
-        ConfigsRow(label: "Angle 0") {
+        PanelSectionRow(label: "Angle 0") {
             Slider(
                 value: $angle0,
                 in: -90 ... 90,
@@ -256,7 +221,7 @@ private extension GridPanel.Configs.Isometric {
     }
 
     var angle1Row: some View {
-        ConfigsRow(label: "Angle 1") {
+        PanelSectionRow(label: "Angle 1") {
             Slider(
                 value: $angle1,
                 in: -90 ... 90,

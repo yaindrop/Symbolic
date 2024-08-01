@@ -29,50 +29,38 @@ private extension PathNodePopover {
     var nodeType: PathNodeType? { selector.pathProperty?.nodeType(id: nodeId) }
 
     @ViewBuilder var content: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                nodeIcon
-                Spacer()
-                Button("Done") { done() }
-                    .font(.callout)
+        PopoverBody {
+            nodeIcon
+            Spacer()
+            Button("Done") { done() }
+                .font(.callout)
+        } popoverContent: {
+            PopoverRow(label: "Position") {
+                VectorPicker(value: .init(node?.position ?? .zero)) { update(value: $0, pending: true) } onDone: { update(value: $0) }
+                    .background(.ultraThickMaterial)
+                    .clipRounded(radius: 6)
             }
-            .padding(12)
-            .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.05), radius: 6)))
-            VStack(spacing: 0) {
-                PanelRow(name: "Position") {
-                    VectorPicker(value: .init(node?.position ?? .zero)) { update(value: $0, pending: true) } onDone: { update(value: $0) }
-                        .background(.ultraThickMaterial)
-                        .clipRounded(radius: 6)
-                }
-                Divider()
-                PanelRow(name: "Type") {
-                    CasePicker<PathNodeType>(cases: [.corner, .locked, .mirrored], value: nodeType ?? .corner) { $0.name } onValue: { update(nodeType: $0) }
-                        .background(.ultraThickMaterial)
-                        .clipRounded(radius: 6)
-                        .animation(nil, value: nodeType)
-                }
-                Divider()
-                PanelRow {
-                    Button("Focus", systemImage: "scope") { focusNode() }
-                        .font(.footnote)
-                    Spacer()
-                    Menu("More", systemImage: "ellipsis") {
-                        Label("\(nodeId)", systemImage: "number")
-                        Divider()
-                        Button("Break", systemImage: "scissors", role: .destructive) { breakNode() }
-                            .font(.footnote)
-                        Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-                            .font(.footnote)
-                    }
-                    .menuOrder(.fixed)
+            PopoverDivider()
+            PopoverRow(label: "Type") {
+                CasePicker<PathNodeType>(cases: [.corner, .locked, .mirrored], value: nodeType ?? .corner) { $0.name } onValue: { update(nodeType: $0) }
+                    .background(.ultraThickMaterial)
+                    .clipRounded(radius: 6)
+            }
+            PopoverDivider()
+            PopoverRow {
+                Button("Focus", systemImage: "scope") { focusNode() }
                     .font(.footnote)
+                Spacer()
+                Menu("More", systemImage: "ellipsis") {
+                    Label("\(nodeId)", systemImage: "number")
+                    Divider()
+                    Button("Break", systemImage: "scissors", role: .destructive) { breakNode() }
+                    Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
                 }
+                .menuOrder(.fixed)
+                .font(.footnote)
             }
-            .padding(.horizontal, 12)
         }
-        .background(.ultraThinMaterial)
-        .clipRounded(radius: 12)
-        .frame(maxWidth: 240)
     }
 
     var nodeIcon: some View {

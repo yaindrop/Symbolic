@@ -23,47 +23,20 @@ private extension PopoverBody {
             .background(.ultraThickMaterial.shadow(.drop(color: .label.opacity(0.05), radius: 6)))
             VStack(spacing: 0) {
                 popoverContent()
+                    .environment(\.contextualViewData, contextualViewData)
             }
         }
         .background(.ultraThinMaterial)
         .clipRounded(radius: 12)
         .frame(maxWidth: 240)
     }
-}
 
-// MARK: - PopoverRow
-
-struct PopoverRow<Content: View>: View, TracedView {
-    var label: String? = nil
-    @ViewBuilder let rowContent: () -> Content
-
-    var body: some View { trace {
-        content
-    } }
-}
-
-// MARK: private
-
-private extension PopoverRow {
-    @ViewBuilder var content: some View {
-        HStack {
-            if let label {
-                Text(label)
-                    .font(.footnote)
-                Spacer()
-            }
-            rowContent()
-        }
-        .frame(height: 32)
-        .padding(size: .init(12, 6))
-    }
-}
-
-// MARK: - PopoverDivider
-
-struct PopoverDivider: View {
-    var body: some View {
-        Divider()
-            .padding(.leading, 12)
+    var contextualViewData: ContextualViewData {
+        .init(
+            labelFont: .footnote,
+            rowHeight: 32,
+            rowPadding: .init(top: 6, leading: 12, bottom: 6, trailing: 12),
+            dividerPadding: .init(top: 0, leading: 12, bottom: 0, trailing: 0)
+        )
     }
 }

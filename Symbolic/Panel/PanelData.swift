@@ -49,7 +49,7 @@ struct MovingPanelData: Equatable {
 
 extension MovingPanelData: TriviallyCloneable {}
 
-// MARK: - enviroments
+// MARK: - environments
 
 private struct PanelIdKey: EnvironmentKey {
     static let defaultValue: UUID = .init()

@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - DebugPanel
+
 struct DebugPanel: View, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.viewport.info }) var viewportInfo
@@ -14,6 +16,8 @@ struct DebugPanel: View, SelectorHolder {
     }
 }
 
+// MARK: private
+
 private extension DebugPanel {
     @ViewBuilder var content: some View {
         viewport
@@ -21,27 +25,15 @@ private extension DebugPanel {
 
     @ViewBuilder var viewport: some View {
         PanelSection(name: "Viewport") {
-            Row(name: "Origin", value: selector.viewportInfo.origin.shortDescription)
-            Divider()
-                .padding(.leading, 12)
-            Row(name: "Scale", value: selector.viewportInfo.scale.shortDescription)
+            ContextualRow(label: "Origin") {
+                Text(selector.viewportInfo.origin.shortDescription)
+                    .contextualFont()
+            }
+            ContextualDivider()
+            ContextualRow(label: "Scale") {
+                Text(selector.viewportInfo.scale.shortDescription)
+                    .contextualFont()
+            }
         }
-    }
-}
-
-private struct Row: View {
-    let name: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Text(name)
-                .font(.callout)
-            Spacer()
-            Text(value)
-                .font(.callout)
-                .padding(.vertical, 4)
-        }
-        .padding(12)
     }
 }

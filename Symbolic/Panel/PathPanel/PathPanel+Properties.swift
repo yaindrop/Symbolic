@@ -26,23 +26,23 @@ private extension PathPanel.Properties {
     @ViewBuilder var content: some View {
         if let path = selector.path {
             PanelSection(name: "Properties") {
-                PanelSectionRow(label: "ID") {
+                ContextualRow(label: "ID") {
                     Text(path.id.description)
                 }
-                PanelSectionDivider()
-                PanelSectionRow(label: "Name") {
+                ContextualDivider()
+                ContextualRow(label: "Name") {
                     Text("Unnamed")
                 }
-                PanelSectionDivider()
-                PanelSectionRow(label: "Nodes") {
+                ContextualDivider()
+                ContextualRow(label: "Nodes") {
                     Text("\(path.nodes.count)")
                 }
-                PanelSectionDivider()
-                PanelSectionRow {
+                ContextualDivider()
+                ContextualRow {
                     Button {} label: {
                         Text("Some Action")
                     }
-                    .font(.callout)
+                    .contextualFont()
                     Spacer()
                 }
             }

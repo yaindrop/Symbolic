@@ -35,21 +35,21 @@ private extension PathNodePopover {
             Button("Done") { done() }
                 .font(.callout)
         } popoverContent: {
-            PopoverRow(label: "Position") {
+            ContextualRow(label: "Position") {
                 VectorPicker(value: .init(node?.position ?? .zero)) { update(value: $0, pending: true) } onDone: { update(value: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
             }
-            PopoverDivider()
-            PopoverRow(label: "Type") {
+            ContextualDivider()
+            ContextualRow(label: "Type") {
                 CasePicker<PathNodeType>(cases: [.corner, .locked, .mirrored], value: nodeType ?? .corner) { $0.name } onValue: { update(nodeType: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
             }
-            PopoverDivider()
-            PopoverRow {
+            ContextualDivider()
+            ContextualRow {
                 Button("Focus", systemImage: "scope") { focusNode() }
-                    .font(.footnote)
+                    .contextualFont()
                 Spacer()
                 Menu("More", systemImage: "ellipsis") {
                     Label("\(nodeId)", systemImage: "number")
@@ -58,7 +58,7 @@ private extension PathNodePopover {
                     Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
                 }
                 .menuOrder(.fixed)
-                .font(.footnote)
+                .contextualFont()
             }
         }
     }

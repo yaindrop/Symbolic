@@ -44,22 +44,22 @@ extension GridPanel {
 private extension GridPanel.Configs {
     @ViewBuilder var content: some View {
         colorRow
-        PanelSectionDivider()
+        ContextualDivider()
         typeRow
-        PanelSectionDivider()
+        ContextualDivider()
         kindConfigs
-        PanelSectionDivider()
+        ContextualDivider()
         editRow
     }
 
     var colorRow: some View {
-        PanelSectionRow(label: "Color") {
+        ContextualRow(label: "Color") {
             ColorPicker("", selection: $tintColor)
         }
     }
 
     var typeRow: some View {
-        PanelSectionRow(label: "Type") {
+        ContextualRow(label: "Type") {
             Picker("", selection: $gridCase) {
                 Text("Cartesian").tag(Grid.Case.cartesian)
                 Text("Isometric").tag(Grid.Case.isometric)
@@ -77,7 +77,7 @@ private extension GridPanel.Configs {
     }
 
     var editRow: some View {
-        PanelSectionRow {
+        ContextualRow {
             Button(role: .destructive) {
                 global.grid.delete()
             } label: {
@@ -136,7 +136,7 @@ private extension GridPanel.Configs.Cartesian {
     }
 
     var intervalRow: some View {
-        PanelSectionRow(label: "Interval") {
+        ContextualRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -144,7 +144,7 @@ private extension GridPanel.Configs.Cartesian {
                 onEditingChanged: { _ in viewModel.intervalCommit.send() }
             )
             Text("\(Int(grid.interval))")
-                .font(.callout)
+                .contextualFont()
         }
     }
 }
@@ -189,14 +189,14 @@ private extension GridPanel.Configs.Isometric {
 
     @ViewBuilder var content: some View {
         intervalRow
-        PanelSectionDivider()
+        ContextualDivider()
         angle0Row
-        PanelSectionDivider()
+        ContextualDivider()
         angle1Row
     }
 
     var intervalRow: some View {
-        PanelSectionRow(label: "Interval") {
+        ContextualRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
@@ -204,31 +204,31 @@ private extension GridPanel.Configs.Isometric {
                 onEditingChanged: { _ in viewModel.intervalCommit.send() }
             )
             Text("\(Int(grid.interval))")
-                .font(.callout)
+                .contextualFont()
         }
     }
 
     var angle0Row: some View {
-        PanelSectionRow(label: "Angle 0") {
+        ContextualRow(label: "Angle 0") {
             Slider(
                 value: $angle0,
                 in: -90 ... 90,
                 step: 5
             )
             Text("\(grid.angle0.shortDescription)")
-                .font(.callout)
+                .contextualFont()
         }
     }
 
     var angle1Row: some View {
-        PanelSectionRow(label: "Angle 1") {
+        ContextualRow(label: "Angle 1") {
             Slider(
                 value: $angle1,
                 in: -90 ... 90,
                 step: 5
             )
             Text("\(grid.angle1.shortDescription)")
-                .font(.callout)
+                .contextualFont()
         }
     }
 }

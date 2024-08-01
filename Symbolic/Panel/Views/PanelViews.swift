@@ -19,6 +19,7 @@ private extension PanelSection {
             title
             VStack(spacing: 0) {
                 sectionContent()
+                    .environment(\.contextualViewData, contextualViewData)
             }
             .background { PanelSectionBackground() }
         }
@@ -32,6 +33,15 @@ private extension PanelSection {
                 .padding(.leading, 12)
             Spacer()
         }
+    }
+
+    var contextualViewData: ContextualViewData {
+        .init(
+            labelFont: .callout,
+            rowHeight: 36,
+            rowPadding: .init(top: 6, leading: 12, bottom: 6, trailing: 12),
+            dividerPadding: .init(top: 0, leading: 12, bottom: 0, trailing: 0)
+        )
     }
 }
 
@@ -54,42 +64,5 @@ private extension PanelSectionBackground {
                 $0.fill(.ultraThinMaterial)
             }
             .clipRounded(radius: 12)
-    }
-}
-
-// MARK: - PanelSectionRow
-
-struct PanelSectionRow<Content: View>: View, TracedView {
-    var label: String? = nil
-    @ViewBuilder let rowContent: () -> Content
-
-    var body: some View { trace {
-        content
-    } }
-}
-
-// MARK: private
-
-private extension PanelSectionRow {
-    @ViewBuilder var content: some View {
-        HStack {
-            if let label {
-                Text(label)
-                    .font(.callout)
-                Spacer()
-            }
-            rowContent()
-        }
-        .frame(height: 36)
-        .padding(size: .init(12, 6))
-    }
-}
-
-// MARK: - PanelSectionDivider
-
-struct PanelSectionDivider: View {
-    var body: some View {
-        Divider()
-            .padding(.leading, 12)
     }
 }

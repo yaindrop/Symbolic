@@ -47,22 +47,22 @@ private extension PathCurvePopover {
             Button("Done") { done() }
                 .font(.callout)
         } popoverContent: {
-            PopoverRow(label: "Control") {
+            ContextualRow(label: "Control") {
                 let value = isOut ? node?.controlOut : node?.controlIn
                 VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
             }
-            PopoverDivider()
-            PopoverRow(label: "Type") {
+            ContextualDivider()
+            ContextualRow(label: "Type") {
                 CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
             }
-            PopoverDivider()
-            PopoverRow {
+            ContextualDivider()
+            ContextualRow {
                 Button("Focus", systemImage: "scope") { focusSegment() }
-                    .font(.footnote)
+                    .contextualFont()
                 Spacer()
                 Menu("More", systemImage: "ellipsis") {
                     Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
@@ -71,7 +71,7 @@ private extension PathCurvePopover {
                     Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
                 }
                 .menuOrder(.fixed)
-                .font(.footnote)
+                .contextualFont()
             }
         }
     }

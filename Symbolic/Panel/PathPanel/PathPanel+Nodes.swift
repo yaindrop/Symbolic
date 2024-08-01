@@ -36,7 +36,7 @@ private extension PathPanel.Nodes {
                 ForEach(nodeIds) { nodeId in
                     NodeRow(context: context, nodeId: nodeId)
                     if nodeId != nodeIds.last {
-                        Divider().padding(.leading, 12)
+                        ContextualDivider()
                     }
                 }
             }
@@ -69,8 +69,15 @@ private struct NodeRow: View, TracedView {
 private extension NodeRow {
     var content: some View {
         VStack(spacing: 0) {
-            row
-            detail
+            ContextualRow {
+                nameButton
+                Spacer()
+                expandButton
+            }
+            if expanded {
+                NodeDetailView(context: context, nodeId: nodeId)
+                    .padding(12)
+            }
         }
         .onChange(of: focused) {
             if focused {
@@ -81,13 +88,9 @@ private extension NodeRow {
 
     var focused: Bool { context.focusedNodeId == nodeId }
 
-    @ViewBuilder var row: some View {
-        HStack {
-            Button { toggleFocus() } label: { name }
-                .tint(.label)
-            Spacer()
-            expandButton
-        }
+    @ViewBuilder var nameButton: some View {
+        Button { toggleFocus() } label: { name }
+            .tint(.label)
     }
 
     @ViewBuilder var name: some View {
@@ -95,32 +98,23 @@ private extension NodeRow {
             HStack {
                 Image(systemName: "smallcircle.filled.circle")
                 Text("\(nodeId.shortDescription)")
-                    .font(.callout)
+                    .contextualFont()
             }
             .foregroundStyle(focused ? .blue : .label)
-            .padding(12)
             .frame(maxHeight: .infinity)
         } deps: { nodeId; focused }
     }
 
     @ViewBuilder var expandButton: some View {
-        Memo {
-            Button { toggleExpanded() } label: { expandIcon }
-                .tint(.label)
-        } deps: { expanded }
+        Button { toggleExpanded() } label: { expandIcon }
+            .tint(.label)
     }
 
     @ViewBuilder var expandIcon: some View {
-        Image(systemName: expanded ? "chevron.up" : "chevron.down")
-            .padding(12)
-            .frame(maxHeight: .infinity)
-    }
-
-    @ViewBuilder var detail: some View {
-        if expanded {
-            NodeDetailView(context: context, nodeId: nodeId)
-                .padding(12)
-        }
+        Memo {
+            Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                .frame(maxHeight: .infinity)
+        } deps: { expanded }
     }
 
     func toggleFocus() {

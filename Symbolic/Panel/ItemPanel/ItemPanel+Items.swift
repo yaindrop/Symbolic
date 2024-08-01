@@ -1,22 +1,26 @@
 import SwiftUI
 
-// MARK: - ItemRow
+private struct Context {
+    var itemMap: ItemMap
+    var pathMap: PathMap
+    var depthMap: [UUID: Int]
+}
+
+// MARK: - Items
 
 extension ItemPanel {
-    struct ItemRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        let itemId: UUID
-
-        var equatableBy: some Equatable { itemId }
-
-        struct SelectorProps: Equatable { let itemId: UUID }
+    struct Items: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.item.get(id: $0.itemId) }) var item
+            @Selected({ global.item.rootIds }) var rootIds
+            @Selected({ global.item.map }) var itemMap
+            @Selected({ global.path.map }) var pathMap
+            @Selected({ global.item.depthMap }) var depthMap
         }
 
         @SelectorWrapper var selector
 
         var body: some View { trace {
-            setupSelector(.init(itemId: itemId)) {
+            setupSelector {
                 content
             }
         } }
@@ -25,38 +29,60 @@ extension ItemPanel {
 
 // MARK: private
 
-extension ItemPanel.ItemRow {
-    @ViewBuilder private var content: some View {
-        if let pathId = selector.item?.pathId {
-            PathRow(pathId: pathId)
-        } else if let group = selector.item?.group {
-            GroupRow(group: group)
+private extension ItemPanel.Items {
+    var content: some View {
+        PanelSection(name: "Items") {
+            ForEach(selector.rootIds) {
+                ItemPanel.ItemRow(context: context, itemId: $0)
+                if $0 != selector.rootIds.last {
+                    ContextualDivider()
+                }
+            }
         }
     }
+
+    var context: Context {
+        .init(itemMap: selector.itemMap, pathMap: selector.pathMap, depthMap: selector.depthMap)
+    }
+}
+
+// MARK: - ItemRow
+
+private extension ItemPanel {
+    struct ItemRow: View, TracedView {
+        let context: Context, itemId: UUID
+
+        var body: some View { trace {
+            content
+        } }
+    }
+}
+
+// MARK: private
+
+extension ItemPanel.ItemRow {
+    @ViewBuilder private var content: some View {
+        if let pathId = item?.pathId {
+            PathRow(context: context, pathId: pathId)
+        } else if let group = item?.group {
+            GroupRow(context: context, group: group)
+        }
+    }
+
+    var item: Item? { context.itemMap[itemId] }
 }
 
 // MARK: - GroupRow
 
-private struct GroupRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
+private struct GroupRow: View, TracedView {
     @Environment(\.contextualViewData) var contextualViewData
 
-    let group: ItemGroup
-
-    var equatableBy: some Equatable { group }
-
-    struct SelectorProps: Equatable { let itemId: UUID }
-    class Selector: SelectorBase {
-        @Selected({ global.item.depth(itemId: $0.itemId) }) var depth
-    }
-
-    @SelectorWrapper var selector
+    let context: Context, group: ItemGroup
 
     @State private var expanded = true
 
     var body: some View { trace {
-        setupSelector(.init(itemId: group.id)) {
-            content
-        }
+        content
     } }
 }
 
@@ -117,17 +143,19 @@ private extension GroupRow {
         .contextualFont()
     }
 
+    var depth: Int { context.depthMap[group.id] ?? 0 }
+
     var members: some View {
         VStack(spacing: 0) {
             ForEach(group.members) {
-                ItemPanel.ItemRow(itemId: $0)
+                ItemPanel.ItemRow(context: context, itemId: $0)
                     .id($0)
                 if $0 != group.members.last {
                     ContextualDivider()
                 }
             }
         }
-        .background(selector.depth % 2 == 0 ? Color.tertiarySystemBackground : Color.secondarySystemBackground)
+        .background(depth % 2 == 0 ? Color.tertiarySystemBackground : Color.secondarySystemBackground)
         .clipRounded(radius: 12)
         .padding(.leading, 6)
     }
@@ -135,22 +163,11 @@ private extension GroupRow {
 
 // MARK: - PathRow
 
-private struct PathRow: View, TracedView, EquatableBy, ComputedSelectorHolder {
-    let pathId: UUID
-
-    var equatableBy: some Equatable { pathId }
-
-    struct SelectorProps: Equatable { let pathId: UUID }
-    class Selector: SelectorBase {
-        @Selected({ global.path.get(id: $0.pathId) }) var path
-    }
-
-    @SelectorWrapper var selector
+private struct PathRow: View, TracedView {
+    let context: Context, pathId: UUID
 
     var body: some View { trace {
-        setupSelector(.init(pathId: pathId)) {
-            content
-        }
+        content
     } }
 }
 
@@ -183,8 +200,10 @@ private extension PathRow {
         }
     }
 
+    var path: Path? { context.pathMap[pathId] }
+
     @ViewBuilder var name: some View {
-        if let path = selector.path {
+        if let path {
             HStack(spacing: 6) {
                 PathThumbnail(path: path)
                 Text(pathId.shortDescription)

@@ -526,7 +526,6 @@ protocol _SelectorProtocol: AnyObject {
     func setupRetrack(callback: @escaping () -> Void)
 
     typealias Selected<T: Equatable> = _Selected<Self, T>
-    typealias Formula<T> = _Formula<Self, T>
 }
 
 extension _Selector: _SelectorProtocol {
@@ -634,15 +633,6 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
     init(configs: PartialSelectorConfigs = .init(), _ selector: @escaping () -> Value) {
         self.configs = configs
         self.selector = { _ in selector() }
-    }
-}
-
-@propertyWrapper
-struct _Formula<Instance: _SelectorProtocol, Value> {
-    let wrappedValue: (Instance.Props) -> Value
-
-    init(_ formula: @escaping (Instance.Props) -> Value) {
-        wrappedValue = formula
     }
 }
 

@@ -57,7 +57,7 @@
 		573204D62C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D52C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift */; };
 		573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */; };
 		573204DA2C15D8BF008E0DED /* ItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D92C15D8BF008E0DED /* ItemsView.swift */; };
-		573204DC2C15DDA2008E0DED /* ItemPanel+ItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204DB2C15DDA2008E0DED /* ItemPanel+ItemRow.swift */; };
+		573204DC2C15DDA2008E0DED /* ItemPanel+Items.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */; };
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
 		57416E3F2BE12A9500C73434 /* PathNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathNode.swift */; };
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
@@ -207,7 +207,7 @@
 		573204D52C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+FocusedPathSelectionMenu.swift"; sourceTree = "<group>"; };
 		573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SelectionBounds.swift"; sourceTree = "<group>"; };
 		573204D92C15D8BF008E0DED /* ItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemsView.swift; sourceTree = "<group>"; };
-		573204DB2C15DDA2008E0DED /* ItemPanel+ItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+ItemRow.swift"; sourceTree = "<group>"; };
+		573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+Items.swift"; sourceTree = "<group>"; };
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		57416E3E2BE12A9500C73434 /* PathNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNode.swift; sourceTree = "<group>"; };
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
@@ -721,7 +721,7 @@
 			isa = PBXGroup;
 			children = (
 				57DD2A272C0321110046931C /* ItemPanel.swift */,
-				573204DB2C15DDA2008E0DED /* ItemPanel+ItemRow.swift */,
+				573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */,
 			);
 			path = ItemPanel;
 			sourceTree = "<group>";
@@ -911,7 +911,7 @@
 				571B9B322C14A71600AAD516 /* ContextMenuView.swift in Sources */,
 				573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */,
 				571B9B452C14AA4500AAD516 /* String+Extension.swift in Sources */,
-				573204DC2C15DDA2008E0DED /* ItemPanel+ItemRow.swift in Sources */,
+				573204DC2C15DDA2008E0DED /* ItemPanel+Items.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57DD2A282C0321110046931C /* ItemPanel.swift in Sources */,
 				572552872BF0F563002147AE /* Tracer.swift in Sources */,

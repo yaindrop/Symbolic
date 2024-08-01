@@ -57,6 +57,12 @@ extension ItemStoreProtocol {
         ancestorIds(of: itemId).count
     }
 
+    var depthMap: [UUID: Int] {
+        map.keys.reduce(into: [UUID: Int]()) { dict, itemId in
+            dict[itemId] = depth(itemId: itemId)
+        }
+    }
+
     func expandedItems(rootItemId: UUID) -> [Item] {
         guard let item = get(id: rootItemId) else { return [] }
         guard let group = item.group else { return [item] }

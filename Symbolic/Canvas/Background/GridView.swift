@@ -165,7 +165,7 @@ extension GridView {
                 }
             }
         }
-        .foregroundColor(color)
+        .foregroundStyle(color)
     }
 }
 

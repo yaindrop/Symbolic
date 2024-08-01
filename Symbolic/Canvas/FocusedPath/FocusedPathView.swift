@@ -28,8 +28,8 @@ private extension FocusedPathView {
             ZStack {
                 Stroke()
                 NodeHandles()
-                BezierHandles()
                 SegmentHandles()
+                BezierHandles()
             }
             if selector.selectingNodes {
                 SelectionBounds()

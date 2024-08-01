@@ -80,7 +80,7 @@ private extension FileEntryCard {
             .padding(.horizontal, 12)
             .frame(maxWidth: .infinity, maxHeight: 54)
             .background(entry.isDirectory ? .blue : .gray)
-            .foregroundColor(.white)
+            .foregroundStyle(.white)
         }
         .frame(width: 150, height: 150, alignment: .center)
         .clipRounded(radius: 12)
@@ -90,7 +90,7 @@ private extension FileEntryCard {
     @ViewBuilder var selectingOverlay: some View {
         if selector.isSelectingFiles {
             Image(systemName: selector.selected ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(selector.selected ? .blue : .white)
+                .foregroundStyle(selector.selected ? .blue : .white)
                 .font(.title3)
                 .shadow(color: (selector.selected ? Color.systemBackground : .label).opacity(0.66), radius: 1)
                 .padding(6)

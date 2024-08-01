@@ -163,13 +163,17 @@ extension FocusedPathService {
         }
     }
 
+    func toggleSelection(nodeIds: [UUID]) {
+        if activeNodeIds.isSuperset(of: nodeIds) {
+            selectRemove(node: nodeIds)
+        } else {
+            selectAdd(node: nodeIds)
+        }
+    }
+
     func onTap(node nodeId: UUID) {
         if selectingNodes {
-            if activeNodeIds.contains(nodeId) {
-                selectRemove(node: [nodeId])
-            } else {
-                selectAdd(node: [nodeId])
-            }
+            toggleSelection(nodeIds: [nodeId])
         } else {
             let focused = focusedNodeId == nodeId
             focused ? clear() : setFocus(node: nodeId)
@@ -180,12 +184,7 @@ extension FocusedPathService {
         if selectingNodes {
             guard let path = activeItem.focusedPath,
                   let toId = path.nodeId(after: fromId) else { return }
-            let nodeIds = [fromId, toId]
-            if activeNodeIds.isSuperset(of: nodeIds) {
-                selectRemove(node: nodeIds)
-            } else {
-                selectAdd(node: nodeIds)
-            }
+            toggleSelection(nodeIds: [fromId, toId])
         } else {
             let focused = focusedSegmentId == fromId
             focused ? clear() : setFocus(segment: fromId)

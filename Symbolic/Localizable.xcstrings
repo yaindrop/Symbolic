@@ -188,13 +188,13 @@
     "Secondary" : {
 
     },
+    "Select Nodes" : {
+
+    },
     "Settings" : {
 
     },
     "some action" : {
-
-    },
-    "Some Action" : {
 
     },
     "Split" : {
@@ -219,6 +219,9 @@
 
     },
     "Wrap in new folder" : {
+
+    },
+    "Zoom In" : {
 
     }
   },

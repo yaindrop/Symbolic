@@ -4,6 +4,8 @@ private struct Context {
     var path: Path
     var pathProperty: PathProperty
     var focusedNodeId: UUID?
+    var selectingNodes: Bool
+    var activeNodeIds: Set<UUID>
 }
 
 // MARK: - Nodes
@@ -14,6 +16,8 @@ extension PathPanel {
             @Selected({ global.activeItem.focusedPath }) var path
             @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
+            @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
         }
 
         @SelectorWrapper var selector
@@ -45,7 +49,7 @@ private extension PathPanel.Nodes {
 
     var context: Context? {
         if let path = selector.path, let pathProperty = selector.pathProperty {
-            .init(path: path, pathProperty: pathProperty, focusedNodeId: selector.focusedNodeId)
+            .init(path: path, pathProperty: pathProperty, focusedNodeId: selector.focusedNodeId, selectingNodes: selector.selectingNodes, activeNodeIds: selector.activeNodeIds)
         } else {
             nil
         }
@@ -70,25 +74,29 @@ private extension NodeRow {
     var content: some View {
         VStack(spacing: 0) {
             ContextualRow {
-                nameButton
+                leadingButton
                 Spacer()
-                expandButton
+                trailingButton
             }
-            if expanded {
+            if expanded && !context.selectingNodes {
                 NodeDetailView(context: context, nodeId: nodeId)
                     .padding(12)
             }
         }
         .onChange(of: focused) {
             if focused {
-                withAnimation(.fast) { expanded = true }
+                expanded = true
             }
         }
+        .animation(.fast, value: expanded)
+        .animation(.fast, value: context.selectingNodes)
     }
 
     var focused: Bool { context.focusedNodeId == nodeId }
 
-    @ViewBuilder var nameButton: some View {
+    var selected: Bool { context.activeNodeIds.contains(nodeId) }
+
+    @ViewBuilder var leadingButton: some View {
         Button { toggleFocus() } label: { name }
             .tint(.label)
     }
@@ -105,9 +113,23 @@ private extension NodeRow {
         } deps: { nodeId; focused }
     }
 
-    @ViewBuilder var expandButton: some View {
-        Button { toggleExpanded() } label: { expandIcon }
-            .tint(.label)
+    @ViewBuilder var trailingButton: some View {
+        if context.selectingNodes {
+            Button { toggleSelection() } label: { selectIcon }
+                .tint(.label)
+        } else {
+            Button { toggleExpanded() } label: { expandIcon }
+                .tint(.label)
+        }
+    }
+
+    @ViewBuilder var selectIcon: some View {
+        Memo {
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(Color.label, .blue)
+                .frame(maxHeight: .infinity)
+        } deps: { selected }
     }
 
     @ViewBuilder var expandIcon: some View {
@@ -119,7 +141,7 @@ private extension NodeRow {
 
     func toggleFocus() {
         if focused {
-            withAnimation(.fast) { expanded = false }
+            expanded = false
             global.focusedPath.clear()
         } else {
             global.focusedPath.setFocus(node: nodeId)
@@ -127,7 +149,11 @@ private extension NodeRow {
     }
 
     func toggleExpanded() {
-        withAnimation(.fast) { expanded.toggle() }
+        expanded.toggle()
+    }
+
+    func toggleSelection() {
+        global.focusedPath.toggleSelection(nodeIds: [nodeId])
     }
 }
 

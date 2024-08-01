@@ -8,6 +8,7 @@ extension PathPanel {
             @Selected({ global.activeItem.focusedPath }) var path
             @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
+            @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
         }
 
         @SelectorWrapper var selector
@@ -39,11 +40,15 @@ private extension PathPanel.Properties {
                 }
                 ContextualDivider()
                 ContextualRow {
-                    Button {} label: {
-                        Text("Some Action")
+                    Button("Zoom In", systemImage: "arrow.up.left.and.arrow.down.right") {
+                        global.viewportUpdater.zoomTo(rect: path.boundingRect)
                     }
                     .contextualFont()
                     Spacer()
+                    Button(selector.selectingNodes ? "Done" : "Select Nodes", systemImage: selector.selectingNodes ? "" : "checklist") {
+                        global.focusedPath.toggleSelectingNodes()
+                    }
+                    .contextualFont()
                 }
             }
         }

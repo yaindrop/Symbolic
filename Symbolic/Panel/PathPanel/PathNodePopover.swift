@@ -31,8 +31,7 @@ private extension PathNodePopover {
     @ViewBuilder var content: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                Text("Node")
-                    .font(.callout.bold())
+                nodeIcon
                 Spacer()
                 Button("Done") { done() }
                     .font(.callout)
@@ -76,6 +75,10 @@ private extension PathNodePopover {
         .frame(maxWidth: 240)
     }
 
+    var nodeIcon: some View {
+        PathNodeIcon(nodeId: nodeId)
+    }
+
     func done() {
         global.portal.deregister(id: portalId)
     }
@@ -83,7 +86,7 @@ private extension PathNodePopover {
     func update(value: Vector2? = nil, pending: Bool = false) {
         guard var node, let value else { return }
         node.position = .init(value)
-        global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
+        global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
     }
 
     func update(nodeType _: PathNodeType) {
@@ -108,6 +111,6 @@ private extension PathNodePopover {
     }
 
     func deleteNode() {
-        global.documentUpdater.update(focusedPath: .deleteNode(.init(nodeId: nodeId)))
+        global.documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: [nodeId])))
     }
 }

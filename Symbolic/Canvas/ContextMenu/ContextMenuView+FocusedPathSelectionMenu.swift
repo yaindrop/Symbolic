@@ -134,7 +134,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
     }
 
-    func onUngroup() {}
-
-    func onDelete() {}
+    func onDelete() {
+        global.documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: .init(global.focusedPath.activeNodeIds))))
+    }
 }

@@ -43,8 +43,7 @@ private extension PathCurvePopover {
     @ViewBuilder var content: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                Text("Curve \(isOut ? "Out" : "In")")
-                    .font(.callout.bold())
+                curveIcon
                 Spacer()
                 Button("Done") { done() }
                     .font(.callout)
@@ -57,12 +56,6 @@ private extension PathCurvePopover {
                     VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
                         .background(.ultraThickMaterial)
                         .clipRounded(radius: 6)
-                }
-                Divider()
-                PanelRow(name: "Segment") {
-                    Button { focusSegment() } label: {
-                        segmentIcon
-                    }
                 }
                 Divider()
                 PanelRow(name: "Type") {
@@ -92,29 +85,10 @@ private extension PathCurvePopover {
         .frame(maxWidth: 240)
     }
 
-    var segmentIcon: some View {
-        HStack(spacing: 0) {
-            nodeIcon(nodeId: fromNodeId)
-                .scaleEffect(isOut ? 1 : 0.9)
-                .opacity(isOut ? 1 : 0.5)
-            Image(systemName: "arrow.forward")
-                .font(.caption)
-                .padding(6)
-            nodeIcon(nodeId: toNodeId)
-                .scaleEffect(isOut ? 0.9 : 1)
-                .opacity(isOut ? 0.5 : 1)
+    @ViewBuilder var curveIcon: some View {
+        if let fromNodeId, let toNodeId {
+            PathCurveIcon(fromNodeId: fromNodeId, toNodeId: toNodeId, isOut: isOut)
         }
-    }
-
-    func nodeIcon(nodeId: UUID?) -> some View {
-        VStack(spacing: 0) {
-            Image(systemName: "smallcircle.filled.circle")
-                .font(.callout)
-            Spacer(minLength: 0)
-            Text(nodeId?.shortDescription ?? "nil")
-                .font(.system(size: 10).monospaced())
-        }
-        .frame(width: 32, height: 32)
     }
 
     func done() {
@@ -128,7 +102,7 @@ private extension PathCurvePopover {
             } else {
                 node.controlIn = value
             }
-            global.documentUpdater.update(focusedPath: .setNode(.init(nodeId: nodeId, node: node)), pending: pending)
+            global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
         }
     }
 

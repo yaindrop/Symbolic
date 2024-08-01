@@ -267,26 +267,32 @@ extension DocumentUpdater {
     private func collectEvents(to events: inout [SingleEvent], _ action: PathAction.Update) {
         let pathId = action.pathId
         switch action.kind {
-        case let .deleteNode(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .deleteNodes(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .updateNode(action): collectEvents(to: &events, pathId: pathId, action)
+
         case let .addEndingNode(action): collectEvents(to: &events, pathId: pathId, action)
         case let .splitSegment(action): collectEvents(to: &events, pathId: pathId, action)
 
         case let .moveNodes(action): collectEvents(to: &events, pathId: pathId, action)
         case let .moveNodeControl(action): collectEvents(to: &events, pathId: pathId, action)
-
-        case let .setNode(action): collectEvents(to: &events, pathId: pathId, action)
         }
     }
 
-    private func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.DeleteNode) {
-        let nodeId = action.nodeId
-        guard let path = pathStore.get(id: pathId),
-              path.node(id: nodeId) != nil else { return }
-        if path.nodes.count - 1 < 2 {
+    private func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.DeleteNodes) {
+        let nodeIds = action.nodeIds
+        guard let path = pathStore.get(id: pathId) else { return }
+        if path.nodes.count - nodeIds.count < 2 {
             events.append(.path(.delete(.init(pathIds: [pathId]))))
-        } else {
+            return
+        }
+        for nodeId in nodeIds {
             events.append(.path(.init(in: pathId, .nodeDelete(.init(nodeId: nodeId)))))
         }
+    }
+
+    private func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.UpdateNode) {
+        let nodeId = action.nodeId, node = action.node
+        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: nodeId, node: node)))))
     }
 
     private func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.AddEndingNode) {
@@ -387,11 +393,6 @@ extension DocumentUpdater {
         }
 
         kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, controlIn: newControlIn, controlOut: newControlOut))))
-    }
-
-    private func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.SetNode) {
-        let nodeId = action.nodeId, node = action.node
-        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: nodeId, node: node)))))
     }
 
     // MARK: multiple path update actions

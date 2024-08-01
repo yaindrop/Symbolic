@@ -97,3 +97,56 @@ private extension PathNodeThumbnail {
         }
     }
 }
+
+// MARK: - PathNodeIcon
+
+struct PathNodeIcon: View, TracedView {
+    let nodeId: UUID
+
+    var body: some View { trace {
+        content
+    } }
+}
+
+// MARK: private
+
+private extension PathNodeIcon {
+    var content: some View {
+        VStack(spacing: 0) {
+            Image(systemName: "smallcircle.filled.circle")
+                .font(.callout)
+            Spacer(minLength: 0)
+            Text(nodeId.shortDescription)
+                .font(.system(size: 10).monospaced())
+        }
+        .frame(width: 32, height: 32)
+    }
+}
+
+// MARK: - PathCurveIcon
+
+struct PathCurveIcon: View, TracedView {
+    let fromNodeId: UUID, toNodeId: UUID, isOut: Bool
+
+    var body: some View { trace {
+        content
+    } }
+}
+
+// MARK: private
+
+private extension PathCurveIcon {
+    var content: some View {
+        HStack(spacing: 0) {
+            PathNodeIcon(nodeId: fromNodeId)
+                .scaleEffect(isOut ? 1 : 0.9)
+                .opacity(isOut ? 1 : 0.5)
+            Image(systemName: "arrow.forward")
+                .font(.caption)
+                .padding(6)
+            PathNodeIcon(nodeId: toNodeId)
+                .scaleEffect(isOut ? 0.9 : 1)
+                .opacity(isOut ? 0.5 : 1)
+        }
+    }
+}

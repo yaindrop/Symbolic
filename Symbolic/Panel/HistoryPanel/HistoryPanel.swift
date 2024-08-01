@@ -26,9 +26,9 @@ private extension DocumentAction {
 
             case let .update(update):
                 switch update.kind {
-                case let .deleteNode(action):
-                    "In path \(update.pathId.shortDescription) delete node \(action.nodeId.shortDescription)"
-                case let .setNode(action):
+                case let .deleteNodes(action):
+                    "In path \(update.pathId.shortDescription) delete node \(action.nodeIds.map { $0.shortDescription })"
+                case let .updateNode(action):
                     "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.node)"
 
                 case let .addEndingNode(action):

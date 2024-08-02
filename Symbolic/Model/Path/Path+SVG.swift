@@ -24,13 +24,13 @@ extension SVGPathCommand.ArcTo {
 }
 
 extension SVGPathCommand.BezierTo {
-    func toControls(current: Point2) -> (controlOut: Vector2, controlIn: Vector2) {
-        (controlOut: current.offset(to: control0), controlIn: position.offset(to: control1))
+    func toControls(current: Point2) -> (cubicOut: Vector2, cubicIn: Vector2) {
+        (cubicOut: current.offset(to: control0), cubicIn: position.offset(to: control1))
     }
 }
 
 extension SVGPathCommand {
-    func toControls(current: Point2) -> (controlOut: Vector2, controlIn: Vector2) {
+    func toControls(current: Point2) -> (cubicOut: Vector2, cubicIn: Vector2) {
         switch self {
         case .arcTo:
             logError("Arc should have been approximated")
@@ -62,12 +62,12 @@ extension Path {
 
         var nodes: [PathNode] = []
         current = svgPath.initial
-        var prevControlIn: Vector2?
+        var prevCubicIn: Vector2?
         for command in approximatedCommands {
-            let (controlOut, controlIn) = command.toControls(current: current)
-            nodes.append(.init(position: current, controlIn: prevControlIn ?? .zero, controlOut: controlOut))
+            let (cubicOut, cubicIn) = command.toControls(current: current)
+            nodes.append(.init(position: current, cubicIn: prevCubicIn ?? .zero, cubicOut: cubicOut))
             current = command.position
-            prevControlIn = controlIn
+            prevCubicIn = cubicIn
         }
 
         if svgPath.initial != svgPath.last {

@@ -4,19 +4,19 @@ import SwiftUI
 
 struct PathNode: Equatable, Codable {
     var position: Point2
-    var controlIn: Vector2
-    var controlOut: Vector2
+    var cubicIn: Vector2
+    var cubicOut: Vector2
 
-    init(position: Point2, controlIn: Vector2 = .zero, controlOut: Vector2 = .zero) {
+    init(position: Point2, cubicIn: Vector2 = .zero, cubicOut: Vector2 = .zero) {
         self.position = position
-        self.controlIn = controlIn
-        self.controlOut = controlOut
+        self.cubicIn = cubicIn
+        self.cubicOut = cubicOut
     }
 }
 
 extension PathNode {
-    var positionIn: Point2 { position + controlIn }
-    var positionOut: Point2 { position + controlOut }
+    var positionIn: Point2 { position + cubicIn }
+    var positionOut: Point2 { position + cubicOut }
 }
 
 extension PathNode: TriviallyCloneable {}
@@ -25,7 +25,7 @@ extension PathNode: TriviallyCloneable {}
 
 extension PathNode: CustomStringConvertible {
     var description: String {
-        "Node(position: \(position), in: \(controlIn), out: \(controlOut))"
+        "Node(position: \(position), in: \(cubicIn), out: \(cubicOut))"
     }
 }
 
@@ -33,7 +33,7 @@ extension PathNode: CustomStringConvertible {
 
 extension PathNode: Transformable {
     func applying(_ t: CGAffineTransform) -> Self {
-        .init(position: position.applying(t), controlIn: controlIn.applying(t), controlOut: controlOut.applying(t))
+        .init(position: position.applying(t), cubicIn: cubicIn.applying(t), cubicOut: cubicOut.applying(t))
     }
 }
 
@@ -42,47 +42,47 @@ extension PathNode: Transformable {
 struct PathSegment: Equatable {
     var from: Point2
     var to: Point2
-    var fromControlOut: Vector2
-    var toControlIn: Vector2
+    var fromCubicOut: Vector2
+    var toCubicIn: Vector2
 
-    init(from: Point2, to: Point2, fromControlOut: Vector2 = .zero, toControlIn: Vector2 = .zero) {
+    init(from: Point2, to: Point2, fromCubicOut: Vector2 = .zero, toCubicIn: Vector2 = .zero) {
         self.from = from
         self.to = to
-        self.fromControlOut = fromControlOut
-        self.toControlIn = toControlIn
+        self.fromCubicOut = fromCubicOut
+        self.toCubicIn = toCubicIn
     }
 
     init(from: Point2, to: Point2, quadratic: Point2) {
         self.from = from
         self.to = to
-        fromControlOut = from.offset(to: quadratic) * 2 / 3
-        toControlIn = to.offset(to: quadratic) * 2 / 3
+        fromCubicOut = from.offset(to: quadratic) * 2 / 3
+        toCubicIn = to.offset(to: quadratic) * 2 / 3
     }
 
     init(from: PathNode, to: PathNode) {
         self.from = from.position
         self.to = to.position
-        fromControlOut = from.controlOut
-        toControlIn = to.controlIn
+        fromCubicOut = from.cubicOut
+        toCubicIn = to.cubicIn
     }
 }
 
 extension PathSegment {
-    var fromOut: Point2 { from + fromControlOut }
-    var toIn: Point2 { to + toControlIn }
+    var fromOut: Point2 { from + fromCubicOut }
+    var toIn: Point2 { to + toCubicIn }
 
-    var isLine: Bool { fromControlOut == .zero && toControlIn == .zero }
+    var isLine: Bool { fromCubicOut == .zero && toCubicIn == .zero }
 
     var quadratic: Point2? {
-        let c0 = from + fromControlOut * 3 / 2
-        let c1 = to + toControlIn * 3 / 2
+        let c0 = from + fromCubicOut * 3 / 2
+        let c1 = to + toCubicIn * 3 / 2
         guard c0 ~= c1 else { return nil }
         return c0
     }
 
     var toQuradratic: PathSegment {
-        let c0 = from + fromControlOut * 3 / 2
-        let c1 = to + toControlIn * 3 / 2
+        let c0 = from + fromCubicOut * 3 / 2
+        let c1 = to + toCubicIn * 3 / 2
         let c = c0.midPoint(to: c1)
         return .init(from: from, to: to, quadratic: c)
     }
@@ -92,14 +92,14 @@ extension PathSegment {
 
 extension PathSegment: CustomStringConvertible {
     var description: String {
-        "Segment(from: \(from), to: \(to), out: \(fromControlOut), in: \(toControlIn))"
+        "Segment(from: \(from), to: \(to), out: \(fromCubicOut), in: \(toCubicIn))"
     }
 }
 
 // MARK: Transformable
 
 extension PathSegment: Transformable {
-    func applying(_ t: CGAffineTransform) -> Self { .init(from: from.applying(t), to: to.applying(t), fromControlOut: fromControlOut.applying(t), toControlIn: toControlIn.applying(t)) }
+    func applying(_ t: CGAffineTransform) -> Self { .init(from: from.applying(t), to: to.applying(t), fromCubicOut: fromCubicOut.applying(t), toCubicIn: toCubicIn.applying(t)) }
 }
 
 // MARK: Parametrizable
@@ -173,8 +173,8 @@ extension PathSegment: ParamSplittable {
         let p012 = lerp(from: p01, to: p12, at: t), p123 = lerp(from: p12, to: p23, at: t)
         let p0123 = lerp(from: p012, to: p123, at: t)
         return (
-            .init(from: from, to: .init(p0123), fromControlOut: p01 - p0, toControlIn: p012 - p0123),
-            .init(from: .init(p0123), to: to, fromControlOut: p123 - p0123, toControlIn: p23 - p3)
+            .init(from: from, to: .init(p0123), fromCubicOut: p01 - p0, toCubicIn: p012 - p0123),
+            .init(from: .init(p0123), to: to, fromCubicOut: p123 - p0123, toCubicIn: p23 - p3)
         )
     }
 

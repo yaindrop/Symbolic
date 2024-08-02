@@ -39,7 +39,7 @@ private extension DocumentAction {
                 case let .moveNodes(action):
                     "In path \(update.pathId.shortDescription) move node \(action.nodeIds.map { $0.id.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
                 case let .moveNodeControl(action):
-                    "In path \(update.pathId.shortDescription) move node control from \(action.nodeId.shortDescription) by \(action.controlInOffset.shortDescription) and \(action.controlOutOffset.shortDescription)"
+                    "In path \(update.pathId.shortDescription) move node control from \(action.nodeId.shortDescription) by \(action.offset.shortDescription) of \(action.controlType)"
                 }
 
             case let .merge(action):

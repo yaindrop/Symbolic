@@ -181,7 +181,7 @@ private struct NodeDetailView: View, TracedView {
 
 private extension NodeDetailView {
     enum ActivePopover {
-        case controlIn, node, controlOut
+        case cubicIn, node, cubicOut
     }
 
     var content: some View {
@@ -233,7 +233,7 @@ private extension NodeDetailView {
     @ViewBuilder func controlButton(isOut: Bool) -> some View {
         let disabled = (isOut ? context.path.nodeId(after: nodeId) : context.path.nodeId(before: nodeId)) == nil,
             align: PlaneOuterAlign = isOut ? .bottomInnerTrailing : .bottomInnerLeading,
-            isPresented = $activePopover.predicate(isOut ? .controlOut : .controlIn, nil)
+            isPresented = $activePopover.predicate(isOut ? .cubicOut : .cubicIn, nil)
         Button { isPresented.wrappedValue.toggle() } label: { controlLabel(isOut: isOut) }
             .disabled(disabled)
             .tint(.label)
@@ -263,19 +263,18 @@ private extension NodeDetailView {
     @ViewBuilder func controlLabel(isOut: Bool) -> some View {
         let disabled = isOut ? context.path.nodeId(after: nodeId) == nil : context.path.nodeId(before: nodeId) == nil,
             color = disabled ? Color.label.opacity(0.5) : !focused ? .label : isOut ? .green : .orange,
+            segment = isOut ? segment : prevSegment,
             segmentType = isOut ? segmentType : prevSegmentType,
-            handleType: PathBezierHandleType = isOut ? .cubicOut : .cubicIn
+            activeType = segment.map { segmentType?.activeType(segment: $0, isOut: isOut) }
         var name: String {
             guard !disabled,
-                  let segment,
-                  let segmentType = segmentType?.activeType(segment: segment, isOut: isOut) else { return "Terminal" }
-            return segmentType.name
+                  let activeType else { return "Terminal" }
+            return activeType.name
         }
         var image: String {
             guard !disabled,
-                  let segment,
-                  let segmentType = segmentType?.activeType(segment: segment, isOut: isOut) else { return "circle.slash" }
-            switch segmentType {
+                  let activeType = activeType else { return "circle.slash" }
+            switch activeType {
             case .line: return "line.diagonal"
             default: return "point.topleft.down.to.point.bottomright.curvepath"
             }

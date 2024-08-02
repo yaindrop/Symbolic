@@ -18,18 +18,18 @@ private extension PathNodeThumbnail {
             .fill(.clear)
             .overlay {
                 let segmentsPath = segmentsPath,
-                    controlInPath = controlInPath,
-                    controlOutPath = controlOutPath,
-                    paths = [segmentsPath, controlInPath, controlOutPath],
+                    cubicInPath = cubicInPath,
+                    cubicOutPath = cubicOutPath,
+                    paths = [segmentsPath, cubicInPath, cubicOutPath],
                     boundingRect = CGRect(union: paths.map { $0.boundingRect })!,
                     transform = CGAffineTransform(fit: boundingRect, to: .init(size))
                 segmentsPath
                     .transform(transform)
                     .stroke(Color.label.opacity(0.5), style: .init(lineWidth: 2, lineCap: .round))
-                controlInPath
+                cubicInPath
                     .transform(transform)
                     .stroke(.orange, style: .init(lineWidth: 1, lineCap: .round))
-                controlOutPath
+                cubicOutPath
                     .transform(transform)
                     .stroke(.green, style: .init(lineWidth: 1, lineCap: .round))
                 nodePath(transform)
@@ -60,7 +60,7 @@ private extension PathNodeThumbnail {
         }
     }
 
-    var controlInPath: SUPath {
+    var cubicInPath: SUPath {
         SUPath {
             guard let node else { return }
             $0.move(to: node.position)
@@ -68,7 +68,7 @@ private extension PathNodeThumbnail {
         }
     }
 
-    var controlOutPath: SUPath {
+    var cubicOutPath: SUPath {
         SUPath {
             guard let node else { return }
             $0.move(to: node.position)

@@ -16,6 +16,14 @@ extension PathNodeType {
         case .mirrored: "Mirrored"
         }
     }
+
+    func map(current: Vector2, opposite: Vector2) -> Vector2 {
+        switch self {
+        case .corner: current
+        case .locked: opposite.with(length: -current.length)
+        case .mirrored: -opposite
+        }
+    }
 }
 
 extension PathNodeType: CustomStringConvertible {
@@ -37,7 +45,7 @@ enum PathSegmentType: Codable, CaseIterable {
     case quadratic
 }
 
-enum PathBezierHandleType {
+enum PathBezierControlType: Codable {
     case cubicIn
     case cubicOut
     case quadratic
@@ -55,7 +63,7 @@ extension PathSegmentType {
 
     func activeType(segment: PathSegment, isOut: Bool) -> Self {
         if self == .auto {
-            let cubicControl = isOut ? segment.fromControlOut : segment.toControlIn
+            let cubicControl = isOut ? segment.fromCubicOut : segment.toCubicIn
             if cubicControl == .zero {
                 return .line
             }

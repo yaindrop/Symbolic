@@ -57,7 +57,7 @@ private extension Polyline {
             let pt1 = points[first],
                 pt2 = points[last],
                 dist = pt1.distance(to: pt2) / 3
-            let segment = PathSegment(from: pt1, to: pt2, fromControlOut: tan1.with(length: dist), toControlIn: tan2.with(length: dist))
+            let segment = PathSegment(from: pt1, to: pt2, fromCubicOut: tan1.with(length: dist), toCubicIn: tan2.with(length: dist))
             addSegment(nodes: &nodes, segment: segment)
             return
         }
@@ -95,11 +95,11 @@ private extension Polyline {
 
     func addSegment(nodes: inout [PathNode], segment: PathSegment) {
         if nodes.isEmpty {
-            nodes.append(.init(position: segment.from, controlOut: segment.fromControlOut))
+            nodes.append(.init(position: segment.from, cubicOut: segment.fromCubicOut))
         } else {
-            nodes[nodes.count - 1].controlOut = segment.fromControlOut
+            nodes[nodes.count - 1].cubicOut = segment.fromCubicOut
         }
-        nodes.append(.init(position: segment.to, controlIn: segment.toControlIn))
+        nodes.append(.init(position: segment.to, cubicIn: segment.toCubicIn))
     }
 
     // Use least-squares method to find Bezier control points for region.
@@ -183,7 +183,7 @@ private extension Polyline {
 
         // First and last control points of the Bezier curve are
         // positioned exactly at the first and last data points
-        return .init(from: pt1, to: pt2, fromControlOut: handle1 ?? tan1.with(length: alpha1), toControlIn: handle2 ?? tan2.with(length: alpha2))
+        return .init(from: pt1, to: pt2, fromCubicOut: handle1 ?? tan1.with(length: alpha1), toCubicIn: handle2 ?? tan2.with(length: alpha2))
     }
 
     // Given set of points and their parameterization, try to find

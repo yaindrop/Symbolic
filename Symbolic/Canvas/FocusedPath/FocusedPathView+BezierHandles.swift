@@ -2,7 +2,7 @@ import SwiftUI
 
 private class GestureContext {
     var nodeId: UUID?
-    var handleType: PathBezierHandleType = .cubicIn
+    var controlType: PathBezierControlType = .cubicIn
 }
 
 // MARK: - global actions
@@ -11,16 +11,15 @@ private extension GlobalStores {
     func controlGesture(context: GestureContext) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             guard let nodeId = context.nodeId else { return }
-            let handleType = context.handleType
-            let (controlOutOffset, controlInOffset) = handleType == .cubicOut ? (v.offset, .zero) : (.zero, v.offset)
-            documentUpdater.updateInView(focusedPath: .moveNodeControl(.init(nodeId: nodeId, controlInOffset: controlInOffset, controlOutOffset: controlOutOffset)), pending: pending)
+            let controlType = context.controlType
+            documentUpdater.updateInView(focusedPath: .moveNodeControl(.init(nodeId: nodeId, offset: v.offset, controlType: controlType)), pending: pending)
         }
         return .init(
             onPress: { info in
                 let location = info.location.applying(viewport.toWorld)
-                guard let (nodeId, handleType) = focusedPath.controlNodeId(closestTo: location) else { return }
+                guard let (nodeId, controlType) = focusedPath.controlNodeId(closestTo: location) else { return }
                 context.nodeId = nodeId
-                context.handleType = handleType
+                context.controlType = controlType
                 canvasAction.start(continuous: .movePathBezierControl)
             },
             onPressEnd: { _, cancelled in
@@ -84,9 +83,9 @@ private extension FocusedPathView.BezierHandles {
             for nodeId in selector.cubicInNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
                 let position = node.position.applying(viewport.worldToView),
-                    handle = node.positionIn.applying(viewport.worldToView)
-                appendLine(to: &p, from: position, to: handle)
-                appendCircle(to: &p, at: handle)
+                    control = node.positionIn.applying(viewport.worldToView)
+                appendLine(to: &p, from: position, to: control)
+                appendCircle(to: &p, at: control)
             }
         }
         .stroke(cubicInColor, style: StrokeStyle(lineWidth: lineWidth))
@@ -100,9 +99,9 @@ private extension FocusedPathView.BezierHandles {
             for nodeId in selector.cubicOutNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
                 let position = node.position.applying(viewport.worldToView),
-                    handle = node.positionOut.applying(viewport.worldToView)
-                appendLine(to: &p, from: position, to: handle)
-                appendCircle(to: &p, at: handle)
+                    control = node.positionOut.applying(viewport.worldToView)
+                appendLine(to: &p, from: position, to: control)
+                appendCircle(to: &p, at: control)
             }
         }
         .stroke(cubicOutColor, style: StrokeStyle(lineWidth: lineWidth))
@@ -118,10 +117,10 @@ private extension FocusedPathView.BezierHandles {
                       let quadratic = segment.quadratic else { continue }
                 let from = segment.from.applying(viewport.worldToView),
                     to = segment.to.applying(viewport.worldToView),
-                    handle = quadratic.applying(viewport.worldToView)
-                appendLine(to: &p, from: from, to: handle)
-                appendLine(to: &p, from: to, to: handle)
-                appendCircle(to: &p, at: handle)
+                    control = quadratic.applying(viewport.worldToView)
+                appendLine(to: &p, from: from, to: control)
+                appendLine(to: &p, from: to, to: control)
+                appendCircle(to: &p, at: control)
             }
         }
         .stroke(quadraticColor, style: StrokeStyle(lineWidth: lineWidth))
@@ -145,19 +144,19 @@ private extension FocusedPathView.BezierHandles {
             guard let path = selector.path else { return }
             for nodeId in selector.cubicInNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let handle = node.positionIn.applying(viewport.worldToView)
-                appendTouchableRect(to: &p, at: handle)
+                let control = node.positionIn.applying(viewport.worldToView)
+                appendTouchableRect(to: &p, at: control)
             }
             for nodeId in selector.cubicOutNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let handle = node.positionOut.applying(viewport.worldToView)
-                appendTouchableRect(to: &p, at: handle)
+                let control = node.positionOut.applying(viewport.worldToView)
+                appendTouchableRect(to: &p, at: control)
             }
             for nodeId in selector.quadraticFromNodeIds {
                 guard let segment = path.segment(fromId: nodeId),
                       let quadratic = segment.quadratic else { continue }
-                let handle = quadratic.applying(viewport.worldToView)
-                appendTouchableRect(to: &p, at: handle)
+                let control = quadratic.applying(viewport.worldToView)
+                appendTouchableRect(to: &p, at: control)
             }
         }
         .fill(debugFocusedPath ? .red.opacity(0.1) : .clear)

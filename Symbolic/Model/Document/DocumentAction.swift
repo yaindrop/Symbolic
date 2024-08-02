@@ -50,7 +50,7 @@ extension PathAction.Update {
     struct SplitSegment: Equatable, Codable { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
     struct MoveNodes: Equatable, Codable { let nodeIds: [UUID], offset: Vector2 }
-    struct MoveNodeControl: Equatable, Codable { let nodeId: UUID, controlInOffset: Vector2, controlOutOffset: Vector2 }
+    struct MoveNodeControl: Equatable, Codable { let nodeId: UUID, offset: Vector2, controlType: PathBezierControlType }
 
     enum Kind: Equatable, Codable {
         case deleteNodes(DeleteNodes)

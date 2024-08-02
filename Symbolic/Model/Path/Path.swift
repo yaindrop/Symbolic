@@ -319,7 +319,7 @@ extension Path {
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
               let node = node(id: nodeId) else { return nil }
-        let newNode = PathNode(position: node.position, controlOut: node.controlOut)
+        let newNode = PathNode(position: node.position, cubicOut: node.cubicOut)
         if isClosed {
             nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
             nodeMap.insert((newNodeId, newNode), at: 0)
@@ -355,9 +355,9 @@ extension Path {
             guard let node = node(id: nodeId) else { continue }
             switch setNodeType.nodeType {
             case .locked:
-                nodeMap[nodeId]?.controlOut = node.controlIn.with(length: -node.controlOut.length)
+                nodeMap[nodeId]?.cubicOut = node.cubicIn.with(length: -node.cubicOut.length)
             case .mirrored:
-                nodeMap[nodeId]?.controlOut = -node.controlIn
+                nodeMap[nodeId]?.cubicOut = -node.cubicIn
             default: break
             }
         }
@@ -368,13 +368,13 @@ extension Path {
             switch setSegmentType.segmentType {
             case .line:
                 guard let toNodeId = nodeId(after: fromNodeId) else { return }
-                nodeMap[fromNodeId]?.controlOut = .zero
-                nodeMap[toNodeId]?.controlIn = .zero
+                nodeMap[fromNodeId]?.cubicOut = .zero
+                nodeMap[toNodeId]?.cubicIn = .zero
             case .quadratic:
                 guard let toNodeId = nodeId(after: fromNodeId),
                       let segment = segment(fromId: fromNodeId)?.toQuradratic else { return }
-                nodeMap[fromNodeId]?.controlOut = segment.fromControlOut
-                nodeMap[toNodeId]?.controlIn = segment.toControlIn
+                nodeMap[fromNodeId]?.cubicOut = segment.fromCubicOut
+                nodeMap[toNodeId]?.cubicIn = segment.toCubicIn
             default: break
             }
         }

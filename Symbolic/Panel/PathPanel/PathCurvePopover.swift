@@ -44,7 +44,7 @@ private extension PathCurvePopover {
                 .font(.callout)
         } popoverContent: {
             ContextualRow(label: "Control") {
-                let value = isOut ? node?.controlOut : node?.controlIn
+                let value = isOut ? node?.cubicOut : node?.cubicIn
                 VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
@@ -85,9 +85,9 @@ private extension PathCurvePopover {
     func update(value: Vector2? = nil, pending: Bool = false) {
         if let value, var node {
             if isOut {
-                node.controlOut = value
+                node.cubicOut = value
             } else {
-                node.controlIn = value
+                node.cubicIn = value
             }
             global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
         }

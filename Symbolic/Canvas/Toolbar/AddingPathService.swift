@@ -31,7 +31,7 @@ extension AddingPathService {
 //        guard let from else { return nil }
 //        let mid = from.midPoint(to: to)
 //        let offset = mid.offset(to: to)
-//        return .init(from: from, to: to, fromControlOut: from.offset(to: mid + offset.normalLeft / 2), toControlIn: to.offset(to: mid + offset.normalRight / 2))
+//        return .init(from: from, to: to, fromCubicOut: from.offset(to: mid + offset.normalLeft / 2), toCubicIn: to.offset(to: mid + offset.normalRight / 2))
 //    }
 
     var polyline: Polyline? {

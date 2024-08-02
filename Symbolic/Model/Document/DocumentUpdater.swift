@@ -45,7 +45,7 @@ extension DocumentUpdater {
             case let .moveNodes(kind):
                 .moveNodes(.init(nodeIds: kind.nodeIds, offset: kind.offset.applying(toWorld)))
             case let .moveNodeControl(kind):
-                .moveNodeControl(.init(nodeId: kind.nodeId, controlInOffset: kind.controlInOffset.applying(toWorld), controlOutOffset: kind.controlOutOffset.applying(toWorld)))
+                .moveNodeControl(.init(nodeId: kind.nodeId, offset: kind.offset.applying(toWorld), controlType: kind.controlType))
 
             default: kind
             }
@@ -323,9 +323,9 @@ extension DocumentUpdater {
         let (before, after) = segment.split(paramT: paramT)
         let snappedOffset = position.offset(to: grid.snap(position + offset))
 
-        let newNode = PathNode(position: position + snappedOffset, controlIn: before.toControlIn, controlOut: after.fromControlOut)
-        fromNode.controlOut = before.fromControlOut
-        toNode.controlIn = after.toControlIn
+        let newNode = PathNode(position: position + snappedOffset, cubicIn: before.toCubicIn, cubicOut: after.fromCubicOut)
+        fromNode.cubicOut = before.fromCubicOut
+        toNode.cubicIn = after.toCubicIn
 
         events.append(.path(.init(in: pathId, [
             .nodeCreate(.init(prevNodeId: fromNodeId, nodeId: newNodeId, node: newNode)),
@@ -353,46 +353,54 @@ extension DocumentUpdater {
     }
 
     private func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.MoveNodeControl) {
-        let nodeId = action.nodeId, controlInOffset = action.controlInOffset, controlOutOffset = action.controlOutOffset
+        let nodeId = action.nodeId, offset = action.offset, controlType = action.controlType
         guard let path = pathStore.get(id: pathId),
               let node = path.node(id: nodeId) else { return }
 
-        let snappedControlInOffset: Vector2 = {
-            guard controlInOffset != .zero else { return .zero }
-            let snappedControlIn = grid.snap(node.positionIn + controlInOffset)
-            return node.positionIn.offset(to: snappedControlIn)
-        }()
-        let snappedControlOutOffset: Vector2 = {
-            guard controlOutOffset != .zero else { return .zero }
-            let snappedControlOut = grid.snap(node.positionOut + controlOutOffset)
-            return node.positionOut.offset(to: snappedControlOut)
-        }()
-
-        let draggedIn = !snappedControlInOffset.isZero, draggedOut = !snappedControlOutOffset.isZero
-        guard draggedIn || draggedOut else { return }
+        var snappedCubicInOffset: Vector2 = .zero
+        var snappedCubicOutOffset: Vector2 = .zero
+        var snappedQuadraticOffset: Vector2 = .zero
+        switch controlType {
+        case .cubicIn:
+            let snappedCubicIn = grid.snap(node.positionIn + offset)
+            snappedCubicInOffset = node.positionIn.offset(to: snappedCubicIn)
+            guard !snappedCubicInOffset.isZero else { return }
+        case .cubicOut:
+            let snappedCubicOut = grid.snap(node.positionOut + offset)
+            snappedCubicOutOffset = node.positionOut.offset(to: snappedCubicOut)
+            guard !snappedCubicOutOffset.isZero else { return }
+        case .quadratic:
+            guard let segment = path.segment(fromId: nodeId),
+                  let quadratic = segment.quadratic else { return }
+            let snappedQuadratic = grid.snap(quadratic + offset)
+            snappedQuadraticOffset = quadratic.offset(to: snappedQuadratic)
+            guard !snappedQuadraticOffset.isZero else { return }
+        }
 
         var kinds: [PathEvent.Update.Kind] = []
         defer { events.append(.path(.init(in: pathId, kinds))) }
 
-        var newControlIn = node.controlIn + snappedControlInOffset, newControlOut = node.controlOut + snappedControlOutOffset
-
         guard let property = pathPropertyStore.get(id: pathId) else { return }
         let nodeType = property.nodeType(id: nodeId)
-        if draggedIn {
-            switch nodeType {
-            case .corner: break
-            case .locked: newControlOut = newControlIn.with(length: -newControlOut.length)
-            case .mirrored: newControlOut = -newControlIn
-            }
-        } else if draggedOut {
-            switch nodeType {
-            case .corner: break
-            case .locked: newControlIn = newControlOut.with(length: -newControlIn.length)
-            case .mirrored: newControlIn = -newControlOut
-            }
+        switch controlType {
+        case .cubicIn:
+            let newCubicIn = node.cubicIn + snappedCubicInOffset,
+                newCubicOut = nodeType.map(current: node.cubicOut, opposite: newCubicIn)
+            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
+        case .cubicOut:
+            let newCubicOut = node.cubicOut + snappedCubicOutOffset,
+                newCubicIn = nodeType.map(current: node.cubicIn, opposite: newCubicOut)
+            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
+        case .quadratic:
+            guard let segment = path.segment(fromId: nodeId),
+                  let quadratic = segment.quadratic,
+                  let nextId = path.nodeId(after: nodeId),
+                  let next = path.node(id: nextId) else { return }
+            let newQuadratic = quadratic + snappedQuadraticOffset,
+                newSegment = PathSegment(from: segment.from, to: segment.to, quadratic: newQuadratic)
+            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: node.cubicIn, cubicOut: newSegment.fromCubicOut))))
+            kinds.append(.nodeUpdate(.init(nodeId: nextId, node: .init(position: next.position, cubicIn: newSegment.toCubicIn, cubicOut: next.cubicOut))))
         }
-
-        kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, controlIn: newControlIn, controlOut: newControlOut))))
     }
 
     // MARK: multiple path update actions

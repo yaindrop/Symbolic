@@ -52,6 +52,13 @@ struct PathSegment: Equatable {
         self.toControlIn = toControlIn
     }
 
+    init(from: Point2, to: Point2, quadratic: Point2) {
+        self.from = from
+        self.to = to
+        fromControlOut = from.offset(to: quadratic) * 2 / 3
+        toControlIn = to.offset(to: quadratic) * 2 / 3
+    }
+
     init(from: PathNode, to: PathNode) {
         self.from = from.position
         self.to = to.position
@@ -65,6 +72,20 @@ extension PathSegment {
     var toIn: Point2 { to + toControlIn }
 
     var isLine: Bool { fromControlOut == .zero && toControlIn == .zero }
+
+    var quadratic: Point2? {
+        let c0 = from + fromControlOut * 3 / 2
+        let c1 = to + toControlIn * 3 / 2
+        guard c0 ~= c1 else { return nil }
+        return c0
+    }
+
+    var toQuradratic: PathSegment {
+        let c0 = from + fromControlOut * 3 / 2
+        let c1 = to + toControlIn * 3 / 2
+        let c = c0.midPoint(to: c1)
+        return .init(from: from, to: to, quadratic: c)
+    }
 }
 
 // MARK: CustomStringConvertible

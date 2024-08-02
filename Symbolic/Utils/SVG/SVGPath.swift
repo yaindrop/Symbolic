@@ -17,7 +17,7 @@ enum SVGPathCommand {
         func toQuadratic(current: Point2) -> QuadraticBezierTo? {
             let quadraticControl0 = current + current.offset(to: control0) * 3 / 2
             let quadraticControl1 = position + position.offset(to: control1) * 3 / 2
-            guard quadraticControl0 == quadraticControl1 else { return nil }
+            guard quadraticControl0 ~= quadraticControl1 else { return nil }
             return QuadraticBezierTo(control: quadraticControl0, position: position)
         }
     }

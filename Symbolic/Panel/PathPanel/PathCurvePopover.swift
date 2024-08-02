@@ -26,19 +26,15 @@ struct PathCurvePopover: View, TracedView, ComputedSelectorHolder {
 private extension PathCurvePopover {
     var node: PathNode? { selector.path?.node(id: nodeId) }
 
-    var segmentType: PathSegmentType? {
-        if isOut {
-            selector.pathProperty?.segmentType(id: nodeId)
-        } else {
-            selector.path?.nodeId(before: nodeId).map { selector.pathProperty?.segmentType(id: $0) }
-        }
-    }
-
     var fromNodeId: UUID? { isOut ? nodeId : selector.path?.nodeId(before: nodeId) }
 
     var toNodeId: UUID? { isOut ? selector.path?.nodeId(after: nodeId) : nodeId }
 
     var segment: PathSegment? { fromNodeId.map { selector.path?.segment(fromId: $0) } }
+
+    var segmentType: PathSegmentType? { fromNodeId.map { selector.pathProperty?.segmentType(id: $0) } }
+
+    var activeSegmentType: PathSegmentType? { segment.map { segmentType?.activeType(segment: $0, isOut: isOut) } }
 
     @ViewBuilder var content: some View {
         PopoverBody {
@@ -55,7 +51,7 @@ private extension PathCurvePopover {
             }
             ContextualDivider()
             ContextualRow(label: "Type") {
-                CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
+                CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: activeSegmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
             }

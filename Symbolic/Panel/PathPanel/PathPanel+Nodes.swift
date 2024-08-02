@@ -123,10 +123,16 @@ private extension NodeRow {
 
     @ViewBuilder var selectIcon: some View {
         Memo {
-            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                .symbolRenderingMode(.palette)
-                .foregroundStyle(Color.label, .blue)
-                .frame(maxHeight: .infinity)
+            if selected {
+                Image(systemName: "checkmark.circle.fill")
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, .blue)
+                    .frame(maxHeight: .infinity)
+            } else {
+                Image(systemName: "circle")
+                    .foregroundStyle(Color.label)
+                    .frame(maxHeight: .infinity)
+            }
         } deps: { selected }
     }
 
@@ -203,11 +209,17 @@ private extension NodeDetailView {
 
     var node: PathNode? { context.path.node(id: nodeId) }
 
+    var prevId: UUID? { context.path.nodeId(before: nodeId) }
+
     var focused: Bool { context.focusedNodeId == nodeId }
 
     var segmentType: PathSegmentType? { context.pathProperty.segmentType(id: nodeId) }
 
-    var prevSegmentType: PathSegmentType? { context.path.nodeId(before: nodeId).map { context.pathProperty.segmentType(id: $0) }}
+    var prevSegmentType: PathSegmentType? { prevId.map { context.pathProperty.segmentType(id: $0) } }
+
+    var segment: PathSegment? { context.path.segment(fromId: nodeId) }
+
+    var prevSegment: PathSegment? { prevId.map { context.path.segment(fromId: $0) } }
 
     @ViewBuilder var nodeButton: some View {
         let isPresented = $activePopover.predicate(.node, nil)
@@ -252,17 +264,17 @@ private extension NodeDetailView {
         let disabled = isOut ? context.path.nodeId(after: nodeId) == nil : context.path.nodeId(before: nodeId) == nil,
             color = disabled ? Color.label.opacity(0.5) : !focused ? .label : isOut ? .green : .orange,
             segmentType = isOut ? segmentType : prevSegmentType,
-            control = isOut ? node?.controlOut : node?.controlIn
+            handleType: PathBezierHandleType = isOut ? .cubicOut : .cubicIn
         var name: String {
             guard !disabled,
-                  let control,
-                  let segmentType = segmentType?.activeType(control: control) else { return "Terminal" }
+                  let segment,
+                  let segmentType = segmentType?.activeType(segment: segment, isOut: isOut) else { return "Terminal" }
             return segmentType.name
         }
         var image: String {
             guard !disabled,
-                  let control,
-                  let segmentType = segmentType?.activeType(control: control) else { return "circle.slash" }
+                  let segment,
+                  let segmentType = segmentType?.activeType(segment: segment, isOut: isOut) else { return "circle.slash" }
             switch segmentType {
             case .line: return "line.diagonal"
             default: return "point.topleft.down.to.point.bottomright.curvepath"

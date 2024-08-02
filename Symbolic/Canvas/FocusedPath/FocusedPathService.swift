@@ -71,53 +71,83 @@ extension FocusedPathService {
 // MARK: bezier control
 
 extension FocusedPathService {
-    var controlInNodeIds: [UUID] {
+    var cubicInNodeIds: [UUID] {
         guard let path = activeItem.focusedPath,
               let pathProperty = activeItem.focusedPathProperty else { return [] }
         let focusedSegmentId = focusedSegmentId,
             focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
             guard let prevId = path.nodeId(before: $0),
-                  let node = path.node(id: $0) else { return false }
-            let segmentType = pathProperty.segmentType(id: prevId),
-                focused = focusedSegmentId == prevId || focusedNodeId == $0,
-                valid = segmentType == .cubic || (segmentType == .auto && node.controlIn != .zero)
-            return focused && valid
+                  let segment = path.segment(fromId: prevId) else { return false }
+
+            let focused = focusedSegmentId == prevId || focusedNodeId == $0
+            guard focused else { return false }
+
+            let segmentType = pathProperty.segmentType(id: prevId)
+            return segmentType.activeType(segment: segment, isOut: false) == .cubic
         }
     }
 
-    var controlOutNodeIds: [UUID] {
+    var cubicOutNodeIds: [UUID] {
         guard let path = activeItem.focusedPath,
               let pathProperty = activeItem.focusedPathProperty else { return [] }
         let focusedSegmentId = focusedSegmentId,
             focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
-            guard let node = path.node(id: $0) else { return false }
-            let segmentType = pathProperty.segmentType(id: $0),
-                focused = focusedSegmentId == $0 || focusedNodeId == $0,
-                valid = segmentType == .cubic || (segmentType == .auto && node.controlOut != .zero)
-            return focused && valid
+            guard let segment = path.segment(fromId: $0) else { return false }
+
+            let focused = focusedSegmentId == $0 || focusedNodeId == $0
+            guard focused else { return false }
+
+            let segmentType = pathProperty.segmentType(id: $0)
+            return segmentType.activeType(segment: segment, isOut: true) == .cubic
         }
     }
 
-    func controlNodeId(closestTo point: Point2) -> (nodeId: UUID, isControlOut: Bool)? {
-        var result: (id: UUID, isControlOut: Bool, distance: Scalar)?
+    var quadraticFromNodeIds: [UUID] {
+        guard let path = activeItem.focusedPath,
+              let pathProperty = activeItem.focusedPathProperty else { return [] }
+        let focusedSegmentId = focusedSegmentId,
+            focusedNodeId = focusedNodeId
+        return path.nodeIds.filter {
+            let prevId = path.nodeId(before: $0)
+            guard let segment = path.segment(fromId: $0),
+                  let nextId = path.nodeId(after: $0) else { return false }
+
+            let focused = focusedSegmentId == $0 || (prevId != nil && focusedSegmentId == prevId) || focusedNodeId == $0 || focusedNodeId == nextId
+            guard focused else { return false }
+
+            let segmentType = pathProperty.segmentType(id: $0)
+            return segmentType.activeType(segment: segment, isOut: false) == .quadratic
+        }
+    }
+
+    func controlNodeId(closestTo point: Point2) -> (nodeId: UUID, type: PathBezierHandleType)? {
+        var result: (id: UUID, type: PathBezierHandleType, distance: Scalar)?
         guard let path = activeItem.focusedPath else { return nil }
-        for nodeId in controlInNodeIds {
+        for nodeId in cubicInNodeIds {
             guard let node = path.node(id: nodeId) else { continue }
             let distance = node.positionIn.distance(to: point)
             if distance < result?.distance ?? .infinity {
-                result = (nodeId, false, distance)
+                result = (nodeId, .cubicIn, distance)
             }
         }
-        for nodeId in controlOutNodeIds {
+        for nodeId in cubicOutNodeIds {
             guard let node = path.node(id: nodeId) else { continue }
             let distance = node.positionOut.distance(to: point)
             if distance < result?.distance ?? .infinity {
-                result = (nodeId, true, distance)
+                result = (nodeId, .cubicOut, distance)
             }
         }
-        return result.map { ($0.id, $0.isControlOut) }
+        for nodeId in quadraticFromNodeIds {
+            guard let segment = path.segment(fromId: nodeId),
+                  let position = segment.quadratic else { continue }
+            let distance = position.distance(to: point)
+            if distance < result?.distance ?? .infinity {
+                result = (nodeId, .quadratic, distance)
+            }
+        }
+        return result.map { ($0.id, $0.type) }
     }
 }
 

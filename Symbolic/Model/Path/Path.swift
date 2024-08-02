@@ -370,6 +370,11 @@ extension Path {
                 guard let toNodeId = nodeId(after: fromNodeId) else { return }
                 nodeMap[fromNodeId]?.controlOut = .zero
                 nodeMap[toNodeId]?.controlIn = .zero
+            case .quadratic:
+                guard let toNodeId = nodeId(after: fromNodeId),
+                      let segment = segment(fromId: fromNodeId)?.toQuradratic else { return }
+                nodeMap[fromNodeId]?.controlOut = segment.fromControlOut
+                nodeMap[toNodeId]?.controlIn = segment.toControlIn
             default: break
             }
         }

@@ -37,6 +37,12 @@ enum PathSegmentType: Codable, CaseIterable {
     case quadratic
 }
 
+enum PathBezierHandleType {
+    case cubicIn
+    case cubicOut
+    case quadratic
+}
+
 extension PathSegmentType {
     var name: String {
         switch self {
@@ -47,8 +53,21 @@ extension PathSegmentType {
         }
     }
 
-    func activeType(control: Vector2) -> Self {
-        self != .auto ? self : control == .zero ? .line : .cubic
+    func activeType(segment: PathSegment, isOut: Bool) -> Self {
+        if self == .auto {
+            let cubicControl = isOut ? segment.fromControlOut : segment.toControlIn
+            if cubicControl == .zero {
+                return .line
+            }
+            if segment.quadratic != nil {
+                return .quadratic
+            }
+            return .cubic
+        }
+        if self == .quadratic && segment.quadratic == nil {
+            return .cubic
+        }
+        return self
     }
 }
 

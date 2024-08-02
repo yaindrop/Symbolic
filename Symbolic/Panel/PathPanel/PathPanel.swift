@@ -6,7 +6,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
     @Environment(\.panelScrollProxy) private var panelScrollProxy
 
     class Selector: SelectorBase {
-        @Selected({ global.activeItem.focusedPath }) var path
+        @Selected({ global.activeItem.focusedPath }) var focusedPath
         @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
         @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
     }
@@ -24,7 +24,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
 
 private extension PathPanel {
     @ViewBuilder var content: some View {
-        if let path = selector.path {
+        if selector.focusedPath != nil {
             Properties()
             Nodes()
                 .onChange(of: selector.focusedNodeId) {

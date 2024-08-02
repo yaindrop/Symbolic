@@ -78,11 +78,8 @@ extension FocusedPathService {
             focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
             guard let prevId = path.nodeId(before: $0),
-                  let segment = path.segment(fromId: prevId) else { return false }
-
-            let focused = focusedSegmentId == prevId || focusedNodeId == $0
-            guard focused else { return false }
-
+                  let segment = path.segment(fromId: prevId),
+                  focusedSegmentId == prevId || focusedNodeId == $0 else { return false }
             let segmentType = pathProperty.segmentType(id: prevId)
             return segmentType.activeType(segment: segment, isOut: false) == .cubic
         }
@@ -94,11 +91,8 @@ extension FocusedPathService {
         let focusedSegmentId = focusedSegmentId,
             focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
-            guard let segment = path.segment(fromId: $0) else { return false }
-
-            let focused = focusedSegmentId == $0 || focusedNodeId == $0
-            guard focused else { return false }
-
+            guard let segment = path.segment(fromId: $0),
+                  focusedSegmentId == $0 || focusedNodeId == $0 else { return false }
             let segmentType = pathProperty.segmentType(id: $0)
             return segmentType.activeType(segment: segment, isOut: true) == .cubic
         }
@@ -110,13 +104,9 @@ extension FocusedPathService {
         let focusedSegmentId = focusedSegmentId,
             focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
-            let prevId = path.nodeId(before: $0)
             guard let segment = path.segment(fromId: $0),
-                  let nextId = path.nodeId(after: $0) else { return false }
-
-            let focused = focusedSegmentId == $0 || (prevId != nil && focusedSegmentId == prevId) || focusedNodeId == $0 || focusedNodeId == nextId
-            guard focused else { return false }
-
+                  let nextId = path.nodeId(after: $0),
+                  focusedSegmentId == $0 || focusedNodeId == $0 || focusedNodeId == nextId else { return false }
             let segmentType = pathProperty.segmentType(id: $0)
             return segmentType.activeType(segment: segment, isOut: false) == .quadratic
         }

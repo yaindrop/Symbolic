@@ -62,20 +62,18 @@ extension PathSegmentType {
     }
 
     func activeType(segment: PathSegment, isOut: Bool) -> Self {
-        if self == .auto {
-            let cubicControl = isOut ? segment.fromCubicOut : segment.toCubicIn
-            if cubicControl == .zero {
-                return .line
-            }
-            if segment.quadratic != nil {
-                return .quadratic
-            }
+        switch self {
+        case .auto:
+            let cubic = isOut ? segment.fromCubicOut : segment.toCubicIn
+            guard !cubic.isZero else { return .line }
+            guard segment.quadratic == nil else { return .quadratic }
             return .cubic
-        }
-        if self == .quadratic && segment.quadratic == nil {
+        case .quadratic:
+            guard segment.quadratic == nil else { return .quadratic }
             return .cubic
+        default:
+            return self
         }
-        return self
     }
 }
 

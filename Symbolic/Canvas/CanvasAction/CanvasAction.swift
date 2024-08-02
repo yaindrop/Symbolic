@@ -20,7 +20,6 @@ enum CanvasAction: Equatable {
         case movePathNode
         case movePathSegment
         case movePathBezierControl
-        case movePathArcControl
 
         case addAndMoveEndingNode
         case splitAndMovePathNode
@@ -72,7 +71,6 @@ extension CanvasAction.Continuous {
         case .movePathNode: "Drag to move node"
         case .movePathSegment: "Drag to move segment"
         case .movePathBezierControl: "Drag to move control"
-        case .movePathArcControl: "Drag to move control"
 
         case .addAndMoveEndingNode: "Drag to move added node"
         case .splitAndMovePathNode: "Drag to move split node"

@@ -70,8 +70,12 @@ extension Path {
             prevCubicIn = cubicIn
         }
 
-        if svgPath.initial != svgPath.last {
-            nodes.append(.init(position: svgPath.last))
+        if let prevCubicIn, !nodes.isEmpty {
+            if svgPath.initial == svgPath.last {
+                nodes[0].cubicIn = prevCubicIn
+            } else {
+                nodes.append(.init(position: svgPath.last, cubicIn: prevCubicIn))
+            }
         }
 
         let nodeMap = NodeMap(values: nodes) { _ in UUID() }

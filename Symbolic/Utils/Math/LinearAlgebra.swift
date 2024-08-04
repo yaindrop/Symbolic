@@ -80,6 +80,10 @@ extension Vector2 {
         case .vertical: self.init(0, v)
         }
     }
+
+    init(angle: Angle, length: Scalar) {
+        self.init(length * cos(angle.radians), length * sin(angle.radians))
+    }
 }
 
 // MARK: - Point2

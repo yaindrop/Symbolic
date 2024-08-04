@@ -5,7 +5,7 @@ private class GestureContext: ObservableObject {
     var longPressAddedNodeId: UUID?
 
     @Published var longPressedNodeId: UUID?
-    @Published var longPressedActionVector: Vector2 = .zero
+    @Published var longPressedOffset: Vector2 = .zero
 }
 
 // MARK: - global actions
@@ -72,7 +72,7 @@ private extension GlobalStores {
             },
 
             onLongPress: { _ in
-                context.longPressedNodeId = context.nodeId
+                withAnimation { context.longPressedNodeId = context.nodeId }
                 addEndingNode()
                 updateLongPress(pending: true)
                 if canAddEndingNode {
@@ -82,20 +82,23 @@ private extension GlobalStores {
                 }
             },
             onLongPressEnd: { _ in
-                context.longPressedNodeId = nil
+                withAnimation { context.longPressedNodeId = nil }
                 updateLongPress()
             },
 
             onDrag: {
                 if context.longPressedNodeId != nil {
-                    context.longPressedActionVector = $0.offset
+                    context.longPressedOffset = $0.offset
                     return
                 }
                 updateDrag($0, pending: true)
                 canvasAction.end(triggering: .addEndingNode)
             },
             onDragEnd: {
-                guard context.longPressedNodeId == nil else { return }
+                if context.longPressedNodeId != nil {
+                    withAnimation { context.longPressedOffset = .zero }
+                    return
+                }
                 updateDrag($0)
             }
         )
@@ -142,8 +145,10 @@ private extension FocusedPathView.NodeHandles {
             if let longPressedNodeId = gestureContext.longPressedNodeId,
                let node = selector.path?.node(id: longPressedNodeId)
             {
-                ActionWheel(vector: gestureContext.longPressedActionVector)
-                    .position(node.position.applying($0.worldToView))
+                ActionWheel(configs: .init(count: 6), offset: gestureContext.longPressedOffset) { _ in
+                    Image(systemName: "scissors")
+                }
+                .position(node.position.applying($0.worldToView))
             }
         }
     }

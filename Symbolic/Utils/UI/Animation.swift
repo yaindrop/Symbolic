@@ -84,3 +84,9 @@ struct AnimatableReader<Value: Animatable, Content: View>: View, Animatable, Tra
         content(value)
     } }
 }
+
+// MARK: - AnimatablePair
+
+extension AnimatablePair {
+    var tuple: (First, Second) { (first, second) }
+}

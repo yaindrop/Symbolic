@@ -4,8 +4,9 @@ private class GestureContext: ObservableObject {
     var nodeId: UUID?
     var longPressAddedNodeId: UUID?
 
-    @Published var longPressedNodeId: UUID?
-    @Published var longPressedOffset: Vector2 = .zero
+    @Published var actionWheelNodeId: UUID?
+    @Published var actionWheelOffset: Vector2 = .zero
+    var actionWheelOption: ActionWheel.Option?
 }
 
 // MARK: - global actions
@@ -72,7 +73,7 @@ private extension GlobalStores {
             },
 
             onLongPress: { _ in
-                withAnimation { context.longPressedNodeId = context.nodeId }
+                withAnimation { context.actionWheelNodeId = context.nodeId }
                 addEndingNode()
                 updateLongPress(pending: true)
                 if canAddEndingNode {
@@ -82,21 +83,22 @@ private extension GlobalStores {
                 }
             },
             onLongPressEnd: { _ in
-                withAnimation { context.longPressedNodeId = nil }
+                withAnimation { context.actionWheelNodeId = nil }
                 updateLongPress()
             },
 
             onDrag: {
-                if context.longPressedNodeId != nil {
-                    context.longPressedOffset = $0.offset
+                if context.actionWheelNodeId != nil {
+                    context.actionWheelOffset = $0.offset
                     return
                 }
                 updateDrag($0, pending: true)
                 canvasAction.end(triggering: .addEndingNode)
             },
             onDragEnd: {
-                if context.longPressedNodeId != nil {
-                    withAnimation { context.longPressedOffset = .zero }
+                if context.actionWheelNodeId != nil {
+                    print("dbg", context.actionWheelOption)
+                    withAnimation { context.actionWheelOffset = .zero }
                     return
                 }
                 updateDrag($0)
@@ -123,6 +125,8 @@ extension FocusedPathView {
 
         @StateObject private var gestureContext = GestureContext()
 
+        @State private var hoveringOption: ActionWheel.Option?
+
         var body: some View { trace {
             setupSelector {
                 content
@@ -142,14 +146,7 @@ private extension FocusedPathView.NodeHandles {
             shapes(nodeType: .mirrored, viewport: $0)
             activeMarks(viewport: $0)
             touchables(viewport: $0)
-            if let longPressedNodeId = gestureContext.longPressedNodeId,
-               let node = selector.path?.node(id: longPressedNodeId)
-            {
-                ActionWheel(configs: .init(count: 6), offset: gestureContext.longPressedOffset) { _ in
-                    Image(systemName: "scissors")
-                }
-                .position(node.position.applying($0.worldToView))
-            }
+            actionWheel(viewport: $0)
         }
     }
 
@@ -232,5 +229,20 @@ private extension FocusedPathView.NodeHandles {
         }
         .stroke(.blue.opacity(0.5))
         .allowsHitTesting(false)
+    }
+
+    @ViewBuilder func actionWheel(viewport: SizedViewportInfo) -> some View {
+        let node = gestureContext.actionWheelNodeId.map { selector.path?.node(id: $0) }
+        if let node {
+            ActionWheel(
+                offset: gestureContext.actionWheelOffset,
+                options: [
+                    .init(name: "Break", imageName: "scissors") {},
+                    .init(name: "Merge", imageName: "arrow.left.to.line") {},
+                ],
+                hovering: .init(gestureContext, \.actionWheelOption)
+            )
+            .position(node.position.applying(viewport.worldToView))
+        }
     }
 }

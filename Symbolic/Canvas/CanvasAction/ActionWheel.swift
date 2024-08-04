@@ -2,14 +2,16 @@ import SwiftUI
 
 // MARK: - ActionWheel
 
-struct ActionWheel<Icon: View>: View, TracedView {
-    struct Configs {
-        var count: Int
+struct ActionWheel: View, TracedView {
+    struct Option {
+        var name: String
+        var imageName: String
+        var onSelect: () -> Void
     }
 
-    var configs: Configs
     var offset: Vector2
-    @ViewBuilder var icon: (Int) -> Icon
+    var options: [Option]
+    @Binding var hovering: Option?
 
     @ViewBuilder var body: some View { trace {
         content
@@ -19,35 +21,21 @@ struct ActionWheel<Icon: View>: View, TracedView {
 // MARK: private
 
 private extension ActionWheel {
-    var offsetAngle: Angle {
-        let radian = Vector2.unitX.radian(to: offset)
-        return .radians(radian + (radian > 0 ? 0 : 2 * .pi))
-    }
-
-    var size: CGSize { .init(squared: 200) }
-
-    var rotation: Angle {
-        .degrees(3 * log(offset.length + 1))
-    }
-
-    var axis: (x: Scalar, y: Scalar, z: Scalar) {
-        (x: offset.normalLeft.dx, y: offset.normalLeft.dy, z: 0)
-    }
-
     var content: some View {
         ZStack {
-            ForEach(0 ... configs.count - 1, id: \.self) { index in
-                let startAngle = Angle.radians(2 * .pi * Scalar(index) / Scalar(configs.count)),
-                    endAngle = Angle.radians(2 * .pi * Scalar(index + 1) / Scalar(configs.count)),
-                    selected = (startAngle ... endAngle).contains(offsetAngle) && offset.length > size.width / 4
-                let center = CGRect(size).center
+            ForEach(options.indices, id: \.self) { index in
+                let startAngle = startAngle(index),
+                    endAngle = endAngle(index),
+                    midAngle = midAngle(index),
+                    selected = selected(index)
                 WheelArc(startAngle: startAngle, endAngle: endAngle, selected: selected)
-                    .fill(Color.label.opacity(selected ? 0.2 : 0.1))
-                icon(index)
-                    .position(center + Vector2(angle: startAngle, length: size.width / 3))
+                    .fill(selected ? Color.blue.opacity(0.2) : Color.label.opacity(0.1))
+                Image(systemName: options[index].imageName)
+                    .font(selected ? .body.bold() : .body)
+                    .foregroundColor(selected ? .blue : .label)
+                    .position(center + Vector2(angle: midAngle, length: size.width / 3))
             }
             SUPath {
-                let center = CGRect(size).center
                 $0.move(to: center)
                 $0.addLine(to: center + offset)
             }
@@ -58,6 +46,52 @@ private extension ActionWheel {
         .rotation3DEffect(rotation, axis: axis, anchor: .center)
         .transition(.opacity)
         .allowsHitTesting(false)
+        .onChange(of: selectedIndex) { _, index in
+            hovering = index.map { options[$0] }
+        }
+    }
+
+    var count: Int { options.count }
+
+    var size: CGSize { .init(squared: 200) }
+
+    var center: Point2 { CGRect(size).center }
+
+    var rotation: Angle {
+        .degrees(3 * log(offset.length + 1))
+    }
+
+    var axis: (x: Scalar, y: Scalar, z: Scalar) {
+        (x: offset.normalLeft.dx, y: offset.normalLeft.dy, z: 0)
+    }
+
+    // MARK: angle
+
+    var offsetAngle: Angle {
+        let radian = Vector2.unitX.radian(to: offset)
+        return .radians(radian + (radian > 0 ? 0 : 2 * .pi))
+    }
+
+    func startAngle(_ index: Int) -> Angle {
+        .radians(2 * .pi * Scalar(index) / Scalar(count))
+    }
+
+    func midAngle(_ index: Int) -> Angle {
+        .radians(2 * .pi * (Scalar(index) + 0.5) / Scalar(count))
+    }
+
+    func endAngle(_ index: Int) -> Angle {
+        .radians(2 * .pi * Scalar(index + 1) / Scalar(count))
+    }
+
+    // MARK: selected
+
+    func selected(_ index: Int) -> Bool {
+        (startAngle(index) ... endAngle(index)).contains(offsetAngle) && offset.length > size.width / 4
+    }
+
+    var selectedIndex: Int? {
+        options.indices.first { selected($0) }
     }
 }
 

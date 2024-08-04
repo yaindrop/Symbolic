@@ -65,6 +65,12 @@ func build<Content: ToolbarContent>(@ToolbarContentBuilder _ builder: () -> Cont
 
 // MARK: - Binding
 
+extension Binding {
+    init<T>(_ instance: T, _ keyPath: ReferenceWritableKeyPath<T, Value>) {
+        self.init(get: { instance[keyPath: keyPath] }, set: { instance[keyPath: keyPath] = $0 })
+    }
+}
+
 extension Binding where Value: Equatable {
     func predicate(_ trueValue: Value, _ falseValue: Value) -> Binding<Bool> {
         Binding<Bool>(get: {

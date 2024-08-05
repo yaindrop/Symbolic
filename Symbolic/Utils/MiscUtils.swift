@@ -84,3 +84,21 @@ extension Binding where Value: Equatable {
         })
     }
 }
+
+// MARK: - Task
+
+extension Task where Success == Never, Failure == Never {
+    static func sleep(seconds duration: Double) async throws {
+        try await Task.sleep(nanoseconds: .init(duration * Double(NSEC_PER_SEC)))
+    }
+}
+
+extension Task where Success == Void, Failure == Never {
+    static func delayed(seconds duration: Double, work: @escaping () async -> Void) -> Self {
+        .init {
+            try? await Task<Never, Never>.sleep(seconds: duration)
+            guard !Task<Never, Never>.isCancelled else { return }
+            await work()
+        }
+    }
+}

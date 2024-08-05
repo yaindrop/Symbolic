@@ -36,11 +36,8 @@ struct ThrottledState<Value>: DynamicProperty {
 
         func setupTask() {
             task?.cancel()
-            task = .init { @MainActor [weak self] in
-                guard let self else { return }
-                try? await Task.sleep(for: .milliseconds(UInt64(configs.duration * Double(MSEC_PER_SEC))))
-                guard !Task.isCancelled else { return }
-                throttleEnd()
+            task = Task.delayed(seconds: configs.duration) { @MainActor [weak self] in
+                self?.throttleEnd()
             }
         }
 

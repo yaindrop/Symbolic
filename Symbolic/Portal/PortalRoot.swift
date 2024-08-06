@@ -7,6 +7,7 @@ struct PortalWrapper: View, TracedView, SelectorHolder {
 
     class Selector: SelectorBase {
         @Selected({ global.portal.rootFrame }) var rootFrame
+        @Selected({ global.root.rootPanLocation }) var rootPanLocation
     }
 
     @SelectorWrapper var selector
@@ -28,15 +29,21 @@ extension PortalWrapper {
             .transaction { $0.animation = nil }
             .sizeReader { size = $0 }
             .transition(.scale(scale: 0, anchor: anchor).combined(with: .opacity))
-            .position(box.center)
-            .background {
-                if portal.configs.isModal {
-                    Color.invisibleSolid
-                        .multipleGesture(.init(
-                            onPress: { _ in global.portal.deregister(id: portal.id) }
-                        ))
+            .if(portal.configs.isModal) {
+                $0.overlay {
+                    GeometryReader { ctx in
+                        let frame = ctx.frame(in: .global),
+                            dismissed = selector.rootPanLocation.map { !frame.contains($0) } ?? false
+                        Color.clear
+                            .onChange(of: dismissed) {
+                                if dismissed {
+                                    global.portal.deregister(id: portal.id)
+                                }
+                            }
+                    }
                 }
             }
+            .position(box.center)
             .environment(\.portalId, portal.id)
     }
 

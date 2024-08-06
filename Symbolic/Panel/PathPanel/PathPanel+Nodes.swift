@@ -164,7 +164,6 @@ private extension NodeRow {
 // MARK: - NodeDetailView
 
 private struct NodeDetailView: View, TracedView {
-    @Environment(\.panelScrollFrame) var panelScrollFrame
     @Environment(\.panelAppearance) var panelAppearance
     let context: Context, nodeId: UUID
 
@@ -195,11 +194,6 @@ private extension NodeDetailView {
         .background(.ultraThickMaterial)
         .clipRounded(radius: 12)
         .geometryReader { frame = $0.frame(in: .global) }
-        .onChange(of: panelScrollFrame.contains(frame)) { _, contains in
-            if !contains {
-                activePopover = nil
-            }
-        }
         .onChange(of: panelAppearance) { _, appearance in
             if appearance != .floatingPrimary, appearance != .popoverSection {
                 activePopover = nil
@@ -225,7 +219,7 @@ private extension NodeDetailView {
         let isPresented = $activePopover.predicate(.node, nil)
         Button { isPresented.wrappedValue.toggle() } label: { nodeLabel }
             .tint(.label)
-            .portal(isPresented: isPresented, configs: .init(align: .bottomCenter, gap: .init(squared: 6))) {
+            .portal(isPresented: isPresented, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
                 PathNodePopover(pathId: context.path.id, nodeId: nodeId)
             }
     }
@@ -237,7 +231,7 @@ private extension NodeDetailView {
         Button { isPresented.wrappedValue.toggle() } label: { controlLabel(isOut: isOut) }
             .disabled(disabled)
             .tint(.label)
-            .portal(isPresented: isPresented, configs: .init(align: align, gap: .init(squared: 6))) {
+            .portal(isPresented: isPresented, configs: .init(isModal: true, align: align, gap: .init(squared: 6))) {
                 PathCurvePopover(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
             }
     }

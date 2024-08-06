@@ -11,23 +11,19 @@ enum ItemEvent: Equatable, Codable {
 // MARK: - PathEvent
 
 enum PathEvent: Equatable, Codable {
-    struct Create: Equatable, Codable { let paths: [Path] }
-    struct Delete: Equatable, Codable { let pathIds: [UUID] }
-    struct Move: Equatable, Codable { let pathIds: [UUID], offset: Vector2 }
-
+    struct Create: Equatable, Codable { let path: Path }
+    struct Delete: Equatable, Codable { let pathId: UUID }
     struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
 
     // multi update
     struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newPathId: UUID, newNodeId: UUID, offset: Vector2 } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
+    struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newPathId: UUID, newNodeId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
     struct SegmentBreak: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at segment, creating a new path when the current path is not closed
 
     case create(Create)
     case delete(Delete)
-    case move(Move)
     case update(Update)
 
-    // multi update
     case merge(Merge)
     case nodeBreak(NodeBreak)
     case segmentBreak(SegmentBreak)
@@ -36,11 +32,13 @@ enum PathEvent: Equatable, Codable {
 // MARK: Update
 
 extension PathEvent.Update {
+    struct Move: Equatable, Codable { let offset: Vector2 }
     struct NodeCreate: Equatable, Codable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
     struct NodeUpdate: Equatable, Codable { let nodeId: UUID, node: PathNode }
     struct NodeDelete: Equatable, Codable { let nodeId: UUID }
 
     enum Kind: Equatable, Codable {
+        case move(Move)
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
@@ -106,11 +104,9 @@ extension PathEvent {
     var affectedPathIds: [UUID] {
         switch self {
         case let .create(event):
-            event.paths.map { $0.id }
+            [event.path.id]
         case let .delete(event):
-            event.pathIds
-        case let .move(event):
-            event.pathIds
+            [event.pathId]
         case let .update(event):
             [event.pathId]
         case let .merge(event):

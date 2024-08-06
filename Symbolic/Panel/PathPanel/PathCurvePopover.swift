@@ -115,6 +115,6 @@ private extension PathCurvePopover {
 
     func breakSegment() {
         guard let fromNodeId else { return }
-        global.documentUpdater.update(path: .breakAtSegment(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: UUID())))
+        global.documentUpdater.update(focusedPath: .breakAtSegment(.init(fromNodeId: fromNodeId, newPathId: UUID())))
     }
 }

@@ -95,7 +95,7 @@ private extension PathNodePopover {
 //    }
 
     func breakNode() {
-        global.documentUpdater.update(path: .breakAtNode(.init(pathId: pathId, nodeId: nodeId, newPathId: UUID(), newNodeId: UUID(), offset: .zero)))
+        global.documentUpdater.update(focusedPath: .breakAtNode(.init(nodeId: nodeId, newPathId: UUID(), newNodeId: UUID())))
     }
 
     func deleteNode() {

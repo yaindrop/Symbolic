@@ -22,29 +22,20 @@ enum PathAction: Equatable, Codable {
     struct Move: Equatable, Codable { var pathIds: [UUID], offset: Vector2 }
     struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }
 
-    // multi update
-    struct Merge: Equatable, Codable { var pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct BreakAtNode: Equatable, Codable { var pathId: UUID, nodeId: UUID, newPathId: UUID, newNodeId: UUID, offset: Vector2 }
-    struct BreakAtSegment: Equatable, Codable { var pathId: UUID, fromNodeId: UUID, newPathId: UUID }
-
     case load(Load)
 
     case create(Create)
     case delete(Delete)
     case move(Move)
     case update(Update)
-
-    case merge(Merge)
-    case breakAtNode(BreakAtNode)
-    case breakAtSegment(BreakAtSegment)
 }
 
 // MARK: Update
 
 extension PathAction.Update {
     struct DeleteNodes: Equatable, Codable { var nodeIds: [UUID] }
-
     struct UpdateNode: Equatable, Codable { var nodeId: UUID, node: PathNode }
+    struct CombineNode: Equatable, Codable { var nodeId: UUID, isNext: Bool }
 
     struct AddEndingNode: Equatable, Codable { var endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
     struct SplitSegment: Equatable, Codable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
@@ -52,10 +43,14 @@ extension PathAction.Update {
     struct MoveNodes: Equatable, Codable { var nodeIds: [UUID], offset: Vector2 }
     struct MoveNodeControl: Equatable, Codable { var nodeId: UUID, offset: Vector2, controlType: PathBezierControlType }
 
+    struct Merge: Equatable, Codable { var endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct BreakAtNode: Equatable, Codable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID }
+    struct BreakAtSegment: Equatable, Codable { var fromNodeId: UUID, newPathId: UUID }
+
     enum Kind: Equatable, Codable {
         case deleteNodes(DeleteNodes)
-
         case updateNode(UpdateNode)
+        case combineNode(CombineNode)
 
         // handle actions
         case addEndingNode(AddEndingNode)
@@ -63,6 +58,10 @@ extension PathAction.Update {
 
         case moveNodes(MoveNodes)
         case moveNodeControl(MoveNodeControl)
+
+        case merge(Merge)
+        case breakAtNode(BreakAtNode)
+        case breakAtSegment(BreakAtSegment)
     }
 }
 

@@ -34,20 +34,16 @@ private extension Tracer {
 
     // MARK: store
 
-    struct StoreAccess<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
-        let keyPath: ReferenceWritableKeyPath<S, _Trackable<S, T>>
+    struct StoreAccess<S, K>: ReflectedStringMessage {
+        let keyPath: KeyPath<S, K>
     }
 
-    struct StoreAccessDerived<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
-        let keyPath: ReferenceWritableKeyPath<S, _Derived<S, T>>
+    struct StoreUpdate<S, K>: ReflectedStringMessage {
+        let keyPath: KeyPath<S, K>
     }
 
-    struct StoreUpdate<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
-        let keyPath: ReferenceWritableKeyPath<S, _Trackable<S, T>>, newValue: T
-    }
-
-    struct StoreUpdateDerived<S: _StoreProtocol, T: Equatable>: ReflectedStringMessage {
-        let keyPath: ReferenceWritableKeyPath<S, _Derived<S, T>>, newValue: T
+    struct StoreUpdateNotify<S, K, T>: ReflectedStringMessage {
+        let keyPath: KeyPath<S, K>, newValue: T
     }
 
     // MARK: selector
@@ -56,24 +52,24 @@ private extension Tracer {
         let name: String
     }
 
-    struct SelectorAccess<S: _SelectorProtocol, T: Equatable>: ReflectedStringMessage {
-        let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>
+    struct SelectorAccess<S, K>: ReflectedStringMessage {
+        let name: String, keyPath: KeyPath<S, K>
     }
 
-    struct SelectorTrack<S: _SelectorProtocol, T: Equatable>: ReflectedStringMessage {
-        let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>, configs: SelectorConfigs
+    struct SelectorTrack<S, K>: ReflectedStringMessage {
+        let name: String, keyPath: KeyPath<S, K>, configs: SelectorConfigs
     }
 
-    struct SelectorTrackSetup<T: Equatable>: ReflectedStringMessage {
+    struct SelectorTrackSetup<T>: ReflectedStringMessage {
         let newValue: T
     }
 
-    struct SelectorTrackUpdate<T: Equatable>: ReflectedStringMessage {
+    struct SelectorTrackUpdate<T>: ReflectedStringMessage {
         let newValue: T
     }
 
-    struct SelectorRetrack<S: _SelectorProtocol, T: Equatable>: ReflectedStringMessage {
-        let name: String, keyPath: ReferenceWritableKeyPath<S, _Selected<S, T>>
+    struct SelectorRetrack<S, K>: ReflectedStringMessage {
+        let name: String, keyPath: KeyPath<S, K>
     }
 
     struct SelectorNotify: ReflectedStringMessage {
@@ -312,7 +308,7 @@ private extension _StoreProtocol {
     // MARK: access derived
 
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = subtracer.range(.init(Tracer.StoreAccessDerived(keyPath: keyPath))); defer { _r() }
+        let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let value = wrapper.value ?? update(keyPath: keyPath)
 
@@ -344,7 +340,7 @@ private extension _StoreProtocol {
             wrapper.id = id
         }
         guard forced || wrapper.value != newValue else { return }
-        let _r = subtracer.range(.init(Tracer.StoreUpdate(keyPath: keyPath, newValue: newValue))); defer { _r() }
+        let _r = subtracer.range(.init(Tracer.StoreUpdate(keyPath: keyPath))); defer { _r() }
         wrapper.value = newValue
         wrapper.didSetSubject.send(newValue)
 
@@ -354,6 +350,7 @@ private extension _StoreProtocol {
 
         if wrapper.willNotifyCancellable == nil {
             wrapper.willNotifyCancellable = manager.updatingWillNotify?.sink {
+                let _r = subtracer.range(.init(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue))); defer { _r() }
                 wrapper.willNotifySubject.send(wrapper.value)
                 wrapper.willNotifyCancellable = nil
             }
@@ -365,7 +362,7 @@ private extension _StoreProtocol {
     @discardableResult func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
         @Ref(self, keyPath) var wrapper
         let (newValue, context) = withDeriving { wrapper.derive(self) }
-        let _r = subtracer.range(.init(Tracer.StoreUpdateDerived(keyPath: keyPath, newValue: newValue))); defer { _r() }
+        let _r = subtracer.range(.init(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue))); defer { _r() }
 
         wrapper.value = newValue
         wrapper.willNotifySubject.send(newValue)
@@ -415,6 +412,7 @@ func withStoreUpdating(configs: PartialSelectorConfigs = .init(), _ apply: () ->
 struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var id: Int?
     fileprivate var value: Value
+    fileprivate var updatingValue: Value?
 
     fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
     fileprivate let willNotifySubject = PassthroughSubject<Value, Never>()

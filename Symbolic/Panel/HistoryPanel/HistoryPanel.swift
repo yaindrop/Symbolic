@@ -30,6 +30,8 @@ private extension DocumentAction {
                     "In path \(update.pathId.shortDescription) delete node \(action.nodeIds.map { $0.shortDescription })"
                 case let .updateNode(action):
                     "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.node)"
+                case let .combineNode(action):
+                    "In path \(update.pathId.shortDescription) combine node at \(action.nodeId.shortDescription) with \(action.isNext ? "next" : "prev") node"
 
                 case let .addEndingNode(action):
                     "In path \(update.pathId.shortDescription) add ending node from \(action.endingNodeId.shortDescription) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"
@@ -40,14 +42,14 @@ private extension DocumentAction {
                     "In path \(update.pathId.shortDescription) move node \(action.nodeIds.map { $0.id.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
                 case let .moveNodeControl(action):
                     "In path \(update.pathId.shortDescription) move node control from \(action.nodeId.shortDescription) by \(action.offset.shortDescription) of \(action.controlType)"
-                }
 
-            case let .merge(action):
-                "Merge path \(action.pathId.shortDescription) node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
-            case let .breakAtNode(action):
-                "Break path \(action.pathId.shortDescription) at node \(action.nodeId.shortDescription)"
-            case let .breakAtSegment(action):
-                "Break path \(action.pathId.shortDescription) at segment from \(action.fromNodeId.shortDescription)"
+                case let .merge(action):
+                    "In path \(update.pathId.shortDescription) merge node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
+                case let .breakAtNode(action):
+                    "In path \(update.pathId.shortDescription) break at node \(action.nodeId.shortDescription)"
+                case let .breakAtSegment(action):
+                    "In path \(update.pathId.shortDescription) break at segment from \(action.fromNodeId.shortDescription)"
+                }
             }
 
         case let .pathProperty(action):

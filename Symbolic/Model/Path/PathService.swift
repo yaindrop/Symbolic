@@ -165,7 +165,6 @@ extension PathService {
         switch event {
         case let .create(event): loadEvent(event)
         case let .delete(event): loadEvent(event)
-        case let .move(event): loadEvent(event)
         case let .update(event): loadEvent(event)
         case let .merge(event): loadEvent(event)
         case let .nodeBreak(event): loadEvent(event)
@@ -174,20 +173,11 @@ extension PathService {
     }
 
     private func loadEvent(_ event: PathEvent.Create) {
-        add(paths: event.paths)
+        add(paths: [event.path])
     }
 
     private func loadEvent(_ event: PathEvent.Delete) {
-        remove(pathIds: event.pathIds)
-    }
-
-    private func loadEvent(_ event: PathEvent.Move) {
-        let paths = event.pathIds.compactMap { pathId -> Path? in
-            guard let path = get(id: pathId) else { return nil }
-            path.update(moveOffset: event.offset)
-            return path
-        }
-        update(paths: paths)
+        remove(pathIds: [event.pathId])
     }
 
     private func loadEvent(_ event: PathEvent.Update) {
@@ -195,6 +185,8 @@ extension PathService {
         guard let path = get(id: pathId) else { return }
         for kind in event.kinds {
             switch kind {
+            case let .move(event):
+                path.update(move: event)
             case let .nodeCreate(event):
                 path.update(nodeCreate: event)
             case let .nodeDelete(event):

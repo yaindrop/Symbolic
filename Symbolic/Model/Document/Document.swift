@@ -25,7 +25,9 @@ struct Document: Codable {
         parser.delegate = delegate
         parser.parse()
 
-        events.append(.init(kind: .single(.path(.create(.init(paths: paths)))), action: .path(.load(.init(paths: paths)))))
+        for path in paths {
+            events.append(.init(kind: .single(.path(.create(.init(path: path)))), action: .path(.load(.init(paths: paths)))))
+        }
     }
 }
 

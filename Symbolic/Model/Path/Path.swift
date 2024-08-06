@@ -257,10 +257,10 @@ extension Path {
         .init(id: id, nodeMap: nodeMap, isClosed: isClosed ?? self.isClosed)
     }
 
-    func update(moveOffset: Vector2) {
+    func update(move: PathEvent.Update.Move) {
         let _r = tracer.range("Path.update move"); defer { _r() }
         for id in nodeIds {
-            nodeMap[id]?.position += moveOffset
+            nodeMap[id]?.position += move.offset
         }
     }
 
@@ -317,12 +317,11 @@ extension Path {
     func update(nodeBreak: PathEvent.NodeBreak) -> Path? {
         let nodeId = nodeBreak.nodeId,
             newPathId = nodeBreak.newPathId,
-            newNodeId = nodeBreak.newNodeId,
-            offset = nodeBreak.offset
+            newNodeId = nodeBreak.newNodeId
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
               let node = node(id: nodeId) else { return nil }
-        let newNode = PathNode(position: node.position + offset, cubicOut: node.cubicOut)
+        let newNode = PathNode(position: node.position, cubicOut: node.cubicOut)
         if isClosed {
             nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
             nodeMap.insert((newNodeId, newNode), at: 0)

@@ -5,6 +5,7 @@ import SwiftUI
 struct ContextMenuRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.contextMenu.menus }) var menus
+        @Selected({ global.contextMenu.hidden }) var hidden
     }
 
     @SelectorWrapper var selector
@@ -13,6 +14,8 @@ struct ContextMenuRoot: View, TracedView, SelectorHolder {
         setupSelector {
             ZStack {
                 ForEach(Array(selector.menus)) { ContextMenuView(data: $0) }
+                    .opacity(selector.hidden ? 0 : 1)
+                    .animation(.fast, value: selector.hidden)
             }
         }
     } }

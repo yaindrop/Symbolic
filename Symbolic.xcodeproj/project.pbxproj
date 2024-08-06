@@ -92,6 +92,8 @@
 		5781504D2C5BB6800057D798 /* PathPanel+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504C2C5BB6800057D798 /* PathPanel+Properties.swift */; };
 		5781504F2C5BC2BC0057D798 /* ContextualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504E2C5BC2BC0057D798 /* ContextualViews.swift */; };
 		578150512C5E6A930057D798 /* ActionWheel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150502C5E6A930057D798 /* ActionWheel.swift */; };
+		578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150542C625B6C0057D798 /* PathPanel+Selection.swift */; };
+		578150572C6260510057D798 /* PathSelectionPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150562C6260510057D798 /* PathSelectionPopover.swift */; };
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
@@ -243,6 +245,8 @@
 		5781504C2C5BB6800057D798 /* PathPanel+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+Properties.swift"; sourceTree = "<group>"; };
 		5781504E2C5BC2BC0057D798 /* ContextualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextualViews.swift; sourceTree = "<group>"; };
 		578150502C5E6A930057D798 /* ActionWheel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionWheel.swift; sourceTree = "<group>"; };
+		578150542C625B6C0057D798 /* PathPanel+Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+Selection.swift"; sourceTree = "<group>"; };
+		578150562C6260510057D798 /* PathSelectionPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSelectionPopover.swift; sourceTree = "<group>"; };
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
@@ -439,6 +443,8 @@
 				575C3CF52BD60C200035B758 /* PathPanel.swift */,
 				5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */,
 				5781504C2C5BB6800057D798 /* PathPanel+Properties.swift */,
+				578150542C625B6C0057D798 /* PathPanel+Selection.swift */,
+				578150562C6260510057D798 /* PathSelectionPopover.swift */,
 			);
 			path = PathPanel;
 			sourceTree = "<group>";
@@ -979,6 +985,7 @@
 				57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */,
 				571B9B472C14AA5F00AAD516 /* Container+Extension.swift in Sources */,
 				572CA9E02C31A0CA003760B7 /* RootStore.swift in Sources */,
+				578150572C6260510057D798 /* PathSelectionPopover.swift in Sources */,
 				57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */,
 				57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */,
 				574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */,
@@ -1000,6 +1007,7 @@
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				57B703FB2C38418000B60F36 /* CustomState.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
+				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,
 				571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,

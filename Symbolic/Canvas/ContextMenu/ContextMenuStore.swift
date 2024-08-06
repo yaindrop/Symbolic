@@ -13,6 +13,7 @@ enum ContextMenuData: SelfIdentifiable {
 
 class ContextMenuStore: Store {
     @Trackable var menus = Set<ContextMenuData>()
+    @Trackable var hidden: Bool = false
 }
 
 extension ContextMenuStore {
@@ -26,6 +27,10 @@ extension ContextMenuStore {
 
     func clear() {
         update { $0(\._menus, []) }
+    }
+
+    func setHidden(_ hidden: Bool) {
+        update { $0(\._hidden, hidden) }
     }
 
     @ViewBuilder func representative(_ data: ContextMenuData) -> some View {

@@ -26,6 +26,7 @@ private extension PathPanel {
     @ViewBuilder var content: some View {
         if selector.focusedPath != nil {
             Properties()
+            Selection()
             Nodes()
                 .onChange(of: selector.focusedNodeId) {
                     guard let id = selector.focusedNodeId else { return }

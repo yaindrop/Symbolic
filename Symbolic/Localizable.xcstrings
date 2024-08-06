@@ -41,6 +41,9 @@
     "%lld" : {
 
     },
+    "%lld nodes selected" : {
+
+    },
     "Back" : {
 
     },
@@ -135,6 +138,9 @@
 
     },
     "Front" : {
+
+    },
+    "Invert" : {
 
     },
     "Isometric" : {

@@ -208,6 +208,12 @@ extension FocusedPathService {
         }
     }
 
+    func invertSelection() {
+        let _r = subtracer.range(type: .intent, "invertSelection"); defer { _r() }
+        guard let path = activeItem.focusedPath else { return }
+        store.update(activeNodeIds: .init(path.nodeIds.filter { !activeNodeIds.contains($0) }))
+    }
+
     func onTap(node nodeId: UUID) {
         if selectingNodes {
             toggleSelection(nodeIds: [nodeId])

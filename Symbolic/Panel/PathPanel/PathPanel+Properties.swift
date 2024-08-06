@@ -45,10 +45,6 @@ private extension PathPanel.Properties {
                     }
                     .contextualFont()
                     Spacer()
-                    Button(selector.selectingNodes ? "Done" : "Select Nodes", systemImage: selector.selectingNodes ? "" : "checklist") {
-                        global.focusedPath.toggleSelectingNodes()
-                    }
-                    .contextualFont()
                 }
             }
         }

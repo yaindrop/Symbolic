@@ -61,6 +61,7 @@ private extension GlobalStores {
         return .init(
             configs: .init(durationThreshold: 0.2),
             onPress: { info in
+                contextMenu.setHidden(true)
                 let location = info.location.applying(viewport.toWorld)
                 guard let path = activeItem.focusedPath,
                       let nodeId = path.nodeId(closestTo: location) else { return }
@@ -69,6 +70,7 @@ private extension GlobalStores {
                 canvasAction.start(triggering: .pathNodeActions)
             },
             onPressEnd: { _, cancelled in
+                contextMenu.setHidden(false)
                 context.nodeId = nil
                 canvasAction.end(triggering: .pathNodeActions)
                 canvasAction.end(continuous: .addAndMoveEndingNode)
@@ -91,7 +93,8 @@ private extension GlobalStores {
             },
             onLongPressEnd: { _ in
                 guard context.actionWheelNodeId != nil else { return }
-                context.actionWheelOption?.onSelect()
+                contextMenu.setHidden(false)
+                context.actionWheelOption?.onPressEnd()
                 withAnimation { context.actionWheelNodeId = nil }
             },
 
@@ -101,32 +104,43 @@ private extension GlobalStores {
     }
 
     func actionWheelOptions(context: GestureContext) -> [ActionWheel.Option] {
+        var nodeId: UUID? { context.actionWheelNodeId }
         var isEndingNode: Bool {
             guard let nodeId = context.nodeId,
                   let path = activeItem.focusedPath else { return false }
             return path.isEndingNode(id: nodeId)
         }
+        var hasPrev: Bool {
+            guard let nodeId = context.nodeId,
+                  let path = activeItem.focusedPath else { return false }
+            return path.nodeId(before: nodeId) != nil
+        }
+        var hasNext: Bool {
+            guard let nodeId = context.nodeId,
+                  let path = activeItem.focusedPath else { return false }
+            return path.nodeId(after: nodeId) != nil
+        }
         return [
             .init(name: "Delete", imageName: "trash", tintColor: .red) {
-                guard let nodeId = context.nodeId else { return }
+                guard let nodeId else { return }
                 documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: [nodeId])))
             },
             isEndingNode ?
                 .init(name: "Add", imageName: "plus.square", holdingDuration: 0.5) {
-                    guard let nodeId = context.nodeId else { return }
+                    guard let nodeId else { return }
                     let offset = context.dragOffset.applying(viewport.toWorld)
                     start(context: context, action: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: .init(), offset: offset)))
                 } :
                 .init(name: "Break", imageName: "scissors") {
-                    guard let nodeId = context.nodeId else { return }
+                    guard let nodeId else { return }
                     documentUpdater.update(focusedPath: .breakAtNode(.init(nodeId: nodeId, newPathId: .init(), newNodeId: .init())))
                 },
-            .init(name: "Combine Prev", imageName: "arrow.right.to.line", tintColor: .orange) {
-                guard let nodeId = context.nodeId else { return }
+            .init(name: "Combine Prev", imageName: "arrow.right.to.line", disabled: !hasPrev, tintColor: .orange) {
+                guard let nodeId else { return }
                 documentUpdater.update(focusedPath: .combineNode(.init(nodeId: nodeId, isNext: false)))
             },
-            .init(name: "Combine Next", imageName: "arrow.left.to.line", tintColor: .green) {
-                guard let nodeId = context.nodeId else { return }
+            .init(name: "Combine Next", imageName: "arrow.left.to.line", disabled: !hasNext, tintColor: .green) {
+                guard let nodeId else { return }
                 documentUpdater.update(focusedPath: .combineNode(.init(nodeId: nodeId, isNext: true)))
             },
         ]
@@ -166,6 +180,7 @@ extension FocusedPathView {
 private extension FocusedPathView.NodeHandles {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
+            indexMarks(viewport: $0)
             snappedMarks(viewport: $0)
             shapes(nodeType: .corner, viewport: $0)
             shapes(nodeType: .locked, viewport: $0)
@@ -179,6 +194,21 @@ private extension FocusedPathView.NodeHandles {
     var circleSize: Scalar { 12 }
     var rectSize: Scalar { circleSize / 2 * 1.7725 } // sqrt of pi
     var touchableSize: Scalar { 40 }
+    var textSize: Scalar { 16 }
+
+    @ViewBuilder func indexMarks(viewport: SizedViewportInfo) -> some View {
+        Canvas { ctx, _ in
+            guard let path = selector.path else { return }
+            for index in path.nodes.indices {
+                guard let node = path.node(at: index) else { continue }
+                let position = node.position.applying(viewport.worldToView) - Vector2(textSize / 2, textSize / 2),
+                    size = CGSize(squared: textSize),
+                    text = Text("\(index)").font(.system(size: 8)).foregroundStyle(.blue)
+                ctx.draw(ctx.resolve(text), in: .init(center: position, size: size))
+            }
+        }
+        .allowsHitTesting(false)
+    }
 
     @ViewBuilder func shapes(nodeType: PathNodeType, viewport: SizedViewportInfo) -> some View {
         SUPath { p in

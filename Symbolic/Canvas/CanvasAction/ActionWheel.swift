@@ -8,9 +8,15 @@ struct ActionWheel: View, TracedView {
     struct Option {
         var name: String
         var imageName: String
+        var disabled: Bool = false
         var tintColor: Color = .blue
         var holdingDuration: Double?
         var onSelect: () -> Void
+
+        func onPressEnd() {
+            guard holdingDuration == nil else { return }
+            onSelect()
+        }
     }
 
     var offset: Vector2
@@ -67,6 +73,7 @@ private extension ActionWheel {
                 }
             }
         optionSymbol(option: option, selected: selected, angle: midAngle)
+            .opacity(option.disabled ? 0.5 : 1)
     }
 
     func optionSymbol(option: Option, selected: Bool, angle: Angle) -> some View {
@@ -150,7 +157,8 @@ private extension ActionWheel {
     // MARK: selected
 
     func selected(_ index: Int) -> Bool {
-        (startAngle(index) ... endAngle(index)).contains(offsetAngle) && offset.length > radius * innerRatio
+        if options[index].disabled { return false }
+        return (startAngle(index) ... endAngle(index)).contains(offsetAngle) && offset.length > radius * innerRatio
     }
 
     var selectedIndex: Int? {

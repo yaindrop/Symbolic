@@ -86,11 +86,11 @@ extension ViewportUpdater {
         }
     }
 
-    func zoomTo(rect: CGRect) {
+    func zoomTo(rect: CGRect, ratio: Scalar = 0.8) {
         let freeSpace = global.panel.freeSpace
         let _r = subtracer.range(type: .intent, "zoomTo \(rect) in \(freeSpace)"); defer { _r() }
         let worldRect = viewport.worldRect
-        let targetRect = CGRect(center: freeSpace.center, size: freeSpace.size * 0.8).applying(viewport.toWorld)
+        let targetRect = CGRect(center: freeSpace.center, size: freeSpace.size * ratio).applying(viewport.toWorld)
         let transform = CGAffineTransform(fit: rect, to: targetRect).inverted()
         let newWorldRect = worldRect.applying(transform)
         let origin = newWorldRect.origin

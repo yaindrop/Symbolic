@@ -73,6 +73,10 @@ extension CGRect {
         guard let first = rects.first else { return nil }
         self = rects.dropFirst().reduce(into: first) { bounds, rect in bounds = bounds.union(rect) }
     }
+
+    init?(containing points: [Point2]) {
+        self.init(union: points.map { .init(center: $0, size: .zero) })
+    }
 }
 
 extension Angle {

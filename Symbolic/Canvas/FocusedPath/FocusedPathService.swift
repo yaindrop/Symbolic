@@ -49,11 +49,23 @@ extension FocusedPathService {
         return path.continuousNodeIndexPairs(nodeIds: activeNodeIds)
     }
 
-    func nodesBounds(from: Int, to: Int) -> CGRect? {
+    func nodeBounds(id nodeId: UUID) -> CGRect? {
+        guard let path = activeItem.focusedPath,
+              let node = path.node(id: nodeId) else { return nil }
+        return .init(containing: [node.position, node.positionIn, node.positionOut])
+    }
+
+    func segmentBounds(fromId: UUID) -> CGRect? {
+        guard let path = activeItem.focusedPath,
+              let segment = path.segment(fromId: fromId) else { return nil }
+        return .init(containing: [segment.from, segment.to, segment.fromOut, segment.toIn])
+    }
+
+    func subpathBounds(from: Int, to: Int) -> CGRect? {
         guard let path = activeItem.focusedPath else { return nil }
         if from == to {
-            guard let node = path.node(at: from) else { return nil }
-            return CGRect(center: node.position, size: .zero)
+            guard let nodeId = path.nodeId(at: from) else { return nil }
+            return nodeBounds(id: nodeId)
         } else {
             guard let subpath = path.subpath(from: from, to: to) else { return nil }
             return subpath.boundingRect
@@ -61,10 +73,12 @@ extension FocusedPathService {
     }
 
     var activeNodesBounds: CGRect? {
-        guard let nodeBounds = activeNodeIndexPairs.completeMap({ nodesBounds(from: $0.first, to: $0.second) }) else { return nil }
-        guard let unioned = CGRect(union: nodeBounds) else { return nil }
-        guard let pathBounds = activeItem.focusedPath?.boundingRect else { return nil }
-        return .init(origin: .init(unioned.origin.x, pathBounds.minY), size: .init(unioned.size.width, pathBounds.height))
+        guard let nodeBounds = activeNodeIndexPairs.completeMap({ subpathBounds(from: $0.first, to: $0.second) }),
+              let bounds = CGRect(union: nodeBounds),
+              let pathBounds = activeItem.focusedPath?.boundingRect else { return nil }
+        let minY = min(bounds.minY, pathBounds.minY),
+            maxY = max(bounds.maxY, pathBounds.maxY)
+        return .init(origin: .init(bounds.minX, minY), size: .init(bounds.width, maxY - minY))
     }
 }
 

@@ -315,11 +315,14 @@ extension Path {
     }
 
     func update(nodeBreak: PathEvent.NodeBreak) -> Path? {
-        let nodeId = nodeBreak.nodeId, newNodeId = nodeBreak.newNodeId, newPathId = nodeBreak.newPathId
+        let nodeId = nodeBreak.nodeId,
+            newPathId = nodeBreak.newPathId,
+            newNodeId = nodeBreak.newNodeId,
+            offset = nodeBreak.offset
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
               let node = node(id: nodeId) else { return nil }
-        let newNode = PathNode(position: node.position, cubicOut: node.cubicOut)
+        let newNode = PathNode(position: node.position + offset, cubicOut: node.cubicOut)
         if isClosed {
             nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
             nodeMap.insert((newNodeId, newNode), at: 0)

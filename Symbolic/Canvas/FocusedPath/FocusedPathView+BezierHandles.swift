@@ -11,8 +11,9 @@ private extension GlobalStores {
     func controlGesture(context: GestureContext) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             guard let nodeId = context.nodeId else { return }
-            let controlType = context.controlType
-            documentUpdater.updateInView(focusedPath: .moveNodeControl(.init(nodeId: nodeId, offset: v.offset, controlType: controlType)), pending: pending)
+            let controlType = context.controlType,
+                offset = v.offset.applying(viewport.toWorld)
+            documentUpdater.update(focusedPath: .moveNodeControl(.init(nodeId: nodeId, offset: offset, controlType: controlType)), pending: pending)
         }
         return .init(
             onPress: { info in

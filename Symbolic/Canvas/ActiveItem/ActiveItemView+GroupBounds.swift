@@ -31,12 +31,13 @@ private extension GlobalStores {
     }
 
     func onDrag(group: ItemGroup, _ v: PanInfo, pending: Bool = false) {
+        let offset = v.offset.applying(viewport.toWorld)
         if activeItem.selected(itemId: group.id) {
             let selectedPathIds = activeItem.selectedPaths.map { $0.id }
-            documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+            documentUpdater.update(path: .move(.init(pathIds: selectedPathIds, offset: offset)), pending: pending)
         } else {
             let groupedPathIds = item.groupedPaths(groupId: group.id).map { $0.id }
-            documentUpdater.updateInView(path: .move(.init(pathIds: groupedPathIds, offset: v.offset)), pending: pending)
+            documentUpdater.update(path: .move(.init(pathIds: groupedPathIds, offset: offset)), pending: pending)
         }
     }
 

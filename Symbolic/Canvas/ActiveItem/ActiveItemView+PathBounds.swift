@@ -14,11 +14,12 @@ private extension GlobalStores {
     }
 
     func onDrag(pathId: UUID, _ v: PanInfo, pending: Bool = false) {
+        let offset = v.offset.applying(viewport.toWorld)
         if activeItem.selected(itemId: pathId) {
             let selectedPathIds = activeItem.selectedPaths.map { $0.id }
-            documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+            documentUpdater.update(path: .move(.init(pathIds: selectedPathIds, offset: offset)), pending: pending)
         } else {
-            documentUpdater.updateInView(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
+            documentUpdater.update(path: .move(.init(pathIds: [pathId], offset: offset)), pending: pending)
         }
     }
 
@@ -85,11 +86,12 @@ extension ActiveItemView.PathBounds {
     }
 
     func updateDrag(_ v: PanInfo, pending: Bool = false) {
+        let offset = v.offset.applying(global.viewport.toWorld)
         if selector.selected {
             let selectedPathIds = global.activeItem.selectedPaths.map { $0.id }
-            global.documentUpdater.updateInView(path: .move(.init(pathIds: selectedPathIds, offset: v.offset)), pending: pending)
+            global.documentUpdater.update(path: .move(.init(pathIds: selectedPathIds, offset: offset)), pending: pending)
         } else {
-            global.documentUpdater.updateInView(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
+            global.documentUpdater.update(path: .move(.init(pathIds: [pathId], offset: offset)), pending: pending)
         }
     }
 }

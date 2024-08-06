@@ -7,7 +7,8 @@ private extension GlobalStores {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             guard let fromId = focusedPath.focusedSegmentId,
                   let toId = activeItem.focusedPath?.nodeId(after: fromId) else { return }
-            documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: v.offset)), pending: pending)
+            let offset = v.offset.applying(viewport.toWorld)
+            documentUpdater.update(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: offset)), pending: pending)
         }
         return .init(
             onPress: { _ in canvasAction.start(continuous: .movePathSegment) },

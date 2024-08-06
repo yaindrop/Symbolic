@@ -1,5 +1,7 @@
 import SwiftUI
 
+let debugActionWheel = false
+
 // MARK: - ActionWheel
 
 struct ActionWheel: View, TracedView {
@@ -56,15 +58,6 @@ private extension ActionWheel {
             outerRatio = outerRatio + (selected ? deltaRatio : 0)
         WheelArc(startAngle: startAngle, endAngle: endAngle, innerRatio: innerRatio, outerRatio: outerRatio)
             .fill(selected ? option.tintColor.opacity(0.2) : Color.label.opacity(0.1))
-        optionSymbol(index: index, selected: selected, angle: midAngle)
-    }
-
-    @ViewBuilder func optionSymbol(index: Int, selected: Bool, angle: Angle) -> some View {
-        let option = options[index]
-        Image(systemName: option.imageName)
-            .font(selected ? .body.bold() : .body)
-            .foregroundColor(selected ? option.tintColor : .label)
-            .frame(size: .init(squared: 32))
             .overlay {
                 if option.holdingDuration != nil, selected {
                     CircularProgress(t: holding?.progress ?? 0)
@@ -73,13 +66,21 @@ private extension ActionWheel {
                         .onDisappear { resetHolding(index: index) }
                 }
             }
+        optionSymbol(option: option, selected: selected, angle: midAngle)
+    }
+
+    func optionSymbol(option: Option, selected: Bool, angle: Angle) -> some View {
+        Image(systemName: option.imageName)
+            .font(selected ? .body.bold() : .body)
+            .foregroundColor(selected ? option.tintColor : .label)
+            .frame(size: .init(squared: 32))
             .position(center + .init(angle: angle, length: radius * midRatio))
     }
 
     func setupHolding(index: Int) {
         let option = options[index]
         guard let duration = option.holdingDuration else { return }
-        let task = Task.delayed(seconds: duration) { option.onSelect() }
+        let task = Task.delayed(seconds: duration) { @MainActor in option.onSelect() }
         holding = .init(index: index, progress: 0, task: task)
         withAnimation(.linear(duration: duration)) {
             holding?.progress = 1
@@ -92,12 +93,14 @@ private extension ActionWheel {
         holding = nil
     }
 
-    var debugLine: some View {
-        SUPath {
-            $0.move(to: center)
-            $0.addLine(to: center + offset)
+    @ViewBuilder var debugLine: some View {
+        if debugActionWheel {
+            SUPath {
+                $0.move(to: center)
+                $0.addLine(to: center + offset)
+            }
+            .stroke(.red)
         }
-        .stroke(.red)
     }
 
     var size: CGSize { .init(squared: 200) }
@@ -147,7 +150,7 @@ private extension ActionWheel {
     // MARK: selected
 
     func selected(_ index: Int) -> Bool {
-        (startAngle(index) ... endAngle(index)).contains(offsetAngle) && offset.length > radius * midRatio
+        (startAngle(index) ... endAngle(index)).contains(offsetAngle) && offset.length > radius * innerRatio
     }
 
     var selectedIndex: Int? {

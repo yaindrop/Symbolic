@@ -2,51 +2,70 @@ import SwiftUI
 
 private class GestureContext: ObservableObject {
     var nodeId: UUID?
-    var longPressAddedNodeId: UUID?
 
     @Published var dragOffset: Vector2 = .zero
 
     @Published var actionWheelNodeId: UUID?
     var actionWheelOption: ActionWheel.Option?
+
+    enum PendingAction {
+        case moveNodes(PathAction.Update.MoveNodes)
+        case addEndingNode(PathAction.Update.AddEndingNode)
+        case breakAtNode(PathAction.BreakAtNode)
+    }
+
+    var pendingAction: PendingAction?
+
+    func setup(_ nodeId: UUID) {
+        self.nodeId = nodeId
+        dragOffset = .zero
+        actionWheelNodeId = nil
+        actionWheelOption = nil
+        pendingAction = nil
+    }
 }
 
 // MARK: - global actions
 
 private extension GlobalStores {
+    func start(context: GestureContext, _ action: GestureContext.PendingAction) {
+        context.actionWheelNodeId = nil
+        context.pendingAction = action
+        update(action, pending: true)
+    }
+
+    func update(_ action: GestureContext.PendingAction, offset: Vector2? = nil, pending: Bool = false) {
+        switch action {
+        case var .moveNodes(action):
+            action.offset = offset ?? action.offset
+            documentUpdater.update(focusedPath: .moveNodes(action), pending: pending)
+        case var .addEndingNode(action):
+            action.offset = offset ?? action.offset
+            documentUpdater.update(focusedPath: .addEndingNode(action), pending: pending)
+        case var .breakAtNode(action):
+            action.offset = offset ?? action.offset
+            documentUpdater.update(path: .breakAtNode(action), pending: pending)
+        }
+    }
+
     func nodesGesture(context: GestureContext) -> MultipleGesture {
         var canAddEndingNode: Bool {
             guard let nodeId = context.nodeId,
                   let focusedPath = activeItem.focusedPath else { return false }
             return focusedPath.isEndingNode(id: nodeId)
         }
-        func addEndingNode() {
-            guard canAddEndingNode else { return }
-            let id = UUID()
-            context.longPressAddedNodeId = id
-            focusedPath.setFocus(node: id)
-        }
-        func moveAddedNode(newNodeId: UUID, offset: Vector2, pending: Bool = false) {
-            guard let nodeId = context.nodeId else { return }
-            documentUpdater.updateInView(focusedPath: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: newNodeId, offset: offset)), pending: pending)
-            if !pending {
-                context.longPressAddedNodeId = nil
-            }
-        }
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             context.dragOffset = v.offset
             guard context.actionWheelNodeId == nil else { return }
-            guard let nodeId = context.nodeId else { return }
-            if let newNodeId = context.longPressAddedNodeId {
-                moveAddedNode(newNodeId: newNodeId, offset: v.offset, pending: pending)
+            let offset = v.offset.applying(viewport.toWorld)
+            if let action = context.pendingAction {
+                update(action, offset: offset, pending: pending)
             } else {
+                guard let nodeId = context.nodeId else { return }
                 let multiDrag = focusedPath.selectingNodes && focusedPath.activeNodeIds.contains(nodeId)
                 let nodeIds = multiDrag ? .init(focusedPath.activeNodeIds) : [nodeId]
-                documentUpdater.updateInView(focusedPath: .moveNodes(.init(nodeIds: nodeIds, offset: v.offset)), pending: pending)
+                start(context: context, .moveNodes(.init(nodeIds: nodeIds, offset: offset)))
             }
-        }
-        func updateLongPress(pending: Bool = false) {
-            guard let newNodeId = context.longPressAddedNodeId else { return }
-            moveAddedNode(newNodeId: newNodeId, offset: .zero, pending: pending)
         }
 
         return .init(
@@ -55,17 +74,12 @@ private extension GlobalStores {
                 let location = info.location.applying(viewport.toWorld)
                 guard let path = activeItem.focusedPath,
                       let nodeId = path.nodeId(closestTo: location) else { return }
-                context.nodeId = nodeId
-                context.dragOffset = .zero
+                context.setup(nodeId)
                 canvasAction.start(continuous: .movePathNode)
-//                if canAddEndingNode {
-//                    canvasAction.start(triggering: .addEndingNode)
-//                }
                 canvasAction.start(triggering: .pathNodeActions)
             },
             onPressEnd: { _, cancelled in
                 context.nodeId = nil
-//                canvasAction.end(triggering: .addEndingNode)
                 canvasAction.end(triggering: .pathNodeActions)
                 canvasAction.end(continuous: .addAndMoveEndingNode)
                 canvasAction.end(continuous: .movePathNode)
@@ -79,25 +93,42 @@ private extension GlobalStores {
 
             onLongPress: { _ in
                 withAnimation { context.actionWheelNodeId = context.nodeId }
+                if let nodeId = context.nodeId {
+                    focusedPath.setFocus(node: nodeId)
+                }
+                canvasAction.end(continuous: .movePathNode)
                 canvasAction.end(triggering: .pathNodeActions)
-
-//                //                addEndingNode()
-//                updateLongPress(pending: true)
-//                if canAddEndingNode {
-//                    canvasAction.end(continuous: .movePathNode)
-//                    canvasAction.end(triggering: .addEndingNode)
-//                    canvasAction.start(continuous: .addAndMoveEndingNode)
-//                }
             },
             onLongPressEnd: { _ in
                 guard context.actionWheelNodeId != nil else { return }
+                context.actionWheelOption?.onSelect()
                 withAnimation { context.actionWheelNodeId = nil }
-                updateLongPress()
             },
 
             onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )
+    }
+
+    func actionWheelOptions(context: GestureContext) -> [ActionWheel.Option] {
+        [
+            .init(name: "Break", imageName: "scissors") {
+                guard let path = activeItem.focusedPath,
+                      let nodeId = context.nodeId else { return }
+                documentUpdater.update(path: .breakAtNode(.init(pathId: path.id, nodeId: nodeId, newPathId: .init(), newNodeId: .init(), offset: .zero)))
+            },
+            .init(name: "Add", imageName: "plus.square", tintColor: .blue, holdingDuration: 0.5) {
+                guard let nodeId = context.nodeId else { return }
+                let offset = context.dragOffset.applying(viewport.toWorld)
+                start(context: context, .addEndingNode(.init(endingNodeId: nodeId, newNodeId: .init(), offset: offset)))
+            },
+            .init(name: "Delete", imageName: "trash", tintColor: .red) {
+                guard let nodeId = context.nodeId else { return }
+                documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: [nodeId])))
+            },
+            .init(name: "Merge Prev", imageName: "arrow.right.to.line", tintColor: .orange) { print("2") },
+            .init(name: "Merge Next", imageName: "arrow.left.to.line", tintColor: .green) { print("2") },
+        ]
     }
 }
 
@@ -226,16 +257,12 @@ private extension FocusedPathView.NodeHandles {
     }
 
     @ViewBuilder func actionWheel(viewport: SizedViewportInfo) -> some View {
-        let node = gestureContext.actionWheelNodeId.map { selector.path?.node(id: $0) }
-        if let node {
+        let path = selector.path,
+            nodeId = gestureContext.actionWheelNodeId
+        if let path, let nodeId, let node = path.node(id: nodeId) {
             ActionWheel(
                 offset: gestureContext.dragOffset,
-                options: [
-                    .init(name: "Break", imageName: "scissors", holdingDuration: 2) { print("1") },
-                    .init(name: "Merge", imageName: "arrow.left.to.line") { print("2") },
-                    .init(name: "Delete", imageName: "trash", holdingDuration: 2) { print("3") },
-                    .init(name: "Split", imageName: "square.split.diagonal") { print("4") },
-                ],
+                options: global.actionWheelOptions(context: gestureContext),
                 hovering: .init(gestureContext, \.actionWheelOption)
             )
             .position(node.position.applying(viewport.worldToView))

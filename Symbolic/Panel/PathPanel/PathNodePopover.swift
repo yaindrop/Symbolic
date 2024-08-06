@@ -82,8 +82,8 @@ private extension PathNodePopover {
     }
 
     func focusNode() {
-        guard let node else { return }
-        global.viewportUpdater.zoomTo(rect: .init(center: node.position, size: .init(squared: 32)))
+        guard let bounds = global.focusedPath.nodeBounds(id: nodeId) else { return }
+        global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
         global.focusedPath.setFocus(node: nodeId)
     }
 
@@ -95,7 +95,7 @@ private extension PathNodePopover {
 //    }
 
     func breakNode() {
-        global.documentUpdater.update(path: .breakAtNode(.init(pathId: pathId, nodeId: nodeId, newNodeId: UUID(), newPathId: UUID())))
+        global.documentUpdater.update(path: .breakAtNode(.init(pathId: pathId, nodeId: nodeId, newPathId: UUID(), newNodeId: UUID(), offset: .zero)))
     }
 
     func deleteNode() {

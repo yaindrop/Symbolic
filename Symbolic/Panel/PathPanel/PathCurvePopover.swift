@@ -99,8 +99,8 @@ private extension PathCurvePopover {
 
     func focusSegment() {
         guard let fromNodeId,
-              let segment else { return }
-        global.viewportUpdater.zoomTo(rect: segment.boundingRect.outset(by: 32))
+              let bounds = global.focusedPath.segmentBounds(fromId: fromNodeId) else { return }
+        global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
         global.focusedPath.setFocus(segment: fromNodeId)
     }
 

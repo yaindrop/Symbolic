@@ -22,16 +22,17 @@ private extension GlobalStores {
         }
         func moveSplitNode(paramT: Scalar, newNodeId: UUID, offset: Vector2, pending: Bool = false) {
             guard let segmentId = context.segmentId else { return }
-            documentUpdater.updateInView(focusedPath: .splitSegment(.init(fromNodeId: segmentId, paramT: paramT, newNodeId: newNodeId, offset: offset)), pending: pending)
+            documentUpdater.update(focusedPath: .splitSegment(.init(fromNodeId: segmentId, paramT: paramT, newNodeId: newNodeId, offset: offset)), pending: pending)
             if !pending {
                 context.longPressParamT = nil
             }
         }
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
+            let offset = v.offset.applying(viewport.toWorld)
             if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
-                moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: v.offset, pending: pending)
+                moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: offset, pending: pending)
             } else if let pathId = activeItem.focusedPath?.id {
-                documentUpdater.updateInView(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
+                documentUpdater.update(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
             }
         }
         func updateLongPress(pending: Bool = false) {

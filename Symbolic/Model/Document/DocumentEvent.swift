@@ -19,7 +19,7 @@ enum PathEvent: Equatable, Codable {
 
     // multi update
     struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
+    struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newPathId: UUID, newNodeId: UUID, offset: Vector2 } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
     struct SegmentBreak: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at segment, creating a new path when the current path is not closed
 
     case create(Create)

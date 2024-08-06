@@ -3,9 +3,9 @@ import Foundation
 // MARK: - ItemAction
 
 enum ItemAction: Equatable, Codable {
-    struct Group: Equatable, Codable { let group: ItemGroup, inGroupId: UUID? }
-    struct Ungroup: Equatable, Codable { let groupIds: [UUID] }
-    struct Reorder: Equatable, Codable { let members: [UUID], inGroupId: UUID? }
+    struct Group: Equatable, Codable { var group: ItemGroup, inGroupId: UUID? }
+    struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
+    struct Reorder: Equatable, Codable { var members: [UUID], inGroupId: UUID? }
 
     case group(Group)
     case ungroup(Ungroup)
@@ -15,17 +15,17 @@ enum ItemAction: Equatable, Codable {
 // MARK: - PathAction
 
 enum PathAction: Equatable, Codable {
-    struct Load: Equatable, Codable { let paths: [Path] }
+    struct Load: Equatable, Codable { var paths: [Path] }
 
-    struct Create: Equatable, Codable { let path: Path }
-    struct Delete: Equatable, Codable { let pathIds: [UUID] }
-    struct Move: Equatable, Codable { let pathIds: [UUID], offset: Vector2 }
-    struct Update: Equatable, Codable { let pathId: UUID, kind: Kind }
+    struct Create: Equatable, Codable { var path: Path }
+    struct Delete: Equatable, Codable { var pathIds: [UUID] }
+    struct Move: Equatable, Codable { var pathIds: [UUID], offset: Vector2 }
+    struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }
 
     // multi update
-    struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct BreakAtNode: Equatable, Codable { let pathId: UUID, nodeId: UUID, newNodeId: UUID, newPathId: UUID }
-    struct BreakAtSegment: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID }
+    struct Merge: Equatable, Codable { var pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct BreakAtNode: Equatable, Codable { var pathId: UUID, nodeId: UUID, newPathId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct BreakAtSegment: Equatable, Codable { var pathId: UUID, fromNodeId: UUID, newPathId: UUID }
 
     case load(Load)
 
@@ -42,15 +42,15 @@ enum PathAction: Equatable, Codable {
 // MARK: Update
 
 extension PathAction.Update {
-    struct DeleteNodes: Equatable, Codable { let nodeIds: [UUID] }
+    struct DeleteNodes: Equatable, Codable { var nodeIds: [UUID] }
 
-    struct UpdateNode: Equatable, Codable { let nodeId: UUID, node: PathNode }
+    struct UpdateNode: Equatable, Codable { var nodeId: UUID, node: PathNode }
 
-    struct AddEndingNode: Equatable, Codable { let endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
-    struct SplitSegment: Equatable, Codable { let fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
+    struct AddEndingNode: Equatable, Codable { var endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct SplitSegment: Equatable, Codable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
-    struct MoveNodes: Equatable, Codable { let nodeIds: [UUID], offset: Vector2 }
-    struct MoveNodeControl: Equatable, Codable { let nodeId: UUID, offset: Vector2, controlType: PathBezierControlType }
+    struct MoveNodes: Equatable, Codable { var nodeIds: [UUID], offset: Vector2 }
+    struct MoveNodeControl: Equatable, Codable { var nodeId: UUID, offset: Vector2, controlType: PathBezierControlType }
 
     enum Kind: Equatable, Codable {
         case deleteNodes(DeleteNodes)
@@ -69,15 +69,15 @@ extension PathAction.Update {
 // MARK: - PathPropertyAction
 
 enum PathPropertyAction: Equatable, Codable {
-    struct Update: Equatable, Codable { let pathId: UUID, kind: Kind }
+    struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }
 
     case update(Update)
 }
 
 extension PathPropertyAction.Update {
-    struct SetName: Equatable, Codable { let name: String? }
-    struct SetNodeType: Equatable, Codable { let nodeIds: [UUID], nodeType: PathNodeType? }
-    struct SetSegmentType: Equatable, Codable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
+    struct SetName: Equatable, Codable { var name: String? }
+    struct SetNodeType: Equatable, Codable { var nodeIds: [UUID], nodeType: PathNodeType? }
+    struct SetSegmentType: Equatable, Codable { var fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
     enum Kind: Equatable, Codable {
         case setName(SetName)

@@ -35,9 +35,7 @@ private extension PathPanel.Selection {
                         Button { showPopover.toggle() } label: {
                             Image(systemName: "ellipsis.circle")
                         }
-                        .portal(isPresented: $showPopover) {
-                            PathNodePopover(pathId: pathId, nodeId: nodeId)
-                        }
+                        .portal(isPresented: $showPopover) { PathSelectionPopover() }
                     }
                 }
                 ContextualDivider()

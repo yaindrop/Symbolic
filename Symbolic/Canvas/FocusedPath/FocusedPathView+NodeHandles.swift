@@ -194,17 +194,17 @@ private extension FocusedPathView.NodeHandles {
     var circleSize: Scalar { 12 }
     var rectSize: Scalar { circleSize / 2 * 1.7725 } // sqrt of pi
     var touchableSize: Scalar { 40 }
-    var textSize: Scalar { 16 }
 
     @ViewBuilder func indexMarks(viewport: SizedViewportInfo) -> some View {
         Canvas { ctx, _ in
             guard let path = selector.path else { return }
             for index in path.nodes.indices {
                 guard let node = path.node(at: index) else { continue }
-                let position = node.position.applying(viewport.worldToView) - Vector2(textSize / 2, textSize / 2),
-                    size = CGSize(squared: textSize),
-                    text = Text("\(index)").font(.system(size: 8)).foregroundStyle(.blue)
-                ctx.draw(ctx.resolve(text), in: .init(center: position, size: size))
+                let text = Text("\(index)").font(.system(size: 8)).foregroundStyle(.blue),
+                    resolved = ctx.resolve(text),
+                    size = resolved.measure(in: .init(squared: touchableSize)),
+                    position = node.position.applying(viewport.worldToView) - Vector2(circleSize + size.width + 4, 0) / 2
+                ctx.draw(resolved, in: .init(center: position, size: size))
             }
         }
         .allowsHitTesting(false)

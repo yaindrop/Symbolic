@@ -41,6 +41,9 @@
     "%lld" : {
 
     },
+    "%lld nodes" : {
+
+    },
     "%lld nodes selected" : {
 
     },
@@ -225,6 +228,9 @@
 
     },
     "Wrap in new folder" : {
+
+    },
+    "Zoom in" : {
 
     },
     "Zoom In" : {

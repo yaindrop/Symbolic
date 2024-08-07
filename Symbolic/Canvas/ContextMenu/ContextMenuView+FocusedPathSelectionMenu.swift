@@ -7,7 +7,9 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.activeItem.focusedPath }) var focusedPath
             @Selected({ global.focusedPath.activeNodesBounds }) var bounds
+            @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeSegmentIds }) var activeSegmentIds
             @Selected({ global.focusedPath.activeNodeIds.map { global.activeItem.focusedPathProperty?.nodeType(id: $0) }.allSame() }) var activeNodeType
@@ -15,6 +17,8 @@ extension ContextMenuView {
         }
 
         @SelectorWrapper var selector
+
+        @State private var showPopover: Bool = false
 
         var body: some View {
             setupSelector {
@@ -51,17 +55,16 @@ extension ContextMenuView.FocusedPathSelectionMenu {
 
             Divider()
 
-            Menu { nodeTypeMenu } label: { Image(systemName: "smallcircle.filled.circle") }
-                .menuOrder(.fixed)
+            Button { showPopover.toggle() } label: { Image(systemName: "ellipsis.circle") }
                 .frame(minWidth: 32)
                 .tint(.label)
-
-            if !selector.activeSegmentIds.isEmpty {
-                Menu { segmentTypeMenu } label: { Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath") }
-                    .menuOrder(.fixed)
-                    .frame(minWidth: 32)
-                    .tint(.label)
-            }
+                .portal(isPresented: $showPopover) {
+                    if selector.selectingNodes || selector.activeNodeIds.count > 1 {
+                        PathSelectionPopover()
+                    } else if let path = selector.focusedPath, let nodeId = selector.activeNodeIds.first {
+                        PathNodePopover(pathId: path.id, nodeId: nodeId)
+                    }
+                }
 
             Divider()
 

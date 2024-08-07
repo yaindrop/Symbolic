@@ -39,6 +39,10 @@ extension Array {
         return mapped
     }
 
+    func compact<T>() -> [T] where Element == T? { compactMap { $0 }}
+
+    func complete<T>() -> [T]? where Element == T? { completeMap { $0 } }
+
     func allSame() -> Element? where Element: Equatable {
         allSatisfy { $0 == first } ? first : nil
     }

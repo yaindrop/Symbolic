@@ -13,7 +13,7 @@ private extension GlobalStores {
             guard let nodeId = context.nodeId else { return }
             let controlType = context.controlType,
                 offset = v.offset.applying(viewport.toWorld)
-            documentUpdater.update(focusedPath: .moveNodeControl(.init(nodeId: nodeId, offset: offset, controlType: controlType)), pending: pending)
+            documentUpdater.update(focusedPath: .moveNodeControl(.init(nodeId: nodeId, controlType: controlType, offset: offset)), pending: pending)
         }
         return .init(
             onPress: { info in

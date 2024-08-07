@@ -259,7 +259,7 @@ private extension NodeDetailView {
             color = disabled ? Color.label.opacity(0.5) : !focused ? .label : isOut ? .green : .orange,
             segment = isOut ? segment : prevSegment,
             segmentType = isOut ? segmentType : prevSegmentType,
-            activeType = segment.map { segmentType?.activeType(segment: $0, isOut: isOut) }
+            activeType = segment.map { segmentType?.activeType(segment: $0) }
         var name: String {
             guard !disabled,
                   let activeType else { return "Terminal" }
@@ -268,10 +268,7 @@ private extension NodeDetailView {
         var image: String {
             guard !disabled,
                   let activeType = activeType else { return "circle.slash" }
-            switch activeType {
-            case .line: return "line.diagonal"
-            default: return "point.topleft.down.to.point.bottomright.curvepath"
-            }
+            return "point.topleft.down.to.point.bottomright.curvepath"
         }
         VStack(spacing: 0) {
             Image(systemName: image)

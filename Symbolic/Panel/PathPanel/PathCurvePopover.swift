@@ -49,7 +49,7 @@ private extension PathCurvePopover {
             }
             ContextualDivider()
             ContextualRow(label: "Type") {
-                CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: segmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
+                CasePicker<PathSegmentType>(cases: [.cubic, .quadratic], value: segmentType ?? .cubic) { $0.name } onValue: { update(segmentType: $0) }
                     .background(.ultraThickMaterial)
                     .clipRounded(radius: 6)
             }

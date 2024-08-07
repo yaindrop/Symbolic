@@ -41,7 +41,7 @@ extension PathAction.Update {
     struct SplitSegment: Equatable, Codable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
 
     struct MoveNodes: Equatable, Codable { var nodeIds: [UUID], offset: Vector2 }
-    struct MoveNodeControl: Equatable, Codable { var nodeId: UUID, offset: Vector2, controlType: PathBezierControlType }
+    struct MoveNodeControl: Equatable, Codable { var nodeId: UUID, controlType: PathBezierControlType, offset: Vector2 }
 
     struct Merge: Equatable, Codable { var endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     struct BreakAtNode: Equatable, Codable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID }

@@ -93,9 +93,10 @@ extension FocusedPathService {
         return path.nodeIds.filter {
             guard let prevId = path.nodeId(before: $0),
                   let segment = path.segment(fromId: prevId),
+                  !(segment.toCubicIn ~== .zero),
                   focusedSegmentId == prevId || focusedNodeId == $0 else { return false }
-            let segmentType = pathProperty.segmentType(id: prevId)
-            return segmentType.activeType(segment: segment, isOut: false) == .cubic
+            let segmentType = pathProperty.segmentType(id: prevId).activeType(segment: segment)
+            return segmentType == .cubic
         }
     }
 
@@ -106,9 +107,10 @@ extension FocusedPathService {
             focusedNodeId = focusedNodeId
         return path.nodeIds.filter {
             guard let segment = path.segment(fromId: $0),
+                  !(segment.fromCubicOut ~== .zero),
                   focusedSegmentId == $0 || focusedNodeId == $0 else { return false }
-            let segmentType = pathProperty.segmentType(id: $0)
-            return segmentType.activeType(segment: segment, isOut: true) == .cubic
+            let segmentType = pathProperty.segmentType(id: $0).activeType(segment: segment)
+            return segmentType == .cubic
         }
     }
 
@@ -121,8 +123,8 @@ extension FocusedPathService {
             guard let segment = path.segment(fromId: $0),
                   let nextId = path.nodeId(after: $0),
                   focusedSegmentId == $0 || focusedNodeId == $0 || focusedNodeId == nextId else { return false }
-            let segmentType = pathProperty.segmentType(id: $0)
-            return segmentType.activeType(segment: segment, isOut: false) == .quadratic
+            let segmentType = pathProperty.segmentType(id: $0).activeType(segment: segment)
+            return segmentType == .quadratic
         }
     }
 

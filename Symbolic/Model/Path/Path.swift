@@ -368,10 +368,6 @@ extension Path {
     func update(setSegmentType: PathPropertyEvent.Update.SetSegmentType) {
         for fromNodeId in setSegmentType.fromNodeIds {
             switch setSegmentType.segmentType {
-            case .line:
-                guard let toNodeId = nodeId(after: fromNodeId) else { return }
-                nodeMap[fromNodeId]?.cubicOut = .zero
-                nodeMap[toNodeId]?.cubicIn = .zero
             case .quadratic:
                 guard let toNodeId = nodeId(after: fromNodeId),
                       let segment = segment(fromId: fromNodeId)?.toQuradratic else { return }

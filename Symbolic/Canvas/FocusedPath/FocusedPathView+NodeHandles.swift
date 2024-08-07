@@ -4,6 +4,7 @@ private class GestureContext: ObservableObject {
     enum PendingAction {
         case moveNodes(PathAction.Update.MoveNodes)
         case addEndingNode(PathAction.Update.AddEndingNode)
+        case moveNodeControl(PathAction.Update.MoveNodeControl)
     }
 
     var nodeId: UUID?
@@ -40,6 +41,9 @@ private extension GlobalStores {
         case var .addEndingNode(action):
             action.offset = offset ?? action.offset
             documentUpdater.update(focusedPath: .addEndingNode(action), pending: pending)
+        case var .moveNodeControl(action):
+            action.offset = offset ?? action.offset
+            documentUpdater.update(focusedPath: .moveNodeControl(action), pending: pending)
         }
     }
 
@@ -104,45 +108,59 @@ private extension GlobalStores {
     }
 
     func actionWheelOptions(context: GestureContext) -> [ActionWheel.Option] {
-        var nodeId: UUID? { context.actionWheelNodeId }
-        var isEndingNode: Bool {
-            guard let nodeId = context.nodeId,
-                  let path = activeItem.focusedPath else { return false }
-            return path.isEndingNode(id: nodeId)
-        }
-        var hasPrev: Bool {
-            guard let nodeId = context.nodeId,
-                  let path = activeItem.focusedPath else { return false }
-            return path.nodeId(before: nodeId) != nil
-        }
-        var hasNext: Bool {
-            guard let nodeId = context.nodeId,
-                  let path = activeItem.focusedPath else { return false }
-            return path.nodeId(after: nodeId) != nil
-        }
+        guard let path = activeItem.focusedPath,
+              let pathProperty = activeItem.focusedPathProperty,
+              let nodeId = context.nodeId,
+              let node = path.node(id: nodeId) else { return [] }
+
+        let isEndingNode = path.isEndingNode(id: nodeId),
+            prevId = path.nodeId(before: nodeId),
+            prevSegment = prevId.map { path.segment(fromId: $0) },
+            prevSegmentType = prevSegment.map { pathProperty.segmentType(id: prevId!).activeType(segment: $0) },
+            hasCubicIn = prevSegmentType == .cubic,
+            segment = path.segment(fromId: nodeId),
+            segmentType = segment.map { pathProperty.segmentType(id: nodeId).activeType(segment: $0) },
+            hasCubicOut = segmentType == .cubic
+
         return [
             .init(name: "Delete", imageName: "trash", tintColor: .red) {
-                guard let nodeId else { return }
+                guard let nodeId = context.actionWheelNodeId else { return }
                 documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: [nodeId])))
             },
             isEndingNode ?
-                .init(name: "Add", imageName: "plus.square", holdingDuration: 0.5) {
-                    guard let nodeId else { return }
+                .init(name: "Add", imageName: "plus.square", holdingDuration: 0.3) {
+                    guard let nodeId = context.actionWheelNodeId else { return }
                     let offset = context.dragOffset.applying(viewport.toWorld)
                     start(context: context, action: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: .init(), offset: offset)))
                 } :
                 .init(name: "Break", imageName: "scissors") {
-                    guard let nodeId else { return }
+                    guard let nodeId = context.actionWheelNodeId else { return }
                     documentUpdater.update(focusedPath: .breakAtNode(.init(nodeId: nodeId, newPathId: .init(), newNodeId: .init())))
                 },
-            .init(name: "Combine Prev", imageName: "arrow.right.to.line", disabled: !hasPrev, tintColor: .orange) {
-                guard let nodeId else { return }
-                documentUpdater.update(focusedPath: .combineNode(.init(nodeId: nodeId, isNext: false)))
-            },
-            .init(name: "Combine Next", imageName: "arrow.left.to.line", disabled: !hasNext, tintColor: .green) {
-                guard let nodeId else { return }
-                documentUpdater.update(focusedPath: .combineNode(.init(nodeId: nodeId, isNext: true)))
-            },
+            node.cubicIn == .zero ?
+                .init(name: "Move Cubic In", imageName: "arrow.left.to.line", disabled: !hasCubicIn, tintColor: .orange, holdingDuration: 0.3) {
+                    guard let nodeId = context.actionWheelNodeId else { return }
+                    let offset = context.dragOffset.applying(viewport.toWorld)
+                    start(context: context, action: .moveNodeControl(.init(nodeId: nodeId, controlType: .cubicIn, offset: offset)))
+                } :
+                .init(name: "Reset Cubic In", imageName: "circle.slash", disabled: !hasCubicIn, tintColor: .orange) {
+                    guard let nodeId = context.actionWheelNodeId else { return }
+                    var node = node
+                    node.cubicIn = .zero
+                    documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)))
+                },
+            node.cubicOut == .zero ?
+                .init(name: "Move Cubic Out", imageName: "arrow.right.to.line", disabled: !hasCubicOut, tintColor: .green, holdingDuration: 0.3) {
+                    guard let nodeId = context.actionWheelNodeId else { return }
+                    let offset = context.dragOffset.applying(viewport.toWorld)
+                    start(context: context, action: .moveNodeControl(.init(nodeId: nodeId, controlType: .cubicOut, offset: offset)))
+                } :
+                .init(name: "Reset Cubic Out", imageName: "circle.slash", disabled: !hasCubicOut, tintColor: .green) {
+                    guard let nodeId = context.actionWheelNodeId else { return }
+                    var node = node
+                    node.cubicOut = .zero
+                    documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)))
+                },
         ]
     }
 }

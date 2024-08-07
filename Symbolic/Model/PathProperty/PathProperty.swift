@@ -39,9 +39,7 @@ extension PathNodeType: CustomStringConvertible {
 // MARK: - PathSegmentType
 
 enum PathSegmentType: Codable, CaseIterable {
-    case auto
     case cubic
-    case line
     case quadratic
 }
 
@@ -54,35 +52,23 @@ enum PathBezierControlType: Codable {
 extension PathSegmentType {
     var name: String {
         switch self {
-        case .auto: "Auto"
         case .cubic: "Cubic"
-        case .line: "Line"
         case .quadratic: "Quad"
         }
     }
 
-    func activeType(segment: PathSegment, isOut: Bool) -> Self {
-        switch self {
-        case .auto:
-            let cubic = isOut ? segment.fromCubicOut : segment.toCubicIn
-            guard !cubic.isZero else { return .line }
-            guard segment.quadratic == nil else { return .quadratic }
-            return .cubic
-        case .quadratic:
-            guard segment.quadratic == nil else { return .quadratic }
-            return .cubic
-        default:
-            return self
+    func activeType(segment: PathSegment) -> Self {
+        if self == .quadratic && segment.quadratic != nil {
+            return .quadratic
         }
+        return .cubic
     }
 }
 
 extension PathSegmentType: CustomStringConvertible {
     var description: String {
         switch self {
-        case .auto: "auto"
         case .cubic: "cubic"
-        case .line: "line"
         case .quadratic: "quadratic"
         }
     }
@@ -104,6 +90,6 @@ extension PathProperty {
     }
 
     func segmentType(id: UUID) -> PathSegmentType {
-        segmentTypeMap[id] ?? .auto
+        segmentTypeMap[id] ?? .cubic
     }
 }

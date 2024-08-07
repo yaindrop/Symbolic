@@ -54,7 +54,7 @@ private extension PathSelectionPopover {
             }
             if !selector.activeSegmentIds.isEmpty {
                 ContextualRow(label: "Segments") {
-                    CasePicker<PathSegmentType>(cases: [.line, .cubic, .quadratic], value: selector.activeSegmentType ?? .auto) { $0.name } onValue: { update(segmentType: $0) }
+                    CasePicker<PathSegmentType>(cases: [.cubic, .quadratic], value: selector.activeSegmentType ?? .cubic) { $0.name } onValue: { update(segmentType: $0) }
                         .background(.ultraThickMaterial)
                         .clipRounded(radius: 6)
                 }

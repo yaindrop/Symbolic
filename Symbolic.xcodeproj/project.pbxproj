@@ -86,7 +86,7 @@
 		576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2642C048F6900353912 /* ActiveItemView.swift */; };
 		576BE2672C0828A000353912 /* View+Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576BE2662C0828A000353912 /* View+Modifiers.swift */; };
 		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
-		578150472C57E2540057D798 /* PathCurvePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathCurvePopover.swift */; };
+		578150472C57E2540057D798 /* PathSegmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathSegmentPopover.swift */; };
 		578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150482C5891AE0057D798 /* PathNodeThumbnail.swift */; };
 		5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504A2C5929500057D798 /* PathNodePopover.swift */; };
 		5781504D2C5BB6800057D798 /* PathPanel+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504C2C5BB6800057D798 /* PathPanel+Properties.swift */; };
@@ -239,7 +239,7 @@
 		576BE2642C048F6900353912 /* ActiveItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveItemView.swift; sourceTree = "<group>"; };
 		576BE2662C0828A000353912 /* View+Modifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Modifiers.swift"; sourceTree = "<group>"; };
 		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
-		578150462C57E2540057D798 /* PathCurvePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathCurvePopover.swift; sourceTree = "<group>"; };
+		578150462C57E2540057D798 /* PathSegmentPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegmentPopover.swift; sourceTree = "<group>"; };
 		578150482C5891AE0057D798 /* PathNodeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodeThumbnail.swift; sourceTree = "<group>"; };
 		5781504A2C5929500057D798 /* PathNodePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodePopover.swift; sourceTree = "<group>"; };
 		5781504C2C5BB6800057D798 /* PathPanel+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PathPanel+Properties.swift"; sourceTree = "<group>"; };
@@ -437,13 +437,13 @@
 		5724877A2BDF7F5F0096DDE4 /* PathPanel */ = {
 			isa = PBXGroup;
 			children = (
-				578150462C57E2540057D798 /* PathCurvePopover.swift */,
 				5781504A2C5929500057D798 /* PathNodePopover.swift */,
 				578150482C5891AE0057D798 /* PathNodeThumbnail.swift */,
 				575C3CF52BD60C200035B758 /* PathPanel.swift */,
 				5724877B2BDF80000096DDE4 /* PathPanel+Nodes.swift */,
 				5781504C2C5BB6800057D798 /* PathPanel+Properties.swift */,
 				578150542C625B6C0057D798 /* PathPanel+Selection.swift */,
+				578150462C57E2540057D798 /* PathSegmentPopover.swift */,
 				578150562C6260510057D798 /* PathSelectionPopover.swift */,
 			);
 			path = PathPanel;
@@ -955,7 +955,7 @@
 				572CA9DA2C319E6B003760B7 /* DeletedFileBrowserView.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathService.swift in Sources */,
 				57E082132C27A8EC008CC67B /* FileTree.swift in Sources */,
-				578150472C57E2540057D798 /* PathCurvePopover.swift in Sources */,
+				578150472C57E2540057D798 /* PathSegmentPopover.swift in Sources */,
 				578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */,
 				571B9B342C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift in Sources */,
 				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,

@@ -78,7 +78,6 @@ extension ViewportUpdater {
     func onCommit() {
         global.canvasAction.end(continuous: .panViewport)
         global.canvasAction.end(continuous: .pinchViewport)
-        global.canvasAction.end(continuous: .pinchViewport)
         let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
         withStoreUpdating {
             store.update(updating: false)
@@ -87,6 +86,7 @@ extension ViewportUpdater {
     }
 
     func zoomTo(rect: CGRect, ratio: Scalar = 0.8) {
+        assert(rect.size.width > 0 && rect.height > 0)
         let freeSpace = global.panel.freeSpace
         let _r = subtracer.range(type: .intent, "zoomTo \(rect) in \(freeSpace)"); defer { _r() }
         let worldRect = viewport.worldRect

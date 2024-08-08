@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - PathCurvePopover
+// MARK: - PathSegmentPopover
 
-struct PathCurvePopover: View, TracedView, ComputedSelectorHolder {
+struct PathSegmentPopover: View, TracedView, ComputedSelectorHolder {
     @Environment(\.portalId) var portalId
     let pathId: UUID, nodeId: UUID, isOut: Bool
 
@@ -23,7 +23,7 @@ struct PathCurvePopover: View, TracedView, ComputedSelectorHolder {
 
 // MARK: private
 
-private extension PathCurvePopover {
+private extension PathSegmentPopover {
     var node: PathNode? { selector.path?.node(id: nodeId) }
 
     var fromNodeId: UUID? { isOut ? nodeId : selector.path?.nodeId(before: nodeId) }

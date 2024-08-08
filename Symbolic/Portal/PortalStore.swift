@@ -82,9 +82,18 @@ struct PortalReference<Content: View>: View, ComputedSelectorHolder {
                         portalId.map { global.portal.deregister(id: $0) }
                     }
                 }
-                .onChange(of: frame) { portalId.map { global.portal.setReference(of: $0, frame) } }
-                .onChange(of: selector.deregistered) { if selector.deregistered { isPresented = false } }
-                .onDisappear { portalId.map { global.portal.deregister(id: $0) } }
+                .onChange(of: frame) {
+                    portalId.map { global.portal.setReference(of: $0, frame) }
+                }
+                .onChange(of: selector.deregistered) {
+                    if selector.deregistered {
+                        isPresented = false
+                    }
+                }
+                .onDisappear {
+                    portalId.map { global.portal.deregister(id: $0) }
+                    isPresented = false
+                }
         }
     }
 }

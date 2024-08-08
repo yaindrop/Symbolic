@@ -232,7 +232,7 @@ private extension NodeDetailView {
             .disabled(disabled)
             .tint(.label)
             .portal(isPresented: isPresented, configs: .init(isModal: true, align: align, gap: .init(squared: 6))) {
-                PathCurvePopover(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
+                PathSegmentPopover(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
             }
     }
 

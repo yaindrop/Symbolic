@@ -9,9 +9,9 @@ extension ContextMenuView {
             @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.activeItem.focusedPath }) var focusedPath
             @Selected({ global.focusedPath.activeNodesBounds }) var bounds
-            @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
+            @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
+            @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ global.focusedPath.activeSegmentIds }) var activeSegmentIds
             @Selected({ global.focusedPath.activeNodeIds.map { global.activeItem.focusedPathProperty?.nodeType(id: $0) }.allSame() }) var activeNodeType
             @Selected({ global.focusedPath.activeSegmentIds.map { global.activeItem.focusedPathProperty?.segmentType(id: $0) }.allSame() }) var activeSegmentType
         }
@@ -58,11 +58,14 @@ extension ContextMenuView.FocusedPathSelectionMenu {
             Button { showPopover.toggle() } label: { Image(systemName: "ellipsis.circle") }
                 .frame(minWidth: 32)
                 .tint(.label)
-                .portal(isPresented: $showPopover) {
-                    if selector.selectingNodes || selector.activeNodeIds.count > 1 {
-                        PathSelectionPopover()
-                    } else if let path = selector.focusedPath, let nodeId = selector.activeNodeIds.first {
+                .portal(isPresented: $showPopover, configs: .init(isModal: true, align: .centerTrailing, gap: .init(12, 0))) {
+                    let path = selector.focusedPath
+                    if let path, let nodeId = selector.focusedNodeId {
                         PathNodePopover(pathId: path.id, nodeId: nodeId)
+                    } else if let path, let segmentId = selector.focusedSegmentId {
+                        PathSegmentPopover(pathId: path.id, nodeId: segmentId, isOut: true)
+                    } else {
+                        PathSelectionPopover()
                     }
                 }
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - PathCurvePopover
+// MARK: - PathSegmentPopover
 
 struct PathSelectionPopover: View, TracedView, SelectorHolder {
     @Environment(\.portalId) var portalId

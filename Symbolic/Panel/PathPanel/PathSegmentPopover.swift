@@ -4,7 +4,7 @@ import SwiftUI
 
 struct PathSegmentPopover: View, TracedView, ComputedSelectorHolder {
     @Environment(\.portalId) var portalId
-    let pathId: UUID, nodeId: UUID, isOut: Bool
+    var pathId: UUID, nodeId: UUID, isOut: Bool? = nil
 
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
     class Selector: SelectorBase {
@@ -26,9 +26,9 @@ struct PathSegmentPopover: View, TracedView, ComputedSelectorHolder {
 private extension PathSegmentPopover {
     var node: PathNode? { selector.path?.node(id: nodeId) }
 
-    var fromNodeId: UUID? { isOut ? nodeId : selector.path?.nodeId(before: nodeId) }
+    var fromNodeId: UUID? { isOut != false ? nodeId : selector.path?.nodeId(before: nodeId) }
 
-    var toNodeId: UUID? { isOut ? selector.path?.nodeId(after: nodeId) : nodeId }
+    var toNodeId: UUID? { isOut != false ? selector.path?.nodeId(after: nodeId) : nodeId }
 
     var segment: PathSegment? { fromNodeId.map { selector.path?.segment(fromId: $0) } }
 
@@ -36,18 +36,26 @@ private extension PathSegmentPopover {
 
     @ViewBuilder var content: some View {
         PopoverBody {
-            curveIcon
+            if let fromNodeId, let toNodeId {
+                PathSegmentIcon(fromNodeId: fromNodeId, toNodeId: toNodeId, isOut: isOut)
+            }
             Spacer()
             Button("Done") { done() }
                 .font(.callout)
         } popoverContent: {
-            ContextualRow(label: "Control") {
-                let value = isOut ? node?.cubicOut : node?.cubicIn
-                VectorPicker(value: value ?? .zero) { update(value: $0, pending: true) } onDone: { update(value: $0) }
-                    .background(.ultraThickMaterial)
-                    .clipRounded(radius: 6)
+            let segmentType = segmentType
+            if isOut != false, segmentType != .quadratic, let node = node {
+                ContextualRow(label: "Cubic Out") { vectorPicker(value: node.cubicOut, controlType: .cubicOut) }
+                ContextualDivider()
             }
-            ContextualDivider()
+            if isOut != true, segmentType != .quadratic, let node = node {
+                ContextualRow(label: "Cubic In") { vectorPicker(value: node.cubicIn, controlType: .cubicIn) }
+                ContextualDivider()
+            }
+            if segmentType != .cubic, let quadratic = segment?.quadratic {
+                ContextualRow(label: "Quadratic") { vectorPicker(value: .init(quadratic), controlType: .quadratic) }
+                ContextualDivider()
+            }
             ContextualRow(label: "Type") {
                 CasePicker<PathSegmentType>(cases: [.cubic, .quadratic], value: segmentType ?? .cubic) { $0.name } onValue: { update(segmentType: $0) }
                     .background(.ultraThickMaterial)
@@ -58,36 +66,50 @@ private extension PathSegmentPopover {
                 Button("Focus", systemImage: "scope") { focusSegment() }
                     .contextualFont()
                 Spacer()
-                Menu("More", systemImage: "ellipsis") {
-                    Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
-                    Button("Merge", systemImage: "arrow.left.to.line") {}
-                    Divider()
-                    Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
-                }
-                .menuOrder(.fixed)
-                .contextualFont()
+                moreMenu
+                    .contextualFont()
             }
         }
     }
 
-    @ViewBuilder var curveIcon: some View {
-        if let fromNodeId, let toNodeId {
-            PathCurveIcon(fromNodeId: fromNodeId, toNodeId: toNodeId, isOut: isOut)
-        }
+    @ViewBuilder func vectorPicker(value: Vector2, controlType: PathBezierControlType) -> some View {
+        VectorPicker(value: value) { update(value: $0, controlType: controlType, pending: true) } onDone: { update(value: $0, controlType: controlType) }
+            .background(.ultraThickMaterial)
+            .clipRounded(radius: 6)
     }
 
+    @ViewBuilder var moreMenu: some View {
+        Menu("More", systemImage: "ellipsis") {
+            Button("Reset Controls", systemImage: "line.diagonal") { resetControls() }
+            Button("Split", systemImage: "square.split.diagonal") { splitSegment() }
+            Divider()
+            Button("Break", systemImage: "scissors", role: .destructive) { breakSegment() }
+        }
+        .menuOrder(.fixed)
+    }
+}
+
+// MARK: actions
+
+private extension PathSegmentPopover {
     func done() {
         global.portal.deregister(id: portalId)
     }
 
-    func update(value: Vector2? = nil, pending: Bool = false) {
-        if let value, var node {
-            if isOut {
-                node.cubicOut = value
-            } else {
-                node.cubicIn = value
-            }
+    func update(value: Vector2, controlType: PathBezierControlType, pending: Bool = false) {
+        guard let fromNodeId,
+              var node,
+              var segment else { return }
+        switch controlType {
+        case .cubicOut:
+            node.cubicOut = value
             global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
+        case .cubicIn:
+            node.cubicIn = value
+            global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
+        case .quadratic:
+            segment = .init(from: segment.from, to: segment.to, quadratic: .init(value))
+            global.documentUpdater.update(focusedPath: .updateSegment(.init(fromNodeId: fromNodeId, segment: segment)), pending: pending)
         }
     }
 
@@ -102,6 +124,13 @@ private extension PathSegmentPopover {
               let bounds = global.focusedPath.segmentBounds(fromId: fromNodeId) else { return }
         global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
         global.focusedPath.setFocus(segment: fromNodeId)
+    }
+
+    func resetControls() {
+        guard let fromNodeId, var segment else { return }
+        segment.fromCubicOut = .zero
+        segment.toCubicIn = .zero
+        global.documentUpdater.update(focusedPath: .updateSegment(.init(fromNodeId: fromNodeId, segment: segment)))
     }
 
     func splitSegment() {

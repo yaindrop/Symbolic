@@ -39,7 +39,7 @@ extension PathNode: Transformable {
 
 // MARK: - PathSegment
 
-struct PathSegment: Equatable {
+struct PathSegment: Equatable, Codable {
     var from: Point2
     var to: Point2
     var fromCubicOut: Vector2

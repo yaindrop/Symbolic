@@ -35,7 +35,7 @@ enum PathAction: Equatable, Codable {
 extension PathAction.Update {
     struct DeleteNodes: Equatable, Codable { var nodeIds: [UUID] }
     struct UpdateNode: Equatable, Codable { var nodeId: UUID, node: PathNode }
-    struct CombineNode: Equatable, Codable { var nodeId: UUID, isNext: Bool }
+    struct UpdateSegment: Equatable, Codable { var fromNodeId: UUID, segment: PathSegment }
 
     struct AddEndingNode: Equatable, Codable { var endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
     struct SplitSegment: Equatable, Codable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
@@ -50,7 +50,7 @@ extension PathAction.Update {
     enum Kind: Equatable, Codable {
         case deleteNodes(DeleteNodes)
         case updateNode(UpdateNode)
-        case combineNode(CombineNode)
+        case updateSegment(UpdateSegment)
 
         // handle actions
         case addEndingNode(AddEndingNode)

@@ -30,8 +30,8 @@ private extension DocumentAction {
                     "In path \(update.pathId.shortDescription) delete node \(action.nodeIds.map { $0.shortDescription })"
                 case let .updateNode(action):
                     "In path \(update.pathId.shortDescription) set node \(action.nodeId.shortDescription) to \(action.node)"
-                case let .combineNode(action):
-                    "In path \(update.pathId.shortDescription) combine node at \(action.nodeId.shortDescription) with \(action.isNext ? "next" : "prev") node"
+                case let .updateSegment(action):
+                    "In path \(update.pathId.shortDescription) update segment from \(action.fromNodeId.shortDescription) with \(action.segment)"
 
                 case let .addEndingNode(action):
                     "In path \(update.pathId.shortDescription) add ending node from \(action.endingNodeId.shortDescription) to \(action.newNodeId.shortDescription) with \(action.offset.shortDescription)"

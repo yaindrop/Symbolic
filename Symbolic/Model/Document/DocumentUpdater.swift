@@ -233,7 +233,7 @@ private extension DocumentUpdater {
         switch action.kind {
         case let .deleteNodes(action): collectEvents(to: &events, pathId: pathId, action)
         case let .updateNode(action): collectEvents(to: &events, pathId: pathId, action)
-        case let .combineNode(action): collectEvents(to: &events, pathId: pathId, action)
+        case let .updateSegment(action): collectEvents(to: &events, pathId: pathId, action)
 
         case let .addEndingNode(action): collectEvents(to: &events, pathId: pathId, action)
         case let .splitSegment(action): collectEvents(to: &events, pathId: pathId, action)
@@ -264,23 +264,19 @@ private extension DocumentUpdater {
         events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: nodeId, node: node)))))
     }
 
-    func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.CombineNode) {
-        let nodeId = action.nodeId, isNext = action.isNext
+    func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.UpdateSegment) {
+        let fromNodeId = action.fromNodeId,
+            segment = action.segment
         guard let path = pathStore.get(id: pathId),
-              var node = path.node(id: nodeId) else { return }
-        if isNext {
-            guard let nextId = path.nodeId(after: nodeId),
-                  let next = path.node(id: nextId) else { return }
-            node.cubicOut = next.cubicOut
-            events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: nodeId, node: node)))))
-            events.append(.path(.init(in: pathId, .nodeDelete(.init(nodeId: nextId)))))
-        } else {
-            guard let prevId = path.nodeId(before: nodeId),
-                  let prev = path.node(id: prevId) else { return }
-            node.cubicIn = prev.cubicIn
-            events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: nodeId, node: node)))))
-            events.append(.path(.init(in: pathId, .nodeDelete(.init(nodeId: prevId)))))
-        }
+              var fromNode = path.node(id: fromNodeId),
+              let toNodeId = path.nodeId(after: fromNodeId),
+              var toNode = path.node(id: toNodeId) else { return }
+        fromNode.position = segment.from
+        fromNode.cubicOut = segment.fromCubicOut
+        toNode.position = segment.to
+        toNode.cubicIn = segment.toCubicIn
+        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: fromNodeId, node: fromNode)))))
+        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: toNodeId, node: toNode)))))
     }
 
     func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.AddEndingNode) {

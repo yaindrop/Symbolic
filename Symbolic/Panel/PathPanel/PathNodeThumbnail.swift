@@ -118,10 +118,10 @@ private extension PathNodeIcon {
     }
 }
 
-// MARK: - PathCurveIcon
+// MARK: - PathSegmentIcon
 
-struct PathCurveIcon: View, TracedView {
-    let fromNodeId: UUID, toNodeId: UUID, isOut: Bool
+struct PathSegmentIcon: View, TracedView {
+    let fromNodeId: UUID, toNodeId: UUID, isOut: Bool?
 
     var body: some View { trace {
         content
@@ -130,18 +130,18 @@ struct PathCurveIcon: View, TracedView {
 
 // MARK: private
 
-private extension PathCurveIcon {
+private extension PathSegmentIcon {
     var content: some View {
         HStack(spacing: 0) {
             PathNodeIcon(nodeId: fromNodeId)
-                .scaleEffect(isOut ? 1 : 0.9)
-                .opacity(isOut ? 1 : 0.5)
+                .scaleEffect(isOut != false ? 1 : 0.9)
+                .opacity(isOut != false ? 1 : 0.5)
             Image(systemName: "arrow.forward")
                 .font(.caption)
                 .padding(6)
             PathNodeIcon(nodeId: toNodeId)
-                .scaleEffect(isOut ? 0.9 : 1)
-                .opacity(isOut ? 0.5 : 1)
+                .scaleEffect(isOut != true ? 1 : 0.9)
+                .opacity(isOut != true ? 1 : 0.5)
         }
     }
 }

@@ -63,7 +63,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
                     if let path, let nodeId = selector.focusedNodeId {
                         PathNodePopover(pathId: path.id, nodeId: nodeId)
                     } else if let path, let segmentId = selector.focusedSegmentId {
-                        PathSegmentPopover(pathId: path.id, nodeId: segmentId, isOut: true)
+                        PathSegmentPopover(pathId: path.id, nodeId: segmentId)
                     } else {
                         PathSelectionPopover()
                     }

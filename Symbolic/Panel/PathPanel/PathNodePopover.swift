@@ -30,7 +30,7 @@ private extension PathNodePopover {
 
     @ViewBuilder var content: some View {
         PopoverBody {
-            nodeIcon
+            PathNodeIcon(nodeId: nodeId)
             Spacer()
             Button("Done") { done() }
                 .font(.callout)
@@ -51,22 +51,28 @@ private extension PathNodePopover {
                 Button("Focus", systemImage: "scope") { focusNode() }
                     .contextualFont()
                 Spacer()
-                Menu("More", systemImage: "ellipsis") {
-                    Label("\(nodeId)", systemImage: "number")
-                    Divider()
-                    Button("Break", systemImage: "scissors", role: .destructive) { breakNode() }
-                    Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
-                }
-                .menuOrder(.fixed)
-                .contextualFont()
+                moreMenu
+                    .contextualFont()
             }
         }
     }
 
-    var nodeIcon: some View {
-        PathNodeIcon(nodeId: nodeId)
+    @ViewBuilder var moreMenu: some View {
+        Menu("More", systemImage: "ellipsis") {
+            Label("\(nodeId)", systemImage: "number")
+            Divider()
+            Button("Reset Controls", systemImage: "dot.square") { resetControls() }
+            Divider()
+            Button("Break", systemImage: "scissors", role: .destructive) { breakNode() }
+            Button("Delete", systemImage: "trash", role: .destructive) { deleteNode() }
+        }
+        .menuOrder(.fixed)
     }
+}
 
+// MARK: actions
+
+private extension PathNodePopover {
     func done() {
         global.portal.deregister(id: portalId)
     }
@@ -87,12 +93,12 @@ private extension PathNodePopover {
         global.focusedPath.setFocus(node: nodeId)
     }
 
-//    func mergeNode() {
-//        if let mergableNodeId {
-//            let pathId = context.path.id
-//            global.documentUpdater.update(path: .merge(.init(pathId: pathId, endingNodeId: nodeId, mergedPathId: pathId, mergedEndingNodeId: mergableNodeId)))
-//        }
-//    }
+    func resetControls() {
+        guard var node else { return }
+        node.cubicIn = .zero
+        node.cubicOut = .zero
+        global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)))
+    }
 
     func breakNode() {
         global.documentUpdater.update(focusedPath: .breakAtNode(.init(nodeId: nodeId, newPathId: UUID(), newNodeId: UUID())))

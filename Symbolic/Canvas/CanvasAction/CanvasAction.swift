@@ -4,9 +4,9 @@ enum CanvasAction: Equatable {
     enum Triggering: Equatable {
         case select
         case addPath
-        case addEndingNode
-        case splitPathSegment
+        case pathSplitSegment
         case pathNodeActions
+        case pathSelect
     }
 
     enum Continuous: Equatable {
@@ -52,10 +52,9 @@ extension CanvasAction.Triggering {
         case .addPath: "Hold to add path"
         case .select: "Hold to select"
 
-        case .addEndingNode: "Hold to add node"
-        case .splitPathSegment: "Hold to split"
-
+        case .pathSplitSegment: "Hold to split"
         case .pathNodeActions: "Hold to show node actions"
+        case .pathSelect: "Hold to select nodes"
         }
     }
 }

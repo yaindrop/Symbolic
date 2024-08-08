@@ -62,6 +62,19 @@ private extension GlobalStores {
             }
         }
 
+        func showActionWheel() {
+            withAnimation { context.actionWheelNodeId = context.nodeId }
+            if let nodeId = context.nodeId {
+                focusedPath.setFocus(node: nodeId)
+            }
+        }
+
+        func commitActionWheel() {
+            guard context.actionWheelNodeId != nil else { return }
+            context.actionWheelOption?.onPressEnd()
+            withAnimation { context.actionWheelNodeId = nil }
+        }
+
         return .init(
             configs: .init(durationThreshold: 0.2),
             onPress: { info in
@@ -71,15 +84,20 @@ private extension GlobalStores {
                       let nodeId = path.nodeId(closestTo: location) else { return }
                 context.setup(nodeId)
                 canvasAction.start(continuous: .movePathNode)
-                canvasAction.start(triggering: .pathNodeActions)
+                if focusedPath.selectingNodes {
+                    canvasAction.start(triggering: .pathSelect)
+                } else {
+                    canvasAction.start(triggering: .pathNodeActions)
+                }
             },
             onPressEnd: { _, cancelled in
                 contextMenu.setHidden(false)
                 context.nodeId = nil
-                canvasAction.end(triggering: .pathNodeActions)
-                canvasAction.end(continuous: .addAndMoveEndingNode)
-                canvasAction.end(continuous: .movePathNode)
                 if cancelled { documentUpdater.cancel() }
+                canvasAction.end(triggering: .pathNodeActions)
+                canvasAction.end(continuous: .movePathNode)
+                canvasAction.end(continuous: .addAndMoveEndingNode)
+                canvasAction.end(continuous: .movePathBezierControl)
             },
 
             onTap: { _ in
@@ -88,21 +106,20 @@ private extension GlobalStores {
             },
 
             onLongPress: { _ in
-                withAnimation { context.actionWheelNodeId = context.nodeId }
-                if let nodeId = context.nodeId {
-                    focusedPath.setFocus(node: nodeId)
+                if focusedPath.selectingNodes {
+                    canvasAction.end(triggering: .pathSelect)
+                } else {
+                    showActionWheel()
+                    canvasAction.end(continuous: .movePathNode)
+                    canvasAction.end(triggering: .pathNodeActions)
                 }
-                canvasAction.end(continuous: .movePathNode)
+            },
+            onLongPressEnd: { _ in commitActionWheel() },
+
+            onDrag: {
+                updateDrag($0, pending: true)
                 canvasAction.end(triggering: .pathNodeActions)
             },
-            onLongPressEnd: { _ in
-                guard context.actionWheelNodeId != nil else { return }
-                contextMenu.setHidden(false)
-                context.actionWheelOption?.onPressEnd()
-                withAnimation { context.actionWheelNodeId = nil }
-            },
-
-            onDrag: { updateDrag($0, pending: true) },
             onDragEnd: { updateDrag($0) }
         )
     }
@@ -132,6 +149,7 @@ private extension GlobalStores {
                     guard let nodeId = context.actionWheelNodeId else { return }
                     let offset = context.dragOffset.applying(viewport.toWorld)
                     start(context: context, action: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: .init(), offset: offset)))
+                    canvasAction.start(continuous: .addAndMoveEndingNode)
                 } :
                 .init(name: "Break", imageName: "scissors") {
                     guard let nodeId = context.actionWheelNodeId else { return }
@@ -142,6 +160,7 @@ private extension GlobalStores {
                     guard let nodeId = context.actionWheelNodeId else { return }
                     let offset = context.dragOffset.applying(viewport.toWorld)
                     start(context: context, action: .moveNodeControl(.init(nodeId: nodeId, controlType: .cubicIn, offset: offset)))
+                    canvasAction.start(continuous: .movePathBezierControl)
                 } :
                 .init(name: "Reset Cubic In", imageName: "circle.slash", disabled: !hasCubicIn, tintColor: .orange) {
                     guard let nodeId = context.actionWheelNodeId else { return }
@@ -154,6 +173,7 @@ private extension GlobalStores {
                     guard let nodeId = context.actionWheelNodeId else { return }
                     let offset = context.dragOffset.applying(viewport.toWorld)
                     start(context: context, action: .moveNodeControl(.init(nodeId: nodeId, controlType: .cubicOut, offset: offset)))
+                    canvasAction.start(continuous: .movePathBezierControl)
                 } :
                 .init(name: "Reset Cubic Out", imageName: "circle.slash", disabled: !hasCubicOut, tintColor: .green) {
                     guard let nodeId = context.actionWheelNodeId else { return }

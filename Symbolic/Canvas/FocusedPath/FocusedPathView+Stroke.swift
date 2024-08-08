@@ -48,11 +48,11 @@ private extension GlobalStores {
                 guard let segmentId = activeItem.focusedPath?.segmentId(closestTo: location) else { return }
                 context.segmentId = segmentId
                 canvasAction.start(continuous: .movePath)
-                canvasAction.start(triggering: .splitPathSegment)
+                canvasAction.start(triggering: .pathSplitSegment)
             },
             onPressEnd: { _, cancelled in
                 context.segmentId = nil
-                canvasAction.end(triggering: .splitPathSegment)
+                canvasAction.end(triggering: .pathSplitSegment)
                 canvasAction.end(continuous: .splitAndMovePathNode)
                 canvasAction.end(continuous: .movePath)
                 if cancelled { documentUpdater.cancel() }
@@ -66,13 +66,13 @@ private extension GlobalStores {
                 split($0)
                 updateLongPress(pending: true)
                 canvasAction.end(continuous: .movePath)
-                canvasAction.end(triggering: .splitPathSegment)
+                canvasAction.end(triggering: .pathSplitSegment)
                 canvasAction.start(continuous: .splitAndMovePathNode)
             },
             onLongPressEnd: { _ in updateLongPress() },
             onDrag: {
                 updateDrag($0, pending: true)
-                canvasAction.end(triggering: .splitPathSegment)
+                canvasAction.end(triggering: .pathSplitSegment)
             },
             onDragEnd: { updateDrag($0) }
         )

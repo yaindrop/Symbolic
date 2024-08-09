@@ -146,7 +146,7 @@ private extension NodeRow {
     func toggleFocus() {
         if focused {
             withAnimation(.fast) { expanded = false }
-            global.focusedPath.clear()
+            global.focusedPath.selectionClear()
         } else {
             global.focusedPath.setFocus(node: nodeId)
         }
@@ -157,7 +157,7 @@ private extension NodeRow {
     }
 
     func toggleSelection() {
-        global.focusedPath.toggleSelection(nodeIds: [nodeId])
+        global.focusedPath.selection(toggle: [nodeId])
     }
 }
 

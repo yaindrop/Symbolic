@@ -172,56 +172,58 @@ extension FocusedPathService {
         store.update(activeNodeIds: [fromNodeId, toId])
     }
 
-    func clear() {
-        let _r = subtracer.range(type: .intent, "clear"); defer { _r() }
+    func setSelecting(_ value: Bool) {
+        let _r = subtracer.range(type: .intent, "set selecting \(value)"); defer { _r() }
+        withStoreUpdating(configs: .init(animation: .fast)) {
+            if value {
+                store.update(selectingNodes: true)
+            } else {
+                selectionClear()
+            }
+        }
+    }
+
+    func selection(add ids: [UUID]) {
+        let _r = subtracer.range(type: .intent, "selection add \(ids)"); defer { _r() }
+        store.update(activeNodeIds: activeNodeIds.cloned { $0.formUnion(ids) })
+    }
+
+    func selection(remove ids: [UUID]) {
+        let _r = subtracer.range(type: .intent, "selection remove \(ids)"); defer { _r() }
+        store.update(activeNodeIds: activeNodeIds.cloned { $0.subtract(ids) })
+    }
+
+    func selection(toggle nodeIds: [UUID]) {
+        let _r = subtracer.range(type: .intent, "selection toggle of \(nodeIds)"); defer { _r() }
+        if activeNodeIds.isSuperset(of: nodeIds) {
+            selection(remove: nodeIds)
+        } else {
+            selection(add: nodeIds)
+        }
+    }
+
+    func selectionInvert() {
+        let _r = subtracer.range(type: .intent, "selection invert"); defer { _r() }
+        guard let path = activeItem.focusedPath else { return }
+        store.update(activeNodeIds: .init(path.nodeIds.filter { !activeNodeIds.contains($0) }))
+    }
+
+    func selectionClear() {
+        let _r = subtracer.range(type: .intent, "selection clear"); defer { _r() }
         withStoreUpdating {
             store.update(activeNodeIds: [])
             store.update(selectingNodes: false)
         }
     }
+}
 
-    func selectAdd(node ids: [UUID]) {
-        let _r = subtracer.range(type: .intent, "selectAdd \(ids)"); defer { _r() }
-        store.update(activeNodeIds: activeNodeIds.cloned { $0.formUnion(ids) })
-    }
-
-    func selectRemove(node ids: [UUID]) {
-        let _r = subtracer.range(type: .intent, "selectRemove \(ids)"); defer { _r() }
-        store.update(activeNodeIds: activeNodeIds.cloned { $0.subtract(ids) })
-    }
-
-    func toggleSelectingNodes() {
-        let _r = subtracer.range(type: .intent, "toggleSelectingNodes from \(selectingNodes)"); defer { _r() }
-        withStoreUpdating(configs: .init(animation: .fast)) {
-            if selectingNodes {
-                clear()
-            } else {
-                store.update(selectingNodes: true)
-            }
-        }
-    }
-
-    func toggleSelection(nodeIds: [UUID]) {
-        let _r = subtracer.range(type: .intent, "toggleSelection of \(nodeIds)"); defer { _r() }
-        if activeNodeIds.isSuperset(of: nodeIds) {
-            selectRemove(node: nodeIds)
-        } else {
-            selectAdd(node: nodeIds)
-        }
-    }
-
-    func invertSelection() {
-        let _r = subtracer.range(type: .intent, "invertSelection"); defer { _r() }
-        guard let path = activeItem.focusedPath else { return }
-        store.update(activeNodeIds: .init(path.nodeIds.filter { !activeNodeIds.contains($0) }))
-    }
-
+extension FocusedPathService {
     func onTap(node nodeId: UUID) {
         if selectingNodes {
-            toggleSelection(nodeIds: [nodeId])
+            selection(toggle: [nodeId])
         } else {
             let focused = focusedNodeId == nodeId
-            focused ? clear() : setFocus(node: nodeId)
+            focused ? selectionClear() : setFocus(node: nodeId)
         }
     }
 
@@ -229,10 +231,10 @@ extension FocusedPathService {
         if selectingNodes {
             guard let path = activeItem.focusedPath,
                   let toId = path.nodeId(after: fromId) else { return }
-            toggleSelection(nodeIds: [fromId, toId])
+            selection(toggle: [fromId, toId])
         } else {
             let focused = focusedSegmentId == fromId
-            focused ? clear() : setFocus(segment: fromId)
+            focused ? selectionClear() : setFocus(segment: fromId)
         }
     }
 }

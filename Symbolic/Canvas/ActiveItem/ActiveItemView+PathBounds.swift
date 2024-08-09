@@ -9,7 +9,7 @@ private extension GlobalStores {
         } else if activeItem.focusedItemId != pathId {
             activeItem.focus(itemId: pathId)
         } else if !focusedPath.selectingNodes {
-            focusedPath.clear()
+            focusedPath.selectionClear()
         }
     }
 

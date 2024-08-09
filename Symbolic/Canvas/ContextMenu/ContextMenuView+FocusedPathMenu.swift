@@ -43,7 +43,9 @@ extension ContextMenuView.FocusedPathMenu {
                 .frame(minWidth: 32)
                 .tint(.label)
 
-            Button { onToggleSelectingNodes() } label: { Image(systemName: "checklist").foregroundStyle(selector.selectingNodes ? .blue : .label) }
+            Button {
+                global.focusedPath.setSelecting(!selector.selectingNodes)
+            } label: { Image(systemName: "checklist").foregroundStyle(selector.selectingNodes ? .blue : .label) }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -79,10 +81,6 @@ extension ContextMenuView.FocusedPathMenu {
         Button("Copy", systemImage: "doc.on.doc") {}
         Button("Cut", systemImage: "scissors") {}
         Button("Duplicate", systemImage: "plus.square.on.square") {}
-    }
-
-    func onToggleSelectingNodes() {
-        global.focusedPath.toggleSelectingNodes()
     }
 
     func onUngroup() {}

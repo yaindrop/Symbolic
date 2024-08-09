@@ -110,9 +110,9 @@ private extension GlobalStores {
                     canvasAction.end(triggering: .pathSelect)
                 } else {
                     showActionWheel()
-                    canvasAction.end(continuous: .movePathNode)
                     canvasAction.end(triggering: .pathNodeActions)
                 }
+                canvasAction.end(continuous: .movePathNode)
             },
             onLongPressEnd: { _ in commitActionWheel() },
 

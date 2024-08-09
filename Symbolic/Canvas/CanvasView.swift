@@ -109,7 +109,7 @@ private extension GlobalStores {
         activeItem.store.holdCancellables {
             activeItem.store.$focusedItemId.willNotify
                 .sink { _ in
-                    focusedPath.clear()
+                    focusedPath.selectionClear()
                 }
         }
     }

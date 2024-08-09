@@ -31,29 +31,27 @@ private extension PathPanel.Selection {
                 ContextualRow {
                     Text("\(selector.activeNodeIds.count) nodes selected")
                     Spacer()
-                    if let pathId = selector.path?.id, let nodeId = selector.activeNodeIds.first {
-                        Button { showPopover.toggle() } label: {
-                            Image(systemName: "ellipsis.circle")
-                        }
-                        .portal(isPresented: $showPopover) { PathSelectionPopover() }
+                    Button { showPopover.toggle() } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
+                    .portal(isPresented: $showPopover) { PathSelectionPopover() }
                 }
                 ContextualDivider()
                 ContextualRow {
                     Button("Invert") {
-                        global.focusedPath.invertSelection()
+                        global.focusedPath.selectionInvert()
                     }
                     .contextualFont()
                     Spacer()
                     Button("Done") {
-                        global.focusedPath.toggleSelectingNodes()
+                        global.focusedPath.setSelecting(false)
                     }
                     .contextualFont()
                 }
             } else {
                 ContextualRow {
                     Button("Select Nodes", systemImage: "checklist") {
-                        global.focusedPath.toggleSelectingNodes()
+                        global.focusedPath.setSelecting(true)
                     }
                     .contextualFont()
                     .frame(maxWidth: .infinity)

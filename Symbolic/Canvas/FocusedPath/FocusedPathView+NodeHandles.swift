@@ -15,12 +15,15 @@ private class GestureContext: ObservableObject {
     @Published var actionWheelNodeId: UUID?
     var actionWheelOption: ActionWheel.Option?
 
+    var selectionActiveIds: Set<UUID>?
+
     func setup(_ nodeId: UUID) {
         self.nodeId = nodeId
         dragOffset = .zero
         actionWheelNodeId = nil
         actionWheelOption = nil
         pendingAction = nil
+        selectionActiveIds = nil
     }
 }
 
@@ -50,12 +53,16 @@ private extension GlobalStores {
     func nodesGesture(context: GestureContext) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             context.dragOffset = v.offset
-            guard context.actionWheelNodeId == nil else { return }
+            guard let nodeId = context.nodeId else { return }
             let offset = v.offset.applying(viewport.toWorld)
+            if let activeIds = context.selectionActiveIds {
+                focusedPath.selection(activeIds: activeIds, dragFrom: nodeId, offset: offset)
+                return
+            }
+            guard context.actionWheelNodeId == nil else { return }
             if let action = context.pendingAction {
                 update(action: action, offset: offset, pending: pending)
             } else {
-                guard let nodeId = context.nodeId else { return }
                 let multiDrag = focusedPath.selectingNodes && focusedPath.activeNodeIds.contains(nodeId)
                 let nodeIds = multiDrag ? .init(focusedPath.activeNodeIds) : [nodeId]
                 start(context: context, action: .moveNodes(.init(nodeIds: nodeIds, offset: offset)))
@@ -107,6 +114,7 @@ private extension GlobalStores {
 
             onLongPress: { _ in
                 if focusedPath.selectingNodes {
+                    context.selectionActiveIds = focusedPath.activeNodeIds
                     canvasAction.end(triggering: .pathSelect)
                 } else {
                     showActionWheel()

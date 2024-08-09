@@ -202,30 +202,23 @@ extension FocusedPathService {
         }
     }
 
-    func selection(activeIds: Set<UUID>, dragFrom nodeId: UUID, offset: Vector2) {
+    func selection(isRemove: Bool, dragFrom nodeId: UUID, offset: Vector2) {
         let _r = subtracer.range(type: .intent, "selection drag from \(nodeId), offset \(offset)"); defer { _r() }
         guard let path = activeItem.focusedPath,
               let node = path.node(id: nodeId),
               let toNodeId = path.nodeId(closestTo: node.position + offset),
               let fromIndex = path.nodeIndex(id: nodeId),
               let toIndex = path.nodeIndex(id: toNodeId) else { return }
-        let (i, j) = fromIndex < toIndex ? (fromIndex, toIndex) : (toIndex, fromIndex)
-        let subpath: Path?
+        var (i, j) = fromIndex < toIndex ? (fromIndex, toIndex) : (toIndex, fromIndex)
         if path.isClosed, j - i > path.count {
-            subpath = path.subpath(from: j, to: i)
+            (i, j) = (j, i)
+        }
+        guard let nodeIds = path.subpath(from: i, to: j)?.nodeIds else { return }
+        if isRemove {
+            selection(remove: nodeIds)
         } else {
-            subpath = path.subpath(from: i, to: j)
+            selection(add: nodeIds)
         }
-        guard let nodeIds = subpath?.nodeIds else { return }
-        var activeIds = activeIds
-        for nodeId in nodeIds {
-            if activeIds.contains(nodeId) {
-                activeIds.remove(nodeId)
-            } else {
-                activeIds.insert(nodeId)
-            }
-        }
-        store.update(activeNodeIds: activeIds)
     }
 
     func selectionInvert() {

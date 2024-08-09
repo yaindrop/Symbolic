@@ -7,23 +7,28 @@ private class GestureContext: ObservableObject {
         case moveNodeControl(PathAction.Update.MoveNodeControl)
     }
 
+    struct PendingSelection {
+        var isRemove: Bool
+    }
+
+    struct PendingActionWheel {
+        var nodeId: UUID
+        var offset: Vector2
+        var option: ActionWheel.Option?
+    }
+
     var nodeId: UUID?
-
-    @Published var dragOffset: Vector2 = .zero
     var pendingAction: PendingAction?
+    var pendingSelection: PendingSelection?
+    @Published var pendingActionWheel: PendingActionWheel?
 
-    @Published var actionWheelNodeId: UUID?
-    var actionWheelOption: ActionWheel.Option?
-
-    var selectionActiveIds: Set<UUID>?
+    var pendingActionWheelOption: ActionWheel.Option? { get { pendingActionWheel?.option } set { pendingActionWheel?.option = newValue }}
 
     func setup(_ nodeId: UUID) {
         self.nodeId = nodeId
-        dragOffset = .zero
-        actionWheelNodeId = nil
-        actionWheelOption = nil
         pendingAction = nil
-        selectionActiveIds = nil
+        pendingActionWheel = nil
+        pendingSelection = nil
     }
 }
 
@@ -31,7 +36,7 @@ private class GestureContext: ObservableObject {
 
 private extension GlobalStores {
     func start(context: GestureContext, action: GestureContext.PendingAction) {
-        context.actionWheelNodeId = nil
+        context.pendingActionWheel = nil
         context.pendingAction = action
         update(action: action, pending: true)
     }
@@ -39,47 +44,62 @@ private extension GlobalStores {
     func update(action: GestureContext.PendingAction, offset: Vector2? = nil, pending: Bool = false) {
         switch action {
         case var .moveNodes(action):
-            action.offset = offset ?? action.offset
+            offset.map { action.offset = $0 }
             documentUpdater.update(focusedPath: .moveNodes(action), pending: pending)
         case var .addEndingNode(action):
-            action.offset = offset ?? action.offset
+            offset.map { action.offset = $0 }
             documentUpdater.update(focusedPath: .addEndingNode(action), pending: pending)
         case var .moveNodeControl(action):
-            action.offset = offset ?? action.offset
+            offset.map { action.offset = $0 }
             documentUpdater.update(focusedPath: .moveNodeControl(action), pending: pending)
         }
     }
 
     func nodesGesture(context: GestureContext) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            context.dragOffset = v.offset
-            guard let nodeId = context.nodeId else { return }
             let offset = v.offset.applying(viewport.toWorld)
-            if let activeIds = context.selectionActiveIds {
-                focusedPath.selection(activeIds: activeIds, dragFrom: nodeId, offset: offset)
-                return
-            }
-            guard context.actionWheelNodeId == nil else { return }
+            dragActionWheel(v)
+            dragPendingSelection(offset: offset)
+            guard context.pendingSelection == nil,
+                  context.pendingActionWheel == nil else { return }
             if let action = context.pendingAction {
                 update(action: action, offset: offset, pending: pending)
             } else {
+                guard let nodeId = context.nodeId else { return }
                 let multiDrag = focusedPath.selectingNodes && focusedPath.activeNodeIds.contains(nodeId)
                 let nodeIds = multiDrag ? .init(focusedPath.activeNodeIds) : [nodeId]
                 start(context: context, action: .moveNodes(.init(nodeIds: nodeIds, offset: offset)))
             }
         }
 
-        func showActionWheel() {
-            withAnimation { context.actionWheelNodeId = context.nodeId }
+        func startPendingSelection() {
+            guard let nodeId = context.nodeId else { return }
+            context.pendingSelection = .init(isRemove: focusedPath.activeNodeIds.contains(nodeId))
+        }
+
+        func dragPendingSelection(offset: Vector2) {
+            guard let nodeId = context.nodeId else { return }
+            if let pendingSelection = context.pendingSelection {
+                focusedPath.selection(isRemove: pendingSelection.isRemove, dragFrom: nodeId, offset: offset)
+            }
+        }
+
+        func startActionWheel() {
+            guard let nodeId = context.nodeId else { return }
+            withAnimation { context.pendingActionWheel = .init(nodeId: nodeId, offset: .zero) }
             if let nodeId = context.nodeId {
                 focusedPath.setFocus(node: nodeId)
             }
         }
 
-        func commitActionWheel() {
-            guard context.actionWheelNodeId != nil else { return }
-            context.actionWheelOption?.onPressEnd()
-            withAnimation { context.actionWheelNodeId = nil }
+        func dragActionWheel(_ v: DragGesture.Value) {
+            context.pendingActionWheel?.offset = v.offset
+        }
+
+        func endActionWheel() {
+            guard let pendingActionWheel = context.pendingActionWheel else { return }
+            pendingActionWheel.option?.onPressEnd()
+            withAnimation { context.pendingActionWheel = nil }
         }
 
         return .init(
@@ -114,15 +134,15 @@ private extension GlobalStores {
 
             onLongPress: { _ in
                 if focusedPath.selectingNodes {
-                    context.selectionActiveIds = focusedPath.activeNodeIds
+                    startPendingSelection()
                     canvasAction.end(triggering: .pathSelect)
                 } else {
-                    showActionWheel()
+                    startActionWheel()
                     canvasAction.end(triggering: .pathNodeActions)
                 }
                 canvasAction.end(continuous: .movePathNode)
             },
-            onLongPressEnd: { _ in commitActionWheel() },
+            onLongPressEnd: { _ in endActionWheel() },
 
             onDrag: {
                 updateDrag($0, pending: true)
@@ -147,44 +167,38 @@ private extension GlobalStores {
             segmentType = segment.map { pathProperty.segmentType(id: nodeId).activeType(segment: $0) },
             hasCubicOut = segmentType == .cubic
 
+        var offset: Vector2? { context.pendingActionWheel?.offset.applying(viewport.toWorld) }
         return [
             .init(name: "Delete", imageName: "trash", tintColor: .red) {
-                guard let nodeId = context.actionWheelNodeId else { return }
                 documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: [nodeId])))
             },
             isEndingNode ?
                 .init(name: "Add", imageName: "plus.square", holdingDuration: 0.3) {
-                    guard let nodeId = context.actionWheelNodeId else { return }
-                    let offset = context.dragOffset.applying(viewport.toWorld)
+                    guard let offset else { return }
                     start(context: context, action: .addEndingNode(.init(endingNodeId: nodeId, newNodeId: .init(), offset: offset)))
                     canvasAction.start(continuous: .addAndMoveEndingNode)
                 } :
                 .init(name: "Break", imageName: "scissors") {
-                    guard let nodeId = context.actionWheelNodeId else { return }
                     documentUpdater.update(focusedPath: .breakAtNode(.init(nodeId: nodeId, newPathId: .init(), newNodeId: .init())))
                 },
             node.cubicIn == .zero ?
                 .init(name: "Move Cubic In", imageName: "arrow.left.to.line", disabled: !hasCubicIn, tintColor: .orange, holdingDuration: 0.3) {
-                    guard let nodeId = context.actionWheelNodeId else { return }
-                    let offset = context.dragOffset.applying(viewport.toWorld)
+                    guard let offset else { return }
                     start(context: context, action: .moveNodeControl(.init(nodeId: nodeId, controlType: .cubicIn, offset: offset)))
                     canvasAction.start(continuous: .movePathBezierControl)
                 } :
                 .init(name: "Reset Cubic In", imageName: "circle.slash", disabled: !hasCubicIn, tintColor: .orange) {
-                    guard let nodeId = context.actionWheelNodeId else { return }
                     var node = node
                     node.cubicIn = .zero
                     documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)))
                 },
             node.cubicOut == .zero ?
                 .init(name: "Move Cubic Out", imageName: "arrow.right.to.line", disabled: !hasCubicOut, tintColor: .green, holdingDuration: 0.3) {
-                    guard let nodeId = context.actionWheelNodeId else { return }
-                    let offset = context.dragOffset.applying(viewport.toWorld)
+                    guard let offset else { return }
                     start(context: context, action: .moveNodeControl(.init(nodeId: nodeId, controlType: .cubicOut, offset: offset)))
                     canvasAction.start(continuous: .movePathBezierControl)
                 } :
                 .init(name: "Reset Cubic Out", imageName: "circle.slash", disabled: !hasCubicOut, tintColor: .green) {
-                    guard let nodeId = context.actionWheelNodeId else { return }
                     var node = node
                     node.cubicOut = .zero
                     documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)))
@@ -334,13 +348,11 @@ private extension FocusedPathView.NodeHandles {
     }
 
     @ViewBuilder func actionWheel(viewport: SizedViewportInfo) -> some View {
-        let path = selector.path,
-            nodeId = gestureContext.actionWheelNodeId
-        if let path, let nodeId, let node = path.node(id: nodeId) {
+        if let pendingActionWheel = gestureContext.pendingActionWheel, let path = selector.path, let node = path.node(id: pendingActionWheel.nodeId) {
             ActionWheel(
-                offset: gestureContext.dragOffset,
+                offset: pendingActionWheel.offset,
                 options: global.actionWheelOptions(context: gestureContext),
-                hovering: .init(gestureContext, \.actionWheelOption)
+                hovering: .init(gestureContext, \.pendingActionWheelOption)
             )
             .position(node.position.applying(viewport.worldToView))
         }

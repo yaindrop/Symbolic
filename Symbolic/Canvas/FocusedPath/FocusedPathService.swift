@@ -185,12 +185,12 @@ extension FocusedPathService {
 
     func selection(add ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selection add \(ids)"); defer { _r() }
-        store.update(activeNodeIds: activeNodeIds.cloned { $0.formUnion(ids) })
+        store.update(activeNodeIds: activeNodeIds.union(ids))
     }
 
     func selection(remove ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selection remove \(ids)"); defer { _r() }
-        store.update(activeNodeIds: activeNodeIds.cloned { $0.subtract(ids) })
+        store.update(activeNodeIds: activeNodeIds.subtracting(ids))
     }
 
     func selection(toggle nodeIds: [UUID]) {
@@ -202,7 +202,7 @@ extension FocusedPathService {
         }
     }
 
-    func selection(isRemove: Bool, dragFrom nodeId: UUID, offset: Vector2) {
+    func selection(activeNodeIds: Set<UUID>, dragFrom nodeId: UUID, offset: Vector2) {
         let _r = subtracer.range(type: .intent, "selection drag from \(nodeId), offset \(offset)"); defer { _r() }
         guard let path = activeItem.focusedPath,
               let node = path.node(id: nodeId),
@@ -213,11 +213,11 @@ extension FocusedPathService {
         if path.isClosed, j - i > path.count {
             (i, j) = (j, i)
         }
-        guard let nodeIds = path.subpath(from: i, to: j)?.nodeIds else { return }
-        if isRemove {
-            selection(remove: nodeIds)
+        guard let nodeIds = path.indices(from: i, to: j).map({ path.nodeId(at: $0) }).complete() else { return }
+        if activeNodeIds.contains(nodeId) {
+            store.update(activeNodeIds: activeNodeIds.subtracting(nodeIds))
         } else {
-            selection(add: nodeIds)
+            store.update(activeNodeIds: activeNodeIds.union(nodeIds))
         }
     }
 

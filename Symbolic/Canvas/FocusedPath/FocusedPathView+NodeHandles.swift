@@ -8,7 +8,7 @@ private class GestureContext: ObservableObject {
     }
 
     struct PendingSelection {
-        var isRemove: Bool
+        var originActiveNodeIds: Set<UUID>
     }
 
     struct PendingActionWheel {
@@ -73,14 +73,13 @@ private extension GlobalStores {
         }
 
         func startPendingSelection() {
-            guard let nodeId = context.nodeId else { return }
-            context.pendingSelection = .init(isRemove: focusedPath.activeNodeIds.contains(nodeId))
+            context.pendingSelection = .init(originActiveNodeIds: focusedPath.activeNodeIds)
         }
 
         func dragPendingSelection(offset: Vector2) {
             guard let nodeId = context.nodeId else { return }
             if let pendingSelection = context.pendingSelection {
-                focusedPath.selection(isRemove: pendingSelection.isRemove, dragFrom: nodeId, offset: offset)
+                focusedPath.selection(activeNodeIds: pendingSelection.originActiveNodeIds, dragFrom: nodeId, offset: offset)
             }
         }
 

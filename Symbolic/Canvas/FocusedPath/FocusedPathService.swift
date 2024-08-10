@@ -207,13 +207,22 @@ extension FocusedPathService {
         guard let path = activeItem.focusedPath,
               let node = path.node(id: nodeId),
               let toNodeId = path.nodeId(closestTo: node.position + offset),
-              let fromIndex = path.nodeIndex(id: nodeId),
-              let toIndex = path.nodeIndex(id: toNodeId) else { return }
-        var (i, j) = fromIndex < toIndex ? (fromIndex, toIndex) : (toIndex, fromIndex)
-        if path.isClosed, j - i > path.count {
+              var i = path.nodeIndex(id: nodeId),
+              var j = path.nodeIndex(id: toNodeId) else { return }
+        if i > j {
             (i, j) = (j, i)
         }
-        guard let nodeIds = path.indices(from: i, to: j).map({ path.nodeId(at: $0) }).complete() else { return }
+        let nodeIds = path.indices(from: i, to: j).map { path.nodeId(at: $0) }.complete()
+        guard var nodeIds else { return }
+        if path.isClosed {
+            let reverseNodeIds = path.indices(from: j, to: i).map { path.nodeId(at: $0) }.complete()
+            guard let reverseNodeIds else { return }
+            let diff = self.activeNodeIds.count + nodeIds.count - 2 * self.activeNodeIds.intersection(nodeIds).count,
+                reverseDiff = self.activeNodeIds.count + reverseNodeIds.count - 2 * self.activeNodeIds.intersection(reverseNodeIds).count
+            if reverseDiff < diff {
+                nodeIds = reverseNodeIds
+            }
+        }
         if activeNodeIds.contains(nodeId) {
             store.update(activeNodeIds: activeNodeIds.subtracting(nodeIds))
         } else {

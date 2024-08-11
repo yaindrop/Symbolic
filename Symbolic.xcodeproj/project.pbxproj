@@ -97,6 +97,9 @@
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
+		579B29AE2C69078D004E7DC8 /* monster_generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29AB2C69078D004E7DC8 /* monster_generated.swift */; };
+		579B29AF2C69078D004E7DC8 /* monster.fbs in Resources */ = {isa = PBXBuildFile; fileRef = 579B29AC2C69078D004E7DC8 /* monster.fbs */; };
+		579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29B12C690824004E7DC8 /* FlatBuffers */; };
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
@@ -250,6 +253,8 @@
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
+		579B29AB2C69078D004E7DC8 /* monster_generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = monster_generated.swift; sourceTree = "<group>"; };
+		579B29AC2C69078D004E7DC8 /* monster.fbs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = monster.fbs; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -298,6 +303,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,10 +378,12 @@
 		5723BF6D2BC39844002209F2 = {
 			isa = PBXGroup;
 			children = (
+				579B29AD2C69078D004E7DC8 /* flatbuffers */,
 				5723BF782BC39844002209F2 /* Symbolic */,
 				5723BF8B2BC39846002209F2 /* SymbolicTests */,
 				5723BF952BC39846002209F2 /* SymbolicUITests */,
 				5723BF772BC39844002209F2 /* Products */,
+				579B29B02C690824004E7DC8 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -560,6 +568,23 @@
 				57B703F32C366B8100B60F36 /* ToolbarStore.swift */,
 			);
 			path = Toolbar;
+			sourceTree = "<group>";
+		};
+		579B29AD2C69078D004E7DC8 /* flatbuffers */ = {
+			isa = PBXGroup;
+			children = (
+				579B29AB2C69078D004E7DC8 /* monster_generated.swift */,
+				579B29AC2C69078D004E7DC8 /* monster.fbs */,
+			);
+			name = flatbuffers;
+			path = Symbolic/flatbuffers;
+			sourceTree = "<group>";
+		};
+		579B29B02C690824004E7DC8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
@@ -787,6 +812,7 @@
 			);
 			name = Symbolic;
 			packageProductDependencies = (
+				579B29B12C690824004E7DC8 /* FlatBuffers */,
 			);
 			productName = Symbolic;
 			productReference = 5723BF762BC39844002209F2 /* Symbolic.app */;
@@ -862,6 +888,7 @@
 			);
 			mainGroup = 5723BF6D2BC39844002209F2;
 			packageReferences = (
+				579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */,
 			);
 			productRefGroup = 5723BF772BC39844002209F2 /* Products */;
 			projectDirPath = "";
@@ -879,6 +906,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				579B29AF2C69078D004E7DC8 /* monster.fbs in Resources */,
 				5723BF832BC39846002209F2 /* Preview Assets.xcassets in Resources */,
 				5723BF802BC39846002209F2 /* Assets.xcassets in Resources */,
 				57E082192C28FD26008CC67B /* Localizable.xcstrings in Resources */,
@@ -1007,6 +1035,7 @@
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				57B703FB2C38418000B60F36 /* CustomState.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
+				579B29AE2C69078D004E7DC8 /* monster_generated.swift in Sources */,
 				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,
 				571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */,
@@ -1365,6 +1394,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/flatbuffers.git";
+			requirement = {
+				kind = exactVersion;
+				version = 24.3.25;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		579B29B12C690824004E7DC8 /* FlatBuffers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */;
+			productName = FlatBuffers;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5723BF6E2BC39844002209F2 /* Project object */;
 }

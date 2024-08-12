@@ -169,10 +169,8 @@ extension ItemService: ItemStoreProtocol {
         return allPathIds.compactMap { pathMap.value(key: $0) }
     }
 
-    func groupedPaths(groupId: UUID) -> [Path] {
-        let pathMap = path.map
-        return leafItems(rootItemId: groupId)
-            .compactMap { $0.pathId.map { pathMap.value(key: $0) } }
+    func groupedPathIds(groupId: UUID) -> [UUID] {
+        leafItems(rootItemId: groupId).compactMap { $0.pathId }
     }
 
     func boundingRect(itemId: UUID) -> CGRect? {

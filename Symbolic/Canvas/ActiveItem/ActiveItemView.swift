@@ -4,7 +4,7 @@ import SwiftUI
 
 struct ActiveItemView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.activeItem.activePaths }) var activePaths
+        @Selected({ global.activeItem.activePathIds }) var activePathIds
         @Selected({ global.activeItem.activeGroups }) var activeGroups
     }
 
@@ -22,8 +22,8 @@ private extension ActiveItemView {
         ForEach(selector.activeGroups) {
             GroupBounds(group: $0)
         }
-        ForEach(selector.activePaths) {
-            PathBounds(pathId: $0.id)
+        ForEach(selector.activePathIds) {
+            PathBounds(pathId: $0)
         }
         SelectionBounds()
     }

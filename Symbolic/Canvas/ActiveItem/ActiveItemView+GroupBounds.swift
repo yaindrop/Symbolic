@@ -5,9 +5,10 @@ import SwiftUI
 private extension GlobalStores {
     func onTap(group: ItemGroup, position: Point2) {
         let worldPosition = position.applying(viewport.toWorld)
-        let groupedPaths = item.groupedPaths(groupId: group.id)
-        let path = groupedPaths.first {
-            self.path.hitTest(path: $0, position: worldPosition, threshold: 32)
+        let groupedPathIds = item.groupedPathIds(groupId: group.id)
+        let path = groupedPathIds.first {
+            guard let p = self.path.get(id: $0) else { return false }
+            return self.path.hitTest(path: p, position: worldPosition, threshold: 32)
         }
         if let path {
             if toolbar.multiSelect {
@@ -33,11 +34,11 @@ private extension GlobalStores {
     func onDrag(group: ItemGroup, _ v: PanInfo, pending: Bool = false) {
         let offset = v.offset.applying(viewport.toWorld)
         if activeItem.selected(itemId: group.id) {
-            let selectedPathIds = activeItem.selectedPaths.map { $0.id }
-            documentUpdater.update(path: .move(.init(pathIds: selectedPathIds, offset: offset)), pending: pending)
+            let pathIds = activeItem.selectedPathIds
+            documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
         } else {
-            let groupedPathIds = item.groupedPaths(groupId: group.id).map { $0.id }
-            documentUpdater.update(path: .move(.init(pathIds: groupedPathIds, offset: offset)), pending: pending)
+            let pathIds = item.groupedPathIds(groupId: group.id)
+            documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
         }
     }
 

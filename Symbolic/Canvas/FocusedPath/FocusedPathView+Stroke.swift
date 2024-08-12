@@ -31,7 +31,7 @@ private extension GlobalStores {
             let offset = v.offset.applying(viewport.toWorld)
             if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
                 moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: offset, pending: pending)
-            } else if let pathId = activeItem.focusedPath?.id {
+            } else if let pathId = activeItem.focusedPathId {
                 documentUpdater.update(path: .move(.init(pathIds: [pathId], offset: v.offset)), pending: pending)
             }
         }

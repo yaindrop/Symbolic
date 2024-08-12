@@ -15,9 +15,9 @@ enum ItemAction: Equatable, Codable {
 // MARK: - PathAction
 
 enum PathAction: Equatable, Codable {
-    struct Load: Equatable, Codable { var paths: [Path] }
+    struct Load: Equatable, Codable { var pathIds: [UUID], paths: [Path] }
 
-    struct Create: Equatable, Codable { var path: Path }
+    struct Create: Equatable, Codable { var pathId: UUID, path: Path }
     struct Delete: Equatable, Codable { var pathIds: [UUID] }
     struct Move: Equatable, Codable { var pathIds: [UUID], offset: Vector2 }
     struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }

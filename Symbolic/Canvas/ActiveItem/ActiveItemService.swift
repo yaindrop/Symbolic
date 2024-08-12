@@ -46,27 +46,41 @@ extension ActiveItemService {
     var activeItemIds: Set<UUID> { store.activeItemIds }
     var focusedItemId: UUID? { store.focusedItemId }
 
+    // MARK: active
+
+    var activeItems: [Item] {
+        activeItemIds.compactMap { item.get(id: $0) }
+    }
+
+    var activePathIds: [UUID] {
+        activeItems.compactMap { $0.pathId }
+    }
+
+    var activeGroups: [ItemGroup] {
+        activeItems.compactMap { $0.group }
+    }
+
+    // MARK: selected
+
     var selectedItemIds: Set<UUID> {
         guard store.focusedItemId == nil else { return [] }
-        var result = Set(store.activeItemIds)
-        for id in store.activeItemIds {
+        var result = Set(activeItemIds)
+        for id in activeItemIds {
             result.subtract(item.ancestorIds(of: id))
         }
         return result
     }
 
-    var activePaths: [Path] {
-        let activeItemIds = activeItemIds
-        return item.allPaths.filter { activeItemIds.contains($0.id) }
-    }
-
-    var activeGroups: [ItemGroup] {
-        let activeItemIds = activeItemIds
-        return item.allGroups.filter { activeItemIds.contains($0.id) }
-    }
-
     var selectedItems: [Item] {
         selectedItemIds.compactMap { item.get(id: $0) }
+    }
+
+    var selectedPathIds: [UUID] {
+        selectedItems.compactMap { $0.pathId }
+    }
+
+    func selected(itemId: UUID) -> Bool {
+        selectedItemIds.contains(itemId)
     }
 
     var selectionBounds: CGRect? {
@@ -75,30 +89,29 @@ extension ActiveItemService {
 
     var selectionOutset: Scalar { 12 }
 
-    var selectedPaths: [Path] {
-        selectedItemIds
-            .flatMap { item.leafItems(rootItemId: $0) }
-            .compactMap { path.get(id: $0.id) }
+    // MARK: focused
+
+    var focusedItem: Item? {
+        focusedItemId.map { item.get(id: $0) }
     }
 
-    func selected(itemId: UUID) -> Bool {
-        selectedItemIds.contains(itemId)
+    var focusedPathId: UUID? {
+        focusedItem.map { $0.pathId }
     }
 
     var focusedPath: Path? {
-        guard let focusedItemId else { return nil }
-        return path.get(id: focusedItemId)
+        focusedPathId.map { path.get(id: $0) }
     }
 
     var focusedPathProperty: PathProperty? {
-        guard let focusedItemId else { return nil }
-        return pathProperty.get(id: focusedItemId)
+        focusedItemId.map { pathProperty.get(id: $0) }
     }
 
     var focusedGroup: ItemGroup? {
-        guard let focusedItemId else { return nil }
-        return item.group(id: focusedItemId)
+        focusedItemId.map { item.group(id: $0) }
     }
+
+    // MARK: group
 
     func activeDescendants(groupId: UUID) -> [Item] {
         item.expandedItems(rootItemId: groupId)
@@ -117,9 +130,11 @@ extension ActiveItemService {
     }
 }
 
-// MARK: focus actions
+// MARK: actions
 
 extension ActiveItemService {
+    // MARK: focus
+
     func focus(itemId: UUID) {
         let _r = subtracer.range(type: .intent, "focus \(itemId)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
@@ -146,11 +161,9 @@ extension ActiveItemService {
         let parentId = item.parentId(of: focusedItemId)
         store.update(active: activeItemIds, focused: parentId)
     }
-}
 
-// MARK: select actions
+    // MARK: select
 
-extension ActiveItemService {
     func select(itemIds: [UUID]) {
         let _r = subtracer.range(type: .intent, "select \(itemIds)"); defer { _r() }
         store.update(active: .init(itemIds))

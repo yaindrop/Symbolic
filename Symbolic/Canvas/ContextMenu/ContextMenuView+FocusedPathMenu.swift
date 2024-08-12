@@ -7,7 +7,7 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ global.activeItem.focusedPath.map { global.item.boundingRect(itemId: $0.id) } }) var bounds
+            @Selected({ global.activeItem.focusedPathId.map { global.item.boundingRect(itemId: $0) } }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeNodeIds.isEmpty }) var visible
         }

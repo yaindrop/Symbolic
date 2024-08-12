@@ -62,9 +62,9 @@ extension PathService {
         return path.hitPath(width: width).contains(position)
     }
 
-    func hitTest(position: Point2, threshold: Scalar = 24) -> Path? {
+    func hitTest(position: Point2, threshold: Scalar = 24) -> UUID? {
         let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
-        return map.values.first { $0.hitPath(width: width).contains(position) }
+        return map.first { _, path in path.hitPath(width: width).contains(position) }?.key
     }
 }
 
@@ -73,14 +73,12 @@ extension PathService {
 extension PathService {
     var targetStore: PathStore { pendingStore.active ? pendingStore : store }
 
-    private func add(paths: [Path]) {
+    private func add(pathId: UUID, path: Path) {
         let _r = subtracer.range("add"); defer { _r() }
         var updated = map
-        for path in paths {
-            guard !exists(id: path.id) else { continue }
-            guard path.count > 1 else { continue }
-            updated[path.id] = path.cloned
-        }
+        guard !exists(id: pathId) else { return }
+        guard path.count > 1 else { return }
+        updated[pathId] = path
         targetStore.update(map: updated)
     }
 
@@ -93,13 +91,13 @@ extension PathService {
         targetStore.update(map: updated)
     }
 
-    private func update(paths: [Path]) {
+    private func update(pathId: UUID, path: Path) {
         let _r = subtracer.range("update"); defer { _r() }
         var updated = map
-        for path in paths {
-            if path.count <= 1 {
-                updated.removeValue(forKey: path.id)
-            }
+        if path.count <= 1 {
+            updated.removeValue(forKey: pathId)
+        } else {
+            updated[pathId] = path
         }
         targetStore.update(map: updated, forced: true)
     }
@@ -128,7 +126,7 @@ extension PathService {
         withStoreUpdating {
             if let event {
                 pendingStore.update(active: true)
-                pendingStore.update(map: store.map.cloned)
+                pendingStore.update(map: store.map)
                 loadEvent(event)
             } else {
                 pendingStore.update(active: false)
@@ -173,7 +171,7 @@ extension PathService {
     }
 
     private func loadEvent(_ event: PathEvent.Create) {
-        add(paths: [event.path])
+        add(pathId: event.pathId, path: event.path)
     }
 
     private func loadEvent(_ event: PathEvent.Delete) {
@@ -182,7 +180,7 @@ extension PathService {
 
     private func loadEvent(_ event: PathEvent.Update) {
         let pathId = event.pathId
-        guard let path = get(id: pathId) else { return }
+        guard var path = get(id: pathId) else { return }
         for kind in event.kinds {
             switch kind {
             case let .move(event):
@@ -195,39 +193,39 @@ extension PathService {
                 path.update(nodeUpdate: event)
             }
         }
-        update(paths: [path])
+        update(pathId: pathId, path: path)
     }
 
     // MARK: path multi update
 
     private func loadEvent(_ event: PathEvent.Merge) {
         let pathId = event.pathId, mergedPathId = event.mergedPathId
-        guard let path = get(id: pathId),
+        guard var path = get(id: pathId),
               let mergedPath = get(id: mergedPathId) else { return }
         if mergedPath != path {
             remove(pathIds: [mergedPathId])
         }
         path.update(merge: event, mergedPath: mergedPath)
-        update(paths: [path])
+        update(pathId: pathId, path: path)
     }
 
     private func loadEvent(_ event: PathEvent.NodeBreak) {
         let pathId = event.pathId
-        guard let path = get(id: pathId) else { return }
+        guard var path = get(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
-        update(paths: [path])
+        update(pathId: pathId, path: path)
         if let newPath {
-            add(paths: [newPath])
+            add(pathId: event.newPathId, path: newPath)
         }
     }
 
     private func loadEvent(_ event: PathEvent.SegmentBreak) {
         let pathId = event.pathId
-        guard let path = get(id: pathId) else { return }
+        guard var path = get(id: pathId) else { return }
         let newPath = path.update(segmentBreak: event)
-        update(paths: [path])
+        update(pathId: pathId, path: path)
         if let newPath {
-            add(paths: [newPath])
+            add(pathId: event.newPathId, path: newPath)
         }
     }
 
@@ -241,7 +239,7 @@ extension PathService {
 
     private func loadEvent(_ event: PathPropertyEvent.Update) {
         let pathId = event.pathId
-        guard let path = get(id: pathId) else { return }
+        guard var path = get(id: pathId) else { return }
         for kind in event.kinds {
             switch kind {
             case let .setName(event): break
@@ -251,6 +249,6 @@ extension PathService {
                 path.update(setSegmentType: event)
             }
         }
-        update(paths: [path])
+        update(pathId: pathId, path: path)
     }
 }

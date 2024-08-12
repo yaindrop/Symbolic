@@ -47,7 +47,7 @@ extension SVGPathCommand {
 }
 
 extension Path {
-    convenience init(from svgPath: SVGPath) {
+    init(from svgPath: SVGPath) {
         var approximatedCommands: [SVGPathCommand] = []
 
         var current = svgPath.initial
@@ -79,6 +79,6 @@ extension Path {
         }
 
         let nodeMap = NodeMap(values: nodes) { _ in UUID() }
-        self.init(id: UUID(), nodeMap: nodeMap, isClosed: svgPath.isClosed)
+        self.init(nodeMap: nodeMap, isClosed: svgPath.isClosed)
     }
 }

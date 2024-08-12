@@ -26,7 +26,7 @@ struct Document: Codable {
         parser.parse()
 
         for path in paths {
-            events.append(.init(kind: .single(.path(.create(.init(path: path)))), action: .path(.load(.init(paths: paths)))))
+            events.append(.init(kind: .single(.path(.create(.init(pathId: .init(), path: path)))), action: .path(.load(.init(pathIds: .init(repeating: .init(), count: paths.count).map { _ in UUID() }, paths: paths)))))
         }
     }
 }

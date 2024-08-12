@@ -29,7 +29,7 @@ private extension GlobalStores {
             onTap: { info in
                 let worldLocation = info.location.applying(viewport.toWorld)
                 let _r = tracer.range(type: .intent, "On tap \(worldLocation)"); defer { _r() }
-                let pathId = path.hitTest(position: worldLocation)?.id
+                let pathId = path.hitTest(position: worldLocation)
                 if toolbar.multiSelect {
                     if let pathId {
                         activeItem.selectAdd(itemId: pathId)
@@ -77,8 +77,9 @@ private extension GlobalStores {
                 canvasAction.end(continuous: .draggingSelection)
 
                 if let path = addingPath.path {
-                    documentUpdater.update(path: .create(.init(path: path)))
-                    activeItem.focus(itemId: path.id)
+                    let newPathId = UUID()
+                    documentUpdater.update(path: .create(.init(pathId: newPathId, path: path)))
+                    activeItem.focus(itemId: newPathId)
                     canvasAction.on(instant: .addPath)
                 }
                 addingPath.onEnd()

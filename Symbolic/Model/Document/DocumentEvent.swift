@@ -11,7 +11,7 @@ enum ItemEvent: Equatable, Codable {
 // MARK: - PathEvent
 
 enum PathEvent: Equatable, Codable {
-    struct Create: Equatable, Codable { let path: Path }
+    struct Create: Equatable, Codable { let pathId: UUID, path: Path }
     struct Delete: Equatable, Codable { let pathId: UUID }
     struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
 
@@ -33,12 +33,14 @@ enum PathEvent: Equatable, Codable {
 
 extension PathEvent.Update {
     struct Move: Equatable, Codable { let offset: Vector2 }
+
     struct NodeCreate: Equatable, Codable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
-    struct NodeUpdate: Equatable, Codable { let nodeId: UUID, node: PathNode }
     struct NodeDelete: Equatable, Codable { let nodeId: UUID }
+    struct NodeUpdate: Equatable, Codable { let nodeId: UUID, node: PathNode }
 
     enum Kind: Equatable, Codable {
         case move(Move)
+
         case nodeCreate(NodeCreate)
         case nodeDelete(NodeDelete)
         case nodeUpdate(NodeUpdate)
@@ -104,7 +106,7 @@ extension PathEvent {
     var affectedPathIds: [UUID] {
         switch self {
         case let .create(event):
-            [event.path.id]
+            [event.pathId]
         case let .delete(event):
             [event.pathId]
         case let .update(event):

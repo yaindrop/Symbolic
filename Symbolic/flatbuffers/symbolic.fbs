@@ -1,0 +1,81 @@
+namespace Symbolic;
+
+table UUID {
+  u0:ubyte;
+  u1:ubyte;
+  u2:ubyte;
+  u3:ubyte;
+  u4:ubyte;
+  u5:ubyte;
+  u6:ubyte;
+  u7:ubyte;
+}
+
+table Vector2 {
+  x:float;
+  y:float;
+}
+
+table PathNode {
+  position:Vector2;
+  cubic_in:Vector2;
+  cubic_out:Vector2;
+}
+
+table Path {
+  id:UUID;
+  node_ids:[UUID];
+  nodes:[PathNode];
+  is_closed:bool;
+}
+
+// PathEvent
+
+union PathEvent {
+  PathEvent_Create,
+  PathEvent_Delete,
+  PathEvent_Update,
+}
+
+table PathEvent_Create {
+  path:Path;
+}
+
+table PathEvent_Delete {
+  path_id:UUID;
+}
+
+// PathEvent_Update
+
+union PathEvent_Update_Kind {
+  PathEvent_Update_Move,
+  PathEvent_Update_NodeCreate,
+  PathEvent_Update_NodeDelete,
+  PathEvent_Update_NodeUpdate,
+}
+
+table PathEvent_Update {
+  path_id:UUID;
+  kinds:[PathEvent_Update_Kind];
+}
+
+table PathEvent_Update_Move {
+  prev_node_id:UUID;
+  node_id:UUID;
+  node:PathNode;
+}
+
+table PathEvent_Update_NodeCreate {
+  prev_node_id:UUID;
+  node_id:UUID;
+  node:PathNode;
+}
+
+table PathEvent_Update_NodeDelete {
+  node_id:UUID;
+}
+
+table PathEvent_Update_NodeUpdate {
+  node_id:UUID;
+  node:PathNode;
+}

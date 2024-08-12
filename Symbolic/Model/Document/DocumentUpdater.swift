@@ -29,7 +29,7 @@ struct DocumentUpdater {
 
 extension DocumentUpdater {
     func update(focusedPath kind: PathAction.Update.Kind, pending: Bool = false) {
-        guard let pathId = activeItem.focusedPath?.id else { return }
+        guard let pathId = activeItem.focusedPathId else { return }
         handle(.path(.update(.init(pathId: pathId, kind: kind))), pending: pending)
     }
 
@@ -200,15 +200,19 @@ private extension DocumentUpdater {
     }
 
     func collectEvents(to events: inout [SingleEvent], _ action: PathAction.Load) {
-        let paths = action.paths
-        for path in paths {
-            events.append(.path(.create(.init(path: path))))
+        let pathIds = action.pathIds,
+            paths = action.paths
+        assert(pathIds.count == paths.count)
+        for i in pathIds.indices {
+            let pathId = pathIds[i], path = paths[i]
+            events.append(.path(.create(.init(pathId: pathId, path: path))))
         }
     }
 
     func collectEvents(to events: inout [SingleEvent], _ action: PathAction.Create) {
-        let path = action.path
-        events.append(.path(.create(.init(path: path))))
+        let pathId = action.pathId,
+            path = action.path
+        events.append(.path(.create(.init(pathId: pathId, path: path))))
     }
 
     func collectEvents(to events: inout [SingleEvent], _ action: PathAction.Delete) {

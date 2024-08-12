@@ -1,6 +1,7 @@
 import SwiftUI
 
 private struct Context {
+    var pathId: UUID
     var path: Path
     var pathProperty: PathProperty
     var focusedNodeId: UUID?
@@ -13,6 +14,7 @@ private struct Context {
 extension PathPanel {
     struct Nodes: View, SelectorHolder {
         class Selector: SelectorBase {
+            @Selected({ global.activeItem.focusedPathId }) var pathId
             @Selected({ global.activeItem.focusedPath }) var path
             @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
@@ -48,8 +50,8 @@ private extension PathPanel.Nodes {
     }
 
     var context: Context? {
-        if let path = selector.path, let pathProperty = selector.pathProperty {
-            .init(path: path, pathProperty: pathProperty, focusedNodeId: selector.focusedNodeId, selectingNodes: selector.selectingNodes, activeNodeIds: selector.activeNodeIds)
+        if let pathId = selector.pathId, let path = selector.path, let pathProperty = selector.pathProperty {
+            .init(pathId: pathId, path: path, pathProperty: pathProperty, focusedNodeId: selector.focusedNodeId, selectingNodes: selector.selectingNodes, activeNodeIds: selector.activeNodeIds)
         } else {
             nil
         }
@@ -220,7 +222,7 @@ private extension NodeDetailView {
         Button { isPresented.wrappedValue.toggle() } label: { nodeLabel }
             .tint(.label)
             .portal(isPresented: isPresented, configs: .init(isModal: true, align: .bottomCenter, gap: .init(squared: 6))) {
-                PathNodePopover(pathId: context.path.id, nodeId: nodeId)
+                PathNodePopover(pathId: context.pathId, nodeId: nodeId)
             }
     }
 
@@ -232,7 +234,7 @@ private extension NodeDetailView {
             .disabled(disabled)
             .tint(.label)
             .portal(isPresented: isPresented, configs: .init(isModal: true, align: align, gap: .init(squared: 6))) {
-                PathSegmentPopover(pathId: context.path.id, nodeId: nodeId, isOut: isOut)
+                PathSegmentPopover(pathId: context.pathId, nodeId: nodeId, isOut: isOut)
             }
     }
 

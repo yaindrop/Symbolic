@@ -97,9 +97,9 @@
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
-		579B29AE2C69078D004E7DC8 /* monster_generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29AB2C69078D004E7DC8 /* monster_generated.swift */; };
-		579B29AF2C69078D004E7DC8 /* monster.fbs in Resources */ = {isa = PBXBuildFile; fileRef = 579B29AC2C69078D004E7DC8 /* monster.fbs */; };
 		579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29B12C690824004E7DC8 /* FlatBuffers */; };
+		579B29B62C69985A004E7DC8 /* symbolic_generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29B32C69985A004E7DC8 /* symbolic_generated.swift */; };
+		579B29B72C69985A004E7DC8 /* symbolic.fbs in Resources */ = {isa = PBXBuildFile; fileRef = 579B29B42C69985A004E7DC8 /* symbolic.fbs */; };
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
@@ -253,8 +253,8 @@
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
-		579B29AB2C69078D004E7DC8 /* monster_generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = monster_generated.swift; sourceTree = "<group>"; };
-		579B29AC2C69078D004E7DC8 /* monster.fbs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = monster.fbs; sourceTree = "<group>"; };
+		579B29B32C69985A004E7DC8 /* symbolic_generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic_generated.swift; sourceTree = "<group>"; };
+		579B29B42C69985A004E7DC8 /* symbolic.fbs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = symbolic.fbs; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -378,7 +378,7 @@
 		5723BF6D2BC39844002209F2 = {
 			isa = PBXGroup;
 			children = (
-				579B29AD2C69078D004E7DC8 /* flatbuffers */,
+				579B29B52C69985A004E7DC8 /* flatbuffers */,
 				5723BF782BC39844002209F2 /* Symbolic */,
 				5723BF8B2BC39846002209F2 /* SymbolicTests */,
 				5723BF952BC39846002209F2 /* SymbolicUITests */,
@@ -570,21 +570,21 @@
 			path = Toolbar;
 			sourceTree = "<group>";
 		};
-		579B29AD2C69078D004E7DC8 /* flatbuffers */ = {
-			isa = PBXGroup;
-			children = (
-				579B29AB2C69078D004E7DC8 /* monster_generated.swift */,
-				579B29AC2C69078D004E7DC8 /* monster.fbs */,
-			);
-			name = flatbuffers;
-			path = Symbolic/flatbuffers;
-			sourceTree = "<group>";
-		};
 		579B29B02C690824004E7DC8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		579B29B52C69985A004E7DC8 /* flatbuffers */ = {
+			isa = PBXGroup;
+			children = (
+				579B29B32C69985A004E7DC8 /* symbolic_generated.swift */,
+				579B29B42C69985A004E7DC8 /* symbolic.fbs */,
+			);
+			name = flatbuffers;
+			path = Symbolic/flatbuffers;
 			sourceTree = "<group>";
 		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
@@ -906,10 +906,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				579B29AF2C69078D004E7DC8 /* monster.fbs in Resources */,
 				5723BF832BC39846002209F2 /* Preview Assets.xcassets in Resources */,
 				5723BF802BC39846002209F2 /* Assets.xcassets in Resources */,
 				57E082192C28FD26008CC67B /* Localizable.xcstrings in Resources */,
+				579B29B72C69985A004E7DC8 /* symbolic.fbs in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1035,7 +1035,6 @@
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				57B703FB2C38418000B60F36 /* CustomState.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
-				579B29AE2C69078D004E7DC8 /* monster_generated.swift in Sources */,
 				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,
 				571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */,
@@ -1050,6 +1049,7 @@
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
+				579B29B62C69985A004E7DC8 /* symbolic_generated.swift in Sources */,
 				5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectionService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,

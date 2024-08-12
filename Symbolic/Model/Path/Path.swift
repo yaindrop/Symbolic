@@ -8,44 +8,32 @@ protocol SUPathAppendable {
 
 // MARK: - Path
 
-class Path: Identifiable, Cloneable, Codable {
+struct Path: Codable, Equatable {
     typealias NodeMap = OrderedMap<UUID, PathNode>
 
-    let id: UUID
     private(set) var nodeMap: NodeMap
     private(set) var isClosed: Bool
 
-    required init(id: UUID, nodeMap: NodeMap, isClosed: Bool) {
-        self.id = id
+    init(nodeMap: NodeMap, isClosed: Bool) {
         self.nodeMap = nodeMap
         self.isClosed = isClosed
-    }
-
-    // MARK: Cloneable
-
-    required init(_ path: Path) {
-        id = path.id
-        nodeMap = path.nodeMap
-        isClosed = path.isClosed
     }
 
     // MARK: Codable
 
     private enum CodingKeys: String, CodingKey {
-        case id, nodeIds, nodes, isClosed
+        case nodeIds, nodes, isClosed
     }
 
     func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
         try container.encode(nodeIds, forKey: .nodeIds)
         try container.encode(nodes, forKey: .nodes)
         try container.encode(isClosed, forKey: .isClosed)
     }
 
-    required init(from decoder: any Decoder) throws {
+    init(from decoder: any Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
-        id = try values.decode(UUID.self, forKey: .id)
         nodeMap = .init()
         isClosed = try values.decode(Bool.self, forKey: .isClosed)
 
@@ -189,7 +177,7 @@ extension Path {
         guard let nodeIds = indices(from: i, to: j).completeMap({ nodeIds[$0] }) else { return nil }
         guard nodeIds.count > 1 else { return nil }
         let nodeMap = NodeMap(keys: nodeIds) { self.nodeMap[$0]! }
-        return .init(id: UUID(), nodeMap: nodeMap, isClosed: isClosed && nodeMap.count == self.nodeMap.count)
+        return .init(nodeMap: nodeMap, isClosed: isClosed && nodeMap.count == self.nodeMap.count)
     }
 
     func continuousNodeIndexPairs(nodeIds: Set<UUID>) -> [Pair<Int, Int>] {
@@ -220,16 +208,10 @@ extension Path {
 
 // MARK: EquatableBy
 
-extension Path: EquatableBy {
-    var equatableBy: some Equatable { ObjectIdentifier(self) }
-}
-
-// MARK: EquatableBy
-
 extension Path: Transformable {
     func applying(_ t: CGAffineTransform) -> Self {
         let nodes = nodes.map { $0.applying(t) }
-        return .init(id: UUID(), nodeMap: .init(values: nodes) { _ in UUID() }, isClosed: isClosed)
+        return .init(nodeMap: .init(values: nodes) { _ in UUID() }, isClosed: isClosed)
     }
 }
 
@@ -246,7 +228,7 @@ extension Path: SUPathAppendable {
 
 extension Path: CustomStringConvertible {
     var description: String {
-        "Path(id: \(id), nodes: \(nodes), isClosed: \(isClosed))"
+        "Path(nodes: \(nodes), isClosed: \(isClosed))"
     }
 }
 
@@ -254,17 +236,17 @@ extension Path: CustomStringConvertible {
 
 extension Path {
     func with(nodeMap: NodeMap, isClosed: Bool? = nil) -> Self {
-        .init(id: id, nodeMap: nodeMap, isClosed: isClosed ?? self.isClosed)
+        .init(nodeMap: nodeMap, isClosed: isClosed ?? self.isClosed)
     }
 
-    func update(move: PathEvent.Update.Move) {
+    mutating func update(move: PathEvent.Update.Move) {
         let _r = tracer.range("Path.update move"); defer { _r() }
         for id in nodeIds {
             nodeMap[id]?.position += move.offset
         }
     }
 
-    func update(nodeCreate: PathEvent.Update.NodeCreate) {
+    mutating func update(nodeCreate: PathEvent.Update.NodeCreate) {
         let _r = tracer.range("Path.update nodeCreate"); defer { _r() }
         let prevNodeId = nodeCreate.prevNodeId, nodeId = nodeCreate.nodeId, node = nodeCreate.node
         var i = 0
@@ -275,17 +257,17 @@ extension Path {
         nodeMap.insert((nodeId, node), at: i)
     }
 
-    func update(nodeDelete: PathEvent.Update.NodeDelete) {
+    mutating func update(nodeDelete: PathEvent.Update.NodeDelete) {
         let _r = tracer.range("Path.update nodeDelete"); defer { _r() }
         nodeMap.removeValue(forKey: nodeDelete.nodeId)
     }
 
-    func update(nodeUpdate: PathEvent.Update.NodeUpdate) {
+    mutating func update(nodeUpdate: PathEvent.Update.NodeUpdate) {
         let _r = tracer.range("Path.update nodeUpdate"); defer { _r() }
         nodeMap[nodeUpdate.nodeId] = nodeUpdate.node
     }
 
-    func update(merge: PathEvent.Merge, mergedPath: Path) {
+    mutating func update(merge: PathEvent.Merge, mergedPath: Path) {
         let endingNodeId = merge.endingNodeId, mergedEndingNodeId = merge.mergedEndingNodeId
         let _r = tracer.range("Path.update move"); defer { _r() }
         guard let endingNode = node(id: endingNodeId),
@@ -314,9 +296,8 @@ extension Path {
 //        }
     }
 
-    func update(nodeBreak: PathEvent.NodeBreak) -> Path? {
+    mutating func update(nodeBreak: PathEvent.NodeBreak) -> Path? {
         let nodeId = nodeBreak.nodeId,
-            newPathId = nodeBreak.newPathId,
             newNodeId = nodeBreak.newNodeId
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId),
@@ -332,12 +313,12 @@ extension Path {
             nodeMap.mutateKeys { $0 = Array($0[...i]) }
             newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
             newNodeMap.insert((newNodeId, newNode), at: 0)
-            return .init(id: newPathId, nodeMap: newNodeMap, isClosed: false)
+            return .init(nodeMap: newNodeMap, isClosed: false)
         }
     }
 
-    func update(segmentBreak: PathEvent.SegmentBreak) -> Path? {
-        let nodeId = segmentBreak.fromNodeId, newPathId = segmentBreak.newPathId
+    mutating func update(segmentBreak: PathEvent.SegmentBreak) -> Path? {
+        let nodeId = segmentBreak.fromNodeId
         let _r = tracer.range("Path.update segmentBreak"); defer { _r() }
         guard let i = nodeIndex(id: nodeId) else { return nil }
         if isClosed {
@@ -348,11 +329,11 @@ extension Path {
             var newNodeMap = nodeMap
             nodeMap.mutateKeys { $0 = Array($0[...i]) }
             newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
-            return .init(id: newPathId, nodeMap: newNodeMap, isClosed: false)
+            return .init(nodeMap: newNodeMap, isClosed: false)
         }
     }
 
-    func update(setNodeType: PathPropertyEvent.Update.SetNodeType) {
+    mutating func update(setNodeType: PathPropertyEvent.Update.SetNodeType) {
         for nodeId in setNodeType.nodeIds {
             guard let node = node(id: nodeId) else { continue }
             switch setNodeType.nodeType {
@@ -365,7 +346,7 @@ extension Path {
         }
     }
 
-    func update(setSegmentType: PathPropertyEvent.Update.SetSegmentType) {
+    mutating func update(setSegmentType: PathPropertyEvent.Update.SetSegmentType) {
         for fromNodeId in setSegmentType.fromNodeIds {
             switch setSegmentType.segmentType {
             case .quadratic:

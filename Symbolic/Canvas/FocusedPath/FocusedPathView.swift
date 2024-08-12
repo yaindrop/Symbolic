@@ -6,7 +6,7 @@ let debugFocusedPath: Bool = true
 
 struct FocusedPathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.activeItem.focusedPath }) var path
+        @Selected({ global.activeItem.focusedPathId }) var pathId
         @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
         @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
     }
@@ -24,7 +24,7 @@ struct FocusedPathView: View, TracedView, SelectorHolder {
 
 private extension FocusedPathView {
     @ViewBuilder var content: some View {
-        if selector.path != nil {
+        if selector.pathId != nil {
             ZStack {
                 Stroke()
                 NodeHandles()

@@ -7,7 +7,7 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ global.activeItem.focusedPath }) var focusedPath
+            @Selected({ global.activeItem.focusedPathId }) var focusedPathId
             @Selected({ global.focusedPath.activeNodesBounds }) var bounds
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
             @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
@@ -61,11 +61,11 @@ extension ContextMenuView.FocusedPathSelectionMenu {
                 .frame(minWidth: 32)
                 .tint(.label)
                 .portal(isPresented: $showPopover, configs: .init(isModal: true, align: .centerTrailing, gap: .init(12, 0))) {
-                    let path = selector.focusedPath
-                    if let path, let nodeId = selector.focusedNodeId {
-                        PathNodePopover(pathId: path.id, nodeId: nodeId)
-                    } else if let path, let segmentId = selector.focusedSegmentId {
-                        PathSegmentPopover(pathId: path.id, nodeId: segmentId)
+                    let pathId = selector.focusedPathId
+                    if let pathId, let nodeId = selector.focusedNodeId {
+                        PathNodePopover(pathId: pathId, nodeId: nodeId)
+                    } else if let pathId, let segmentId = selector.focusedSegmentId {
+                        PathSegmentPopover(pathId: pathId, nodeId: segmentId)
                     } else {
                         PathSelectionPopover()
                     }
@@ -127,13 +127,13 @@ extension ContextMenuView.FocusedPathSelectionMenu {
     }
 
     func setNodeType(_ nodeType: PathNodeType) {
-        guard let pathId = global.activeItem.focusedPath?.id else { return }
+        guard let pathId = global.activeItem.focusedPathId else { return }
         let nodeIds = Array(global.focusedPath.activeNodeIds)
         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
     }
 
     func setSegmentType(_ segmentType: PathSegmentType) {
-        guard let pathId = global.activeItem.focusedPath?.id else { return }
+        guard let pathId = global.activeItem.focusedPathId else { return }
         let fromNodeIds = Array(global.focusedPath.activeSegmentIds)
         global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
     }

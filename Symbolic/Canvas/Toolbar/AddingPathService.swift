@@ -42,7 +42,7 @@ extension AddingPathService {
     var path: Path? {
         guard let polyline else { return nil }
         let nodes = polyline.fit(error: 1)
-        return .init(id: UUID(), nodeMap: .init(values: nodes) { _ in UUID() }, isClosed: false)
+        return .init(nodeMap: .init(values: nodes) { _ in UUID() }, isClosed: false)
     }
 }
 

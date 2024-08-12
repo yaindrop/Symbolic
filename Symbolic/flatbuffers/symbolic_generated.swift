@@ -4,7 +4,7 @@
 
 import FlatBuffers
 
-public enum Symbolic_PathEvent: UInt8, UnionEnum {
+public enum FB_PathEvent_Update_Kind: UInt8, UnionEnum {
   public typealias T = UInt8
 
   public init?(value: T) {
@@ -14,16 +14,17 @@ public enum Symbolic_PathEvent: UInt8, UnionEnum {
   public static var byteSize: Int { return MemoryLayout<UInt8>.size }
   public var value: UInt8 { return self.rawValue }
   case none_ = 0
-  case patheventCreate = 1
-  case patheventDelete = 2
-  case patheventUpdate = 3
+  case move = 1
+  case nodecreate = 2
+  case nodedelete = 3
+  case nodeupdate = 4
 
-  public static var max: Symbolic_PathEvent { return .patheventUpdate }
-  public static var min: Symbolic_PathEvent { return .none_ }
+  public static var max: FB_PathEvent_Update_Kind { return .nodeupdate }
+  public static var min: FB_PathEvent_Update_Kind { return .none_ }
 }
 
 
-public enum Symbolic_PathEvent_Update_Kind: UInt8, UnionEnum {
+public enum FB_PathEvent_Kind: UInt8, UnionEnum {
   public typealias T = UInt8
 
   public init?(value: T) {
@@ -33,182 +34,289 @@ public enum Symbolic_PathEvent_Update_Kind: UInt8, UnionEnum {
   public static var byteSize: Int { return MemoryLayout<UInt8>.size }
   public var value: UInt8 { return self.rawValue }
   case none_ = 0
-  case patheventUpdateMove = 1
-  case patheventUpdateNodecreate = 2
-  case patheventUpdateNodedelete = 3
-  case patheventUpdateNodeupdate = 4
+  case create = 1
+  case delete = 2
+  case update = 3
 
-  public static var max: Symbolic_PathEvent_Update_Kind { return .patheventUpdateNodeupdate }
-  public static var min: Symbolic_PathEvent_Update_Kind { return .none_ }
+  public static var max: FB_PathEvent_Kind { return .update }
+  public static var min: FB_PathEvent_Kind { return .none_ }
 }
 
 
-public struct Symbolic_UUID: FlatBufferObject, Verifiable {
+public enum FB_DocumentEvent_Kind: UInt8, UnionEnum {
+  public typealias T = UInt8
+
+  public init?(value: T) {
+    self.init(rawValue: value)
+  }
+
+  public static var byteSize: Int { return MemoryLayout<UInt8>.size }
+  public var value: UInt8 { return self.rawValue }
+  case none_ = 0
+  case fbPathevent = 1
+
+  public static var max: FB_DocumentEvent_Kind { return .fbPathevent }
+  public static var min: FB_DocumentEvent_Kind { return .none_ }
+}
+
+
+public struct FB_UUID: NativeStruct, Verifiable, FlatbuffersInitializable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
-  public var __buffer: ByteBuffer! { return _accessor.bb }
-  private var _accessor: Table
 
-  private init(_ t: Table) { _accessor = t }
-  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+  private var _u0: UInt8
+  private var _u1: UInt8
+  private var _u2: UInt8
+  private var _u3: UInt8
+  private var _u4: UInt8
+  private var _u5: UInt8
+  private var _u6: UInt8
+  private var _u7: UInt8
+  private var _u8: UInt8
+  private var _u9: UInt8
+  private var _u10: UInt8
+  private var _u11: UInt8
+  private var _u12: UInt8
+  private var _u13: UInt8
+  private var _u14: UInt8
+  private var _u15: UInt8
 
-  private enum VTOFFSET: VOffset {
-    case u0 = 4
-    case u1 = 6
-    case u2 = 8
-    case u3 = 10
-    case u4 = 12
-    case u5 = 14
-    case u6 = 16
-    case u7 = 18
-    var v: Int32 { Int32(self.rawValue) }
-    var p: VOffset { self.rawValue }
+  public init(_ bb: ByteBuffer, o: Int32) {
+    let _accessor = Struct(bb: bb, position: o)
+    _u0 = _accessor.readBuffer(of: UInt8.self, at: 0)
+    _u1 = _accessor.readBuffer(of: UInt8.self, at: 1)
+    _u2 = _accessor.readBuffer(of: UInt8.self, at: 2)
+    _u3 = _accessor.readBuffer(of: UInt8.self, at: 3)
+    _u4 = _accessor.readBuffer(of: UInt8.self, at: 4)
+    _u5 = _accessor.readBuffer(of: UInt8.self, at: 5)
+    _u6 = _accessor.readBuffer(of: UInt8.self, at: 6)
+    _u7 = _accessor.readBuffer(of: UInt8.self, at: 7)
+    _u8 = _accessor.readBuffer(of: UInt8.self, at: 8)
+    _u9 = _accessor.readBuffer(of: UInt8.self, at: 9)
+    _u10 = _accessor.readBuffer(of: UInt8.self, at: 10)
+    _u11 = _accessor.readBuffer(of: UInt8.self, at: 11)
+    _u12 = _accessor.readBuffer(of: UInt8.self, at: 12)
+    _u13 = _accessor.readBuffer(of: UInt8.self, at: 13)
+    _u14 = _accessor.readBuffer(of: UInt8.self, at: 14)
+    _u15 = _accessor.readBuffer(of: UInt8.self, at: 15)
   }
 
-  public var u0: UInt8 { let o = _accessor.offset(VTOFFSET.u0.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u1: UInt8 { let o = _accessor.offset(VTOFFSET.u1.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u2: UInt8 { let o = _accessor.offset(VTOFFSET.u2.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u3: UInt8 { let o = _accessor.offset(VTOFFSET.u3.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u4: UInt8 { let o = _accessor.offset(VTOFFSET.u4.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u5: UInt8 { let o = _accessor.offset(VTOFFSET.u5.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u6: UInt8 { let o = _accessor.offset(VTOFFSET.u6.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public var u7: UInt8 { let o = _accessor.offset(VTOFFSET.u7.v); return o == 0 ? 0 : _accessor.readBuffer(of: UInt8.self, at: o) }
-  public static func startUUID(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 8) }
-  public static func add(u0: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u0, def: 0, at: VTOFFSET.u0.p) }
-  public static func add(u1: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u1, def: 0, at: VTOFFSET.u1.p) }
-  public static func add(u2: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u2, def: 0, at: VTOFFSET.u2.p) }
-  public static func add(u3: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u3, def: 0, at: VTOFFSET.u3.p) }
-  public static func add(u4: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u4, def: 0, at: VTOFFSET.u4.p) }
-  public static func add(u5: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u5, def: 0, at: VTOFFSET.u5.p) }
-  public static func add(u6: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u6, def: 0, at: VTOFFSET.u6.p) }
-  public static func add(u7: UInt8, _ fbb: inout FlatBufferBuilder) { fbb.add(element: u7, def: 0, at: VTOFFSET.u7.p) }
-  public static func endUUID(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createUUID(
-    _ fbb: inout FlatBufferBuilder,
-    u0: UInt8 = 0,
-    u1: UInt8 = 0,
-    u2: UInt8 = 0,
-    u3: UInt8 = 0,
-    u4: UInt8 = 0,
-    u5: UInt8 = 0,
-    u6: UInt8 = 0,
-    u7: UInt8 = 0
-  ) -> Offset {
-    let __start = Symbolic_UUID.startUUID(&fbb)
-    Symbolic_UUID.add(u0: u0, &fbb)
-    Symbolic_UUID.add(u1: u1, &fbb)
-    Symbolic_UUID.add(u2: u2, &fbb)
-    Symbolic_UUID.add(u3: u3, &fbb)
-    Symbolic_UUID.add(u4: u4, &fbb)
-    Symbolic_UUID.add(u5: u5, &fbb)
-    Symbolic_UUID.add(u6: u6, &fbb)
-    Symbolic_UUID.add(u7: u7, &fbb)
-    return Symbolic_UUID.endUUID(&fbb, start: __start)
+  public init(u0: UInt8, u1: UInt8, u2: UInt8, u3: UInt8, u4: UInt8, u5: UInt8, u6: UInt8, u7: UInt8, u8: UInt8, u9: UInt8, u10: UInt8, u11: UInt8, u12: UInt8, u13: UInt8, u14: UInt8, u15: UInt8) {
+    _u0 = u0
+    _u1 = u1
+    _u2 = u2
+    _u3 = u3
+    _u4 = u4
+    _u5 = u5
+    _u6 = u6
+    _u7 = u7
+    _u8 = u8
+    _u9 = u9
+    _u10 = u10
+    _u11 = u11
+    _u12 = u12
+    _u13 = u13
+    _u14 = u14
+    _u15 = u15
   }
+
+  public init() {
+    _u0 = 0
+    _u1 = 0
+    _u2 = 0
+    _u3 = 0
+    _u4 = 0
+    _u5 = 0
+    _u6 = 0
+    _u7 = 0
+    _u8 = 0
+    _u9 = 0
+    _u10 = 0
+    _u11 = 0
+    _u12 = 0
+    _u13 = 0
+    _u14 = 0
+    _u15 = 0
+  }
+
+  public var u0: UInt8 { _u0 }
+  public var u1: UInt8 { _u1 }
+  public var u2: UInt8 { _u2 }
+  public var u3: UInt8 { _u3 }
+  public var u4: UInt8 { _u4 }
+  public var u5: UInt8 { _u5 }
+  public var u6: UInt8 { _u6 }
+  public var u7: UInt8 { _u7 }
+  public var u8: UInt8 { _u8 }
+  public var u9: UInt8 { _u9 }
+  public var u10: UInt8 { _u10 }
+  public var u11: UInt8 { _u11 }
+  public var u12: UInt8 { _u12 }
+  public var u13: UInt8 { _u13 }
+  public var u14: UInt8 { _u14 }
+  public var u15: UInt8 { _u15 }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
-    var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.u0.p, fieldName: "u0", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u1.p, fieldName: "u1", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u2.p, fieldName: "u2", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u3.p, fieldName: "u3", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u4.p, fieldName: "u4", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u5.p, fieldName: "u5", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u6.p, fieldName: "u6", required: false, type: UInt8.self)
-    try _v.visit(field: VTOFFSET.u7.p, fieldName: "u7", required: false, type: UInt8.self)
-    _v.finish()
+    try verifier.inBuffer(position: position, of: FB_UUID.self)
   }
 }
 
-public struct Symbolic_Vector2: FlatBufferObject, Verifiable {
+public struct FB_UUID_Mutable: FlatBufferObject {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
-  private var _accessor: Table
+  private var _accessor: Struct
 
-  private init(_ t: Table) { _accessor = t }
-  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Struct(bb: bb, position: o) }
 
-  private enum VTOFFSET: VOffset {
-    case x = 4
-    case y = 6
-    var v: Int32 { Int32(self.rawValue) }
-    var p: VOffset { self.rawValue }
+  public var u0: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 0) }
+  public var u1: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 1) }
+  public var u2: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 2) }
+  public var u3: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 3) }
+  public var u4: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 4) }
+  public var u5: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 5) }
+  public var u6: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 6) }
+  public var u7: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 7) }
+  public var u8: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 8) }
+  public var u9: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 9) }
+  public var u10: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 10) }
+  public var u11: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 11) }
+  public var u12: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 12) }
+  public var u13: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 13) }
+  public var u14: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 14) }
+  public var u15: UInt8 { return _accessor.readBuffer(of: UInt8.self, at: 15) }
+}
+
+public struct FB_Date: NativeStruct, Verifiable, FlatbuffersInitializable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+
+  private var _timestampNs: Int64
+
+  public init(_ bb: ByteBuffer, o: Int32) {
+    let _accessor = Struct(bb: bb, position: o)
+    _timestampNs = _accessor.readBuffer(of: Int64.self, at: 0)
   }
 
-  public var x: Float32 { let o = _accessor.offset(VTOFFSET.x.v); return o == 0 ? 0.0 : _accessor.readBuffer(of: Float32.self, at: o) }
-  public var y: Float32 { let o = _accessor.offset(VTOFFSET.y.v); return o == 0 ? 0.0 : _accessor.readBuffer(of: Float32.self, at: o) }
-  public static func startVector2(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
-  public static func add(x: Float32, _ fbb: inout FlatBufferBuilder) { fbb.add(element: x, def: 0.0, at: VTOFFSET.x.p) }
-  public static func add(y: Float32, _ fbb: inout FlatBufferBuilder) { fbb.add(element: y, def: 0.0, at: VTOFFSET.y.p) }
-  public static func endVector2(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createVector2(
-    _ fbb: inout FlatBufferBuilder,
-    x: Float32 = 0.0,
-    y: Float32 = 0.0
-  ) -> Offset {
-    let __start = Symbolic_Vector2.startVector2(&fbb)
-    Symbolic_Vector2.add(x: x, &fbb)
-    Symbolic_Vector2.add(y: y, &fbb)
-    return Symbolic_Vector2.endVector2(&fbb, start: __start)
+  public init(timestampNs: Int64) {
+    _timestampNs = timestampNs
   }
+
+  public init() {
+    _timestampNs = 0
+  }
+
+  public var timestampNs: Int64 { _timestampNs }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
-    var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.x.p, fieldName: "x", required: false, type: Float32.self)
-    try _v.visit(field: VTOFFSET.y.p, fieldName: "y", required: false, type: Float32.self)
-    _v.finish()
+    try verifier.inBuffer(position: position, of: FB_Date.self)
   }
 }
 
-public struct Symbolic_PathNode: FlatBufferObject, Verifiable {
+public struct FB_Date_Mutable: FlatBufferObject {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
-  private var _accessor: Table
+  private var _accessor: Struct
 
-  private init(_ t: Table) { _accessor = t }
-  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Struct(bb: bb, position: o) }
 
-  private enum VTOFFSET: VOffset {
-    case position = 4
-    case cubicIn = 6
-    case cubicOut = 8
-    var v: Int32 { Int32(self.rawValue) }
-    var p: VOffset { self.rawValue }
+  public var timestampNs: Int64 { return _accessor.readBuffer(of: Int64.self, at: 0) }
+}
+
+public struct FB_Vector2: NativeStruct, Verifiable, FlatbuffersInitializable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+
+  private var _x: Float32
+  private var _y: Float32
+
+  public init(_ bb: ByteBuffer, o: Int32) {
+    let _accessor = Struct(bb: bb, position: o)
+    _x = _accessor.readBuffer(of: Float32.self, at: 0)
+    _y = _accessor.readBuffer(of: Float32.self, at: 4)
   }
 
-  public var position: Symbolic_Vector2? { let o = _accessor.offset(VTOFFSET.position.v); return o == 0 ? nil : Symbolic_Vector2(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var cubicIn: Symbolic_Vector2? { let o = _accessor.offset(VTOFFSET.cubicIn.v); return o == 0 ? nil : Symbolic_Vector2(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var cubicOut: Symbolic_Vector2? { let o = _accessor.offset(VTOFFSET.cubicOut.v); return o == 0 ? nil : Symbolic_Vector2(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathNode(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
-  public static func add(position: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: position, at: VTOFFSET.position.p) }
-  public static func add(cubicIn: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: cubicIn, at: VTOFFSET.cubicIn.p) }
-  public static func add(cubicOut: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: cubicOut, at: VTOFFSET.cubicOut.p) }
-  public static func endPathNode(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathNode(
-    _ fbb: inout FlatBufferBuilder,
-    positionOffset position: Offset = Offset(),
-    cubicInOffset cubicIn: Offset = Offset(),
-    cubicOutOffset cubicOut: Offset = Offset()
-  ) -> Offset {
-    let __start = Symbolic_PathNode.startPathNode(&fbb)
-    Symbolic_PathNode.add(position: position, &fbb)
-    Symbolic_PathNode.add(cubicIn: cubicIn, &fbb)
-    Symbolic_PathNode.add(cubicOut: cubicOut, &fbb)
-    return Symbolic_PathNode.endPathNode(&fbb, start: __start)
+  public init(x: Float32, y: Float32) {
+    _x = x
+    _y = y
   }
+
+  public init() {
+    _x = 0.0
+    _y = 0.0
+  }
+
+  public var x: Float32 { _x }
+  public var y: Float32 { _y }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
-    var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.position.p, fieldName: "position", required: false, type: ForwardOffset<Symbolic_Vector2>.self)
-    try _v.visit(field: VTOFFSET.cubicIn.p, fieldName: "cubicIn", required: false, type: ForwardOffset<Symbolic_Vector2>.self)
-    try _v.visit(field: VTOFFSET.cubicOut.p, fieldName: "cubicOut", required: false, type: ForwardOffset<Symbolic_Vector2>.self)
-    _v.finish()
+    try verifier.inBuffer(position: position, of: FB_Vector2.self)
   }
 }
 
-public struct Symbolic_Path: FlatBufferObject, Verifiable {
+public struct FB_Vector2_Mutable: FlatBufferObject {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Struct
+
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Struct(bb: bb, position: o) }
+
+  public var x: Float32 { return _accessor.readBuffer(of: Float32.self, at: 0) }
+  public var y: Float32 { return _accessor.readBuffer(of: Float32.self, at: 4) }
+}
+
+public struct FB_PathNode: NativeStruct, Verifiable, FlatbuffersInitializable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+
+  private var _position: FB_Vector2
+  private var _cubicIn: FB_Vector2
+  private var _cubicOut: FB_Vector2
+
+  public init(_ bb: ByteBuffer, o: Int32) {
+    let _accessor = Struct(bb: bb, position: o)
+    _position = FB_Vector2(_accessor.bb, o: _accessor.postion + 0)
+    _cubicIn = FB_Vector2(_accessor.bb, o: _accessor.postion + 8)
+    _cubicOut = FB_Vector2(_accessor.bb, o: _accessor.postion + 16)
+  }
+
+  public init(position: FB_Vector2, cubicIn: FB_Vector2, cubicOut: FB_Vector2) {
+    _position = position
+    _cubicIn = cubicIn
+    _cubicOut = cubicOut
+  }
+
+  public init() {
+    _position = FB_Vector2()
+    _cubicIn = FB_Vector2()
+    _cubicOut = FB_Vector2()
+  }
+
+  public var position: FB_Vector2 { _position }
+  public var cubicIn: FB_Vector2 { _cubicIn }
+  public var cubicOut: FB_Vector2 { _cubicOut }
+
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+    try verifier.inBuffer(position: position, of: FB_PathNode.self)
+  }
+}
+
+public struct FB_PathNode_Mutable: FlatBufferObject {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Struct
+
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Struct(bb: bb, position: o) }
+
+  public var position: FB_Vector2_Mutable { return FB_Vector2_Mutable(_accessor.bb, o: _accessor.postion + 0) }
+  public var cubicIn: FB_Vector2_Mutable { return FB_Vector2_Mutable(_accessor.bb, o: _accessor.postion + 8) }
+  public var cubicOut: FB_Vector2_Mutable { return FB_Vector2_Mutable(_accessor.bb, o: _accessor.postion + 16) }
+}
+
+public struct FB_Path: FlatBufferObject, Verifiable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
@@ -218,55 +326,57 @@ public struct Symbolic_Path: FlatBufferObject, Verifiable {
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
 
   private enum VTOFFSET: VOffset {
-    case id = 4
-    case nodeIds = 6
-    case nodes = 8
-    case isClosed = 10
+    case nodeIds = 4
+    case nodes = 6
+    case isClosed = 8
     var v: Int32 { Int32(self.rawValue) }
     var p: VOffset { self.rawValue }
   }
 
-  public var id: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.id.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
   public var hasNodeIds: Bool { let o = _accessor.offset(VTOFFSET.nodeIds.v); return o == 0 ? false : true }
   public var nodeIdsCount: Int32 { let o = _accessor.offset(VTOFFSET.nodeIds.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-  public func nodeIds(at index: Int32) -> Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.nodeIds.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(_accessor.vector(at: o) + index * 4)) }
+  public func nodeIds(at index: Int32) -> FB_UUID? { let o = _accessor.offset(VTOFFSET.nodeIds.v); return o == 0 ? nil : _accessor.directRead(of: FB_UUID.self, offset: _accessor.vector(at: o) + index * 16) }
+  public func mutableNodeIds(at index: Int32) -> FB_UUID_Mutable? { let o = _accessor.offset(VTOFFSET.nodeIds.v); return o == 0 ? nil : FB_UUID_Mutable(_accessor.bb, o: _accessor.vector(at: o) + index * 16) }
   public var hasNodes: Bool { let o = _accessor.offset(VTOFFSET.nodes.v); return o == 0 ? false : true }
   public var nodesCount: Int32 { let o = _accessor.offset(VTOFFSET.nodes.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-  public func nodes(at index: Int32) -> Symbolic_PathNode? { let o = _accessor.offset(VTOFFSET.nodes.v); return o == 0 ? nil : Symbolic_PathNode(_accessor.bb, o: _accessor.indirect(_accessor.vector(at: o) + index * 4)) }
+  public func nodes(at index: Int32) -> FB_PathNode? { let o = _accessor.offset(VTOFFSET.nodes.v); return o == 0 ? nil : _accessor.directRead(of: FB_PathNode.self, offset: _accessor.vector(at: o) + index * 24) }
+  public func mutableNodes(at index: Int32) -> FB_PathNode_Mutable? { let o = _accessor.offset(VTOFFSET.nodes.v); return o == 0 ? nil : FB_PathNode_Mutable(_accessor.bb, o: _accessor.vector(at: o) + index * 24) }
   public var isClosed: Bool { let o = _accessor.offset(VTOFFSET.isClosed.v); return o == 0 ? false : _accessor.readBuffer(of: Bool.self, at: o) }
-  public static func startPath(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 4) }
-  public static func add(id: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: id, at: VTOFFSET.id.p) }
+  public static func startPath(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
   public static func addVectorOf(nodeIds: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: nodeIds, at: VTOFFSET.nodeIds.p) }
+  public static func startVectorOfNodeIds(_ size: Int, in builder: inout FlatBufferBuilder) {
+    builder.startVector(size * MemoryLayout<FB_UUID>.size, elementSize: MemoryLayout<FB_UUID>.alignment)
+  }
   public static func addVectorOf(nodes: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: nodes, at: VTOFFSET.nodes.p) }
+  public static func startVectorOfNodes(_ size: Int, in builder: inout FlatBufferBuilder) {
+    builder.startVector(size * MemoryLayout<FB_PathNode>.size, elementSize: MemoryLayout<FB_PathNode>.alignment)
+  }
   public static func add(isClosed: Bool, _ fbb: inout FlatBufferBuilder) { fbb.add(element: isClosed, def: false,
    at: VTOFFSET.isClosed.p) }
-  public static func endPath(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
+  public static func endPath(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4, 6]); return end }
   public static func createPath(
     _ fbb: inout FlatBufferBuilder,
-    idOffset id: Offset = Offset(),
-    nodeIdsVectorOffset nodeIds: Offset = Offset(),
-    nodesVectorOffset nodes: Offset = Offset(),
+    nodeIdsVectorOffset nodeIds: Offset,
+    nodesVectorOffset nodes: Offset,
     isClosed: Bool = false
   ) -> Offset {
-    let __start = Symbolic_Path.startPath(&fbb)
-    Symbolic_Path.add(id: id, &fbb)
-    Symbolic_Path.addVectorOf(nodeIds: nodeIds, &fbb)
-    Symbolic_Path.addVectorOf(nodes: nodes, &fbb)
-    Symbolic_Path.add(isClosed: isClosed, &fbb)
-    return Symbolic_Path.endPath(&fbb, start: __start)
+    let __start = FB_Path.startPath(&fbb)
+    FB_Path.addVectorOf(nodeIds: nodeIds, &fbb)
+    FB_Path.addVectorOf(nodes: nodes, &fbb)
+    FB_Path.add(isClosed: isClosed, &fbb)
+    return FB_Path.endPath(&fbb, start: __start)
   }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.id.p, fieldName: "id", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visit(field: VTOFFSET.nodeIds.p, fieldName: "nodeIds", required: false, type: ForwardOffset<Vector<ForwardOffset<Symbolic_UUID>, Symbolic_UUID>>.self)
-    try _v.visit(field: VTOFFSET.nodes.p, fieldName: "nodes", required: false, type: ForwardOffset<Vector<ForwardOffset<Symbolic_PathNode>, Symbolic_PathNode>>.self)
+    try _v.visit(field: VTOFFSET.nodeIds.p, fieldName: "nodeIds", required: true, type: ForwardOffset<Vector<FB_UUID, FB_UUID>>.self)
+    try _v.visit(field: VTOFFSET.nodes.p, fieldName: "nodes", required: true, type: ForwardOffset<Vector<FB_PathNode, FB_PathNode>>.self)
     try _v.visit(field: VTOFFSET.isClosed.p, fieldName: "isClosed", required: false, type: Bool.self)
     _v.finish()
   }
 }
 
-public struct Symbolic_PathEvent_Create: FlatBufferObject, Verifiable {
+public struct FB_PathEvent_Update_Move: FlatBufferObject, Verifiable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
@@ -276,32 +386,204 @@ public struct Symbolic_PathEvent_Create: FlatBufferObject, Verifiable {
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
 
   private enum VTOFFSET: VOffset {
-    case path = 4
+    case offset = 4
     var v: Int32 { Int32(self.rawValue) }
     var p: VOffset { self.rawValue }
   }
 
-  public var path: Symbolic_Path? { let o = _accessor.offset(VTOFFSET.path.v); return o == 0 ? nil : Symbolic_Path(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathEvent_Create(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
-  public static func add(path: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: path, at: VTOFFSET.path.p) }
-  public static func endPathEvent_Create(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Create(
+  public var offset: FB_Vector2! { let o = _accessor.offset(VTOFFSET.offset.v); return _accessor.readBuffer(of: FB_Vector2.self, at: o) }
+  public var mutableOffset: FB_Vector2_Mutable! { let o = _accessor.offset(VTOFFSET.offset.v); return FB_Vector2_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public static func startMove(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
+  public static func add(offset: FB_Vector2?, _ fbb: inout FlatBufferBuilder) { guard let offset = offset else { return }; fbb.create(struct: offset, position: VTOFFSET.offset.p) }
+  public static func endMove(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4]); return end }
+  public static func createMove(
     _ fbb: inout FlatBufferBuilder,
-    pathOffset path: Offset = Offset()
+    offset: FB_Vector2
   ) -> Offset {
-    let __start = Symbolic_PathEvent_Create.startPathEvent_Create(&fbb)
-    Symbolic_PathEvent_Create.add(path: path, &fbb)
-    return Symbolic_PathEvent_Create.endPathEvent_Create(&fbb, start: __start)
+    let __start = FB_PathEvent_Update_Move.startMove(&fbb)
+    FB_PathEvent_Update_Move.add(offset: offset, &fbb)
+    return FB_PathEvent_Update_Move.endMove(&fbb, start: __start)
   }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.path.p, fieldName: "path", required: false, type: ForwardOffset<Symbolic_Path>.self)
+    try _v.visit(field: VTOFFSET.offset.p, fieldName: "offset", required: true, type: FB_Vector2.self)
     _v.finish()
   }
 }
 
-public struct Symbolic_PathEvent_Delete: FlatBufferObject, Verifiable {
+public struct FB_PathEvent_Update_NodeCreate: FlatBufferObject, Verifiable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Table
+
+  private init(_ t: Table) { _accessor = t }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+
+  private enum VTOFFSET: VOffset {
+    case prevNodeId = 4
+    case nodeId = 6
+    case node = 8
+    var v: Int32 { Int32(self.rawValue) }
+    var p: VOffset { self.rawValue }
+  }
+
+  public var prevNodeId: FB_UUID? { let o = _accessor.offset(VTOFFSET.prevNodeId.v); return o == 0 ? nil : _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutablePrevNodeId: FB_UUID_Mutable? { let o = _accessor.offset(VTOFFSET.prevNodeId.v); return o == 0 ? nil : FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public var nodeId: FB_UUID! { let o = _accessor.offset(VTOFFSET.nodeId.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutableNodeId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.nodeId.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public var node: FB_PathNode! { let o = _accessor.offset(VTOFFSET.node.v); return _accessor.readBuffer(of: FB_PathNode.self, at: o) }
+  public var mutableNode: FB_PathNode_Mutable! { let o = _accessor.offset(VTOFFSET.node.v); return FB_PathNode_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public static func startNodeCreate(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
+  public static func add(prevNodeId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let prevNodeId = prevNodeId else { return }; fbb.create(struct: prevNodeId, position: VTOFFSET.prevNodeId.p) }
+  public static func add(nodeId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let nodeId = nodeId else { return }; fbb.create(struct: nodeId, position: VTOFFSET.nodeId.p) }
+  public static func add(node: FB_PathNode?, _ fbb: inout FlatBufferBuilder) { guard let node = node else { return }; fbb.create(struct: node, position: VTOFFSET.node.p) }
+  public static func endNodeCreate(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [6, 8]); return end }
+  public static func createNodeCreate(
+    _ fbb: inout FlatBufferBuilder,
+    prevNodeId: FB_UUID? = nil,
+    nodeId: FB_UUID,
+    node: FB_PathNode
+  ) -> Offset {
+    let __start = FB_PathEvent_Update_NodeCreate.startNodeCreate(&fbb)
+    FB_PathEvent_Update_NodeCreate.add(prevNodeId: prevNodeId, &fbb)
+    FB_PathEvent_Update_NodeCreate.add(nodeId: nodeId, &fbb)
+    FB_PathEvent_Update_NodeCreate.add(node: node, &fbb)
+    return FB_PathEvent_Update_NodeCreate.endNodeCreate(&fbb, start: __start)
+  }
+
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+    var _v = try verifier.visitTable(at: position)
+    try _v.visit(field: VTOFFSET.prevNodeId.p, fieldName: "prevNodeId", required: false, type: FB_UUID.self)
+    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: true, type: FB_UUID.self)
+    try _v.visit(field: VTOFFSET.node.p, fieldName: "node", required: true, type: FB_PathNode.self)
+    _v.finish()
+  }
+}
+
+public struct FB_PathEvent_Update_NodeDelete: FlatBufferObject, Verifiable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Table
+
+  private init(_ t: Table) { _accessor = t }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+
+  private enum VTOFFSET: VOffset {
+    case nodeId = 4
+    var v: Int32 { Int32(self.rawValue) }
+    var p: VOffset { self.rawValue }
+  }
+
+  public var nodeId: FB_UUID! { let o = _accessor.offset(VTOFFSET.nodeId.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutableNodeId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.nodeId.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public static func startNodeDelete(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
+  public static func add(nodeId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let nodeId = nodeId else { return }; fbb.create(struct: nodeId, position: VTOFFSET.nodeId.p) }
+  public static func endNodeDelete(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4]); return end }
+  public static func createNodeDelete(
+    _ fbb: inout FlatBufferBuilder,
+    nodeId: FB_UUID
+  ) -> Offset {
+    let __start = FB_PathEvent_Update_NodeDelete.startNodeDelete(&fbb)
+    FB_PathEvent_Update_NodeDelete.add(nodeId: nodeId, &fbb)
+    return FB_PathEvent_Update_NodeDelete.endNodeDelete(&fbb, start: __start)
+  }
+
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+    var _v = try verifier.visitTable(at: position)
+    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: true, type: FB_UUID.self)
+    _v.finish()
+  }
+}
+
+public struct FB_PathEvent_Update_NodeUpdate: FlatBufferObject, Verifiable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Table
+
+  private init(_ t: Table) { _accessor = t }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+
+  private enum VTOFFSET: VOffset {
+    case nodeId = 4
+    case node = 6
+    var v: Int32 { Int32(self.rawValue) }
+    var p: VOffset { self.rawValue }
+  }
+
+  public var nodeId: FB_UUID! { let o = _accessor.offset(VTOFFSET.nodeId.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutableNodeId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.nodeId.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public var node: FB_PathNode! { let o = _accessor.offset(VTOFFSET.node.v); return _accessor.readBuffer(of: FB_PathNode.self, at: o) }
+  public var mutableNode: FB_PathNode_Mutable! { let o = _accessor.offset(VTOFFSET.node.v); return FB_PathNode_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public static func startNodeUpdate(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
+  public static func add(nodeId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let nodeId = nodeId else { return }; fbb.create(struct: nodeId, position: VTOFFSET.nodeId.p) }
+  public static func add(node: FB_PathNode?, _ fbb: inout FlatBufferBuilder) { guard let node = node else { return }; fbb.create(struct: node, position: VTOFFSET.node.p) }
+  public static func endNodeUpdate(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4, 6]); return end }
+  public static func createNodeUpdate(
+    _ fbb: inout FlatBufferBuilder,
+    nodeId: FB_UUID,
+    node: FB_PathNode
+  ) -> Offset {
+    let __start = FB_PathEvent_Update_NodeUpdate.startNodeUpdate(&fbb)
+    FB_PathEvent_Update_NodeUpdate.add(nodeId: nodeId, &fbb)
+    FB_PathEvent_Update_NodeUpdate.add(node: node, &fbb)
+    return FB_PathEvent_Update_NodeUpdate.endNodeUpdate(&fbb, start: __start)
+  }
+
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+    var _v = try verifier.visitTable(at: position)
+    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: true, type: FB_UUID.self)
+    try _v.visit(field: VTOFFSET.node.p, fieldName: "node", required: true, type: FB_PathNode.self)
+    _v.finish()
+  }
+}
+
+public struct FB_PathEvent_Create: FlatBufferObject, Verifiable {
+
+  static func validateVersion() { FlatBuffersVersion_24_3_25() }
+  public var __buffer: ByteBuffer! { return _accessor.bb }
+  private var _accessor: Table
+
+  private init(_ t: Table) { _accessor = t }
+  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
+
+  private enum VTOFFSET: VOffset {
+    case pathId = 4
+    case path = 6
+    var v: Int32 { Int32(self.rawValue) }
+    var p: VOffset { self.rawValue }
+  }
+
+  public var pathId: FB_UUID! { let o = _accessor.offset(VTOFFSET.pathId.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutablePathId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.pathId.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public var path: FB_Path! { let o = _accessor.offset(VTOFFSET.path.v); return FB_Path(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
+  public static func startCreate(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
+  public static func add(pathId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let pathId = pathId else { return }; fbb.create(struct: pathId, position: VTOFFSET.pathId.p) }
+  public static func add(path: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: path, at: VTOFFSET.path.p) }
+  public static func endCreate(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4, 6]); return end }
+  public static func createCreate(
+    _ fbb: inout FlatBufferBuilder,
+    pathId: FB_UUID,
+    pathOffset path: Offset
+  ) -> Offset {
+    let __start = FB_PathEvent_Create.startCreate(&fbb)
+    FB_PathEvent_Create.add(pathId: pathId, &fbb)
+    FB_PathEvent_Create.add(path: path, &fbb)
+    return FB_PathEvent_Create.endCreate(&fbb, start: __start)
+  }
+
+  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
+    var _v = try verifier.visitTable(at: position)
+    try _v.visit(field: VTOFFSET.pathId.p, fieldName: "pathId", required: true, type: FB_UUID.self)
+    try _v.visit(field: VTOFFSET.path.p, fieldName: "path", required: true, type: ForwardOffset<FB_Path>.self)
+    _v.finish()
+  }
+}
+
+public struct FB_PathEvent_Delete: FlatBufferObject, Verifiable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
@@ -316,27 +598,28 @@ public struct Symbolic_PathEvent_Delete: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var pathId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.pathId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathEvent_Delete(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
-  public static func add(pathId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: pathId, at: VTOFFSET.pathId.p) }
-  public static func endPathEvent_Delete(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Delete(
+  public var pathId: FB_UUID! { let o = _accessor.offset(VTOFFSET.pathId.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutablePathId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.pathId.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public static func startDelete(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
+  public static func add(pathId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let pathId = pathId else { return }; fbb.create(struct: pathId, position: VTOFFSET.pathId.p) }
+  public static func endDelete(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4]); return end }
+  public static func createDelete(
     _ fbb: inout FlatBufferBuilder,
-    pathIdOffset pathId: Offset = Offset()
+    pathId: FB_UUID
   ) -> Offset {
-    let __start = Symbolic_PathEvent_Delete.startPathEvent_Delete(&fbb)
-    Symbolic_PathEvent_Delete.add(pathId: pathId, &fbb)
-    return Symbolic_PathEvent_Delete.endPathEvent_Delete(&fbb, start: __start)
+    let __start = FB_PathEvent_Delete.startDelete(&fbb)
+    FB_PathEvent_Delete.add(pathId: pathId, &fbb)
+    return FB_PathEvent_Delete.endDelete(&fbb, start: __start)
   }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.pathId.p, fieldName: "pathId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
+    try _v.visit(field: VTOFFSET.pathId.p, fieldName: "pathId", required: true, type: FB_UUID.self)
     _v.finish()
   }
 }
 
-public struct Symbolic_PathEvent_Update: FlatBufferObject, Verifiable {
+public struct FB_PathEvent_Update: FlatBufferObject, Verifiable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
@@ -353,53 +636,54 @@ public struct Symbolic_PathEvent_Update: FlatBufferObject, Verifiable {
     var p: VOffset { self.rawValue }
   }
 
-  public var pathId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.pathId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
+  public var pathId: FB_UUID! { let o = _accessor.offset(VTOFFSET.pathId.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutablePathId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.pathId.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
   public var hasKindsType: Bool { let o = _accessor.offset(VTOFFSET.kindsType.v); return o == 0 ? false : true }
   public var kindsTypeCount: Int32 { let o = _accessor.offset(VTOFFSET.kindsType.v); return o == 0 ? 0 : _accessor.vector(count: o) }
-  public func kindsType(at index: Int32) -> Symbolic_PathEvent_Update_Kind? { let o = _accessor.offset(VTOFFSET.kindsType.v); return o == 0 ? Symbolic_PathEvent_Update_Kind.none_ : Symbolic_PathEvent_Update_Kind(rawValue: _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)) }
+  public func kindsType(at index: Int32) -> FB_PathEvent_Update_Kind? { let o = _accessor.offset(VTOFFSET.kindsType.v); return o == 0 ? FB_PathEvent_Update_Kind.none_ : FB_PathEvent_Update_Kind(rawValue: _accessor.directRead(of: UInt8.self, offset: _accessor.vector(at: o) + index * 1)) }
   public var hasKinds: Bool { let o = _accessor.offset(VTOFFSET.kinds.v); return o == 0 ? false : true }
   public var kindsCount: Int32 { let o = _accessor.offset(VTOFFSET.kinds.v); return o == 0 ? 0 : _accessor.vector(count: o) }
   public func kinds<T: FlatbuffersInitializable>(at index: Int32, type: T.Type) -> T? { let o = _accessor.offset(VTOFFSET.kinds.v); return o == 0 ? nil : _accessor.directUnion(_accessor.vector(at: o) + index * 4) }
-  public static func startPathEvent_Update(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
-  public static func add(pathId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: pathId, at: VTOFFSET.pathId.p) }
+  public static func startUpdate(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
+  public static func add(pathId: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let pathId = pathId else { return }; fbb.create(struct: pathId, position: VTOFFSET.pathId.p) }
   public static func addVectorOf(kindsType: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: kindsType, at: VTOFFSET.kindsType.p) }
   public static func addVectorOf(kinds: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: kinds, at: VTOFFSET.kinds.p) }
-  public static func endPathEvent_Update(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Update(
+  public static func endUpdate(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4, 6, 8]); return end }
+  public static func createUpdate(
     _ fbb: inout FlatBufferBuilder,
-    pathIdOffset pathId: Offset = Offset(),
-    kindsTypeVectorOffset kindsType: Offset = Offset(),
-    kindsVectorOffset kinds: Offset = Offset()
+    pathId: FB_UUID,
+    kindsTypeVectorOffset kindsType: Offset,
+    kindsVectorOffset kinds: Offset
   ) -> Offset {
-    let __start = Symbolic_PathEvent_Update.startPathEvent_Update(&fbb)
-    Symbolic_PathEvent_Update.add(pathId: pathId, &fbb)
-    Symbolic_PathEvent_Update.addVectorOf(kindsType: kindsType, &fbb)
-    Symbolic_PathEvent_Update.addVectorOf(kinds: kinds, &fbb)
-    return Symbolic_PathEvent_Update.endPathEvent_Update(&fbb, start: __start)
+    let __start = FB_PathEvent_Update.startUpdate(&fbb)
+    FB_PathEvent_Update.add(pathId: pathId, &fbb)
+    FB_PathEvent_Update.addVectorOf(kindsType: kindsType, &fbb)
+    FB_PathEvent_Update.addVectorOf(kinds: kinds, &fbb)
+    return FB_PathEvent_Update.endUpdate(&fbb, start: __start)
   }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.pathId.p, fieldName: "pathId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visitUnionVector(unionKey: VTOFFSET.kindsType.p, unionField: VTOFFSET.kinds.p, unionKeyName: "kindsType", fieldName: "kinds", required: false, completion: { (verifier, key: Symbolic_PathEvent_Update_Kind, pos) in
+    try _v.visit(field: VTOFFSET.pathId.p, fieldName: "pathId", required: true, type: FB_UUID.self)
+    try _v.visitUnionVector(unionKey: VTOFFSET.kindsType.p, unionField: VTOFFSET.kinds.p, unionKeyName: "kindsType", fieldName: "kinds", required: true, completion: { (verifier, key: FB_PathEvent_Update_Kind, pos) in
       switch key {
       case .none_:
         break // NOTE - SWIFT doesnt support none
-      case .patheventUpdateMove:
-        try ForwardOffset<Symbolic_PathEvent_Update_Move>.verify(&verifier, at: pos, of: Symbolic_PathEvent_Update_Move.self)
-      case .patheventUpdateNodecreate:
-        try ForwardOffset<Symbolic_PathEvent_Update_NodeCreate>.verify(&verifier, at: pos, of: Symbolic_PathEvent_Update_NodeCreate.self)
-      case .patheventUpdateNodedelete:
-        try ForwardOffset<Symbolic_PathEvent_Update_NodeDelete>.verify(&verifier, at: pos, of: Symbolic_PathEvent_Update_NodeDelete.self)
-      case .patheventUpdateNodeupdate:
-        try ForwardOffset<Symbolic_PathEvent_Update_NodeUpdate>.verify(&verifier, at: pos, of: Symbolic_PathEvent_Update_NodeUpdate.self)
+      case .move:
+        try ForwardOffset<FB_PathEvent_Update_Move>.verify(&verifier, at: pos, of: FB_PathEvent_Update_Move.self)
+      case .nodecreate:
+        try ForwardOffset<FB_PathEvent_Update_NodeCreate>.verify(&verifier, at: pos, of: FB_PathEvent_Update_NodeCreate.self)
+      case .nodedelete:
+        try ForwardOffset<FB_PathEvent_Update_NodeDelete>.verify(&verifier, at: pos, of: FB_PathEvent_Update_NodeDelete.self)
+      case .nodeupdate:
+        try ForwardOffset<FB_PathEvent_Update_NodeUpdate>.verify(&verifier, at: pos, of: FB_PathEvent_Update_NodeUpdate.self)
       }
     })
     _v.finish()
   }
 }
 
-public struct Symbolic_PathEvent_Update_Move: FlatBufferObject, Verifiable {
+public struct FB_PathEvent: FlatBufferObject, Verifiable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
@@ -409,44 +693,48 @@ public struct Symbolic_PathEvent_Update_Move: FlatBufferObject, Verifiable {
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
 
   private enum VTOFFSET: VOffset {
-    case prevNodeId = 4
-    case nodeId = 6
-    case node = 8
+    case kindType = 4
+    case kind = 6
     var v: Int32 { Int32(self.rawValue) }
     var p: VOffset { self.rawValue }
   }
 
-  public var prevNodeId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.prevNodeId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var nodeId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.nodeId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var node: Symbolic_PathNode? { let o = _accessor.offset(VTOFFSET.node.v); return o == 0 ? nil : Symbolic_PathNode(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathEvent_Update_Move(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
-  public static func add(prevNodeId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: prevNodeId, at: VTOFFSET.prevNodeId.p) }
-  public static func add(nodeId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: nodeId, at: VTOFFSET.nodeId.p) }
-  public static func add(node: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: node, at: VTOFFSET.node.p) }
-  public static func endPathEvent_Update_Move(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Update_Move(
+  public var kindType: FB_PathEvent_Kind { let o = _accessor.offset(VTOFFSET.kindType.v); return o == 0 ? .none_ : FB_PathEvent_Kind(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_ }
+  public func kind<T: FlatbuffersInitializable>(type: T.Type) -> T! { let o = _accessor.offset(VTOFFSET.kind.v); return _accessor.union(o) }
+  public static func startPathEvent(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
+  public static func add(kindType: FB_PathEvent_Kind, _ fbb: inout FlatBufferBuilder) { fbb.add(element: kindType.rawValue, def: 0, at: VTOFFSET.kindType.p) }
+  public static func add(kind: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: kind, at: VTOFFSET.kind.p) }
+  public static func endPathEvent(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [6]); return end }
+  public static func createPathEvent(
     _ fbb: inout FlatBufferBuilder,
-    prevNodeIdOffset prevNodeId: Offset = Offset(),
-    nodeIdOffset nodeId: Offset = Offset(),
-    nodeOffset node: Offset = Offset()
+    kindType: FB_PathEvent_Kind = .none_,
+    kindOffset kind: Offset
   ) -> Offset {
-    let __start = Symbolic_PathEvent_Update_Move.startPathEvent_Update_Move(&fbb)
-    Symbolic_PathEvent_Update_Move.add(prevNodeId: prevNodeId, &fbb)
-    Symbolic_PathEvent_Update_Move.add(nodeId: nodeId, &fbb)
-    Symbolic_PathEvent_Update_Move.add(node: node, &fbb)
-    return Symbolic_PathEvent_Update_Move.endPathEvent_Update_Move(&fbb, start: __start)
+    let __start = FB_PathEvent.startPathEvent(&fbb)
+    FB_PathEvent.add(kindType: kindType, &fbb)
+    FB_PathEvent.add(kind: kind, &fbb)
+    return FB_PathEvent.endPathEvent(&fbb, start: __start)
   }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.prevNodeId.p, fieldName: "prevNodeId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visit(field: VTOFFSET.node.p, fieldName: "node", required: false, type: ForwardOffset<Symbolic_PathNode>.self)
+    try _v.visit(unionKey: VTOFFSET.kindType.p, unionField: VTOFFSET.kind.p, unionKeyName: "kindType", fieldName: "kind", required: true, completion: { (verifier, key: FB_PathEvent_Kind, pos) in
+      switch key {
+      case .none_:
+        break // NOTE - SWIFT doesnt support none
+      case .create:
+        try ForwardOffset<FB_PathEvent_Create>.verify(&verifier, at: pos, of: FB_PathEvent_Create.self)
+      case .delete:
+        try ForwardOffset<FB_PathEvent_Delete>.verify(&verifier, at: pos, of: FB_PathEvent_Delete.self)
+      case .update:
+        try ForwardOffset<FB_PathEvent_Update>.verify(&verifier, at: pos, of: FB_PathEvent_Update.self)
+      }
+    })
     _v.finish()
   }
 }
 
-public struct Symbolic_PathEvent_Update_NodeCreate: FlatBufferObject, Verifiable {
+public struct FB_DocumentEvent: FlatBufferObject, Verifiable {
 
   static func validateVersion() { FlatBuffersVersion_24_3_25() }
   public var __buffer: ByteBuffer! { return _accessor.bb }
@@ -456,115 +744,53 @@ public struct Symbolic_PathEvent_Update_NodeCreate: FlatBufferObject, Verifiable
   public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
 
   private enum VTOFFSET: VOffset {
-    case prevNodeId = 4
-    case nodeId = 6
-    case node = 8
+    case id = 4
+    case time = 6
+    case kindType = 8
+    case kind = 10
     var v: Int32 { Int32(self.rawValue) }
     var p: VOffset { self.rawValue }
   }
 
-  public var prevNodeId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.prevNodeId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var nodeId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.nodeId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var node: Symbolic_PathNode? { let o = _accessor.offset(VTOFFSET.node.v); return o == 0 ? nil : Symbolic_PathNode(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathEvent_Update_NodeCreate(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 3) }
-  public static func add(prevNodeId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: prevNodeId, at: VTOFFSET.prevNodeId.p) }
-  public static func add(nodeId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: nodeId, at: VTOFFSET.nodeId.p) }
-  public static func add(node: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: node, at: VTOFFSET.node.p) }
-  public static func endPathEvent_Update_NodeCreate(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Update_NodeCreate(
+  public var id: FB_UUID! { let o = _accessor.offset(VTOFFSET.id.v); return _accessor.readBuffer(of: FB_UUID.self, at: o) }
+  public var mutableId: FB_UUID_Mutable! { let o = _accessor.offset(VTOFFSET.id.v); return FB_UUID_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public var time: FB_Date! { let o = _accessor.offset(VTOFFSET.time.v); return _accessor.readBuffer(of: FB_Date.self, at: o) }
+  public var mutableTime: FB_Date_Mutable! { let o = _accessor.offset(VTOFFSET.time.v); return FB_Date_Mutable(_accessor.bb, o: o + _accessor.postion) }
+  public var kindType: FB_DocumentEvent_Kind { let o = _accessor.offset(VTOFFSET.kindType.v); return o == 0 ? .none_ : FB_DocumentEvent_Kind(rawValue: _accessor.readBuffer(of: UInt8.self, at: o)) ?? .none_ }
+  public func kind<T: FlatbuffersInitializable>(type: T.Type) -> T! { let o = _accessor.offset(VTOFFSET.kind.v); return _accessor.union(o) }
+  public static func startDocumentEvent(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 4) }
+  public static func add(id: FB_UUID?, _ fbb: inout FlatBufferBuilder) { guard let id = id else { return }; fbb.create(struct: id, position: VTOFFSET.id.p) }
+  public static func add(time: FB_Date?, _ fbb: inout FlatBufferBuilder) { guard let time = time else { return }; fbb.create(struct: time, position: VTOFFSET.time.p) }
+  public static func add(kindType: FB_DocumentEvent_Kind, _ fbb: inout FlatBufferBuilder) { fbb.add(element: kindType.rawValue, def: 0, at: VTOFFSET.kindType.p) }
+  public static func add(kind: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: kind, at: VTOFFSET.kind.p) }
+  public static func endDocumentEvent(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); fbb.require(table: end, fields: [4, 6, 10]); return end }
+  public static func createDocumentEvent(
     _ fbb: inout FlatBufferBuilder,
-    prevNodeIdOffset prevNodeId: Offset = Offset(),
-    nodeIdOffset nodeId: Offset = Offset(),
-    nodeOffset node: Offset = Offset()
+    id: FB_UUID,
+    time: FB_Date,
+    kindType: FB_DocumentEvent_Kind = .none_,
+    kindOffset kind: Offset
   ) -> Offset {
-    let __start = Symbolic_PathEvent_Update_NodeCreate.startPathEvent_Update_NodeCreate(&fbb)
-    Symbolic_PathEvent_Update_NodeCreate.add(prevNodeId: prevNodeId, &fbb)
-    Symbolic_PathEvent_Update_NodeCreate.add(nodeId: nodeId, &fbb)
-    Symbolic_PathEvent_Update_NodeCreate.add(node: node, &fbb)
-    return Symbolic_PathEvent_Update_NodeCreate.endPathEvent_Update_NodeCreate(&fbb, start: __start)
+    let __start = FB_DocumentEvent.startDocumentEvent(&fbb)
+    FB_DocumentEvent.add(id: id, &fbb)
+    FB_DocumentEvent.add(time: time, &fbb)
+    FB_DocumentEvent.add(kindType: kindType, &fbb)
+    FB_DocumentEvent.add(kind: kind, &fbb)
+    return FB_DocumentEvent.endDocumentEvent(&fbb, start: __start)
   }
 
   public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
     var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.prevNodeId.p, fieldName: "prevNodeId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visit(field: VTOFFSET.node.p, fieldName: "node", required: false, type: ForwardOffset<Symbolic_PathNode>.self)
-    _v.finish()
-  }
-}
-
-public struct Symbolic_PathEvent_Update_NodeDelete: FlatBufferObject, Verifiable {
-
-  static func validateVersion() { FlatBuffersVersion_24_3_25() }
-  public var __buffer: ByteBuffer! { return _accessor.bb }
-  private var _accessor: Table
-
-  private init(_ t: Table) { _accessor = t }
-  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
-
-  private enum VTOFFSET: VOffset {
-    case nodeId = 4
-    var v: Int32 { Int32(self.rawValue) }
-    var p: VOffset { self.rawValue }
-  }
-
-  public var nodeId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.nodeId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathEvent_Update_NodeDelete(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 1) }
-  public static func add(nodeId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: nodeId, at: VTOFFSET.nodeId.p) }
-  public static func endPathEvent_Update_NodeDelete(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Update_NodeDelete(
-    _ fbb: inout FlatBufferBuilder,
-    nodeIdOffset nodeId: Offset = Offset()
-  ) -> Offset {
-    let __start = Symbolic_PathEvent_Update_NodeDelete.startPathEvent_Update_NodeDelete(&fbb)
-    Symbolic_PathEvent_Update_NodeDelete.add(nodeId: nodeId, &fbb)
-    return Symbolic_PathEvent_Update_NodeDelete.endPathEvent_Update_NodeDelete(&fbb, start: __start)
-  }
-
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
-    var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    _v.finish()
-  }
-}
-
-public struct Symbolic_PathEvent_Update_NodeUpdate: FlatBufferObject, Verifiable {
-
-  static func validateVersion() { FlatBuffersVersion_24_3_25() }
-  public var __buffer: ByteBuffer! { return _accessor.bb }
-  private var _accessor: Table
-
-  private init(_ t: Table) { _accessor = t }
-  public init(_ bb: ByteBuffer, o: Int32) { _accessor = Table(bb: bb, position: o) }
-
-  private enum VTOFFSET: VOffset {
-    case nodeId = 4
-    case node = 6
-    var v: Int32 { Int32(self.rawValue) }
-    var p: VOffset { self.rawValue }
-  }
-
-  public var nodeId: Symbolic_UUID? { let o = _accessor.offset(VTOFFSET.nodeId.v); return o == 0 ? nil : Symbolic_UUID(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public var node: Symbolic_PathNode? { let o = _accessor.offset(VTOFFSET.node.v); return o == 0 ? nil : Symbolic_PathNode(_accessor.bb, o: _accessor.indirect(o + _accessor.postion)) }
-  public static func startPathEvent_Update_NodeUpdate(_ fbb: inout FlatBufferBuilder) -> UOffset { fbb.startTable(with: 2) }
-  public static func add(nodeId: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: nodeId, at: VTOFFSET.nodeId.p) }
-  public static func add(node: Offset, _ fbb: inout FlatBufferBuilder) { fbb.add(offset: node, at: VTOFFSET.node.p) }
-  public static func endPathEvent_Update_NodeUpdate(_ fbb: inout FlatBufferBuilder, start: UOffset) -> Offset { let end = Offset(offset: fbb.endTable(at: start)); return end }
-  public static func createPathEvent_Update_NodeUpdate(
-    _ fbb: inout FlatBufferBuilder,
-    nodeIdOffset nodeId: Offset = Offset(),
-    nodeOffset node: Offset = Offset()
-  ) -> Offset {
-    let __start = Symbolic_PathEvent_Update_NodeUpdate.startPathEvent_Update_NodeUpdate(&fbb)
-    Symbolic_PathEvent_Update_NodeUpdate.add(nodeId: nodeId, &fbb)
-    Symbolic_PathEvent_Update_NodeUpdate.add(node: node, &fbb)
-    return Symbolic_PathEvent_Update_NodeUpdate.endPathEvent_Update_NodeUpdate(&fbb, start: __start)
-  }
-
-  public static func verify<T>(_ verifier: inout Verifier, at position: Int, of type: T.Type) throws where T: Verifiable {
-    var _v = try verifier.visitTable(at: position)
-    try _v.visit(field: VTOFFSET.nodeId.p, fieldName: "nodeId", required: false, type: ForwardOffset<Symbolic_UUID>.self)
-    try _v.visit(field: VTOFFSET.node.p, fieldName: "node", required: false, type: ForwardOffset<Symbolic_PathNode>.self)
+    try _v.visit(field: VTOFFSET.id.p, fieldName: "id", required: true, type: FB_UUID.self)
+    try _v.visit(field: VTOFFSET.time.p, fieldName: "time", required: true, type: FB_Date.self)
+    try _v.visit(unionKey: VTOFFSET.kindType.p, unionField: VTOFFSET.kind.p, unionKeyName: "kindType", fieldName: "kind", required: true, completion: { (verifier, key: FB_DocumentEvent_Kind, pos) in
+      switch key {
+      case .none_:
+        break // NOTE - SWIFT doesnt support none
+      case .fbPathevent:
+        try ForwardOffset<FB_PathEvent>.verify(&verifier, at: pos, of: FB_PathEvent.self)
+      }
+    })
     _v.finish()
   }
 }

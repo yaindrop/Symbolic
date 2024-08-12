@@ -1,81 +1,111 @@
-namespace Symbolic;
+namespace FB;
 
-table UUID {
-  u0:ubyte;
-  u1:ubyte;
-  u2:ubyte;
-  u3:ubyte;
-  u4:ubyte;
-  u5:ubyte;
-  u6:ubyte;
-  u7:ubyte;
+struct UUID {
+  u0: ubyte;
+  u1: ubyte;
+  u2: ubyte;
+  u3: ubyte;
+  u4: ubyte;
+  u5: ubyte;
+  u6: ubyte;
+  u7: ubyte;
+  u8: ubyte;
+  u9: ubyte;
+  u10: ubyte;
+  u11: ubyte;
+  u12: ubyte;
+  u13: ubyte;
+  u14: ubyte;
+  u15: ubyte;
 }
 
-table Vector2 {
-  x:float;
-  y:float;
+struct Date {
+  timestamp_ns: int64;
 }
 
-table PathNode {
-  position:Vector2;
-  cubic_in:Vector2;
-  cubic_out:Vector2;
+struct Vector2 {
+  x: float;
+  y: float;
+}
+
+struct PathNode {
+  position: Vector2;
+  cubic_in: Vector2;
+  cubic_out: Vector2;
 }
 
 table Path {
-  id:UUID;
-  node_ids:[UUID];
-  nodes:[PathNode];
-  is_closed:bool;
+  node_ids: [UUID] (required);
+  nodes: [PathNode] (required);
+  is_closed: bool;
 }
 
-// PathEvent
+namespace FB.PathEvent.Update;
 
-union PathEvent {
-  PathEvent_Create,
-  PathEvent_Delete,
-  PathEvent_Update,
+table Move {
+  offset: Vector2 (required);
 }
 
-table PathEvent_Create {
-  path:Path;
+table NodeCreate {
+  prev_node_id: UUID;
+  node_id: UUID (required);
+  node: PathNode (required);
 }
 
-table PathEvent_Delete {
-  path_id:UUID;
+table NodeDelete {
+  node_id: UUID (required);
 }
 
-// PathEvent_Update
-
-union PathEvent_Update_Kind {
-  PathEvent_Update_Move,
-  PathEvent_Update_NodeCreate,
-  PathEvent_Update_NodeDelete,
-  PathEvent_Update_NodeUpdate,
+table NodeUpdate {
+  node_id: UUID (required);
+  node: PathNode (required);
 }
 
-table PathEvent_Update {
-  path_id:UUID;
-  kinds:[PathEvent_Update_Kind];
+union Kind {
+  Move,
+  NodeCreate,
+  NodeDelete,
+  NodeUpdate,
 }
 
-table PathEvent_Update_Move {
-  prev_node_id:UUID;
-  node_id:UUID;
-  node:PathNode;
+namespace FB.PathEvent;
+
+table Create {
+  path_id: UUID (required);
+  path: Path (required);
 }
 
-table PathEvent_Update_NodeCreate {
-  prev_node_id:UUID;
-  node_id:UUID;
-  node:PathNode;
+table Delete {
+  path_id: UUID (required);
 }
 
-table PathEvent_Update_NodeDelete {
-  node_id:UUID;
+table Update {
+  path_id: UUID (required);
+  kinds: [Update.Kind] (required);
 }
 
-table PathEvent_Update_NodeUpdate {
-  node_id:UUID;
-  node:PathNode;
+union Kind {
+  Create,
+  Delete,
+  Update,
+}
+
+namespace FB;
+
+table PathEvent {
+  kind: PathEvent.Kind (required);
+}
+
+namespace FB.DocumentEvent;
+
+union Kind {
+  FB.PathEvent,
+}
+
+namespace FB;
+
+table DocumentEvent {
+  id: UUID (required);
+  time: Date (required);
+  kind: DocumentEvent.Kind (required);
 }

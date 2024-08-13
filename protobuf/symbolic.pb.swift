@@ -20,40 +20,46 @@ private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVer
     typealias Version = _2
 }
 
-struct PB_UUID: @unchecked Sendable {
+/// A UUID, encoded in accordance with section 4.1.2 of RFC 4122.
+struct Symbolic_Pb_UUID: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    /// 16 bytes / 128 bits long
-    var data: Data = .init()
+    /// The high 64 bits of the UUID - MSB -> LSB:
+    /// time_low (32) | time_mid (16) | time_hi_and_version (16)
+    var hi: UInt64 = 0
+
+    /// The low 64 bits of the UUID - MSB -> LSB:
+    /// clock_seq_hi_and_reserved (8) | clock_seq_low (8) | node (48)
+    var lo: UInt64 = 0
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     init() {}
 }
 
-struct PB_Vector2: Sendable {
+struct Symbolic_Pb_Vector2: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var x: Float = 0
+    var x: Double = 0
 
-    var y: Float = 0
+    var y: Double = 0
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     init() {}
 }
 
-struct PB_PathNode: Sendable {
+struct Symbolic_Pb_PathNode: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var position: PB_Vector2 {
-        get { _position ?? PB_Vector2() }
+    var position: Symbolic_Pb_Vector2 {
+        get { _position ?? Symbolic_Pb_Vector2() }
         set { _position = newValue }
     }
 
@@ -62,8 +68,8 @@ struct PB_PathNode: Sendable {
     /// Clears the value of `position`. Subsequent reads from it will return its default value.
     mutating func clearPosition() { _position = nil }
 
-    var cubicIn: PB_Vector2 {
-        get { _cubicIn ?? PB_Vector2() }
+    var cubicIn: Symbolic_Pb_Vector2 {
+        get { _cubicIn ?? Symbolic_Pb_Vector2() }
         set { _cubicIn = newValue }
     }
 
@@ -72,8 +78,8 @@ struct PB_PathNode: Sendable {
     /// Clears the value of `cubicIn`. Subsequent reads from it will return its default value.
     mutating func clearCubicIn() { _cubicIn = nil }
 
-    var cubicOut: PB_Vector2 {
-        get { _cubicOut ?? PB_Vector2() }
+    var cubicOut: Symbolic_Pb_Vector2 {
+        get { _cubicOut ?? Symbolic_Pb_Vector2() }
         set { _cubicOut = newValue }
     }
 
@@ -86,19 +92,19 @@ struct PB_PathNode: Sendable {
 
     init() {}
 
-    fileprivate var _position: PB_Vector2? = nil
-    fileprivate var _cubicIn: PB_Vector2? = nil
-    fileprivate var _cubicOut: PB_Vector2? = nil
+    fileprivate var _position: Symbolic_Pb_Vector2? = nil
+    fileprivate var _cubicIn: Symbolic_Pb_Vector2? = nil
+    fileprivate var _cubicOut: Symbolic_Pb_Vector2? = nil
 }
 
-struct PB_Path: Sendable {
+struct Symbolic_Pb_Path: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var nodeIds: [PB_UUID] = []
+    var nodeIds: [Symbolic_Pb_UUID] = []
 
-    var nodes: [PB_PathNode] = []
+    var nodes: [Symbolic_Pb_PathNode] = []
 
     var isClosed: Bool = false
 
@@ -107,33 +113,33 @@ struct PB_Path: Sendable {
     init() {}
 }
 
-struct PB_PathEvent: Sendable {
+struct Symbolic_Pb_PathEvent: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var kind: PB_PathEvent.OneOf_Kind? = nil
+    var kind: Symbolic_Pb_PathEvent.OneOf_Kind? = nil
 
-    var create: PB_PathEvent.Create {
+    var create: Symbolic_Pb_PathEvent.Create {
         get {
             if case let .create(v)? = kind { return v }
-            return PB_PathEvent.Create()
+            return Symbolic_Pb_PathEvent.Create()
         }
         set { kind = .create(newValue) }
     }
 
-    var delete: PB_PathEvent.Delete {
+    var delete: Symbolic_Pb_PathEvent.Delete {
         get {
             if case let .delete(v)? = kind { return v }
-            return PB_PathEvent.Delete()
+            return Symbolic_Pb_PathEvent.Delete()
         }
         set { kind = .delete(newValue) }
     }
 
-    var update: PB_PathEvent.Update {
+    var update: Symbolic_Pb_PathEvent.Update {
         get {
             if case let .update(v)? = kind { return v }
-            return PB_PathEvent.Update()
+            return Symbolic_Pb_PathEvent.Update()
         }
         set { kind = .update(newValue) }
     }
@@ -141,9 +147,9 @@ struct PB_PathEvent: Sendable {
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     enum OneOf_Kind: Equatable, Sendable {
-        case create(PB_PathEvent.Create)
-        case delete(PB_PathEvent.Delete)
-        case update(PB_PathEvent.Update)
+        case create(Symbolic_Pb_PathEvent.Create)
+        case delete(Symbolic_Pb_PathEvent.Delete)
+        case update(Symbolic_Pb_PathEvent.Update)
     }
 
     struct Create: Sendable {
@@ -151,8 +157,8 @@ struct PB_PathEvent: Sendable {
         // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
         // methods supported on all messages.
 
-        var pathID: PB_UUID {
-            get { _pathID ?? PB_UUID() }
+        var pathID: Symbolic_Pb_UUID {
+            get { _pathID ?? Symbolic_Pb_UUID() }
             set { _pathID = newValue }
         }
 
@@ -161,8 +167,8 @@ struct PB_PathEvent: Sendable {
         /// Clears the value of `pathID`. Subsequent reads from it will return its default value.
         mutating func clearPathID() { _pathID = nil }
 
-        var path: PB_Path {
-            get { _path ?? PB_Path() }
+        var path: Symbolic_Pb_Path {
+            get { _path ?? Symbolic_Pb_Path() }
             set { _path = newValue }
         }
 
@@ -175,8 +181,8 @@ struct PB_PathEvent: Sendable {
 
         init() {}
 
-        fileprivate var _pathID: PB_UUID? = nil
-        fileprivate var _path: PB_Path? = nil
+        fileprivate var _pathID: Symbolic_Pb_UUID? = nil
+        fileprivate var _path: Symbolic_Pb_Path? = nil
     }
 
     struct Delete: Sendable {
@@ -184,8 +190,8 @@ struct PB_PathEvent: Sendable {
         // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
         // methods supported on all messages.
 
-        var pathID: PB_UUID {
-            get { _pathID ?? PB_UUID() }
+        var pathID: Symbolic_Pb_UUID {
+            get { _pathID ?? Symbolic_Pb_UUID() }
             set { _pathID = newValue }
         }
 
@@ -198,7 +204,7 @@ struct PB_PathEvent: Sendable {
 
         init() {}
 
-        fileprivate var _pathID: PB_UUID? = nil
+        fileprivate var _pathID: Symbolic_Pb_UUID? = nil
     }
 
     struct Update: Sendable {
@@ -206,8 +212,8 @@ struct PB_PathEvent: Sendable {
         // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
         // methods supported on all messages.
 
-        var pathID: PB_UUID {
-            get { _pathID ?? PB_UUID() }
+        var pathID: Symbolic_Pb_UUID {
+            get { _pathID ?? Symbolic_Pb_UUID() }
             set { _pathID = newValue }
         }
 
@@ -216,36 +222,36 @@ struct PB_PathEvent: Sendable {
         /// Clears the value of `pathID`. Subsequent reads from it will return its default value.
         mutating func clearPathID() { _pathID = nil }
 
-        var kind: PB_PathEvent.Update.OneOf_Kind? = nil
+        var kind: Symbolic_Pb_PathEvent.Update.OneOf_Kind? = nil
 
-        var move: PB_PathEvent.Update.Move {
+        var move: Symbolic_Pb_PathEvent.Update.Move {
             get {
                 if case let .move(v)? = kind { return v }
-                return PB_PathEvent.Update.Move()
+                return Symbolic_Pb_PathEvent.Update.Move()
             }
             set { kind = .move(newValue) }
         }
 
-        var nodeCreate: PB_PathEvent.Update.NodeCreate {
+        var nodeCreate: Symbolic_Pb_PathEvent.Update.NodeCreate {
             get {
                 if case let .nodeCreate(v)? = kind { return v }
-                return PB_PathEvent.Update.NodeCreate()
+                return Symbolic_Pb_PathEvent.Update.NodeCreate()
             }
             set { kind = .nodeCreate(newValue) }
         }
 
-        var nodeDelete: PB_PathEvent.Update.NodeDelete {
+        var nodeDelete: Symbolic_Pb_PathEvent.Update.NodeDelete {
             get {
                 if case let .nodeDelete(v)? = kind { return v }
-                return PB_PathEvent.Update.NodeDelete()
+                return Symbolic_Pb_PathEvent.Update.NodeDelete()
             }
             set { kind = .nodeDelete(newValue) }
         }
 
-        var nodeUpdate: PB_PathEvent.Update.NodeUpdate {
+        var nodeUpdate: Symbolic_Pb_PathEvent.Update.NodeUpdate {
             get {
                 if case let .nodeUpdate(v)? = kind { return v }
-                return PB_PathEvent.Update.NodeUpdate()
+                return Symbolic_Pb_PathEvent.Update.NodeUpdate()
             }
             set { kind = .nodeUpdate(newValue) }
         }
@@ -253,10 +259,10 @@ struct PB_PathEvent: Sendable {
         var unknownFields = SwiftProtobuf.UnknownStorage()
 
         enum OneOf_Kind: Equatable, Sendable {
-            case move(PB_PathEvent.Update.Move)
-            case nodeCreate(PB_PathEvent.Update.NodeCreate)
-            case nodeDelete(PB_PathEvent.Update.NodeDelete)
-            case nodeUpdate(PB_PathEvent.Update.NodeUpdate)
+            case move(Symbolic_Pb_PathEvent.Update.Move)
+            case nodeCreate(Symbolic_Pb_PathEvent.Update.NodeCreate)
+            case nodeDelete(Symbolic_Pb_PathEvent.Update.NodeDelete)
+            case nodeUpdate(Symbolic_Pb_PathEvent.Update.NodeUpdate)
         }
 
         struct Move: Sendable {
@@ -264,8 +270,8 @@ struct PB_PathEvent: Sendable {
             // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
             // methods supported on all messages.
 
-            var offset: PB_Vector2 {
-                get { _offset ?? PB_Vector2() }
+            var offset: Symbolic_Pb_Vector2 {
+                get { _offset ?? Symbolic_Pb_Vector2() }
                 set { _offset = newValue }
             }
 
@@ -278,7 +284,7 @@ struct PB_PathEvent: Sendable {
 
             init() {}
 
-            fileprivate var _offset: PB_Vector2? = nil
+            fileprivate var _offset: Symbolic_Pb_Vector2? = nil
         }
 
         struct NodeCreate: Sendable {
@@ -286,8 +292,8 @@ struct PB_PathEvent: Sendable {
             // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
             // methods supported on all messages.
 
-            var prevNodeID: PB_UUID {
-                get { _prevNodeID ?? PB_UUID() }
+            var prevNodeID: Symbolic_Pb_UUID {
+                get { _prevNodeID ?? Symbolic_Pb_UUID() }
                 set { _prevNodeID = newValue }
             }
 
@@ -296,8 +302,8 @@ struct PB_PathEvent: Sendable {
             /// Clears the value of `prevNodeID`. Subsequent reads from it will return its default value.
             mutating func clearPrevNodeID() { _prevNodeID = nil }
 
-            var nodeID: PB_UUID {
-                get { _nodeID ?? PB_UUID() }
+            var nodeID: Symbolic_Pb_UUID {
+                get { _nodeID ?? Symbolic_Pb_UUID() }
                 set { _nodeID = newValue }
             }
 
@@ -306,8 +312,8 @@ struct PB_PathEvent: Sendable {
             /// Clears the value of `nodeID`. Subsequent reads from it will return its default value.
             mutating func clearNodeID() { _nodeID = nil }
 
-            var node: PB_PathNode {
-                get { _node ?? PB_PathNode() }
+            var node: Symbolic_Pb_PathNode {
+                get { _node ?? Symbolic_Pb_PathNode() }
                 set { _node = newValue }
             }
 
@@ -320,9 +326,9 @@ struct PB_PathEvent: Sendable {
 
             init() {}
 
-            fileprivate var _prevNodeID: PB_UUID? = nil
-            fileprivate var _nodeID: PB_UUID? = nil
-            fileprivate var _node: PB_PathNode? = nil
+            fileprivate var _prevNodeID: Symbolic_Pb_UUID? = nil
+            fileprivate var _nodeID: Symbolic_Pb_UUID? = nil
+            fileprivate var _node: Symbolic_Pb_PathNode? = nil
         }
 
         struct NodeDelete: Sendable {
@@ -330,8 +336,8 @@ struct PB_PathEvent: Sendable {
             // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
             // methods supported on all messages.
 
-            var nodeID: PB_UUID {
-                get { _nodeID ?? PB_UUID() }
+            var nodeID: Symbolic_Pb_UUID {
+                get { _nodeID ?? Symbolic_Pb_UUID() }
                 set { _nodeID = newValue }
             }
 
@@ -344,7 +350,7 @@ struct PB_PathEvent: Sendable {
 
             init() {}
 
-            fileprivate var _nodeID: PB_UUID? = nil
+            fileprivate var _nodeID: Symbolic_Pb_UUID? = nil
         }
 
         struct NodeUpdate: Sendable {
@@ -352,8 +358,8 @@ struct PB_PathEvent: Sendable {
             // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
             // methods supported on all messages.
 
-            var nodeID: PB_UUID {
-                get { _nodeID ?? PB_UUID() }
+            var nodeID: Symbolic_Pb_UUID {
+                get { _nodeID ?? Symbolic_Pb_UUID() }
                 set { _nodeID = newValue }
             }
 
@@ -362,8 +368,8 @@ struct PB_PathEvent: Sendable {
             /// Clears the value of `nodeID`. Subsequent reads from it will return its default value.
             mutating func clearNodeID() { _nodeID = nil }
 
-            var node: PB_PathNode {
-                get { _node ?? PB_PathNode() }
+            var node: Symbolic_Pb_PathNode {
+                get { _node ?? Symbolic_Pb_PathNode() }
                 set { _node = newValue }
             }
 
@@ -376,25 +382,25 @@ struct PB_PathEvent: Sendable {
 
             init() {}
 
-            fileprivate var _nodeID: PB_UUID? = nil
-            fileprivate var _node: PB_PathNode? = nil
+            fileprivate var _nodeID: Symbolic_Pb_UUID? = nil
+            fileprivate var _node: Symbolic_Pb_PathNode? = nil
         }
 
         init() {}
 
-        fileprivate var _pathID: PB_UUID? = nil
+        fileprivate var _pathID: Symbolic_Pb_UUID? = nil
     }
 
     init() {}
 }
 
-struct PB_DocumentEvent: Sendable {
+struct Symbolic_Pb_DocumentEvent: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var id: PB_UUID {
-        get { _id ?? PB_UUID() }
+    var id: Symbolic_Pb_UUID {
+        get { _id ?? Symbolic_Pb_UUID() }
         set { _id = newValue }
     }
 
@@ -413,12 +419,12 @@ struct PB_DocumentEvent: Sendable {
     /// Clears the value of `time`. Subsequent reads from it will return its default value.
     mutating func clearTime() { _time = nil }
 
-    var kind: PB_DocumentEvent.OneOf_Kind? = nil
+    var kind: Symbolic_Pb_DocumentEvent.OneOf_Kind? = nil
 
-    var pathEvent: PB_PathEvent {
+    var pathEvent: Symbolic_Pb_PathEvent {
         get {
             if case let .pathEvent(v)? = kind { return v }
-            return PB_PathEvent()
+            return Symbolic_Pb_PathEvent()
         }
         set { kind = .pathEvent(newValue) }
     }
@@ -426,23 +432,24 @@ struct PB_DocumentEvent: Sendable {
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     enum OneOf_Kind: Equatable, Sendable {
-        case pathEvent(PB_PathEvent)
+        case pathEvent(Symbolic_Pb_PathEvent)
     }
 
     init() {}
 
-    fileprivate var _id: PB_UUID? = nil
+    fileprivate var _id: Symbolic_Pb_UUID? = nil
     fileprivate var _time: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-private let _protobuf_package = "PB"
+private let _protobuf_package = "symbolic.pb"
 
-extension PB_UUID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Symbolic_Pb_UUID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     static let protoMessageName: String = _protobuf_package + ".UUID"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-        1: .same(proto: "data"),
+        1: .same(proto: "hi"),
+        2: .same(proto: "lo"),
     ]
 
     mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -451,27 +458,32 @@ extension PB_UUID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
             // allocates stack space for every case branch when no optimizations are
             // enabled. https://github.com/apple/swift-protobuf/issues/1034
             switch fieldNumber {
-            case 1: try decoder.decodeSingularBytesField(value: &data)
+            case 1: try decoder.decodeSingularFixed64Field(value: &hi)
+            case 2: try decoder.decodeSingularFixed64Field(value: &lo)
             default: break
             }
         }
     }
 
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-        if !data.isEmpty {
-            try visitor.visitSingularBytesField(value: data, fieldNumber: 1)
+        if hi != 0 {
+            try visitor.visitSingularFixed64Field(value: hi, fieldNumber: 1)
+        }
+        if lo != 0 {
+            try visitor.visitSingularFixed64Field(value: lo, fieldNumber: 2)
         }
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_UUID, rhs: PB_UUID) -> Bool {
-        if lhs.data != rhs.data { return false }
+    static func == (lhs: Symbolic_Pb_UUID, rhs: Symbolic_Pb_UUID) -> Bool {
+        if lhs.hi != rhs.hi { return false }
+        if lhs.lo != rhs.lo { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
         return true
     }
 }
 
-extension PB_Vector2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Symbolic_Pb_Vector2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     static let protoMessageName: String = _protobuf_package + ".Vector2"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .same(proto: "x"),
@@ -484,8 +496,8 @@ extension PB_Vector2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
             // allocates stack space for every case branch when no optimizations are
             // enabled. https://github.com/apple/swift-protobuf/issues/1034
             switch fieldNumber {
-            case 1: try decoder.decodeSingularFloatField(value: &x)
-            case 2: try decoder.decodeSingularFloatField(value: &y)
+            case 1: try decoder.decodeSingularDoubleField(value: &x)
+            case 2: try decoder.decodeSingularDoubleField(value: &y)
             default: break
             }
         }
@@ -493,15 +505,15 @@ extension PB_Vector2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
 
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
         if x.bitPattern != 0 {
-            try visitor.visitSingularFloatField(value: x, fieldNumber: 1)
+            try visitor.visitSingularDoubleField(value: x, fieldNumber: 1)
         }
         if y.bitPattern != 0 {
-            try visitor.visitSingularFloatField(value: y, fieldNumber: 2)
+            try visitor.visitSingularDoubleField(value: y, fieldNumber: 2)
         }
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_Vector2, rhs: PB_Vector2) -> Bool {
+    static func == (lhs: Symbolic_Pb_Vector2, rhs: Symbolic_Pb_Vector2) -> Bool {
         if lhs.x != rhs.x { return false }
         if lhs.y != rhs.y { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
@@ -509,7 +521,7 @@ extension PB_Vector2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     }
 }
 
-extension PB_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Symbolic_Pb_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     static let protoMessageName: String = _protobuf_package + ".PathNode"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .same(proto: "position"),
@@ -548,7 +560,7 @@ extension PB_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathNode, rhs: PB_PathNode) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathNode, rhs: Symbolic_Pb_PathNode) -> Bool {
         if lhs._position != rhs._position { return false }
         if lhs._cubicIn != rhs._cubicIn { return false }
         if lhs._cubicOut != rhs._cubicOut { return false }
@@ -557,7 +569,7 @@ extension PB_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     }
 }
 
-extension PB_Path: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Symbolic_Pb_Path: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     static let protoMessageName: String = _protobuf_package + ".Path"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "node_ids"),
@@ -592,7 +604,7 @@ extension PB_Path: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_Path, rhs: PB_Path) -> Bool {
+    static func == (lhs: Symbolic_Pb_Path, rhs: Symbolic_Pb_Path) -> Bool {
         if lhs.nodeIds != rhs.nodeIds { return false }
         if lhs.nodes != rhs.nodes { return false }
         if lhs.isClosed != rhs.isClosed { return false }
@@ -601,7 +613,7 @@ extension PB_Path: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
     }
 }
 
-extension PB_PathEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Symbolic_Pb_PathEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     static let protoMessageName: String = _protobuf_package + ".PathEvent"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         101: .same(proto: "create"),
@@ -616,7 +628,7 @@ extension PB_PathEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
             // enabled. https://github.com/apple/swift-protobuf/issues/1034
             switch fieldNumber {
             case 101: try {
-                    var v: PB_PathEvent.Create?
+                    var v: Symbolic_Pb_PathEvent.Create?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -629,7 +641,7 @@ extension PB_PathEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
                     }
                 }()
             case 102: try {
-                    var v: PB_PathEvent.Delete?
+                    var v: Symbolic_Pb_PathEvent.Delete?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -642,7 +654,7 @@ extension PB_PathEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
                     }
                 }()
             case 103: try {
-                    var v: PB_PathEvent.Update?
+                    var v: Symbolic_Pb_PathEvent.Update?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -682,15 +694,15 @@ extension PB_PathEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent, rhs: PB_PathEvent) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent, rhs: Symbolic_Pb_PathEvent) -> Bool {
         if lhs.kind != rhs.kind { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
         return true
     }
 }
 
-extension PB_PathEvent.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.protoMessageName + ".Create"
+extension Symbolic_Pb_PathEvent.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.protoMessageName + ".Create"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "path_id"),
         2: .same(proto: "path"),
@@ -723,7 +735,7 @@ extension PB_PathEvent.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Create, rhs: PB_PathEvent.Create) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Create, rhs: Symbolic_Pb_PathEvent.Create) -> Bool {
         if lhs._pathID != rhs._pathID { return false }
         if lhs._path != rhs._path { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
@@ -731,8 +743,8 @@ extension PB_PathEvent.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     }
 }
 
-extension PB_PathEvent.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.protoMessageName + ".Delete"
+extension Symbolic_Pb_PathEvent.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.protoMessageName + ".Delete"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "path_id"),
     ]
@@ -760,15 +772,15 @@ extension PB_PathEvent.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Delete, rhs: PB_PathEvent.Delete) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Delete, rhs: Symbolic_Pb_PathEvent.Delete) -> Bool {
         if lhs._pathID != rhs._pathID { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
         return true
     }
 }
 
-extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.protoMessageName + ".Update"
+extension Symbolic_Pb_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.protoMessageName + ".Update"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "path_id"),
         101: .same(proto: "move"),
@@ -785,7 +797,7 @@ extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
             switch fieldNumber {
             case 1: try decoder.decodeSingularMessageField(value: &_pathID)
             case 101: try {
-                    var v: PB_PathEvent.Update.Move?
+                    var v: Symbolic_Pb_PathEvent.Update.Move?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -798,7 +810,7 @@ extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
                     }
                 }()
             case 102: try {
-                    var v: PB_PathEvent.Update.NodeCreate?
+                    var v: Symbolic_Pb_PathEvent.Update.NodeCreate?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -811,7 +823,7 @@ extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
                     }
                 }()
             case 103: try {
-                    var v: PB_PathEvent.Update.NodeDelete?
+                    var v: Symbolic_Pb_PathEvent.Update.NodeDelete?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -824,7 +836,7 @@ extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
                     }
                 }()
             case 104: try {
-                    var v: PB_PathEvent.Update.NodeUpdate?
+                    var v: Symbolic_Pb_PathEvent.Update.NodeUpdate?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -871,7 +883,7 @@ extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Update, rhs: PB_PathEvent.Update) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Update, rhs: Symbolic_Pb_PathEvent.Update) -> Bool {
         if lhs._pathID != rhs._pathID { return false }
         if lhs.kind != rhs.kind { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
@@ -879,8 +891,8 @@ extension PB_PathEvent.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     }
 }
 
-extension PB_PathEvent.Update.Move: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.Update.protoMessageName + ".Move"
+extension Symbolic_Pb_PathEvent.Update.Move: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.Update.protoMessageName + ".Move"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .same(proto: "offset"),
     ]
@@ -908,15 +920,15 @@ extension PB_PathEvent.Update.Move: SwiftProtobuf.Message, SwiftProtobuf._Messag
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Update.Move, rhs: PB_PathEvent.Update.Move) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Update.Move, rhs: Symbolic_Pb_PathEvent.Update.Move) -> Bool {
         if lhs._offset != rhs._offset { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
         return true
     }
 }
 
-extension PB_PathEvent.Update.NodeCreate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.Update.protoMessageName + ".NodeCreate"
+extension Symbolic_Pb_PathEvent.Update.NodeCreate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.Update.protoMessageName + ".NodeCreate"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "prev_node_id"),
         2: .standard(proto: "node_id"),
@@ -954,7 +966,7 @@ extension PB_PathEvent.Update.NodeCreate: SwiftProtobuf.Message, SwiftProtobuf._
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Update.NodeCreate, rhs: PB_PathEvent.Update.NodeCreate) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Update.NodeCreate, rhs: Symbolic_Pb_PathEvent.Update.NodeCreate) -> Bool {
         if lhs._prevNodeID != rhs._prevNodeID { return false }
         if lhs._nodeID != rhs._nodeID { return false }
         if lhs._node != rhs._node { return false }
@@ -963,8 +975,8 @@ extension PB_PathEvent.Update.NodeCreate: SwiftProtobuf.Message, SwiftProtobuf._
     }
 }
 
-extension PB_PathEvent.Update.NodeDelete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.Update.protoMessageName + ".NodeDelete"
+extension Symbolic_Pb_PathEvent.Update.NodeDelete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.Update.protoMessageName + ".NodeDelete"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "node_id"),
     ]
@@ -992,15 +1004,15 @@ extension PB_PathEvent.Update.NodeDelete: SwiftProtobuf.Message, SwiftProtobuf._
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Update.NodeDelete, rhs: PB_PathEvent.Update.NodeDelete) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Update.NodeDelete, rhs: Symbolic_Pb_PathEvent.Update.NodeDelete) -> Bool {
         if lhs._nodeID != rhs._nodeID { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
         return true
     }
 }
 
-extension PB_PathEvent.Update.NodeUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-    static let protoMessageName: String = PB_PathEvent.Update.protoMessageName + ".NodeUpdate"
+extension Symbolic_Pb_PathEvent.Update.NodeUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+    static let protoMessageName: String = Symbolic_Pb_PathEvent.Update.protoMessageName + ".NodeUpdate"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .standard(proto: "node_id"),
         2: .same(proto: "node"),
@@ -1033,7 +1045,7 @@ extension PB_PathEvent.Update.NodeUpdate: SwiftProtobuf.Message, SwiftProtobuf._
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_PathEvent.Update.NodeUpdate, rhs: PB_PathEvent.Update.NodeUpdate) -> Bool {
+    static func == (lhs: Symbolic_Pb_PathEvent.Update.NodeUpdate, rhs: Symbolic_Pb_PathEvent.Update.NodeUpdate) -> Bool {
         if lhs._nodeID != rhs._nodeID { return false }
         if lhs._node != rhs._node { return false }
         if lhs.unknownFields != rhs.unknownFields { return false }
@@ -1041,7 +1053,7 @@ extension PB_PathEvent.Update.NodeUpdate: SwiftProtobuf.Message, SwiftProtobuf._
     }
 }
 
-extension PB_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension Symbolic_Pb_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
     static let protoMessageName: String = _protobuf_package + ".DocumentEvent"
     static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
         1: .same(proto: "id"),
@@ -1058,7 +1070,7 @@ extension PB_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
             case 1: try decoder.decodeSingularMessageField(value: &_id)
             case 2: try decoder.decodeSingularMessageField(value: &_time)
             case 101: try {
-                    var v: PB_PathEvent?
+                    var v: Symbolic_Pb_PathEvent?
                     var hadOneofValue = false
                     if let current = self.kind {
                         hadOneofValue = true
@@ -1092,7 +1104,7 @@ extension PB_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
         try unknownFields.traverse(visitor: &visitor)
     }
 
-    static func == (lhs: PB_DocumentEvent, rhs: PB_DocumentEvent) -> Bool {
+    static func == (lhs: Symbolic_Pb_DocumentEvent, rhs: Symbolic_Pb_DocumentEvent) -> Bool {
         if lhs._id != rhs._id { return false }
         if lhs._time != rhs._time { return false }
         if lhs.kind != rhs.kind { return false }

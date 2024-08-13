@@ -57,6 +57,14 @@ extension Duration {
     }
 }
 
+// MARK: - modify
+
+func modify<T>(_ value: T, _ modifier: (inout T) -> Void) -> T {
+    var value = value
+    modifier(&value)
+    return value
+}
+
 // MARK: - builder helper
 
 func build<Content: View>(@ViewBuilder _ builder: () -> Content) -> Content { builder() }
@@ -100,5 +108,31 @@ extension Task where Success == Void, Failure == Never {
             guard !Task<Never, Never>.isCancelled else { return }
             await work()
         }
+    }
+}
+
+// MARK: - UInt64
+
+extension UInt64 {
+    init(littleEndian b0: UInt8, _ b1: UInt8 = 0, _ b2: UInt8 = 0, _ b3: UInt8 = 0, _ b4: UInt8 = 0, _ b5: UInt8 = 0, _ b6: UInt8 = 0, _ b7: UInt8 = 0) {
+        self = Self(b0)
+            | Self(b1) << 8
+            | Self(b2) << 16
+            | Self(b3) << 24
+            | Self(b4) << 32
+            | Self(b5) << 40
+            | Self(b6) << 48
+            | Self(b7) << 56
+    }
+
+    init(bigEndian b0: UInt8, _ b1: UInt8 = 0, _ b2: UInt8 = 0, _ b3: UInt8 = 0, _ b4: UInt8 = 0, _ b5: UInt8 = 0, _ b6: UInt8 = 0, _ b7: UInt8 = 0) {
+        self = Self(b7)
+            | Self(b6) << 8
+            | Self(b5) << 16
+            | Self(b4) << 24
+            | Self(b3) << 32
+            | Self(b2) << 40
+            | Self(b1) << 48
+            | Self(b0) << 56
     }
 }

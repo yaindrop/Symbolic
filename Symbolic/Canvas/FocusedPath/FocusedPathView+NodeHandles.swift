@@ -230,6 +230,25 @@ extension FocusedPathView {
         var body: some View { trace {
             setupSelector {
                 content
+                    .onAppear {
+                        if let path = selector.path {
+                            let pb = tracer.range("dbg 1") {
+                                let pb = path.pb
+                                return pb
+                            }
+                            let data = tracer.range("dbg 1.5") {
+                                let data = try? pb.serializedData()
+                                return data
+                            }
+                            tracer.range("dbg 1.8") {
+                                data.map { try? Symbolic_Pb_Path(serializedData: $0) }
+                            }
+                            tracer.range("dbg 2") {
+                                pb.value
+                            }
+                            print("dbg v", path, pb.value)
+                        }
+                    }
             }
         } }
     }

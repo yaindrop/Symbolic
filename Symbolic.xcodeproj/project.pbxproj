@@ -100,6 +100,12 @@
 		579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29B12C690824004E7DC8 /* FlatBuffers */; };
 		579B29B62C69985A004E7DC8 /* symbolic_generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29B32C69985A004E7DC8 /* symbolic_generated.swift */; };
 		579B29B72C69985A004E7DC8 /* symbolic.fbs in Resources */ = {isa = PBXBuildFile; fileRef = 579B29B42C69985A004E7DC8 /* symbolic.fbs */; };
+		579B29B92C69E506004E7DC8 /* FB+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29B82C69E506004E7DC8 /* FB+Extension.swift */; };
+		579B29BB2C6B4E49004E7DC8 /* symbolic.proto in Sources */ = {isa = PBXBuildFile; fileRef = 579B29BA2C6B4E49004E7DC8 /* symbolic.proto */; };
+		579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */; };
+		579B29C32C6BA2B8004E7DC8 /* symbolic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */; };
+		579B29C42C6BA2B8004E7DC8 /* symbolic.proto in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C12C6BA2B8004E7DC8 /* symbolic.proto */; };
+		579B29C62C6BA2FD004E7DC8 /* PB+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */; };
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
@@ -255,6 +261,11 @@
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
 		579B29B32C69985A004E7DC8 /* symbolic_generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic_generated.swift; sourceTree = "<group>"; };
 		579B29B42C69985A004E7DC8 /* symbolic.fbs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = symbolic.fbs; sourceTree = "<group>"; };
+		579B29B82C69E506004E7DC8 /* FB+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FB+Extension.swift"; sourceTree = "<group>"; };
+		579B29BA2C6B4E49004E7DC8 /* symbolic.proto */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.protobuf; path = symbolic.proto; sourceTree = "<group>"; };
+		579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic.pb.swift; sourceTree = "<group>"; };
+		579B29C12C6BA2B8004E7DC8 /* symbolic.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = symbolic.proto; sourceTree = "<group>"; };
+		579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PB+Extension.swift"; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -304,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */,
+				579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,6 +390,7 @@
 		5723BF6D2BC39844002209F2 = {
 			isa = PBXGroup;
 			children = (
+				579B29C22C6BA2B8004E7DC8 /* protobuf */,
 				579B29B52C69985A004E7DC8 /* flatbuffers */,
 				5723BF782BC39844002209F2 /* Symbolic */,
 				5723BF8B2BC39846002209F2 /* SymbolicTests */,
@@ -582,9 +595,21 @@
 			children = (
 				579B29B32C69985A004E7DC8 /* symbolic_generated.swift */,
 				579B29B42C69985A004E7DC8 /* symbolic.fbs */,
+				579B29B82C69E506004E7DC8 /* FB+Extension.swift */,
+				579B29BA2C6B4E49004E7DC8 /* symbolic.proto */,
 			);
 			name = flatbuffers;
 			path = Symbolic/flatbuffers;
+			sourceTree = "<group>";
+		};
+		579B29C22C6BA2B8004E7DC8 /* protobuf */ = {
+			isa = PBXGroup;
+			children = (
+				579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */,
+				579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */,
+				579B29C12C6BA2B8004E7DC8 /* symbolic.proto */,
+			);
+			path = protobuf;
 			sourceTree = "<group>";
 		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
@@ -813,6 +838,7 @@
 			name = Symbolic;
 			packageProductDependencies = (
 				579B29B12C690824004E7DC8 /* FlatBuffers */,
+				579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */,
 			);
 			productName = Symbolic;
 			productReference = 5723BF762BC39844002209F2 /* Symbolic.app */;
@@ -889,6 +915,7 @@
 			mainGroup = 5723BF6D2BC39844002209F2;
 			packageReferences = (
 				579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */,
+				579B29BC2C6B4EF5004E7DC8 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 			);
 			productRefGroup = 5723BF772BC39844002209F2 /* Products */;
 			projectDirPath = "";
@@ -939,6 +966,7 @@
 				574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */,
 				578150512C5E6A930057D798 /* ActionWheel.swift in Sources */,
 				57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */,
+				579B29BB2C6B4E49004E7DC8 /* symbolic.proto in Sources */,
 				574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */,
 				573204DA2C15D8BF008E0DED /* ItemsView.swift in Sources */,
 				57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */,
@@ -996,6 +1024,7 @@
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
 				57FC33032C4E157300DF7DBF /* PortalRoot.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
+				579B29C62C6BA2FD004E7DC8 /* PB+Extension.swift in Sources */,
 				571B9B2C2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */,
 				57FC32FB2C4ACACF00DF7DBF /* Polyline.swift in Sources */,
@@ -1011,6 +1040,7 @@
 				574CC7EA2BFA53310042FEE3 /* FocusedPathView+Stroke.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */,
+				579B29C32C6BA2B8004E7DC8 /* symbolic.pb.swift in Sources */,
 				571B9B472C14AA5F00AAD516 /* Container+Extension.swift in Sources */,
 				572CA9E02C31A0CA003760B7 /* RootStore.swift in Sources */,
 				578150572C6260510057D798 /* PathSelectionPopover.swift in Sources */,
@@ -1025,6 +1055,7 @@
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
 				57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */,
+				579B29B92C69E506004E7DC8 /* FB+Extension.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */,
 				57FC32FF2C4E147400DF7DBF /* PortalStore.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
@@ -1058,6 +1089,7 @@
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
+				579B29C42C6BA2B8004E7DC8 /* symbolic.proto in Sources */,
 				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1404,6 +1436,14 @@
 				version = 24.3.25;
 			};
 		};
+		579B29BC2C6B4EF5004E7DC8 /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-protobuf.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.27.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1411,6 +1451,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */;
 			productName = FlatBuffers;
+		};
+		579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 579B29BC2C6B4EF5004E7DC8 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
+			productName = SwiftProtobuf;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

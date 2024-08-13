@@ -1,3 +1,4 @@
+import FlatBuffers
 import SwiftUI
 
 private class GestureContext: ObservableObject {

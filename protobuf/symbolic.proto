@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package PB;
+
+message UUID {
+  bytes data = 1; // 16 bytes / 128 bits long
+}
+
+message Vector2 {
+  float x = 1;
+  float y = 2;
+}
+
+message PathNode {
+  Vector2 position = 1;
+  Vector2 cubic_in = 2;
+  Vector2 cubic_out = 3;
+}
+
+message Path {
+  repeated UUID node_ids = 1;
+  repeated PathNode nodes = 2;
+  bool is_closed = 3;
+}
+
+message PathEvent {
+  message Create {
+    UUID path_id = 1;
+    Path path = 2;
+  }
+
+  message Delete { UUID path_id = 1; }
+
+  message Update {
+    message Move { Vector2 offset = 1; }
+
+    message NodeCreate {
+      optional UUID prev_node_id = 1;
+      UUID node_id = 2;
+      PathNode node = 3;
+    }
+
+    message NodeDelete { UUID node_id = 1; }
+
+    message NodeUpdate {
+      UUID node_id = 1;
+      PathNode node = 2;
+    }
+
+    UUID path_id = 1;
+
+    oneof kind {
+      Move move = 101;
+      NodeCreate node_create = 102;
+      NodeDelete node_delete = 103;
+      NodeUpdate node_update = 104;
+    }
+  }
+
+  oneof kind {
+    Create create = 101;
+    Delete delete = 102;
+    Update update = 103;
+  }
+}
+
+message DocumentEvent {
+  UUID id = 1;
+  google.protobuf.Timestamp time = 2;
+
+  oneof kind { PathEvent path_event = 101; }
+}

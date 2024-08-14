@@ -4,7 +4,7 @@ import os
 import subprocess
 
 proto_dir = './protobuf/'
-output_dir = 'Symbolic/Protobuf/'
+output_dir = 'Symbolic/Protobuf/Generated/'
 
 
 def clean_up_files(directory, extension):

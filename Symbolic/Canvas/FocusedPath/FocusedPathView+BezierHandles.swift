@@ -2,7 +2,7 @@ import SwiftUI
 
 private class GestureContext {
     var nodeId: UUID?
-    var controlType: PathBezierControlType = .cubicIn
+    var controlType: PathNodeControlType = .cubicIn
 }
 
 // MARK: - global actions

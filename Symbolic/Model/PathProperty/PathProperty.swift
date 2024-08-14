@@ -43,10 +43,10 @@ enum PathSegmentType: Codable, CaseIterable {
     case quadratic
 }
 
-enum PathBezierControlType: Codable {
+enum PathNodeControlType: Codable {
     case cubicIn
     case cubicOut
-    case quadratic
+    case quadraticOut
 }
 
 extension PathSegmentType {

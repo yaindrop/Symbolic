@@ -364,7 +364,7 @@ private extension DocumentUpdater {
             let snappedCubicOut = grid.snap(node.positionOut + offset)
             snappedCubicOutOffset = node.positionOut.offset(to: snappedCubicOut)
             guard !snappedCubicOutOffset.isZero else { return }
-        case .quadratic:
+        case .quadraticOut:
             guard let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic else { return }
             let snappedQuadratic = grid.snap(quadratic + offset)
@@ -386,7 +386,7 @@ private extension DocumentUpdater {
             let newCubicOut = node.cubicOut + snappedCubicOutOffset,
                 newCubicIn = nodeType.map(current: node.cubicIn, opposite: newCubicOut)
             kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
-        case .quadratic:
+        case .quadraticOut:
             guard let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic,
                   let nextId = path.nodeId(after: nodeId),

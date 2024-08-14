@@ -53,7 +53,7 @@ private extension PathSegmentPopover {
                 ContextualDivider()
             }
             if segmentType != .cubic, let quadratic = segment?.quadratic {
-                ContextualRow(label: "Quadratic") { vectorPicker(value: .init(quadratic), controlType: .quadratic) }
+                ContextualRow(label: "Quadratic") { vectorPicker(value: .init(quadratic), controlType: .quadraticOut) }
                 ContextualDivider()
             }
             ContextualRow(label: "Type") {
@@ -72,7 +72,7 @@ private extension PathSegmentPopover {
         }
     }
 
-    @ViewBuilder func vectorPicker(value: Vector2, controlType: PathBezierControlType) -> some View {
+    @ViewBuilder func vectorPicker(value: Vector2, controlType: PathNodeControlType) -> some View {
         VectorPicker(value: value) { update(value: $0, controlType: controlType, pending: true) } onDone: { update(value: $0, controlType: controlType) }
             .background(.ultraThickMaterial)
             .clipRounded(radius: 6)
@@ -96,7 +96,7 @@ private extension PathSegmentPopover {
         global.portal.deregister(id: portalId)
     }
 
-    func update(value: Vector2, controlType: PathBezierControlType, pending: Bool = false) {
+    func update(value: Vector2, controlType: PathNodeControlType, pending: Bool = false) {
         guard let fromNodeId,
               var node,
               var segment else { return }
@@ -107,7 +107,7 @@ private extension PathSegmentPopover {
         case .cubicIn:
             node.cubicIn = value
             global.documentUpdater.update(focusedPath: .updateNode(.init(nodeId: nodeId, node: node)), pending: pending)
-        case .quadratic:
+        case .quadraticOut:
             segment = .init(from: segment.from, to: segment.to, quadratic: .init(value))
             global.documentUpdater.update(focusedPath: .updateSegment(.init(fromNodeId: fromNodeId, segment: segment)), pending: pending)
         }

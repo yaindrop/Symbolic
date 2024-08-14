@@ -128,8 +128,8 @@ extension FocusedPathService {
         }
     }
 
-    func controlNodeId(closestTo point: Point2) -> (nodeId: UUID, type: PathBezierControlType)? {
-        var result: (id: UUID, type: PathBezierControlType, distance: Scalar)?
+    func controlNodeId(closestTo point: Point2) -> (nodeId: UUID, type: PathNodeControlType)? {
+        var result: (id: UUID, type: PathNodeControlType, distance: Scalar)?
         guard let path = activeItem.focusedPath else { return nil }
         for nodeId in cubicInNodeIds {
             guard let node = path.node(id: nodeId) else { continue }
@@ -150,7 +150,7 @@ extension FocusedPathService {
                   let position = segment.quadratic else { continue }
             let distance = position.distance(to: point)
             if distance < result?.distance ?? .infinity {
-                result = (nodeId, .quadratic, distance)
+                result = (nodeId, .quadraticOut, distance)
             }
         }
         return result.map { ($0.id, $0.type) }

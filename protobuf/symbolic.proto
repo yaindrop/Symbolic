@@ -6,11 +6,11 @@ package symbolic.pb;
 
 // A UUID, encoded in accordance with section 4.1.2 of RFC 4122.
 message UUID {
-  // The high 64 bits of the UUID - MSB -> LSB:
+  // The higher 64 bits of the UUID, big-endian:
   // time_low (32) | time_mid (16) | time_hi_and_version (16)
   fixed64 hi = 1;
 
-  // The low 64 bits of the UUID - MSB -> LSB:
+  // The lower 64 bits of the UUID, big-endian:
   // clock_seq_hi_and_reserved (8) | clock_seq_low (8) | node (48)
   fixed64 lo = 2;
 }
@@ -30,6 +30,27 @@ message Path {
   repeated UUID node_ids = 1;
   repeated PathNode nodes = 2;
   bool is_closed = 3;
+}
+
+enum PathNodeType {
+  corner = 0;
+  locked = 1;
+  mirrored = 2;
+}
+
+enum PathSegmentType {
+  cubic = 0;
+  quadratic = 1;
+}
+
+message ItemEvent {
+  message SetMembers {
+    // null group_id means root
+    optional UUID group_id = 1;
+    repeated UUID members = 2;
+  }
+
+  oneof kind { SetMembers set_members = 101; }
 }
 
 message PathEvent {
@@ -66,16 +87,71 @@ message PathEvent {
     }
   }
 
+  message Merge {
+    UUID path_id = 1;
+    UUID ending_node_id = 2;
+    UUID merged_path_id = 3;
+    UUID merged_ending_node_id = 4;
+  }
+
+  message Split {
+    UUID path_id = 1;
+    UUID node_id = 2;
+    optional UUID new_path_id = 3;
+    optional UUID new_node_id = 4;
+  }
+
   oneof kind {
     Create create = 101;
     Delete delete = 102;
     Update update = 103;
+    Merge merge = 104;
+    Split split = 105;
   }
 }
 
+message PathPropertyEvent {
+  message Update {
+    message SetName { optional string name = 1; }
+
+    message SetNodeType {
+      repeated UUID node_ids = 1;
+      optional PathNodeType node_type = 2;
+    }
+
+    message SetSegmentType {
+      repeated UUID from_node_ids = 1;
+      optional PathSegmentType segment_type = 2;
+    }
+
+    UUID path_id = 1;
+
+    oneof kind {
+      SetName set_name = 101;
+      SetNodeType set_node_type = 102;
+      SetSegmentType set_segment_type = 103;
+    }
+  }
+
+  oneof kind { Update update = 101; }
+}
+
 message DocumentEvent {
+  message Single {
+    oneof kind {
+      ItemEvent item_event = 101;
+      PathEvent path_event = 102;
+      PathPropertyEvent path_property_event = 103;
+    }
+  }
+
+  message Compound { repeated Single events = 1; }
+
   UUID id = 1;
   google.protobuf.Timestamp time = 2;
 
-  oneof kind { PathEvent path_event = 101; }
+  oneof kind {
+    Single single = 101;
+    Compound compound = 102;
+  }
 }

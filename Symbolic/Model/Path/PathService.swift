@@ -165,8 +165,7 @@ extension PathService {
         case let .delete(event): loadEvent(event)
         case let .update(event): loadEvent(event)
         case let .merge(event): loadEvent(event)
-        case let .nodeBreak(event): loadEvent(event)
-        case let .segmentBreak(event): loadEvent(event)
+        case let .split(event): loadEvent(event)
         }
     }
 
@@ -209,23 +208,13 @@ extension PathService {
         update(pathId: pathId, path: path)
     }
 
-    private func loadEvent(_ event: PathEvent.NodeBreak) {
+    private func loadEvent(_ event: PathEvent.Split) {
         let pathId = event.pathId
         guard var path = get(id: pathId) else { return }
         let newPath = path.update(nodeBreak: event)
         update(pathId: pathId, path: path)
-        if let newPath {
-            add(pathId: event.newPathId, path: newPath)
-        }
-    }
-
-    private func loadEvent(_ event: PathEvent.SegmentBreak) {
-        let pathId = event.pathId
-        guard var path = get(id: pathId) else { return }
-        let newPath = path.update(segmentBreak: event)
-        update(pathId: pathId, path: path)
-        if let newPath {
-            add(pathId: event.newPathId, path: newPath)
+        if let newPath, let newPathId = event.newPathId {
+            add(pathId: newPathId, path: newPath)
         }
     }
 

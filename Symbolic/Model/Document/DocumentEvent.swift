@@ -15,18 +15,17 @@ enum PathEvent: Equatable, Codable {
     struct Delete: Equatable, Codable { let pathId: UUID }
     struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
 
-    // multi update
+    // merge two paths at given ending nodes
     struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct NodeBreak: Equatable, Codable { let pathId: UUID, nodeId: UUID, newPathId: UUID, newNodeId: UUID } // break path at node, creating a new ending node at the same position, and a new path when the current path is not closed
-    struct SegmentBreak: Equatable, Codable { let pathId: UUID, fromNodeId: UUID, newPathId: UUID } // break path at segment, creating a new path when the current path is not closed
+    // split path at node, optionally creating a new ending node at the same position, and a new path when the current path is not closed
+    struct Split: Equatable, Codable { let pathId: UUID, nodeId: UUID, newPathId: UUID?, newNodeId: UUID? }
 
     case create(Create)
     case delete(Delete)
     case update(Update)
 
     case merge(Merge)
-    case nodeBreak(NodeBreak)
-    case segmentBreak(SegmentBreak)
+    case split(Split)
 }
 
 // MARK: Update
@@ -113,10 +112,8 @@ extension PathEvent {
             [event.pathId]
         case let .merge(event):
             [event.pathId, event.mergedPathId]
-        case let .nodeBreak(event):
-            [event.pathId, event.newPathId]
-        case let .segmentBreak(event):
-            [event.pathId, event.newPathId]
+        case let .split(event):
+            [event.pathId, event.newPathId].compact()
         }
     }
 

@@ -410,13 +410,13 @@ private extension DocumentUpdater {
         let nodeId = action.nodeId,
             newNodeId = action.newNodeId,
             newPathId = action.newPathId
-        events.append(.path(.nodeBreak(.init(pathId: pathId, nodeId: nodeId, newPathId: newPathId, newNodeId: newNodeId))))
+        events.append(.path(.split(.init(pathId: pathId, nodeId: nodeId, newPathId: newPathId, newNodeId: newNodeId))))
     }
 
     func collectEvents(to events: inout [SingleEvent], pathId: UUID, _ action: PathAction.Update.BreakAtSegment) {
         let fromNodeId = action.fromNodeId,
             newPathId = action.newPathId
-        events.append(.path(.segmentBreak(.init(pathId: pathId, fromNodeId: fromNodeId, newPathId: newPathId))))
+        events.append(.path(.split(.init(pathId: pathId, nodeId: fromNodeId, newPathId: newPathId, newNodeId: nil))))
     }
 }
 

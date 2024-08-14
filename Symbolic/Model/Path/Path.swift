@@ -296,7 +296,7 @@ extension Path {
 //        }
     }
 
-    mutating func update(nodeBreak: PathEvent.NodeBreak) -> Path? {
+    mutating func update(nodeBreak: PathEvent.Split) -> Path? {
         let nodeId = nodeBreak.nodeId,
             newNodeId = nodeBreak.newNodeId
         let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
@@ -305,30 +305,18 @@ extension Path {
         let newNode = PathNode(position: node.position, cubicOut: node.cubicOut)
         if isClosed {
             nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
-            nodeMap.insert((newNodeId, newNode), at: 0)
+            if let newNodeId {
+                nodeMap.insert((newNodeId, newNode), at: 0)
+            }
             isClosed = false
             return nil
         } else {
             var newNodeMap = nodeMap
             nodeMap.mutateKeys { $0 = Array($0[...i]) }
             newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
-            newNodeMap.insert((newNodeId, newNode), at: 0)
-            return .init(nodeMap: newNodeMap, isClosed: false)
-        }
-    }
-
-    mutating func update(segmentBreak: PathEvent.SegmentBreak) -> Path? {
-        let nodeId = segmentBreak.fromNodeId
-        let _r = tracer.range("Path.update segmentBreak"); defer { _r() }
-        guard let i = nodeIndex(id: nodeId) else { return nil }
-        if isClosed {
-            nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
-            isClosed = false
-            return nil
-        } else {
-            var newNodeMap = nodeMap
-            nodeMap.mutateKeys { $0 = Array($0[...i]) }
-            newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
+            if let newNodeId {
+                newNodeMap.insert((newNodeId, newNode), at: 0)
+            }
             return .init(nodeMap: newNodeMap, isClosed: false)
         }
     }

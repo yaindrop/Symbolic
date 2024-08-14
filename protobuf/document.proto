@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "protobuf/symbolic.proto";
+
+package symbolic.pb;
+
+// MARK: - ItemEvent
+
+message ItemEvent {
+  message SetMembers {
+    // null group_id means root
+    optional UUID group_id = 1;
+    repeated UUID members = 2;
+  }
+
+  oneof kind { SetMembers set_members = 101; }
+}
+
+// MARK: - PathEvent
+
+message PathEvent {
+  message Create {
+    UUID path_id = 1;
+    Path path = 2;
+  }
+
+  message Delete { UUID path_id = 1; }
+
+  message Update {
+    message Move { Vector2 offset = 1; }
+
+    message NodeCreate {
+      optional UUID prev_node_id = 1;
+      UUID node_id = 2;
+      PathNode node = 3;
+    }
+
+    message NodeDelete { UUID node_id = 1; }
+
+    message NodeUpdate {
+      UUID node_id = 1;
+      PathNode node = 2;
+    }
+
+    message Kind {
+      oneof kind {
+        Move move = 101;
+        NodeCreate node_create = 102;
+        NodeDelete node_delete = 103;
+        NodeUpdate node_update = 104;
+      }
+    }
+
+    UUID path_id = 1;
+    repeated Kind kinds = 2;
+  }
+
+  message Merge {
+    UUID path_id = 1;
+    UUID ending_node_id = 2;
+    UUID merged_path_id = 3;
+    UUID merged_ending_node_id = 4;
+  }
+
+  message Split {
+    UUID path_id = 1;
+    UUID node_id = 2;
+    optional UUID new_path_id = 3;
+    optional UUID new_node_id = 4;
+  }
+
+  oneof kind {
+    Create create = 101;
+    Delete delete = 102;
+    Update update = 103;
+    Merge merge = 104;
+    Split split = 105;
+  }
+}
+
+// MARK: - PathPropertyEvent
+
+message PathPropertyEvent {
+  message Update {
+    message SetName { optional string name = 1; }
+
+    message SetNodeType {
+      repeated UUID node_ids = 1;
+      optional PathNodeType node_type = 2;
+    }
+
+    message SetSegmentType {
+      repeated UUID from_node_ids = 1;
+      optional PathSegmentType segment_type = 2;
+    }
+
+    message Kind {
+      oneof kind {
+        SetName set_name = 101;
+        SetNodeType set_node_type = 102;
+        SetSegmentType set_segment_type = 103;
+      }
+    }
+
+    UUID path_id = 1;
+    repeated Kind kinds = 2;
+  }
+
+  oneof kind { Update update = 101; }
+}
+
+// MARK: - DocumentEvent
+
+message DocumentEvent {
+  message Single {
+    oneof kind {
+      ItemEvent item_event = 101;
+      PathEvent path_event = 102;
+      PathPropertyEvent path_property_event = 103;
+    }
+  }
+
+  message Compound { repeated Single events = 1; }
+
+  UUID id = 1;
+  google.protobuf.Timestamp time = 2;
+
+  oneof kind {
+    Single single = 101;
+    Compound compound = 102;
+  }
+}

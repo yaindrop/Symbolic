@@ -98,9 +98,6 @@
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
 		579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */; };
-		579B29C32C6BA2B8004E7DC8 /* symbolic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */; };
-		579B29C42C6BA2B8004E7DC8 /* symbolic.proto in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C12C6BA2B8004E7DC8 /* symbolic.proto */; };
-		579B29C62C6BA2FD004E7DC8 /* PB+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */; };
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
 		57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */; };
@@ -125,6 +122,9 @@
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
 		57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */; };
+		57C168FE2C6CB449007BFC81 /* document.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FA2C6CB449007BFC81 /* document.pb.swift */; };
+		57C168FF2C6CB449007BFC81 /* PB+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FB2C6CB449007BFC81 /* PB+Extension.swift */; };
+		57C169002C6CB449007BFC81 /* symbolic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FC2C6CB449007BFC81 /* symbolic.pb.swift */; };
 		57DD2A162C0236E60046931C /* ItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A152C0236E60046931C /* ItemService.swift */; };
 		57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */; };
 		57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1C2C02DB5A0046931C /* Grid.swift */; };
@@ -254,9 +254,6 @@
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
-		579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic.pb.swift; sourceTree = "<group>"; };
-		579B29C12C6BA2B8004E7DC8 /* symbolic.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = symbolic.proto; sourceTree = "<group>"; };
-		579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PB+Extension.swift"; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -281,6 +278,9 @@
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
 		57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyService.swift; sourceTree = "<group>"; };
+		57C168FA2C6CB449007BFC81 /* document.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = document.pb.swift; sourceTree = "<group>"; };
+		57C168FB2C6CB449007BFC81 /* PB+Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "PB+Extension.swift"; sourceTree = "<group>"; };
+		57C168FC2C6CB449007BFC81 /* symbolic.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic.pb.swift; sourceTree = "<group>"; };
 		57DD2A152C0236E60046931C /* ItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemService.swift; sourceTree = "<group>"; };
 		57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionStore.swift; sourceTree = "<group>"; };
 		57DD2A1C2C02DB5A0046931C /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
@@ -380,7 +380,6 @@
 		5723BF6D2BC39844002209F2 = {
 			isa = PBXGroup;
 			children = (
-				579B29C22C6BA2B8004E7DC8 /* protobuf */,
 				5723BF782BC39844002209F2 /* Symbolic */,
 				5723BF8B2BC39846002209F2 /* SymbolicTests */,
 				5723BF952BC39846002209F2 /* SymbolicUITests */,
@@ -413,6 +412,7 @@
 				5700C2C22BEB5A6800481FA7 /* Panel */,
 				57FC32FC2C4E143A00DF7DBF /* Portal */,
 				5723BF812BC39846002209F2 /* Preview Content */,
+				57C168FD2C6CB449007BFC81 /* Protobuf */,
 				57E0820C2C27A7E3008CC67B /* Root */,
 				57B5F13E2BD4A32E001E1B2E /* Utils */,
 			);
@@ -579,16 +579,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		579B29C22C6BA2B8004E7DC8 /* protobuf */ = {
-			isa = PBXGroup;
-			children = (
-				579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */,
-				579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */,
-				579B29C12C6BA2B8004E7DC8 /* symbolic.proto */,
-			);
-			path = protobuf;
-			sourceTree = "<group>";
-		};
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
@@ -690,6 +680,16 @@
 				57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */,
 			);
 			path = PathProperty;
+			sourceTree = "<group>";
+		};
+		57C168FD2C6CB449007BFC81 /* Protobuf */ = {
+			isa = PBXGroup;
+			children = (
+				57C168FA2C6CB449007BFC81 /* document.pb.swift */,
+				57C168FB2C6CB449007BFC81 /* PB+Extension.swift */,
+				57C168FC2C6CB449007BFC81 /* symbolic.pb.swift */,
+			);
+			path = Protobuf;
 			sourceTree = "<group>";
 		};
 		57DD2A142C0236B80046931C /* Item */ = {
@@ -944,6 +944,7 @@
 				573204DA2C15D8BF008E0DED /* ItemsView.swift in Sources */,
 				57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */,
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
+				57C168FF2C6CB449007BFC81 /* PB+Extension.swift in Sources */,
 				5724878A2BDF84070096DDE4 /* VectorPicker.swift in Sources */,
 				57B5F11F2BC777F0001E1B2E /* Path.swift in Sources */,
 				5724877C2BDF80000096DDE4 /* PathPanel+Nodes.swift in Sources */,
@@ -981,6 +982,7 @@
 				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				571B9B3D2C14A97D00AAD516 /* UUID+Extension.swift in Sources */,
+				57C169002C6CB449007BFC81 /* symbolic.pb.swift in Sources */,
 				572CA9DA2C319E6B003760B7 /* DeletedFileBrowserView.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathService.swift in Sources */,
 				57E082132C27A8EC008CC67B /* FileTree.swift in Sources */,
@@ -997,7 +999,6 @@
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
 				57FC33032C4E157300DF7DBF /* PortalRoot.swift in Sources */,
 				572552832BF0572D002147AE /* OrderedMap.swift in Sources */,
-				579B29C62C6BA2FD004E7DC8 /* PB+Extension.swift in Sources */,
 				571B9B2C2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift in Sources */,
 				57B5F11A2BC62FA3001E1B2E /* MultipleTouchGesture.swift in Sources */,
 				57FC32FB2C4ACACF00DF7DBF /* Polyline.swift in Sources */,
@@ -1013,7 +1014,6 @@
 				574CC7EA2BFA53310042FEE3 /* FocusedPathView+Stroke.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */,
-				579B29C32C6BA2B8004E7DC8 /* symbolic.pb.swift in Sources */,
 				571B9B472C14AA5F00AAD516 /* Container+Extension.swift in Sources */,
 				572CA9E02C31A0CA003760B7 /* RootStore.swift in Sources */,
 				578150572C6260510057D798 /* PathSelectionPopover.swift in Sources */,
@@ -1025,6 +1025,7 @@
 				578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */,
 				572487832BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift in Sources */,
 				57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */,
+				57C168FE2C6CB449007BFC81 /* document.pb.swift in Sources */,
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
 				57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */,
@@ -1060,7 +1061,6 @@
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
-				579B29C42C6BA2B8004E7DC8 /* symbolic.proto in Sources */,
 				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

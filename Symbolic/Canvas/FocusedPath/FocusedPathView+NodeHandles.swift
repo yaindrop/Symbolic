@@ -243,9 +243,9 @@ extension FocusedPathView {
                                 data.map { try? Symbolic_Pb_Path(serializedData: $0) }
                             }
                             tracer.range("dbg 2") {
-                                try? pb.parsed()
+                                try? pb.decoded()
                             }
-                            print("dbg v", path, try? pb.parsed())
+                            print("dbg v", path, try? pb.decoded())
                         }
                     }
             }

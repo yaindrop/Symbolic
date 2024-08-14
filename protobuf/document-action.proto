@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+import "protobuf/symbolic.proto";
+
+package symbolic.pb;
+
+// MARK: - ItemAction
+
+message ItemAction {
+  message Group {
+    ItemGroup group = 1;
+    optional UUID in_group_id = 2;
+  }
+
+  message Ungroup { repeated UUID group_ids = 1; }
+
+  message Reorder {
+    repeated UUID members = 1;
+    optional UUID in_group_id = 2;
+  }
+
+  oneof kind {
+    Group group = 101;
+    Ungroup ungroup = 102;
+    Reorder reorder = 103;
+  }
+}
+
+// MARK: - PathAction
+
+message PathAction {
+  message Create {
+    UUID path_id = 1;
+    Path paths = 2;
+  }
+
+  message Delete { repeated UUID path_ids = 1; }
+
+  message Update {
+    message AddEndingNode {
+      UUID ending_node_id = 1;
+      UUID new_node_id = 2;
+      Vector2 offset = 3;
+    }
+    message SplitSegment {
+      UUID from_node_id = 1;
+      double paramT = 2;
+      UUID new_node_id = 3;
+      Vector2 offset = 4;
+    }
+    message DeleteNodes { repeated UUID node_ids = 1; }
+
+    message UpdateNode {
+      UUID node_id = 1;
+      PathNode node = 2;
+    }
+    message UpdateSegment {
+      UUID from_node_id = 1;
+      PathSegment segment = 2;
+    }
+
+    message MoveNodes {
+      repeated UUID node_ids = 1;
+      Vector2 offset = 2;
+    }
+    message MoveNodeControl {
+      UUID node_id = 1;
+      PathNodeControlType control_type = 2;
+      Vector2 offset = 3;
+    }
+
+    message Merge {
+      UUID ending_node_id = 1;
+      UUID merged_path_id = 2;
+      UUID merged_ending_node_id = 3;
+    }
+    message Split {
+      UUID node_id = 1;
+      UUID new_path_id = 2;
+      optional UUID new_node_id = 3;
+    }
+
+    UUID path_id = 1;
+    oneof kind {
+      AddEndingNode add_ending_node = 101;
+      SplitSegment split_segment = 102;
+      DeleteNodes delete_nodes = 103;
+
+      UpdateNode update_node = 104;
+      UpdateSegment update_segment = 105;
+
+      MoveNodes move_nodes = 106;
+      MoveNodeControl move_node_control = 107;
+
+      Merge merge = 108;
+      Split split = 109;
+    }
+  }
+
+  message Move {
+    repeated UUID path_ids = 1;
+    Vector2 offset = 2;
+  }
+
+  oneof kind {
+    Create create = 101;
+    Delete delete = 102;
+    Update update = 103;
+    Move move = 104;
+  }
+}
+
+// MARK: - PathPropertyAction
+
+message PathPropertyAction {
+  message Update {
+    message SetName { optional string name = 1; }
+
+    message SetNodeType {
+      repeated UUID node_ids = 1;
+      optional PathNodeType node_type = 2;
+    }
+
+    message SetSegmentType {
+      repeated UUID from_node_ids = 1;
+      optional PathSegmentType segment_type = 2;
+    }
+
+    UUID path_id = 1;
+    oneof kind {
+      SetName set_name = 101;
+      SetNodeType set_node_type = 102;
+      SetSegmentType set_segment_type = 103;
+    }
+  }
+
+  oneof kind { Update update = 101; }
+}
+
+// MARK: - DocumentAction
+
+message DocumentAction {
+  oneof kind {
+    ItemAction item_action = 101;
+    PathAction path_action = 102;
+    PathPropertyAction path_property_action = 103;
+  }
+}

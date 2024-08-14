@@ -6,7 +6,18 @@ import subprocess
 proto_dir = './protobuf/'
 output_dir = 'Symbolic/Protobuf/'
 
+
+def clean_up_files(directory, extension):
+    for filename in os.listdir(directory):
+        if filename.endswith(extension):
+            file_path = os.path.join(directory, filename)
+            os.remove(file_path)
+            print(f"Removed: {file_path}")
+
+
 os.makedirs(output_dir, exist_ok=True)
+
+clean_up_files(output_dir, '.pb.swift')
 
 for filename in os.listdir(proto_dir):
     if not filename.endswith('.proto'):

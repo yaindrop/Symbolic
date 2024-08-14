@@ -20,12 +20,35 @@ message Vector2 {
   double y = 2;
 }
 
+message Point2 {
+  double x = 1;
+  double y = 2;
+}
+
+message ItemGroup {
+  UUID id = 1;
+  repeated UUID members = 2;
+}
+
 // MARK: - path types
 
 message PathNode {
-  Vector2 position = 1;
+  Point2 position = 1;
   Vector2 cubic_in = 2;
   Vector2 cubic_out = 3;
+}
+
+enum PathNodeControlType {
+  cubicIn = 0;
+  cubicOut = 1;
+  quadraticOut = 2;
+}
+
+message PathSegment {
+  Point2 from = 1;
+  Point2 to = 2;
+  Vector2 from_cubic_out = 3;
+  Vector2 to_cubic_in = 4;
 }
 
 message Path {

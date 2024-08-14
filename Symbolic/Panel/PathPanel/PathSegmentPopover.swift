@@ -144,6 +144,6 @@ private extension PathSegmentPopover {
 
     func breakSegment() {
         guard let fromNodeId else { return }
-        global.documentUpdater.update(focusedPath: .breakAtSegment(.init(fromNodeId: fromNodeId, newPathId: UUID())))
+        global.documentUpdater.update(focusedPath: .split(.init(nodeId: fromNodeId, newPathId: UUID(), newNodeId: nil)))
     }
 }

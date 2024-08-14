@@ -178,7 +178,7 @@ private extension GlobalStores {
                     canvasAction.start(continuous: .addAndMoveEndingNode)
                 } :
                 .init(name: "Break", imageName: "scissors") {
-                    documentUpdater.update(focusedPath: .breakAtNode(.init(nodeId: nodeId, newPathId: .init(), newNodeId: .init())))
+                    documentUpdater.update(focusedPath: .split(.init(nodeId: nodeId, newPathId: .init(), newNodeId: .init())))
                 },
             node.cubicIn == .zero ?
                 .init(name: "Move Cubic In", imageName: "arrow.left.to.line", disabled: !hasCubicIn, tintColor: .orange, holdingDuration: 0.3) {

@@ -33,35 +33,32 @@ enum PathAction: Equatable, Codable {
 // MARK: Update
 
 extension PathAction.Update {
-    struct DeleteNodes: Equatable, Codable { var nodeIds: [UUID] }
-    struct UpdateNode: Equatable, Codable { var nodeId: UUID, node: PathNode }
-    struct UpdateSegment: Equatable, Codable { var fromNodeId: UUID, segment: PathSegment }
-
     struct AddEndingNode: Equatable, Codable { var endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
     struct SplitSegment: Equatable, Codable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
+    struct DeleteNodes: Equatable, Codable { var nodeIds: [UUID] }
+
+    struct UpdateNode: Equatable, Codable { var nodeId: UUID, node: PathNode }
+    struct UpdateSegment: Equatable, Codable { var fromNodeId: UUID, segment: PathSegment }
 
     struct MoveNodes: Equatable, Codable { var nodeIds: [UUID], offset: Vector2 }
     struct MoveNodeControl: Equatable, Codable { var nodeId: UUID, controlType: PathBezierControlType, offset: Vector2 }
 
     struct Merge: Equatable, Codable { var endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct BreakAtNode: Equatable, Codable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID }
-    struct BreakAtSegment: Equatable, Codable { var fromNodeId: UUID, newPathId: UUID }
+    struct Split: Equatable, Codable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID? }
 
     enum Kind: Equatable, Codable {
-        case deleteNodes(DeleteNodes)
-        case updateNode(UpdateNode)
-        case updateSegment(UpdateSegment)
-
-        // handle actions
         case addEndingNode(AddEndingNode)
         case splitSegment(SplitSegment)
+        case deleteNodes(DeleteNodes)
+
+        case updateNode(UpdateNode)
+        case updateSegment(UpdateSegment)
 
         case moveNodes(MoveNodes)
         case moveNodeControl(MoveNodeControl)
 
         case merge(Merge)
-        case breakAtNode(BreakAtNode)
-        case breakAtSegment(BreakAtSegment)
+        case split(Split)
     }
 }
 

@@ -122,9 +122,10 @@
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
 		57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */; };
-		57C168FE2C6CB449007BFC81 /* document.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FA2C6CB449007BFC81 /* document.pb.swift */; };
 		57C168FF2C6CB449007BFC81 /* PB+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FB2C6CB449007BFC81 /* PB+Extension.swift */; };
 		57C169002C6CB449007BFC81 /* symbolic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FC2C6CB449007BFC81 /* symbolic.pb.swift */; };
+		57C169032C6CB68A007BFC81 /* document-event.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C169012C6CB68A007BFC81 /* document-event.pb.swift */; };
+		57C169042C6CB68A007BFC81 /* document-action.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C169022C6CB68A007BFC81 /* document-action.pb.swift */; };
 		57DD2A162C0236E60046931C /* ItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A152C0236E60046931C /* ItemService.swift */; };
 		57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */; };
 		57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1C2C02DB5A0046931C /* Grid.swift */; };
@@ -278,9 +279,10 @@
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
 		57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyService.swift; sourceTree = "<group>"; };
-		57C168FA2C6CB449007BFC81 /* document.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = document.pb.swift; sourceTree = "<group>"; };
 		57C168FB2C6CB449007BFC81 /* PB+Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "PB+Extension.swift"; sourceTree = "<group>"; };
 		57C168FC2C6CB449007BFC81 /* symbolic.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic.pb.swift; sourceTree = "<group>"; };
+		57C169012C6CB68A007BFC81 /* document-event.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "document-event.pb.swift"; sourceTree = "<group>"; };
+		57C169022C6CB68A007BFC81 /* document-action.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "document-action.pb.swift"; sourceTree = "<group>"; };
 		57DD2A152C0236E60046931C /* ItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemService.swift; sourceTree = "<group>"; };
 		57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionStore.swift; sourceTree = "<group>"; };
 		57DD2A1C2C02DB5A0046931C /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
@@ -685,7 +687,8 @@
 		57C168FD2C6CB449007BFC81 /* Protobuf */ = {
 			isa = PBXGroup;
 			children = (
-				57C168FA2C6CB449007BFC81 /* document.pb.swift */,
+				57C169022C6CB68A007BFC81 /* document-action.pb.swift */,
+				57C169012C6CB68A007BFC81 /* document-event.pb.swift */,
 				57C168FB2C6CB449007BFC81 /* PB+Extension.swift */,
 				57C168FC2C6CB449007BFC81 /* symbolic.pb.swift */,
 			);
@@ -1025,7 +1028,6 @@
 				578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */,
 				572487832BDF82420096DDE4 /* FocusedPathView+NodeHandles.swift in Sources */,
 				57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */,
-				57C168FE2C6CB449007BFC81 /* document.pb.swift in Sources */,
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
 				57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */,
@@ -1040,6 +1042,7 @@
 				57B703FB2C38418000B60F36 /* CustomState.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
+				57C169032C6CB68A007BFC81 /* document-event.pb.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,
 				571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,
@@ -1060,6 +1063,7 @@
 				57B703F42C366B8100B60F36 /* ToolbarStore.swift in Sources */,
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
+				57C169042C6CB68A007BFC81 /* document-action.pb.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
 				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */,
 			);

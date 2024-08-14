@@ -69,19 +69,21 @@ extension Vector2: ProtobufSerializable {
     }
 }
 
+extension Symbolic_Pb_Vector2: ProtobufParsable {
+    func decoded() -> Vector2 {
+        .init(.init(x), .init(y))
+    }
+}
+
 extension Point2: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_Vector2) {
+    func encode(pb: inout Symbolic_Pb_Point2) {
         pb.x = .init(x)
         pb.y = .init(y)
     }
 }
 
-extension Symbolic_Pb_Vector2: ProtobufParsable {
-    func decoded() -> Vector2 {
-        .init(.init(x), .init(y))
-    }
-
-    func parsedAsPoint() -> Point2 {
+extension Symbolic_Pb_Point2: ProtobufParsable {
+    func decoded() -> Point2 {
         .init(.init(x), .init(y))
     }
 }
@@ -98,7 +100,7 @@ extension PathNode: ProtobufSerializable {
 
 extension Symbolic_Pb_PathNode: ProtobufParsable {
     func decoded() -> PathNode {
-        .init(position: position.parsedAsPoint(), cubicIn: cubicIn.decoded(), cubicOut: cubicOut.decoded())
+        .init(position: position.decoded(), cubicIn: cubicIn.decoded(), cubicOut: cubicOut.decoded())
     }
 }
 

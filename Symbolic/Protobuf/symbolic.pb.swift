@@ -20,6 +20,44 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
+enum Symbolic_Pb_PathNodeControlType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+  case cubicIn // = 0
+  case cubicOut // = 1
+  case quadraticOut // = 2
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .cubicIn
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .cubicIn
+    case 1: self = .cubicOut
+    case 2: self = .quadraticOut
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .cubicIn: return 0
+    case .cubicOut: return 1
+    case .quadraticOut: return 2
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [Symbolic_Pb_PathNodeControlType] = [
+    .cubicIn,
+    .cubicOut,
+    .quadraticOut,
+  ]
+
+}
+
 enum Symbolic_Pb_PathNodeType: SwiftProtobuf.Enum, Swift.CaseIterable {
   typealias RawValue = Int
   case corner // = 0
@@ -125,13 +163,50 @@ struct Symbolic_Pb_Vector2: Sendable {
   init() {}
 }
 
+struct Symbolic_Pb_Point2: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var x: Double = 0
+
+  var y: Double = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Symbolic_Pb_ItemGroup: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var id: Symbolic_Pb_UUID {
+    get {return _id ?? Symbolic_Pb_UUID()}
+    set {_id = newValue}
+  }
+  /// Returns true if `id` has been explicitly set.
+  var hasID: Bool {return self._id != nil}
+  /// Clears the value of `id`. Subsequent reads from it will return its default value.
+  mutating func clearID() {self._id = nil}
+
+  var members: [Symbolic_Pb_UUID] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _id: Symbolic_Pb_UUID? = nil
+}
+
 struct Symbolic_Pb_PathNode: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var position: Symbolic_Pb_Vector2 {
-    get {return _position ?? Symbolic_Pb_Vector2()}
+  var position: Symbolic_Pb_Point2 {
+    get {return _position ?? Symbolic_Pb_Point2()}
     set {_position = newValue}
   }
   /// Returns true if `position` has been explicitly set.
@@ -161,9 +236,60 @@ struct Symbolic_Pb_PathNode: Sendable {
 
   init() {}
 
-  fileprivate var _position: Symbolic_Pb_Vector2? = nil
+  fileprivate var _position: Symbolic_Pb_Point2? = nil
   fileprivate var _cubicIn: Symbolic_Pb_Vector2? = nil
   fileprivate var _cubicOut: Symbolic_Pb_Vector2? = nil
+}
+
+struct Symbolic_Pb_PathSegment: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var from: Symbolic_Pb_Point2 {
+    get {return _from ?? Symbolic_Pb_Point2()}
+    set {_from = newValue}
+  }
+  /// Returns true if `from` has been explicitly set.
+  var hasFrom: Bool {return self._from != nil}
+  /// Clears the value of `from`. Subsequent reads from it will return its default value.
+  mutating func clearFrom() {self._from = nil}
+
+  var to: Symbolic_Pb_Point2 {
+    get {return _to ?? Symbolic_Pb_Point2()}
+    set {_to = newValue}
+  }
+  /// Returns true if `to` has been explicitly set.
+  var hasTo: Bool {return self._to != nil}
+  /// Clears the value of `to`. Subsequent reads from it will return its default value.
+  mutating func clearTo() {self._to = nil}
+
+  var fromCubicOut: Symbolic_Pb_Vector2 {
+    get {return _fromCubicOut ?? Symbolic_Pb_Vector2()}
+    set {_fromCubicOut = newValue}
+  }
+  /// Returns true if `fromCubicOut` has been explicitly set.
+  var hasFromCubicOut: Bool {return self._fromCubicOut != nil}
+  /// Clears the value of `fromCubicOut`. Subsequent reads from it will return its default value.
+  mutating func clearFromCubicOut() {self._fromCubicOut = nil}
+
+  var toCubicIn: Symbolic_Pb_Vector2 {
+    get {return _toCubicIn ?? Symbolic_Pb_Vector2()}
+    set {_toCubicIn = newValue}
+  }
+  /// Returns true if `toCubicIn` has been explicitly set.
+  var hasToCubicIn: Bool {return self._toCubicIn != nil}
+  /// Clears the value of `toCubicIn`. Subsequent reads from it will return its default value.
+  mutating func clearToCubicIn() {self._toCubicIn = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _from: Symbolic_Pb_Point2? = nil
+  fileprivate var _to: Symbolic_Pb_Point2? = nil
+  fileprivate var _fromCubicOut: Symbolic_Pb_Vector2? = nil
+  fileprivate var _toCubicIn: Symbolic_Pb_Vector2? = nil
 }
 
 struct Symbolic_Pb_Path: Sendable {
@@ -185,6 +311,14 @@ struct Symbolic_Pb_Path: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "symbolic.pb"
+
+extension Symbolic_Pb_PathNodeControlType: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "cubicIn"),
+    1: .same(proto: "cubicOut"),
+    2: .same(proto: "quadraticOut"),
+  ]
+}
 
 extension Symbolic_Pb_PathNodeType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -277,6 +411,86 @@ extension Symbolic_Pb_Vector2: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
+extension Symbolic_Pb_Point2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Point2"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "x"),
+    2: .same(proto: "y"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.x) }()
+      case 2: try { try decoder.decodeSingularDoubleField(value: &self.y) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.x.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.x, fieldNumber: 1)
+    }
+    if self.y.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.y, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Point2, rhs: Symbolic_Pb_Point2) -> Bool {
+    if lhs.x != rhs.x {return false}
+    if lhs.y != rhs.y {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_ItemGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".ItemGroup"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "id"),
+    2: .same(proto: "members"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._id) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.members) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._id {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.members.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.members, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_ItemGroup, rhs: Symbolic_Pb_ItemGroup) -> Bool {
+    if lhs._id != rhs._id {return false}
+    if lhs.members != rhs.members {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Symbolic_Pb_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PathNode"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -320,6 +534,60 @@ extension Symbolic_Pb_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if lhs._position != rhs._position {return false}
     if lhs._cubicIn != rhs._cubicIn {return false}
     if lhs._cubicOut != rhs._cubicOut {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_PathSegment: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PathSegment"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "from"),
+    2: .same(proto: "to"),
+    3: .standard(proto: "from_cubic_out"),
+    4: .standard(proto: "to_cubic_in"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._from) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._to) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._fromCubicOut) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._toCubicIn) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._from {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._to {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._fromCubicOut {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._toCubicIn {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_PathSegment, rhs: Symbolic_Pb_PathSegment) -> Bool {
+    if lhs._from != rhs._from {return false}
+    if lhs._to != rhs._to {return false}
+    if lhs._fromCubicOut != rhs._fromCubicOut {return false}
+    if lhs._toCubicIn != rhs._toCubicIn {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

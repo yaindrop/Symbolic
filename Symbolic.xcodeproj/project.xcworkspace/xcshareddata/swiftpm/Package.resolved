@@ -1,15 +1,6 @@
 {
-  "originHash" : "7e0aaa26d6a6ef7764cfe03a23f3b98357e319473748e612cefca766f235b537",
+  "originHash" : "9f1e4ec4211205225a9be53f971e143ca4f7b80574f1ff773ebee5bf69ffe8ab",
   "pins" : [
-    {
-      "identity" : "flatbuffers",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/google/flatbuffers.git",
-      "state" : {
-        "revision" : "595bf0007ab1929570c7671f091313c8fc20644e",
-        "version" : "24.3.25"
-      }
-    },
     {
       "identity" : "swift-protobuf",
       "kind" : "remoteSourceControl",

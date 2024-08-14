@@ -148,7 +148,7 @@ extension PathService {
         }
     }
 
-    private func loadEvent(_ event: SingleEvent) {
+    private func loadEvent(_ event: DocumentEvent.Single) {
         switch event {
         case .item: break
         case let .path(event): loadEvent(event)

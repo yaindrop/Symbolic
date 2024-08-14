@@ -110,7 +110,7 @@ private struct EventRow: View, EquatableBy {
 
     var body: some View {
         HStack {
-            Text("\(event.action.readable)")
+            Text("\(event.action?.readable)")
                 .font(.footnote)
             Spacer()
         }

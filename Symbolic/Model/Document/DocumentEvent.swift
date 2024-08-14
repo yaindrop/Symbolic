@@ -3,7 +3,7 @@ import Foundation
 // MARK: - ItemEvent
 
 enum ItemEvent: Equatable, Codable {
-    struct SetMembers: Equatable, Codable { let members: [UUID], inGroupId: UUID? }
+    struct SetMembers: Equatable, Codable { let groupId: UUID?, members: [UUID] }
 
     case setMembers(SetMembers)
 }
@@ -66,38 +66,41 @@ extension PathPropertyEvent.Update {
     }
 }
 
-// MARK: - SingleEvent
-
-enum SingleEvent: Equatable, Codable {
-    case item(ItemEvent)
-    case path(PathEvent)
-    case pathProperty(PathPropertyEvent)
-}
-
-// MARK: - CompoundEvent
-
-struct CompoundEvent: Equatable, Codable {
-    let events: [SingleEvent]
-}
-
 // MARK: - DocumentEvent
 
 struct DocumentEvent: Identifiable, Equatable, Codable {
+    enum Single: Equatable, Codable {
+        case item(ItemEvent)
+        case path(PathEvent)
+        case pathProperty(PathPropertyEvent)
+    }
+
+    struct Compound: Equatable, Codable {
+        let events: [Single]
+    }
+
     enum Kind: Equatable, Codable {
-        case single(SingleEvent)
-        case compound(CompoundEvent)
+        case single(Single)
+        case compound(Compound)
     }
 
     let id: UUID
     let time: Date
     let kind: Kind
-    let action: DocumentAction
+    let action: DocumentAction?
 
     init(kind: Kind, action: DocumentAction) {
         id = .init()
         time = .init()
         self.kind = kind
         self.action = action
+    }
+
+    init(id: UUID, time: Date, kind: Kind) {
+        self.id = id
+        self.time = time
+        self.kind = kind
+        action = nil
     }
 }
 

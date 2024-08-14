@@ -97,11 +97,6 @@
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
-		579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29B12C690824004E7DC8 /* FlatBuffers */; };
-		579B29B62C69985A004E7DC8 /* symbolic_generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29B32C69985A004E7DC8 /* symbolic_generated.swift */; };
-		579B29B72C69985A004E7DC8 /* symbolic.fbs in Resources */ = {isa = PBXBuildFile; fileRef = 579B29B42C69985A004E7DC8 /* symbolic.fbs */; };
-		579B29B92C69E506004E7DC8 /* FB+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29B82C69E506004E7DC8 /* FB+Extension.swift */; };
-		579B29BB2C6B4E49004E7DC8 /* symbolic.proto in Sources */ = {isa = PBXBuildFile; fileRef = 579B29BA2C6B4E49004E7DC8 /* symbolic.proto */; };
 		579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */; };
 		579B29C32C6BA2B8004E7DC8 /* symbolic.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */; };
 		579B29C42C6BA2B8004E7DC8 /* symbolic.proto in Sources */ = {isa = PBXBuildFile; fileRef = 579B29C12C6BA2B8004E7DC8 /* symbolic.proto */; };
@@ -259,10 +254,6 @@
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
-		579B29B32C69985A004E7DC8 /* symbolic_generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic_generated.swift; sourceTree = "<group>"; };
-		579B29B42C69985A004E7DC8 /* symbolic.fbs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = symbolic.fbs; sourceTree = "<group>"; };
-		579B29B82C69E506004E7DC8 /* FB+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FB+Extension.swift"; sourceTree = "<group>"; };
-		579B29BA2C6B4E49004E7DC8 /* symbolic.proto */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.protobuf; path = symbolic.proto; sourceTree = "<group>"; };
 		579B29C02C6BA2B8004E7DC8 /* symbolic.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = symbolic.pb.swift; sourceTree = "<group>"; };
 		579B29C12C6BA2B8004E7DC8 /* symbolic.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = symbolic.proto; sourceTree = "<group>"; };
 		579B29C52C6BA2FD004E7DC8 /* PB+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PB+Extension.swift"; sourceTree = "<group>"; };
@@ -314,7 +305,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				579B29B22C690824004E7DC8 /* FlatBuffers in Frameworks */,
 				579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -391,7 +381,6 @@
 			isa = PBXGroup;
 			children = (
 				579B29C22C6BA2B8004E7DC8 /* protobuf */,
-				579B29B52C69985A004E7DC8 /* flatbuffers */,
 				5723BF782BC39844002209F2 /* Symbolic */,
 				5723BF8B2BC39846002209F2 /* SymbolicTests */,
 				5723BF952BC39846002209F2 /* SymbolicUITests */,
@@ -588,18 +577,6 @@
 			children = (
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		579B29B52C69985A004E7DC8 /* flatbuffers */ = {
-			isa = PBXGroup;
-			children = (
-				579B29B32C69985A004E7DC8 /* symbolic_generated.swift */,
-				579B29B42C69985A004E7DC8 /* symbolic.fbs */,
-				579B29B82C69E506004E7DC8 /* FB+Extension.swift */,
-				579B29BA2C6B4E49004E7DC8 /* symbolic.proto */,
-			);
-			name = flatbuffers;
-			path = Symbolic/flatbuffers;
 			sourceTree = "<group>";
 		};
 		579B29C22C6BA2B8004E7DC8 /* protobuf */ = {
@@ -837,7 +814,6 @@
 			);
 			name = Symbolic;
 			packageProductDependencies = (
-				579B29B12C690824004E7DC8 /* FlatBuffers */,
 				579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */,
 			);
 			productName = Symbolic;
@@ -914,7 +890,6 @@
 			);
 			mainGroup = 5723BF6D2BC39844002209F2;
 			packageReferences = (
-				579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */,
 				579B29BC2C6B4EF5004E7DC8 /* XCRemoteSwiftPackageReference "swift-protobuf" */,
 			);
 			productRefGroup = 5723BF772BC39844002209F2 /* Products */;
@@ -936,7 +911,6 @@
 				5723BF832BC39846002209F2 /* Preview Assets.xcassets in Resources */,
 				5723BF802BC39846002209F2 /* Assets.xcassets in Resources */,
 				57E082192C28FD26008CC67B /* Localizable.xcstrings in Resources */,
-				579B29B72C69985A004E7DC8 /* symbolic.fbs in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -966,7 +940,6 @@
 				574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */,
 				578150512C5E6A930057D798 /* ActionWheel.swift in Sources */,
 				57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */,
-				579B29BB2C6B4E49004E7DC8 /* symbolic.proto in Sources */,
 				574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */,
 				573204DA2C15D8BF008E0DED /* ItemsView.swift in Sources */,
 				57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */,
@@ -1055,7 +1028,6 @@
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
 				57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */,
-				579B29B92C69E506004E7DC8 /* FB+Extension.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */,
 				57FC32FF2C4E147400DF7DBF /* PortalStore.swift in Sources */,
 				57416E492BE5252000C73434 /* FlagInput.swift in Sources */,
@@ -1080,7 +1052,6 @@
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
-				579B29B62C69985A004E7DC8 /* symbolic_generated.swift in Sources */,
 				5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectionService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,
@@ -1428,14 +1399,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/google/flatbuffers.git";
-			requirement = {
-				kind = exactVersion;
-				version = 24.3.25;
-			};
-		};
 		579B29BC2C6B4EF5004E7DC8 /* XCRemoteSwiftPackageReference "swift-protobuf" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-protobuf.git";
@@ -1447,11 +1410,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		579B29B12C690824004E7DC8 /* FlatBuffers */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 579B29A52C690712004E7DC8 /* XCRemoteSwiftPackageReference "flatbuffers" */;
-			productName = FlatBuffers;
-		};
 		579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 579B29BC2C6B4EF5004E7DC8 /* XCRemoteSwiftPackageReference "swift-protobuf" */;

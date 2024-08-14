@@ -274,7 +274,7 @@ extension ItemService {
         }
     }
 
-    private func loadEvent(_ event: SingleEvent) {
+    private func loadEvent(_ event: DocumentEvent.Single) {
         switch event {
         case let .item(event): loadEvent(event)
         case let .path(event): loadEvent(event)
@@ -291,14 +291,15 @@ extension ItemService {
     }
 
     private func loadEvent(_ event: ItemEvent.SetMembers) {
-        let members = event.members, inGroupId = event.inGroupId
-        if let inGroupId {
+        let groupId = event.groupId,
+            members = event.members
+        if let groupId {
             if members.isEmpty {
-                remove(itemId: inGroupId)
-            } else if get(id: inGroupId) == nil {
-                add(item: .init(kind: .group(.init(id: inGroupId, members: members))))
+                remove(itemId: groupId)
+            } else if get(id: groupId) == nil {
+                add(item: .init(kind: .group(.init(id: groupId, members: members))))
             } else {
-                update(item: .init(kind: .group(.init(id: inGroupId, members: members))))
+                update(item: .init(kind: .group(.init(id: groupId, members: members))))
             }
         } else {
             targetStore.update(rootIds: members)

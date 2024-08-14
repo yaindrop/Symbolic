@@ -4,6 +4,8 @@ import "google/protobuf/timestamp.proto";
 
 package symbolic.pb;
 
+// MARK: - basic types
+
 // A UUID, encoded in accordance with section 4.1.2 of RFC 4122.
 message UUID {
   // The higher 64 bits of the UUID, big-endian:
@@ -19,6 +21,8 @@ message Vector2 {
   double x = 1;
   double y = 2;
 }
+
+// MARK: - path types
 
 message PathNode {
   Vector2 position = 1;
@@ -43,6 +47,8 @@ enum PathSegmentType {
   quadratic = 1;
 }
 
+// MARK: - ItemEvent
+
 message ItemEvent {
   message SetMembers {
     // null group_id means root
@@ -52,6 +58,8 @@ message ItemEvent {
 
   oneof kind { SetMembers set_members = 101; }
 }
+
+// MARK: - PathEvent
 
 message PathEvent {
   message Create {
@@ -77,14 +85,17 @@ message PathEvent {
       PathNode node = 2;
     }
 
-    UUID path_id = 1;
-
-    oneof kind {
-      Move move = 101;
-      NodeCreate node_create = 102;
-      NodeDelete node_delete = 103;
-      NodeUpdate node_update = 104;
+    message Kind {
+      oneof kind {
+        Move move = 101;
+        NodeCreate node_create = 102;
+        NodeDelete node_delete = 103;
+        NodeUpdate node_update = 104;
+      }
     }
+
+    UUID path_id = 1;
+    repeated Kind kinds = 2;
   }
 
   message Merge {
@@ -110,6 +121,8 @@ message PathEvent {
   }
 }
 
+// MARK: - PathPropertyEvent
+
 message PathPropertyEvent {
   message Update {
     message SetName { optional string name = 1; }
@@ -124,17 +137,22 @@ message PathPropertyEvent {
       optional PathSegmentType segment_type = 2;
     }
 
-    UUID path_id = 1;
-
-    oneof kind {
-      SetName set_name = 101;
-      SetNodeType set_node_type = 102;
-      SetSegmentType set_segment_type = 103;
+    message Kind {
+      oneof kind {
+        SetName set_name = 101;
+        SetNodeType set_node_type = 102;
+        SetSegmentType set_segment_type = 103;
+      }
     }
+
+    UUID path_id = 1;
+    repeated Kind kinds = 2;
   }
 
   oneof kind { Update update = 101; }
 }
+
+// MARK: - DocumentEvent
 
 message DocumentEvent {
   message Single {

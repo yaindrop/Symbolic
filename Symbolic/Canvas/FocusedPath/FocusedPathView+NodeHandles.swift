@@ -1,4 +1,3 @@
-import FlatBuffers
 import SwiftUI
 
 private class GestureContext: ObservableObject {
@@ -244,9 +243,9 @@ extension FocusedPathView {
                                 data.map { try? Symbolic_Pb_Path(serializedData: $0) }
                             }
                             tracer.range("dbg 2") {
-                                pb.value
+                                try? pb.parsed()
                             }
-                            print("dbg v", path, pb.value)
+                            print("dbg v", path, try? pb.parsed())
                         }
                     }
             }

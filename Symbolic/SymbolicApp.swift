@@ -15,6 +15,7 @@ extension UIApplication {
         guard let windowScene = Self.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
         let tapGesture = UIPanGestureRecognizer(target: self, action: #selector(panAction))
+        tapGesture.maximumNumberOfTouches = 1
         tapGesture.requiresExclusiveTouchType = false
         tapGesture.cancelsTouchesInView = false
         tapGesture.delegate = self

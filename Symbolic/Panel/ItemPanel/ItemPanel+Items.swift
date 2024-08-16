@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 private struct Context {
     var itemMap: ItemMap
@@ -161,10 +162,36 @@ private extension GroupRow {
     }
 }
 
+struct DragRelocateDelegate: DropDelegate {
+    var size: CGSize = .zero
+    @Binding var hovering: Bool
+
+    func performDrop(info _: DropInfo) -> Bool {
+        hovering = false
+        return true
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        print("dbg", info)
+        return DropProposal(operation: .move)
+    }
+
+    func dropEntered(info _: DropInfo) {
+        hovering = true
+    }
+
+    func dropExited(info _: DropInfo) {
+        hovering = false
+    }
+}
+
 // MARK: - PathRow
 
 private struct PathRow: View, TracedView {
     let context: Context, pathId: UUID
+
+    @State private var size: CGSize = .zero
+    @State private var hovering: Bool = false
 
     var body: some View { trace {
         content
@@ -195,7 +222,12 @@ private extension PathRow {
     @ViewBuilder var content: some View {
         ContextualRow {
             name
-            Spacer()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .invisibleSoildOverlay()
+                .border(hovering ? .red : .clear)
+                .sizeReader { size = $0 }
+                .onDrag { NSItemProvider() }
+                .onDrop(of: [.text], delegate: DragRelocateDelegate(size: size, hovering: $hovering))
             menu
         }
     }

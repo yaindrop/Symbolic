@@ -162,17 +162,26 @@ private extension GroupRow {
     }
 }
 
+struct ColorItem: Codable, Transferable {
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(for: ColorItem.self, contentType: .item)
+    }
+}
+
 struct DragRelocateDelegate: DropDelegate {
     var size: CGSize = .zero
     @Binding var hovering: Bool
 
-    func performDrop(info _: DropInfo) -> Bool {
+    func performDrop(info: DropInfo) -> Bool {
         hovering = false
+        let providers = info.itemProviders(for: [.item])
+        providers.first?.loadTransferable(type: ColorItem.self) { print("dbg2", $0) }
         return true
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        print("dbg", info)
+        let providers = info.itemProviders(for: [.item])
+        print("dbg", info, providers, providers.first)
         return DropProposal(operation: .move)
     }
 
@@ -226,8 +235,8 @@ private extension PathRow {
                 .invisibleSoildOverlay()
                 .border(hovering ? .red : .clear)
                 .sizeReader { size = $0 }
-                .onDrag { NSItemProvider() }
-                .onDrop(of: [.text], delegate: DragRelocateDelegate(size: size, hovering: $hovering))
+                .draggable(ColorItem())
+                .onDrop(of: [.item], delegate: DragRelocateDelegate(size: size, hovering: $hovering))
             menu
         }
     }

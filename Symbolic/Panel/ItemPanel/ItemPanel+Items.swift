@@ -97,22 +97,33 @@ private struct DraggingItemHoveringIndicator: View {
     }
 }
 
-private struct DraggingItemId: Codable, Transferable {
+private struct DraggingItemTransferable: Codable, Transferable {
     let itemId: UUID
 
     static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(for: DraggingItemId.self, contentType: .item)
+        CodableRepresentation(for: DraggingItemTransferable.self, contentType: .item)
     }
 }
 
 private struct DraggingItemDelegate: DropDelegate {
+    var itemId: UUID
     var size: CGSize = .zero
     @Binding var hovering: DraggingItemHovering?
 
+    func hovering(info: DropInfo) -> DraggingItemHovering {
+        info.location.y < size.height / 2 ? .before : .after
+    }
+
     func performDrop(info: DropInfo) -> Bool {
         hovering = nil
+        let hovering = hovering(info: info)
         let providers = info.itemProviders(for: [.item])
-        providers.first?.loadTransferable(type: DraggingItemId.self) { print("dbg2", $0) }
+        guard let provider = providers.first else { return true }
+        let itemId = itemId
+        _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
+            guard let transferable = try? result.get() else { return }
+            print("dbg", ItemAction.move(.init(itemId: transferable.itemId, toItemId: itemId, isAfter: hovering == .after)))
+        }
         return true
     }
 
@@ -166,8 +177,8 @@ private extension GroupRow {
         }
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
-        .draggable(DraggingItemId(itemId: group.id))
-        .onDrop(of: [.item], delegate: DraggingItemDelegate(size: size, hovering: $hovering))
+        .draggable(DraggingItemTransferable(itemId: group.id))
+        .onDrop(of: [.item], delegate: DraggingItemDelegate(itemId: group.id, size: size, hovering: $hovering))
         .background { DraggingItemHoveringIndicator(hovering: hovering) }
     }
 
@@ -268,8 +279,8 @@ private extension PathRow {
         }
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
-        .draggable(DraggingItemId(itemId: pathId))
-        .onDrop(of: [.item], delegate: DraggingItemDelegate(size: size, hovering: $hovering))
+        .draggable(DraggingItemTransferable(itemId: pathId))
+        .onDrop(of: [.item], delegate: DraggingItemDelegate(itemId: pathId, size: size, hovering: $hovering))
         .background { DraggingItemHoveringIndicator(hovering: hovering) }
     }
 

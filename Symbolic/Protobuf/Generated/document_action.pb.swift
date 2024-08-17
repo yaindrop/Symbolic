@@ -43,12 +43,12 @@ struct Symbolic_Pb_ItemAction: Sendable {
     set {kind = .ungroup(newValue)}
   }
 
-  var reorder: Symbolic_Pb_ItemAction.Reorder {
+  var move: Symbolic_Pb_ItemAction.Move {
     get {
-      if case .reorder(let v)? = kind {return v}
-      return Symbolic_Pb_ItemAction.Reorder()
+      if case .move(let v)? = kind {return v}
+      return Symbolic_Pb_ItemAction.Move()
     }
-    set {kind = .reorder(newValue)}
+    set {kind = .move(newValue)}
   }
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -56,7 +56,7 @@ struct Symbolic_Pb_ItemAction: Sendable {
   enum OneOf_Kind: Equatable, Sendable {
     case group(Symbolic_Pb_ItemAction.Group)
     case ungroup(Symbolic_Pb_ItemAction.Ungroup)
-    case reorder(Symbolic_Pb_ItemAction.Reorder)
+    case move(Symbolic_Pb_ItemAction.Move)
 
   }
 
@@ -103,27 +103,37 @@ struct Symbolic_Pb_ItemAction: Sendable {
     init() {}
   }
 
-  struct Reorder: Sendable {
+  struct Move: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var members: [Symbolic_Pb_UUID] = []
-
-    var inGroupID: Symbolic_Pb_UUID {
-      get {return _inGroupID ?? Symbolic_Pb_UUID()}
-      set {_inGroupID = newValue}
+    var itemID: Symbolic_Pb_UUID {
+      get {return _itemID ?? Symbolic_Pb_UUID()}
+      set {_itemID = newValue}
     }
-    /// Returns true if `inGroupID` has been explicitly set.
-    var hasInGroupID: Bool {return self._inGroupID != nil}
-    /// Clears the value of `inGroupID`. Subsequent reads from it will return its default value.
-    mutating func clearInGroupID() {self._inGroupID = nil}
+    /// Returns true if `itemID` has been explicitly set.
+    var hasItemID: Bool {return self._itemID != nil}
+    /// Clears the value of `itemID`. Subsequent reads from it will return its default value.
+    mutating func clearItemID() {self._itemID = nil}
+
+    var toItemID: Symbolic_Pb_UUID {
+      get {return _toItemID ?? Symbolic_Pb_UUID()}
+      set {_toItemID = newValue}
+    }
+    /// Returns true if `toItemID` has been explicitly set.
+    var hasToItemID: Bool {return self._toItemID != nil}
+    /// Clears the value of `toItemID`. Subsequent reads from it will return its default value.
+    mutating func clearToItemID() {self._toItemID = nil}
+
+    var isAfter: Bool = false
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     init() {}
 
-    fileprivate var _inGroupID: Symbolic_Pb_UUID? = nil
+    fileprivate var _itemID: Symbolic_Pb_UUID? = nil
+    fileprivate var _toItemID: Symbolic_Pb_UUID? = nil
   }
 
   init() {}
@@ -849,7 +859,7 @@ extension Symbolic_Pb_ItemAction: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     101: .same(proto: "group"),
     102: .same(proto: "ungroup"),
-    103: .same(proto: "reorder"),
+    103: .same(proto: "move"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -885,16 +895,16 @@ extension Symbolic_Pb_ItemAction: SwiftProtobuf.Message, SwiftProtobuf._MessageI
         }
       }()
       case 103: try {
-        var v: Symbolic_Pb_ItemAction.Reorder?
+        var v: Symbolic_Pb_ItemAction.Move?
         var hadOneofValue = false
         if let current = self.kind {
           hadOneofValue = true
-          if case .reorder(let m) = current {v = m}
+          if case .move(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.kind = .reorder(v)
+          self.kind = .move(v)
         }
       }()
       default: break
@@ -916,8 +926,8 @@ extension Symbolic_Pb_ItemAction: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       guard case .ungroup(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 102)
     }()
-    case .reorder?: try {
-      guard case .reorder(let v)? = self.kind else { preconditionFailure() }
+    case .move?: try {
+      guard case .move(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 103)
     }()
     case nil: break
@@ -1006,11 +1016,12 @@ extension Symbolic_Pb_ItemAction.Ungroup: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension Symbolic_Pb_ItemAction.Reorder: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = Symbolic_Pb_ItemAction.protoMessageName + ".Reorder"
+extension Symbolic_Pb_ItemAction.Move: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Symbolic_Pb_ItemAction.protoMessageName + ".Move"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "members"),
-    2: .standard(proto: "in_group_id"),
+    1: .standard(proto: "item_id"),
+    2: .standard(proto: "to_item_id"),
+    3: .standard(proto: "is_after"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1019,8 +1030,9 @@ extension Symbolic_Pb_ItemAction.Reorder: SwiftProtobuf.Message, SwiftProtobuf._
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.members) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._inGroupID) }()
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._itemID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._toItemID) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.isAfter) }()
       default: break
       }
     }
@@ -1031,18 +1043,22 @@ extension Symbolic_Pb_ItemAction.Reorder: SwiftProtobuf.Message, SwiftProtobuf._
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.members.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.members, fieldNumber: 1)
-    }
-    try { if let v = self._inGroupID {
+    try { if let v = self._itemID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._toItemID {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     } }()
+    if self.isAfter != false {
+      try visitor.visitSingularBoolField(value: self.isAfter, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Symbolic_Pb_ItemAction.Reorder, rhs: Symbolic_Pb_ItemAction.Reorder) -> Bool {
-    if lhs.members != rhs.members {return false}
-    if lhs._inGroupID != rhs._inGroupID {return false}
+  static func ==(lhs: Symbolic_Pb_ItemAction.Move, rhs: Symbolic_Pb_ItemAction.Move) -> Bool {
+    if lhs._itemID != rhs._itemID {return false}
+    if lhs._toItemID != rhs._toItemID {return false}
+    if lhs.isAfter != rhs.isAfter {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

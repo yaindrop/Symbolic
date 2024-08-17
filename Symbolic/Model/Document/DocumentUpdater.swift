@@ -108,7 +108,7 @@ private extension DocumentUpdater {
         switch action {
         case let .group(action): collectEvents(to: &events, action)
         case let .ungroup(action): collectEvents(to: &events, action)
-        case let .reorder(action): collectEvents(to: &events, action)
+        case let .move(action): break
         }
     }
 
@@ -178,11 +178,11 @@ private extension DocumentUpdater {
         }
     }
 
-    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Reorder) {
-        let members = action.members, inGroupId = action.inGroupId
-        // TODO: assert something
-        events.append(.item(.setMembers(.init(groupId: inGroupId, members: members))))
-    }
+//    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Reorder) {
+//        let members = action.members, inGroupId = action.inGroupId
+//        // TODO: assert something
+//        events.append(.item(.setMembers(.init(groupId: inGroupId, members: members))))
+//    }
 }
 
 // MARK: collect path events

@@ -5,11 +5,11 @@ import Foundation
 enum ItemAction: Equatable, Codable {
     struct Group: Equatable, Codable { var group: ItemGroup, inGroupId: UUID? }
     struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
-    struct Reorder: Equatable, Codable { var members: [UUID], inGroupId: UUID? }
+    struct Move: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
 
     case group(Group)
     case ungroup(Ungroup)
-    case reorder(Reorder)
+    case move(Move)
 }
 
 // MARK: - PathAction

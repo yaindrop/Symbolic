@@ -14,15 +14,16 @@ message ItemAction {
 
   message Ungroup { repeated UUID group_ids = 1; }
 
-  message Reorder {
-    repeated UUID members = 1;
-    optional UUID in_group_id = 2;
+  message Move {
+    UUID item_id = 1;
+    UUID to_item_id = 2;
+    bool is_after = 3;
   }
 
   oneof kind {
     Group group = 101;
     Ungroup ungroup = 102;
-    Reorder reorder = 103;
+    Move move = 103;
   }
 }
 

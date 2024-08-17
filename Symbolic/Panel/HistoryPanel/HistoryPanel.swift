@@ -9,8 +9,8 @@ private extension DocumentAction {
                 "Group of \(action.group.members.map { $0.shortDescription }.joined(separator: ", ")) as \(action.group.id.shortDescription) in \(action.inGroupId.map { $0.shortDescription } ?? "root")"
             case let .ungroup(action):
                 "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
-            case let .reorder(action):
-                "Reorder \(action.inGroupId.map { $0.shortDescription } ?? "root")"
+            case let .move(action):
+                "Move \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
             }
 
         case let .path(action):

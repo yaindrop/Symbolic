@@ -62,6 +62,10 @@ extension Color {
 }
 
 extension View {
+    func invisibleSoildBackground(disabled: Bool = false) -> some View {
+        background(disabled ? Color.clear : Color.invisibleSolid)
+    }
+
     func invisibleSoildOverlay(disabled: Bool = false) -> some View {
         overlay(disabled ? Color.clear : Color.invisibleSolid)
     }

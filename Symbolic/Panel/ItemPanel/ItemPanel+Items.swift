@@ -73,6 +73,63 @@ extension ItemPanel.ItemRow {
     var item: Item? { context.itemMap[itemId] }
 }
 
+// MARK: - DraggingItem
+
+private enum DraggingItemHovering {
+    case before
+    case after
+}
+
+private struct DraggingItemHoveringIndicator: View {
+    let hovering: DraggingItemHovering?
+
+    var body: some View {
+        VStack(spacing: .zero) {
+            Rectangle()
+                .fill(hovering == .before ? .blue : .clear)
+                .frame(maxWidth: .infinity, maxHeight: 2)
+            Spacer()
+            Rectangle()
+                .fill(hovering == .after ? .blue : .clear)
+                .frame(maxWidth: .infinity, maxHeight: 2)
+        }
+        .padding(.leading, 12)
+    }
+}
+
+private struct DraggingItemId: Codable, Transferable {
+    let itemId: UUID
+
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(for: DraggingItemId.self, contentType: .item)
+    }
+}
+
+private struct DraggingItemDelegate: DropDelegate {
+    var size: CGSize = .zero
+    @Binding var hovering: DraggingItemHovering?
+
+    func performDrop(info: DropInfo) -> Bool {
+        hovering = nil
+        let providers = info.itemProviders(for: [.item])
+        providers.first?.loadTransferable(type: DraggingItemId.self) { print("dbg2", $0) }
+        return true
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        hovering = info.location.y < size.height / 2 ? .before : .after
+        return DropProposal(operation: .move)
+    }
+
+    func dropEntered(info: DropInfo) {
+        hovering = info.location.y < size.height / 2 ? .before : .after
+    }
+
+    func dropExited(info _: DropInfo) {
+        hovering = nil
+    }
+}
+
 // MARK: - GroupRow
 
 private struct GroupRow: View, TracedView {
@@ -81,6 +138,8 @@ private struct GroupRow: View, TracedView {
     let context: Context, group: ItemGroup
 
     @State private var expanded = true
+    @State private var size: CGSize = .zero
+    @State private var hovering: DraggingItemHovering?
 
     var body: some View { trace {
         content
@@ -105,6 +164,11 @@ private extension GroupRow {
                 }
             }
         }
+        .sizeReader { size = $0 }
+        .invisibleSoildBackground()
+        .draggable(DraggingItemId(itemId: group.id))
+        .onDrop(of: [.item], delegate: DraggingItemDelegate(size: size, hovering: $hovering))
+        .background { DraggingItemHoveringIndicator(hovering: hovering) }
     }
 
     var rowHeight: Scalar { contextualViewData.rowHeight }
@@ -162,45 +226,13 @@ private extension GroupRow {
     }
 }
 
-struct ColorItem: Codable, Transferable {
-    static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(for: ColorItem.self, contentType: .item)
-    }
-}
-
-struct DragRelocateDelegate: DropDelegate {
-    var size: CGSize = .zero
-    @Binding var hovering: Bool
-
-    func performDrop(info: DropInfo) -> Bool {
-        hovering = false
-        let providers = info.itemProviders(for: [.item])
-        providers.first?.loadTransferable(type: ColorItem.self) { print("dbg2", $0) }
-        return true
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        let providers = info.itemProviders(for: [.item])
-        print("dbg", info, providers, providers.first)
-        return DropProposal(operation: .move)
-    }
-
-    func dropEntered(info _: DropInfo) {
-        hovering = true
-    }
-
-    func dropExited(info _: DropInfo) {
-        hovering = false
-    }
-}
-
 // MARK: - PathRow
 
 private struct PathRow: View, TracedView {
     let context: Context, pathId: UUID
 
     @State private var size: CGSize = .zero
-    @State private var hovering: Bool = false
+    @State private var hovering: DraggingItemHovering?
 
     var body: some View { trace {
         content
@@ -231,14 +263,14 @@ private extension PathRow {
     @ViewBuilder var content: some View {
         ContextualRow {
             name
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .invisibleSoildOverlay()
-                .border(hovering ? .red : .clear)
-                .sizeReader { size = $0 }
-                .draggable(ColorItem())
-                .onDrop(of: [.item], delegate: DragRelocateDelegate(size: size, hovering: $hovering))
+            Spacer()
             menu
         }
+        .sizeReader { size = $0 }
+        .invisibleSoildBackground()
+        .draggable(DraggingItemId(itemId: pathId))
+        .onDrop(of: [.item], delegate: DraggingItemDelegate(size: size, hovering: $hovering))
+        .background { DraggingItemHoveringIndicator(hovering: hovering) }
     }
 
     var path: Path? { context.pathMap[pathId] }

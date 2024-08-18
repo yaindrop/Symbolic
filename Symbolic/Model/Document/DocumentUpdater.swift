@@ -108,7 +108,7 @@ private extension DocumentUpdater {
         switch action {
         case let .group(action): collectEvents(to: &events, action)
         case let .ungroup(action): collectEvents(to: &events, action)
-        case let .move(action): break
+        case let .move(action): collectEvents(to: &events, action)
         }
     }
 
@@ -178,11 +178,44 @@ private extension DocumentUpdater {
         }
     }
 
-//    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Reorder) {
-//        let members = action.members, inGroupId = action.inGroupId
-//        // TODO: assert something
-//        events.append(.item(.setMembers(.init(groupId: inGroupId, members: members))))
-//    }
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Move) {
+        let itemId = action.itemId,
+            toItemId = action.toItemId,
+            isAfter = action.isAfter,
+            rootIds = itemStore.rootIds,
+            parentId = itemStore.parentId(of: itemId),
+            toParentId = itemStore.parentId(of: toItemId)
+        if parentId == toParentId {
+            if let parentId, let group = itemStore.group(id: parentId) {
+                var members = group.members.filter { $0 != itemId }
+                let index = members.firstIndex(of: toItemId) ?? 0
+                members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+                events.append(.item(.setMembers(.init(groupId: group.id, members: members))))
+            } else {
+                var rootIds = rootIds.filter { $0 != itemId }
+                let index = rootIds.firstIndex(of: toItemId) ?? 0
+                rootIds.insert(itemId, at: isAfter ? rootIds.index(after: index) : index)
+                events.append(.item(.setMembers(.init(groupId: nil, members: rootIds))))
+            }
+            return
+        }
+        if let parentId, let group = itemStore.group(id: parentId) {
+            events.append(.item(.setMembers(.init(groupId: group.id, members: group.members.filter { $0 != itemId }))))
+        } else {
+            events.append(.item(.setMembers(.init(groupId: nil, members: rootIds.filter { $0 != itemId }))))
+        }
+        if let toParentId, let toGroup = itemStore.group(id: toParentId) {
+            var members = toGroup.members
+            let index = members.firstIndex(of: toItemId) ?? 0
+            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+            events.append(.item(.setMembers(.init(groupId: toGroup.id, members: members))))
+        } else {
+            var rootIds = rootIds
+            let index = rootIds.firstIndex(of: toItemId) ?? 0
+            rootIds.insert(itemId, at: isAfter ? rootIds.index(after: index) : index)
+            events.append(.item(.setMembers(.init(groupId: nil, members: rootIds))))
+        }
+    }
 }
 
 // MARK: collect path events

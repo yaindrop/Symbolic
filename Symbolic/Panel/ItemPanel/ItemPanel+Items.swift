@@ -105,7 +105,7 @@ private struct DraggingItemTransferable: Codable, Transferable {
     }
 }
 
-private struct DraggingItemDelegate: DropDelegate {
+private struct DraggingItemDropDelegate: DropDelegate {
     var itemId: UUID
     var size: CGSize = .zero
     @Binding var hovering: DraggingItemHovering?
@@ -122,7 +122,9 @@ private struct DraggingItemDelegate: DropDelegate {
         let itemId = itemId
         _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
             guard let transferable = try? result.get() else { return }
-            print("dbg", ItemAction.move(.init(itemId: transferable.itemId, toItemId: itemId, isAfter: hovering == .after)))
+            Task { @MainActor in
+                global.documentUpdater.update(item: .move(.init(itemId: transferable.itemId, toItemId: itemId, isAfter: hovering == .after)))
+            }
         }
         return true
     }
@@ -178,7 +180,7 @@ private extension GroupRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DraggingItemTransferable(itemId: group.id))
-        .onDrop(of: [.item], delegate: DraggingItemDelegate(itemId: group.id, size: size, hovering: $hovering))
+        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(itemId: group.id, size: size, hovering: $hovering))
         .background { DraggingItemHoveringIndicator(hovering: hovering) }
     }
 
@@ -280,7 +282,7 @@ private extension PathRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DraggingItemTransferable(itemId: pathId))
-        .onDrop(of: [.item], delegate: DraggingItemDelegate(itemId: pathId, size: size, hovering: $hovering))
+        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(itemId: pathId, size: size, hovering: $hovering))
         .background { DraggingItemHoveringIndicator(hovering: hovering) }
     }
 

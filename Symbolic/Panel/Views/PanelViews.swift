@@ -22,6 +22,7 @@ private extension PanelSection {
                     .environment(\.contextualViewData, contextualViewData)
             }
             .background { PanelSectionBackground() }
+            .clipRounded(radius: 12)
         }
     }
 
@@ -63,6 +64,5 @@ private extension PanelSectionBackground {
             } else: {
                 $0.fill(.ultraThinMaterial)
             }
-            .clipRounded(radius: 12)
     }
 }

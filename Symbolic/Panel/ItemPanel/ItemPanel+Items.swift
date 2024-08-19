@@ -5,12 +5,34 @@ private struct Context {
     var itemMap: ItemMap
     var pathMap: PathMap
     var depthMap: [UUID: Int]
+    var focusedItemId: UUID?
+    var selectedItemIds: Set<UUID>
 }
 
 // MARK: - Model
 
 private class Model: ObservableObject {
     @Published var draggingItemHovering: DraggingItemHovering?
+}
+
+private struct SelectedIndicator: View {
+    var body: some View {
+        content
+    }
+
+    @ViewBuilder var content: some View {
+        HStack(spacing: 0) {
+            rect
+            Spacer()
+        }
+    }
+
+    @ViewBuilder var rect: some View {
+        Rectangle()
+            .fill(.blue)
+            .frame(maxWidth: 2, maxHeight: .infinity)
+            .allowsHitTesting(false)
+    }
 }
 
 // MARK: - DraggingItem
@@ -27,7 +49,6 @@ private struct DraggingItemHoveringIndicator: View {
 
     var body: some View {
         content
-            .allowsHitTesting(false)
     }
 
     @ViewBuilder var content: some View {
@@ -50,6 +71,7 @@ private struct DraggingItemHoveringIndicator: View {
             .fill(.blue)
             .frame(maxWidth: .infinity, maxHeight: 2)
             .padding(.leading, 12)
+            .allowsHitTesting(false)
     }
 }
 
@@ -108,6 +130,8 @@ extension ItemPanel {
             @Selected({ global.item.map }) var itemMap
             @Selected({ global.path.map }) var pathMap
             @Selected({ global.item.depthMap }) var depthMap
+            @Selected({ global.activeItem.focusedItemId }) var focusedItemId
+            @Selected({ global.activeItem.selectedItemIds }) var selectedItemIds
         }
 
         @SelectorWrapper var selector
@@ -137,6 +161,11 @@ private extension ItemPanel.Items {
                     }
                 }
                 .overlay {
+                    if context.selectedItemIds.contains(itemId) {
+                        SelectedIndicator()
+                    }
+                }
+                .overlay {
                     DraggingItemHoveringIndicator(members: rootIds, index: index)
                 }
             }
@@ -144,7 +173,7 @@ private extension ItemPanel.Items {
     }
 
     var context: Context {
-        .init(itemMap: selector.itemMap, pathMap: selector.pathMap, depthMap: selector.depthMap)
+        .init(itemMap: selector.itemMap, pathMap: selector.pathMap, depthMap: selector.depthMap, focusedItemId: selector.focusedItemId, selectedItemIds: selector.selectedItemIds)
     }
 }
 
@@ -265,6 +294,11 @@ private extension GroupRow {
                     }
                 }
                 .overlay {
+                    if context.selectedItemIds.contains(itemId) {
+                        SelectedIndicator()
+                    }
+                }
+                .overlay {
                     DraggingItemHoveringIndicator(members: members, index: index)
                 }
             }
@@ -330,6 +364,7 @@ private extension PathRow {
                 Text(pathId.shortDescription)
             }
             .contextualFont()
+            .foregroundStyle(context.focusedItemId == pathId ? .blue : .label)
         }
     }
 

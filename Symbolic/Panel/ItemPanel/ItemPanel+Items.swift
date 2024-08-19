@@ -7,6 +7,98 @@ private struct Context {
     var depthMap: [UUID: Int]
 }
 
+// MARK: - Model
+
+private class Model: ObservableObject {
+    @Published var draggingItemHovering: DraggingItemHovering?
+}
+
+// MARK: - DraggingItem
+
+private struct DraggingItemHovering: Equatable, Hashable {
+    var itemId: UUID
+    var isAfter: Bool
+}
+
+private struct DraggingItemHoveringIndicator: View {
+    @EnvironmentObject var model: Model
+    var members: [UUID]
+    var index: Int
+
+    var body: some View {
+        content
+            .allowsHitTesting(false)
+    }
+
+    @ViewBuilder var content: some View {
+        if let hovering = model.draggingItemHovering {
+            let itemId = members[index]
+            VStack(spacing: 0) {
+                if index == 0, hovering == .init(itemId: itemId, isAfter: false) {
+                    rect
+                }
+                Spacer()
+                if hovering == .init(itemId: itemId, isAfter: true) || members.indices.contains(index + 1) && hovering == .init(itemId: members[index + 1], isAfter: false) {
+                    rect
+                }
+            }
+        }
+    }
+
+    @ViewBuilder var rect: some View {
+        Rectangle()
+            .fill(.blue)
+            .frame(maxWidth: .infinity, maxHeight: 2)
+            .padding(.leading, 12)
+    }
+}
+
+private struct DraggingItemTransferable: Codable, Transferable {
+    let itemId: UUID
+
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(for: DraggingItemTransferable.self, contentType: .item)
+    }
+}
+
+private struct DraggingItemDropDelegate: DropDelegate {
+    @ObservedObject var model: Model
+    var itemId: UUID
+    var size: CGSize = .zero
+
+    func isAfter(info: DropInfo) -> Bool {
+        info.location.y > size.height / 2
+    }
+
+    func dropEntered(info: DropInfo) {
+        model.draggingItemHovering = .init(itemId: itemId, isAfter: isAfter(info: info))
+    }
+
+    func dropExited(info _: DropInfo) {
+        model.draggingItemHovering = nil
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        model.draggingItemHovering = .init(itemId: itemId, isAfter: isAfter(info: info))
+        return DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        model.draggingItemHovering = nil
+        let isAfter = isAfter(info: info)
+        let providers = info.itemProviders(for: [.item])
+        guard let provider = providers.first else { return true }
+        let itemId = itemId
+        _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
+            guard let transferable = try? result.get() else { return }
+            Task { @MainActor in
+                global.documentUpdater.update(item: .move(.init(itemId: transferable.itemId, toItemId: itemId, isAfter: isAfter)))
+            }
+        }
+        return true
+    }
+}
+
 // MARK: - Items
 
 extension ItemPanel {
@@ -20,9 +112,12 @@ extension ItemPanel {
 
         @SelectorWrapper var selector
 
+        @StateObject fileprivate var model = Model()
+
         var body: some View { trace {
             setupSelector {
                 content
+                    .environmentObject(model)
             }
         } }
     }
@@ -33,10 +128,16 @@ extension ItemPanel {
 private extension ItemPanel.Items {
     var content: some View {
         PanelSection(name: "Items") {
-            ForEach(selector.rootIds) {
-                ItemPanel.ItemRow(context: context, itemId: $0)
-                if $0 != selector.rootIds.last {
-                    ContextualDivider()
+            let rootIds = selector.rootIds
+            ForEach(Array(zip(rootIds.indices, rootIds)), id: \.1) { index, itemId in
+                VStack(spacing: 0) {
+                    ItemPanel.ItemRow(context: context, itemId: itemId)
+                    if itemId != rootIds.last {
+                        ContextualDivider()
+                    }
+                }
+                .overlay {
+                    DraggingItemHoveringIndicator(members: rootIds, index: index)
                 }
             }
         }
@@ -55,6 +156,7 @@ private extension ItemPanel {
 
         var body: some View { trace {
             content
+                .id(itemId)
         } }
     }
 }
@@ -73,86 +175,16 @@ extension ItemPanel.ItemRow {
     var item: Item? { context.itemMap[itemId] }
 }
 
-// MARK: - DraggingItem
-
-private enum DraggingItemHovering {
-    case before
-    case after
-}
-
-private struct DraggingItemHoveringIndicator: View {
-    let hovering: DraggingItemHovering?
-
-    var body: some View {
-        VStack(spacing: .zero) {
-            Rectangle()
-                .fill(hovering == .before ? .blue : .clear)
-                .frame(maxWidth: .infinity, maxHeight: 2)
-            Spacer()
-            Rectangle()
-                .fill(hovering == .after ? .blue : .clear)
-                .frame(maxWidth: .infinity, maxHeight: 2)
-        }
-        .padding(.leading, 12)
-    }
-}
-
-private struct DraggingItemTransferable: Codable, Transferable {
-    let itemId: UUID
-
-    static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(for: DraggingItemTransferable.self, contentType: .item)
-    }
-}
-
-private struct DraggingItemDropDelegate: DropDelegate {
-    var itemId: UUID
-    var size: CGSize = .zero
-    @Binding var hovering: DraggingItemHovering?
-
-    func hovering(info: DropInfo) -> DraggingItemHovering {
-        info.location.y < size.height / 2 ? .before : .after
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        hovering = nil
-        let hovering = hovering(info: info)
-        let providers = info.itemProviders(for: [.item])
-        guard let provider = providers.first else { return true }
-        let itemId = itemId
-        _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
-            guard let transferable = try? result.get() else { return }
-            Task { @MainActor in
-                global.documentUpdater.update(item: .move(.init(itemId: transferable.itemId, toItemId: itemId, isAfter: hovering == .after)))
-            }
-        }
-        return true
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        hovering = info.location.y < size.height / 2 ? .before : .after
-        return DropProposal(operation: .move)
-    }
-
-    func dropEntered(info: DropInfo) {
-        hovering = info.location.y < size.height / 2 ? .before : .after
-    }
-
-    func dropExited(info _: DropInfo) {
-        hovering = nil
-    }
-}
-
 // MARK: - GroupRow
 
 private struct GroupRow: View, TracedView {
     @Environment(\.contextualViewData) var contextualViewData
+    @EnvironmentObject var model: Model
 
     let context: Context, group: ItemGroup
 
     @State private var expanded = true
     @State private var size: CGSize = .zero
-    @State private var hovering: DraggingItemHovering?
 
     var body: some View { trace {
         content
@@ -180,8 +212,7 @@ private extension GroupRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DraggingItemTransferable(itemId: group.id))
-        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(itemId: group.id, size: size, hovering: $hovering))
-        .background { DraggingItemHoveringIndicator(hovering: hovering) }
+        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(model: model, itemId: group.id, size: size))
     }
 
     var rowHeight: Scalar { contextualViewData.rowHeight }
@@ -225,11 +256,16 @@ private extension GroupRow {
 
     var members: some View {
         VStack(spacing: 0) {
-            ForEach(group.members) {
-                ItemPanel.ItemRow(context: context, itemId: $0)
-                    .id($0)
-                if $0 != group.members.last {
-                    ContextualDivider()
+            let members = group.members
+            ForEach(Array(zip(members.indices, members)), id: \.1) { index, itemId in
+                VStack(spacing: 0) {
+                    ItemPanel.ItemRow(context: context, itemId: itemId)
+                    if itemId != members.last {
+                        ContextualDivider()
+                    }
+                }
+                .overlay {
+                    DraggingItemHoveringIndicator(members: members, index: index)
                 }
             }
         }
@@ -242,10 +278,10 @@ private extension GroupRow {
 // MARK: - PathRow
 
 private struct PathRow: View, TracedView {
+    @EnvironmentObject var model: Model
     let context: Context, pathId: UUID
 
     @State private var size: CGSize = .zero
-    @State private var hovering: DraggingItemHovering?
 
     var body: some View { trace {
         content
@@ -282,8 +318,7 @@ private extension PathRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DraggingItemTransferable(itemId: pathId))
-        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(itemId: pathId, size: size, hovering: $hovering))
-        .background { DraggingItemHoveringIndicator(hovering: hovering) }
+        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(model: model, itemId: pathId, size: size))
     }
 
     var path: Path? { context.pathMap[pathId] }

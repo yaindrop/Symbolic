@@ -52,18 +52,27 @@ private struct DraggingItemHoveringIndicator: View {
     }
 
     @ViewBuilder var content: some View {
-        if let hovering = model.draggingItemHovering {
-            let itemId = members[index]
+        let showBeforeIndicator = showBeforeIndicator,
+            showAfterIndicator = showAfterIndicator
+        if showBeforeIndicator || showAfterIndicator {
             VStack(spacing: 0) {
-                if index == 0, hovering == .init(itemId: itemId, isAfter: false) {
-                    rect
-                }
+                rect.opacity(showBeforeIndicator ? 1 : 0)
                 Spacer()
-                if hovering == .init(itemId: itemId, isAfter: true) || members.indices.contains(index + 1) && hovering == .init(itemId: members[index + 1], isAfter: false) {
-                    rect
-                }
+                rect.opacity(showAfterIndicator ? 1 : 0)
             }
         }
+    }
+
+    var showBeforeIndicator: Bool {
+        guard index == 0 else { return false }
+        let itemId = members[index]
+        return model.draggingItemHovering == .init(itemId: itemId, isAfter: false)
+    }
+
+    var showAfterIndicator: Bool {
+        guard let hovering = model.draggingItemHovering else { return false }
+        let itemId = members[index]
+        return hovering == .init(itemId: itemId, isAfter: true) || members.indices.contains(index + 1) && hovering == .init(itemId: members[index + 1], isAfter: false)
     }
 
     @ViewBuilder var rect: some View {
@@ -88,10 +97,6 @@ private struct DraggingItemDropDelegate: DropDelegate {
     var itemId: UUID
     var size: CGSize = .zero
 
-    func isAfter(info: DropInfo) -> Bool {
-        info.location.y > size.height / 2
-    }
-
     func dropEntered(info: DropInfo) {
         model.draggingItemHovering = .init(itemId: itemId, isAfter: isAfter(info: info))
     }
@@ -108,16 +113,23 @@ private struct DraggingItemDropDelegate: DropDelegate {
     func performDrop(info: DropInfo) -> Bool {
         model.draggingItemHovering = nil
         let isAfter = isAfter(info: info)
-        let providers = info.itemProviders(for: [.item])
-        guard let provider = providers.first else { return true }
-        let itemId = itemId
-        _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
-            guard let transferable = try? result.get() else { return }
-            Task { @MainActor in
-                global.documentUpdater.update(item: .move(.init(itemId: transferable.itemId, toItemId: itemId, isAfter: isAfter)))
-            }
+        loadTransferable(info: info) {
+            global.documentUpdater.update(item: .move(.init(itemId: $0.itemId, toItemId: itemId, isAfter: isAfter)))
         }
         return true
+    }
+
+    private func isAfter(info: DropInfo) -> Bool {
+        info.location.y > size.height / 2
+    }
+
+    private func loadTransferable(info: DropInfo, _ callback: @escaping (DraggingItemTransferable) -> Void) {
+        let providers = info.itemProviders(for: [.item])
+        guard let provider = providers.first else { return }
+        _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
+            guard let transferable = try? result.get() else { return }
+            Task { @MainActor in callback(transferable) }
+        }
     }
 }
 

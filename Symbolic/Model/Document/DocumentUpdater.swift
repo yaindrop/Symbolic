@@ -186,6 +186,7 @@ private extension DocumentUpdater {
             parentId = itemStore.parentId(of: itemId),
             toParentId = itemStore.parentId(of: toItemId)
         if parentId == toParentId {
+            guard itemId != toItemId else { return }
             if let parentId, let group = itemStore.group(id: parentId) {
                 var members = group.members.filter { $0 != itemId }
                 let index = members.firstIndex(of: toItemId) ?? 0
@@ -199,6 +200,7 @@ private extension DocumentUpdater {
             }
             return
         }
+        guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return }
         if let parentId, let group = itemStore.group(id: parentId) {
             events.append(.item(.setMembers(.init(groupId: group.id, members: group.members.filter { $0 != itemId }))))
         } else {

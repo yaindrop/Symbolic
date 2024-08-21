@@ -270,6 +270,7 @@ private extension GroupRow {
             Text(group.id.shortDescription)
         }
         .contextualFont()
+        .foregroundStyle(context.focusedItemId == group.id ? .blue : .label)
     }
 
     var expandButton: some View {
@@ -277,7 +278,7 @@ private extension GroupRow {
             withAnimation { expanded.toggle() }
         } label: {
             Image(systemName: expanded ? "chevron.up" : "chevron.down")
-                .frame(maxHeight: .infinity)
+                .frame(minWidth: 24, maxHeight: .infinity)
         }
         .tint(.label)
     }

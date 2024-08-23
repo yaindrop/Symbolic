@@ -97,6 +97,7 @@
 		578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
+		5790F99C2C783FEA009E3606 /* ItemPanel+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */; };
 		579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */; };
 		57B5F1142BC62CFB001E1B2E /* LinearAlgebra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */; };
 		57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */; };
@@ -256,6 +257,7 @@
 		578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GridPanel+Configs.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
+		5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+Selection.swift"; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
 		57B5F1152BC62E87001E1B2E /* MultipleTouch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleTouch.swift; sourceTree = "<group>"; };
 		57B5F1172BC62F65001E1B2E /* TouchDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchDebugView.swift; sourceTree = "<group>"; };
@@ -772,6 +774,7 @@
 			children = (
 				57DD2A272C0321110046931C /* ItemPanel.swift */,
 				573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */,
+				5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */,
 			);
 			path = ItemPanel;
 			sourceTree = "<group>";
@@ -1053,6 +1056,7 @@
 				571B9B2A2C148B0800AAD516 /* FocusedPathService.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				57B703FB2C38418000B60F36 /* CustomState.swift in Sources */,
+				5790F99C2C783FEA009E3606 /* ItemPanel+Selection.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,

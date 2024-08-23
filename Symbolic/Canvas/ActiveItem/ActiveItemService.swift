@@ -135,31 +135,35 @@ extension ActiveItemService {
 extension ActiveItemService {
     // MARK: focus
 
+    func onTap(itemId: UUID?) {
+        let _r = subtracer.range(type: .intent, "tap \(itemId?.shortDescription ?? "outside")"); defer { _r() }
+        if let itemId {
+            let ancestors = item.ancestorIds(of: itemId)
+            if let index = ancestors.lastIndex(where: { !store.activeItemIds.contains($0) }) {
+                store.update(active: .init(ancestors[index...]), focused: ancestors[index])
+            } else {
+                store.update(active: .init([itemId] + ancestors), focused: itemId)
+            }
+        } else {
+            if let focusedItemId = store.focusedItemId {
+                let activeItemIds = store.activeItemIds.cloned { $0.remove(focusedItemId) }
+                let parentId = item.parentId(of: focusedItemId)
+                store.update(active: activeItemIds, focused: parentId)
+            } else {
+                store.update(active: .init())
+            }
+        }
+    }
+
     func focus(itemId: UUID) {
         let _r = subtracer.range(type: .intent, "focus \(itemId)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
-        if ancestors.isEmpty {
-            store.update(active: [itemId], focused: itemId)
-            return
-        }
-        let lastInactiveIndex = ancestors.lastIndex { !store.activeItemIds.contains($0) }
-        if let lastInactiveIndex {
-            store.update(active: .init(ancestors[lastInactiveIndex...]), focused: ancestors[lastInactiveIndex])
-        } else {
-            store.update(active: .init([itemId] + ancestors), focused: itemId)
-        }
+        store.update(active: .init([itemId] + ancestors), focused: itemId)
     }
 
     func blur() {
         let _r = subtracer.range(type: .intent, "blur"); defer { _r() }
-        guard let focusedItemId = store.focusedItemId else {
-            store.update(active: .init())
-            return
-        }
-
-        let activeItemIds = store.activeItemIds.cloned { $0.remove(focusedItemId) }
-        let parentId = item.parentId(of: focusedItemId)
-        store.update(active: activeItemIds, focused: parentId)
+        store.update(active: [], focused: nil)
     }
 
     // MARK: select

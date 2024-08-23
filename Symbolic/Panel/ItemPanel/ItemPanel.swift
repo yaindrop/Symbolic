@@ -12,6 +12,7 @@ struct ItemPanel: View, TracedView {
 
 extension ItemPanel {
     @ViewBuilder private var content: some View {
+        Selection()
         Items()
     }
 }

@@ -42,7 +42,7 @@ extension DocumentUpdater {
         let members = activeItem.selectedItems.map { $0.id }
         let inGroupId = global.item.commonAncestorId(itemIds: members)
         update(item: .group(.init(group: .init(id: groupId, members: members), inGroupId: inGroupId)))
-        activeItem.focus(itemId: groupId)
+        activeItem.onTap(itemId: groupId)
     }
 
     func deleteSelection() {

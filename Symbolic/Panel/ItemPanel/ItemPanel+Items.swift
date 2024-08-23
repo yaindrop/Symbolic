@@ -285,7 +285,11 @@ private extension GroupRow {
 
     var menu: some View {
         Menu {
-            Button("some action") {}
+            Button("Focus") {
+                global.activeItem.focus(itemId: group.id)
+                guard let bounds = global.item.boundingRect(itemId: group.id) else { return }
+                global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .frame(maxHeight: .infinity)
@@ -383,7 +387,11 @@ private extension PathRow {
 
     var menu: some View {
         Menu {
-            Button("some action") {}
+            Button("Focus") {
+                global.activeItem.focus(itemId: pathId)
+                guard let bounds = global.item.boundingRect(itemId: pathId) else { return }
+                global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .frame(maxHeight: .infinity)

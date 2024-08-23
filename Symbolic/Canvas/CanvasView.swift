@@ -34,15 +34,15 @@ private extension GlobalStores {
                     if let pathId {
                         activeItem.selectAdd(itemId: pathId)
                     } else {
-                        activeItem.blur()
+                        activeItem.onTap(itemId: nil)
                     }
                 } else {
                     if let pathId {
                         canvasAction.on(instant: .activatePath)
-                        activeItem.focus(itemId: pathId)
+                        activeItem.onTap(itemId: pathId)
                     } else if !activeItem.store.activeItemIds.isEmpty {
                         canvasAction.on(instant: .deactivatePath)
-                        activeItem.blur()
+                        activeItem.onTap(itemId: nil)
                     }
                 }
             },

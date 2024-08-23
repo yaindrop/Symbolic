@@ -41,6 +41,9 @@
     "%lld" : {
 
     },
+    "%lld items selected" : {
+
+    },
     "%lld nodes" : {
 
     },
@@ -176,6 +179,9 @@
     "No path is focused" : {
 
     },
+    "No Selection" : {
+
+    },
     "Panels" : {
 
     },
@@ -204,9 +210,6 @@
 
     },
     "Settings" : {
-
-    },
-    "some action" : {
 
     },
     "Split" : {

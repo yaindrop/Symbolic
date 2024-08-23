@@ -7,7 +7,7 @@ private extension GlobalStores {
         if toolbar.multiSelect {
             activeItem.selectRemove(itemIds: [pathId])
         } else if activeItem.focusedItemId != pathId {
-            activeItem.focus(itemId: pathId)
+            activeItem.onTap(itemId: pathId)
         } else if !focusedPath.selectingNodes {
             focusedPath.selectionClear()
         }

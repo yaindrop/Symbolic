@@ -2,11 +2,10 @@ import SwiftUI
 
 // MARK: - Selection
 
-extension PathPanel {
+extension ItemPanel {
     struct Selection: View, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
+            @Selected(configs: .init(animation: .fast), { global.activeItem.activeItemIds }) var activeItemIds
         }
 
         @SelectorWrapper var selector
@@ -23,12 +22,12 @@ extension PathPanel {
 
 // MARK: private
 
-private extension PathPanel.Selection {
+private extension ItemPanel.Selection {
     @ViewBuilder var content: some View {
         PanelSection(name: "Selection") {
-            if selector.selectingNodes {
+            if !selector.activeItemIds.isEmpty {
                 ContextualRow {
-                    Text("\(selector.activeNodeIds.count) nodes selected")
+                    Text("\(selector.activeItemIds.count) items selected")
                     Spacer()
                     Button { showPopover.toggle() } label: {
                         Image(systemName: "ellipsis.circle")
@@ -49,11 +48,9 @@ private extension PathPanel.Selection {
                 }
             } else {
                 ContextualRow {
-                    Button("Select Nodes", systemImage: "checklist") {
-                        global.focusedPath.setSelecting(true)
-                    }
-                    .contextualFont()
-                    .frame(maxWidth: .infinity)
+                    Text("No Selection")
+                        .contextualFont()
+                        .frame(maxWidth: .infinity)
                 }
             }
         }

@@ -3,16 +3,6 @@ import SwiftUI
 private extension DocumentAction {
     var readable: String {
         switch self {
-        case let .item(action):
-            switch action {
-            case let .group(action):
-                "Group of \(action.group.members.map { $0.shortDescription }.joined(separator: ", ")) as \(action.group.id.shortDescription) in \(action.inGroupId.map { $0.shortDescription } ?? "root")"
-            case let .ungroup(action):
-                "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
-            case let .move(action):
-                "Move \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
-            }
-
         case let .path(action):
             switch action {
             case let .load(action):
@@ -62,6 +52,18 @@ private extension DocumentAction {
                     "Set path \(update.pathId.shortDescription) segment from \(action.fromNodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.segmentType?.description ?? "nil")"
                 }
             }
+
+        case let .item(action):
+            switch action {
+            case let .group(action):
+                "Group of \(action.members.map { $0.shortDescription }.joined(separator: ", ")) as \(action.groupId.shortDescription) in \(action.inGroupId.map { $0.shortDescription } ?? "root")"
+            case let .ungroup(action):
+                "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
+            case let .move(action):
+                "Move \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
+            }
+
+        case .symbol: ""
         }
     }
 }

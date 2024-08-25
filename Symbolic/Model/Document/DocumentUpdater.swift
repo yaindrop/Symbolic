@@ -41,7 +41,7 @@ extension DocumentUpdater {
         let groupId = UUID()
         let members = activeItem.selectedItems.map { $0.id }
         let inGroupId = global.item.commonAncestorId(itemIds: members)
-        update(item: .group(.init(group: .init(id: groupId, members: members), inGroupId: inGroupId)))
+        update(item: .group(.init(groupId: groupId, members: members, inGroupId: inGroupId)))
         activeItem.onTap(itemId: groupId)
     }
 
@@ -72,9 +72,10 @@ private extension DocumentUpdater {
         var events: [DocumentEvent.Single] = []
 
         switch action {
-        case let .item(action): collectEvents(to: &events, action)
         case let .path(action): collectEvents(to: &events, action)
         case let .pathProperty(action): collectEvents(to: &events, action)
+        case let .item(action): collectEvents(to: &events, action)
+        case let .symbol(action): collectEvents(to: &events, action)
         }
 
         guard let first = events.first else {
@@ -101,126 +102,7 @@ private extension DocumentUpdater {
     }
 }
 
-// MARK: collect item events
-
-private extension DocumentUpdater {
-    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction) {
-        switch action {
-        case let .group(action): collectEvents(to: &events, action)
-        case let .ungroup(action): collectEvents(to: &events, action)
-        case let .move(action): collectEvents(to: &events, action)
-        }
-    }
-
-    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Group) {
-        let group = action.group, inGroupId = action.inGroupId
-        guard itemStore.get(id: group.id) == nil else { return } // grouping with existing id
-
-        if let inGroupId {
-            let ancestors = itemStore.ancestorIds(of: inGroupId)
-            guard !ancestors.contains(inGroupId) else { return } // cyclic grouping
-        }
-
-        let rootIds = itemStore.rootIds, allGroups = itemStore.allGroups, groupedMembers = Set(group.members)
-
-        func moveOut(from other: ItemGroup?) {
-            let id = other?.id
-            let members = other?.members ?? rootIds
-            guard inGroupId == id || members.contains(where: { groupedMembers.contains($0) }) else { return }
-
-            var newMembers = members.filter { !groupedMembers.contains($0) }
-            if inGroupId == id {
-                newMembers.append(group.id)
-            }
-            if members != newMembers {
-                events.append(.item(.setMembers(.init(groupId: id, members: newMembers))))
-            }
-        }
-
-        events.append(.item(.setMembers(.init(groupId: group.id, members: group.members))))
-
-        moveOut(from: nil)
-        for other in allGroups {
-            moveOut(from: other)
-        }
-    }
-
-    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Ungroup) {
-        let groupIds = action.groupIds,
-            rootIds = itemStore.rootIds,
-            allGroups = itemStore.allGroups,
-            ungroupedGroups = Set(groupIds)
-
-        func moveIn(to other: ItemGroup?) {
-            let id = other?.id
-            let members = other?.members ?? rootIds
-            let ungroupedMembers = members.filter { ungroupedGroups.contains($0) }
-            guard !ungroupedMembers.isEmpty else { return }
-
-            var newMembers = members.filter { !ungroupedGroups.contains($0) }
-            for groupId in ungroupedMembers {
-                guard let ungrouped = itemStore.group(id: groupId) else { continue }
-                newMembers += ungrouped.members
-            }
-
-            if members != newMembers {
-                events.append(.item(.setMembers(.init(groupId: id, members: newMembers))))
-            }
-        }
-
-        for groupId in groupIds {
-            events.append(.item(.setMembers(.init(groupId: groupId, members: []))))
-        }
-
-        moveIn(to: nil)
-        for other in allGroups {
-            moveIn(to: other)
-        }
-    }
-
-    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Move) {
-        let itemId = action.itemId,
-            toItemId = action.toItemId,
-            isAfter = action.isAfter,
-            rootIds = itemStore.rootIds,
-            parentId = itemStore.parentId(of: itemId),
-            toParentId = itemStore.parentId(of: toItemId)
-        if parentId == toParentId {
-            guard itemId != toItemId else { return }
-            if let parentId, let group = itemStore.group(id: parentId) {
-                var members = group.members.filter { $0 != itemId }
-                let index = members.firstIndex(of: toItemId) ?? 0
-                members.insert(itemId, at: isAfter ? members.index(after: index) : index)
-                events.append(.item(.setMembers(.init(groupId: group.id, members: members))))
-            } else {
-                var rootIds = rootIds.filter { $0 != itemId }
-                let index = rootIds.firstIndex(of: toItemId) ?? 0
-                rootIds.insert(itemId, at: isAfter ? rootIds.index(after: index) : index)
-                events.append(.item(.setMembers(.init(groupId: nil, members: rootIds))))
-            }
-            return
-        }
-        guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return }
-        if let parentId, let group = itemStore.group(id: parentId) {
-            events.append(.item(.setMembers(.init(groupId: group.id, members: group.members.filter { $0 != itemId }))))
-        } else {
-            events.append(.item(.setMembers(.init(groupId: nil, members: rootIds.filter { $0 != itemId }))))
-        }
-        if let toParentId, let toGroup = itemStore.group(id: toParentId) {
-            var members = toGroup.members
-            let index = members.firstIndex(of: toItemId) ?? 0
-            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
-            events.append(.item(.setMembers(.init(groupId: toGroup.id, members: members))))
-        } else {
-            var rootIds = rootIds
-            let index = rootIds.firstIndex(of: toItemId) ?? 0
-            rootIds.insert(itemId, at: isAfter ? rootIds.index(after: index) : index)
-            events.append(.item(.setMembers(.init(groupId: nil, members: rootIds))))
-        }
-    }
-}
-
-// MARK: collect path events
+// MARK: collect events for path action
 
 private extension DocumentUpdater {
     func collectEvents(to events: inout [DocumentEvent.Single], _ action: PathAction) {
@@ -235,19 +117,21 @@ private extension DocumentUpdater {
     }
 
     func collectEvents(to events: inout [DocumentEvent.Single], _ action: PathAction.Load) {
-        let pathIds = action.pathIds,
+        let symbolId = action.symbolId,
+            pathIds = action.pathIds,
             paths = action.paths
-        assert(pathIds.count == paths.count)
+        guard pathIds.count == paths.count else { return }
         for i in pathIds.indices {
             let pathId = pathIds[i], path = paths[i]
-            events.append(.path(.create(.init(pathId: pathId, path: path))))
+            events.append(.path(.create(.init(symbolId: symbolId, pathId: pathId, path: path))))
         }
     }
 
     func collectEvents(to events: inout [DocumentEvent.Single], _ action: PathAction.Create) {
-        let pathId = action.pathId,
+        let symbolId = action.symbolId,
+            pathId = action.pathId,
             path = action.path
-        events.append(.path(.create(.init(pathId: pathId, path: path))))
+        events.append(.path(.create(.init(symbolId: symbolId, pathId: pathId, path: path))))
     }
 
     func collectEvents(to events: inout [DocumentEvent.Single], _ action: PathAction.Delete) {
@@ -448,7 +332,7 @@ private extension DocumentUpdater {
     }
 }
 
-// MARK: collect path property events
+// MARK: collect events for path property action
 
 private extension DocumentUpdater {
     func collectEvents(to events: inout [DocumentEvent.Single], _ action: PathPropertyAction) {
@@ -478,5 +362,190 @@ private extension DocumentUpdater {
         let fromNodeIds = action.fromNodeIds,
             segmentType = action.segmentType
         events.append(.pathProperty(.update(.init(pathId: pathId, kinds: [.setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType))]))))
+    }
+}
+
+// MARK: collect events for item action
+
+private extension DocumentUpdater {
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction) {
+        switch action {
+        case let .group(action): collectEvents(to: &events, action)
+        case let .ungroup(action): collectEvents(to: &events, action)
+        case let .move(action): collectEvents(to: &events, action)
+        }
+    }
+
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Group) {
+        let groupId = action.groupId,
+            members = action.members,
+            inSymbolId = action.inSymbolId,
+            inGroupId = action.inGroupId
+        guard itemStore.get(id: groupId) == nil else { return } // new group id already exists
+        if let inGroupId {
+            let ancestors = itemStore.ancestorIds(of: inGroupId)
+            guard !ancestors.contains(inGroupId) else { return } // cyclic grouping
+        }
+
+        let symbolId: UUID
+        if let inGroupId {
+            guard let id = itemStore.symbolId(of: inGroupId) else { return } // no symbol found
+            symbolId = id
+        } else if let inSymbolId {
+            symbolId = inSymbolId
+        } else {
+            return // no grouping target
+        }
+
+        for itemId in members {
+            guard itemStore.symbolId(of: itemId) == symbolId else { return } // members not in the same symbol
+        }
+
+        let groupedMembers = Set(members)
+        func hasGrouped(in members: [UUID]) -> Bool { members.contains { groupedMembers.contains($0) } }
+        func removeGrouped(from members: inout [UUID]) { members.removeAll { groupedMembers.contains($0) } }
+
+        func adjustRootMembers() {
+            var members = itemStore.rootIds(symbolId: symbolId)
+            guard inSymbolId == symbolId || hasGrouped(in: members) else { return }
+            removeGrouped(from: &members)
+            if inSymbolId == symbolId {
+                members.append(groupId)
+            }
+            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+        }
+
+        func adjustMembers(in group: ItemGroup) {
+            var members = group.members
+            guard inGroupId == group.id || hasGrouped(in: members) else { return }
+            removeGrouped(from: &members)
+            if inGroupId == group.id {
+                members.append(group.id)
+            }
+            events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+        }
+
+        adjustRootMembers()
+        for group in itemStore.allGroups(symbolId: symbolId) {
+            adjustMembers(in: group)
+        }
+
+        events.append(.item(.setGroup(.init(groupId: groupId, members: members))))
+    }
+
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Ungroup) {
+        let groupIds = action.groupIds,
+            symbolId = groupIds.compactMap { itemStore.symbolId(of: $0) }.allSame()
+        guard let symbolId else { return } // groups not in the same symbol
+
+        let ungroupedGroups = Set(groupIds)
+        func hasUngrouped(in members: [UUID]) -> Bool { members.contains { ungroupedGroups.contains($0) } }
+        func expandUngrouped(in members: inout [UUID]) {
+            members = members.flatMap {
+                guard ungroupedGroups.contains($0) else { return [$0] }
+                guard let group = itemStore.group(id: $0) else { return [] }
+                return group.members
+            }
+        }
+
+        func adjustRootMembers() {
+            var members = itemStore.rootIds(symbolId: symbolId)
+            guard hasUngrouped(in: members) else { return }
+            expandUngrouped(in: &members)
+            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+        }
+
+        func adjustMembers(in group: ItemGroup) {
+            var members = group.members
+            guard hasUngrouped(in: members) else { return }
+            expandUngrouped(in: &members)
+            events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+        }
+
+        for groupId in groupIds {
+            events.append(.item(.setGroup(.init(groupId: groupId, members: []))))
+        }
+
+        adjustRootMembers()
+        for group in itemStore.allGroups(symbolId: symbolId) {
+            adjustMembers(in: group)
+        }
+    }
+
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: ItemAction.Move) {
+        let itemId = action.itemId,
+            toItemId = action.toItemId,
+            isAfter = action.isAfter,
+            parentId = itemStore.parentId(of: itemId),
+            toParentId = itemStore.parentId(of: toItemId)
+        guard let symbolId = itemStore.symbolId(of: itemId) else { return } // no symbol found
+        guard itemStore.symbolId(of: toItemId) == symbolId else { return } // not in the same symbol
+        if parentId == toParentId {
+            guard itemId != toItemId else { return } // not moved
+            if let parentId, let group = itemStore.group(id: parentId) {
+                var members = group.members.filter { $0 != itemId }
+                let index = members.firstIndex(of: toItemId) ?? 0
+                members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+                events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+            } else {
+                var members = itemStore.rootIds(symbolId: symbolId).filter { $0 != itemId }
+                let index = members.firstIndex(of: toItemId) ?? 0
+                members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+                events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+            }
+            return
+        }
+        guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
+        if let parentId, let group = itemStore.group(id: parentId) {
+            let members = group.members.filter { $0 != itemId }
+            events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+        } else {
+            let members = itemStore.rootIds(symbolId: symbolId).filter { $0 != itemId }
+            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+        }
+        if let toParentId, let toGroup = itemStore.group(id: toParentId) {
+            var members = toGroup.members
+            let index = members.firstIndex(of: toItemId) ?? 0
+            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+            events.append(.item(.setGroup(.init(groupId: toGroup.id, members: members))))
+        } else {
+            var members = itemStore.rootIds(symbolId: symbolId)
+            let index = members.firstIndex(of: toItemId) ?? 0
+            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+        }
+    }
+}
+
+// MARK: collect events for symbol action
+
+private extension DocumentUpdater {
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: SymbolAction) {
+        switch action {
+        case let .create(action): collectEvents(to: &events, action)
+        case let .delete(action): collectEvents(to: &events, action)
+        case let .resize(action): collectEvents(to: &events, action)
+        }
+    }
+
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: SymbolAction.Create) {
+        let symbolId = action.symbolId,
+            origin = action.origin,
+            size = action.size
+        events.append(.symbol(.create(.init(symbolId: symbolId, origin: origin, size: size))))
+    }
+
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: SymbolAction.Delete) {
+        let symbolIds = action.symbolIds
+        for symbolId in symbolIds {
+            events.append(.symbol(.delete(.init(symbolId: symbolId))))
+        }
+    }
+
+    func collectEvents(to events: inout [DocumentEvent.Single], _ action: SymbolAction.Resize) {
+        let symbolId = action.symbolId,
+            origin = action.origin,
+            size = action.size
+        events.append(.symbol(.create(.init(symbolId: symbolId, origin: origin, size: size))))
     }
 }

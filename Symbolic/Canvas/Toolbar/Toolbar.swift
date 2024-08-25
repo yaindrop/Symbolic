@@ -117,7 +117,8 @@ private extension Toolbar {
             }
 
             ToolbarButton(systemName: "arrow.up.left.and.arrow.down.right") {
-                guard let bounds = global.item.allPathsBounds else { return }
+                guard let symbolId = global.activeSymbol.focusedSymbolId,
+                      let bounds = global.item.allPathsBounds(symbolId: symbolId) else { return }
                 global.viewportUpdater.zoomTo(rect: bounds)
             }
         }

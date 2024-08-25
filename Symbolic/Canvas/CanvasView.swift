@@ -78,7 +78,7 @@ private extension GlobalStores {
 
                 if let path = addingPath.path {
                     let newPathId = UUID()
-                    documentUpdater.update(path: .create(.init(pathId: newPathId, path: path)))
+                    documentUpdater.update(path: .create(.init(symbolId: .init(), pathId: newPathId, path: path)))
                     activeItem.focus(itemId: newPathId)
                     canvasAction.on(instant: .addPath)
                 }
@@ -167,7 +167,8 @@ private extension CanvasView {
     @ViewBuilder var staticObjects: some View { trace("staticObjects") {
         ZStack {
             Background()
-            ItemsView()
+//            ItemsView()
+            SymbolsView()
         }
         .multipleTouchGesture(global.canvasGesture)
     } }

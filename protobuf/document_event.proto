@@ -5,24 +5,13 @@ import "protobuf/symbolic.proto";
 
 package symbolic.pb;
 
-// MARK: - ItemEvent
-
-message ItemEvent {
-  message SetMembers {
-    // null group_id means root
-    optional UUID group_id = 1;
-    repeated UUID members = 2;
-  }
-
-  oneof kind { SetMembers set_members = 101; }
-}
-
 // MARK: - PathEvent
 
 message PathEvent {
   message Create {
-    UUID path_id = 1;
-    Path path = 2;
+    UUID symbol_id = 1;
+    UUID path_id = 2;
+    Path path = 3;
   }
 
   message Delete { UUID path_id = 1; }
@@ -110,14 +99,58 @@ message PathPropertyEvent {
   oneof kind { Update update = 101; }
 }
 
+// MARK: - ItemEvent
+
+message ItemEvent {
+  message SetRoot {
+    UUID symbol_id = 1;
+    repeated UUID members = 2;
+  }
+
+  message SetGroup {
+    UUID group_id = 1;
+    repeated UUID members = 2;
+  }
+
+  oneof kind {
+    SetRoot set_root = 101;
+    SetGroup set_group = 102;
+  }
+}
+
+// MARK: - SymbolEvent
+
+message SymbolEvent {
+  message Create {
+    UUID symbol_id = 1;
+    Point2 origin = 2;
+    Size2 size = 3;
+  }
+
+  message Delete { UUID symbol_id = 1; }
+
+  message Resize {
+    UUID symbol_id = 1;
+    Point2 origin = 2;
+    Size2 size = 3;
+  }
+
+  oneof kind {
+    Create create = 101;
+    Delete delete = 102;
+    Resize resize = 103;
+  }
+}
+
 // MARK: - DocumentEvent
 
 message DocumentEvent {
   message Single {
     oneof kind {
-      ItemEvent item_event = 101;
-      PathEvent path_event = 102;
-      PathPropertyEvent path_property_event = 103;
+      PathEvent path_event = 101;
+      PathPropertyEvent path_property_event = 102;
+      ItemEvent item_event = 103;
+      SymbolEvent symbol_event = 104;
     }
   }
 

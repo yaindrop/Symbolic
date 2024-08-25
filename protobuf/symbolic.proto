@@ -25,9 +25,9 @@ message Point2 {
   double y = 2;
 }
 
-message ItemGroup {
-  UUID id = 1;
-  repeated UUID members = 2;
+message Size2 {
+  double width = 1;
+  double height = 2;
 }
 
 // MARK: - path types

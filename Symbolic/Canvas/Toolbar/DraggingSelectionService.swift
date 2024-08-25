@@ -30,6 +30,7 @@ private extension DraggingSelectionStore {
 struct DraggingSelectionService {
     let store: DraggingSelectionStore
     let viewport: ViewportService
+    let activeSymbol: ActiveSymbolService
     let item: ItemService
     let path: PathService
 }
@@ -47,14 +48,15 @@ extension DraggingSelectionService {
     var rectInWorld: CGRect? { rect?.applying(viewport.toWorld) }
 
     func intersects(item: Item) -> Bool {
-        guard let rectInWorld else { return false }
-        guard let pathId = item.pathId else { return false }
-        guard let path = path.get(id: pathId) else { return false }
+        guard let rectInWorld,
+              let pathId = item.pathId,
+              let path = path.get(id: pathId) else { return false }
         return path.boundingRect.intersects(rectInWorld)
     }
 
     var intersectedRootItems: [Item] {
-        item.rootItems.filter {
+        guard let symbolId = activeSymbol.focusedSymbolId else { return [] }
+        return item.rootItems(symbolId: symbolId).filter {
             item.leafItems(rootItemId: $0.id)
                 .contains { intersects(item: $0) }
         }

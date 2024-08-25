@@ -1,23 +1,11 @@
 import Foundation
 
-// MARK: - ItemAction
-
-enum ItemAction: Equatable, Codable {
-    struct Group: Equatable, Codable { var group: ItemGroup, inGroupId: UUID? }
-    struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
-    struct Move: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
-
-    case group(Group)
-    case ungroup(Ungroup)
-    case move(Move)
-}
-
 // MARK: - PathAction
 
 enum PathAction: Equatable, Codable {
-    struct Load: Equatable, Codable { var pathIds: [UUID], paths: [Path] }
+    struct Load: Equatable, Codable { var symbolId: UUID, pathIds: [UUID], paths: [Path] }
 
-    struct Create: Equatable, Codable { var pathId: UUID, path: Path }
+    struct Create: Equatable, Codable { var symbolId: UUID, pathId: UUID, path: Path }
     struct Delete: Equatable, Codable { var pathIds: [UUID] }
     struct Move: Equatable, Codable { var pathIds: [UUID], offset: Vector2 }
     struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }
@@ -82,10 +70,35 @@ extension PathPropertyAction.Update {
     }
 }
 
+// MARK: - ItemAction
+
+enum ItemAction: Equatable, Codable {
+    struct Group: Equatable, Codable { var groupId: UUID, members: [UUID], inSymbolId: UUID? = nil, inGroupId: UUID? = nil }
+    struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
+    struct Move: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
+
+    case group(Group)
+    case ungroup(Ungroup)
+    case move(Move)
+}
+
+// MARK: - SymbolAction
+
+enum SymbolAction: Equatable, Codable {
+    struct Create: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
+    struct Delete: Equatable, Codable { let symbolIds: [UUID] }
+    struct Resize: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
+
+    case create(Create)
+    case delete(Delete)
+    case resize(Resize)
+}
+
 // MARK: - DocumentAction
 
 enum DocumentAction: Equatable, Codable {
-    case item(ItemAction)
     case path(PathAction)
     case pathProperty(PathPropertyAction)
+    case item(ItemAction)
+    case symbol(SymbolAction)
 }

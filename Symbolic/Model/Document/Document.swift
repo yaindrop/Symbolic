@@ -25,8 +25,13 @@ struct Document: Codable {
         parser.delegate = delegate
         parser.parse()
 
+        let symbolId = UUID()
+        events.append(.init(kind: .single(.symbol(.create(.init(symbolId: symbolId, origin: .zero, size: .init(squared: 1000))))), action: nil))
         for path in paths {
-            events.append(.init(kind: .single(.path(.create(.init(pathId: .init(), path: path)))), action: .path(.load(.init(pathIds: .init(repeating: .init(), count: paths.count).map { _ in UUID() }, paths: paths)))))
+            events.append(.init(
+                kind: .single(.path(.create(.init(symbolId: symbolId, pathId: .init(), path: path)))),
+                action: .path(.load(.init(symbolId: symbolId, pathIds: .init(repeating: .init(), count: paths.count).map { _ in UUID() }, paths: paths)))
+            ))
         }
     }
 }

@@ -177,27 +177,18 @@ struct Symbolic_Pb_Point2: Sendable {
   init() {}
 }
 
-struct Symbolic_Pb_ItemGroup: Sendable {
+struct Symbolic_Pb_Size2: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var id: Symbolic_Pb_UUID {
-    get {return _id ?? Symbolic_Pb_UUID()}
-    set {_id = newValue}
-  }
-  /// Returns true if `id` has been explicitly set.
-  var hasID: Bool {return self._id != nil}
-  /// Clears the value of `id`. Subsequent reads from it will return its default value.
-  mutating func clearID() {self._id = nil}
+  var width: Double = 0
 
-  var members: [Symbolic_Pb_UUID] = []
+  var height: Double = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
-
-  fileprivate var _id: Symbolic_Pb_UUID? = nil
 }
 
 struct Symbolic_Pb_PathNode: Sendable {
@@ -449,11 +440,11 @@ extension Symbolic_Pb_Point2: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension Symbolic_Pb_ItemGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".ItemGroup"
+extension Symbolic_Pb_Size2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Size2"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "id"),
-    2: .same(proto: "members"),
+    1: .same(proto: "width"),
+    2: .same(proto: "height"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -462,30 +453,26 @@ extension Symbolic_Pb_ItemGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularMessageField(value: &self._id) }()
-      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.members) }()
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.width) }()
+      case 2: try { try decoder.decodeSingularDoubleField(value: &self.height) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    try { if let v = self._id {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    } }()
-    if !self.members.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.members, fieldNumber: 2)
+    if self.width.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.width, fieldNumber: 1)
+    }
+    if self.height.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.height, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Symbolic_Pb_ItemGroup, rhs: Symbolic_Pb_ItemGroup) -> Bool {
-    if lhs._id != rhs._id {return false}
-    if lhs.members != rhs.members {return false}
+  static func ==(lhs: Symbolic_Pb_Size2, rhs: Symbolic_Pb_Size2) -> Bool {
+    if lhs.width != rhs.width {return false}
+    if lhs.height != rhs.height {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

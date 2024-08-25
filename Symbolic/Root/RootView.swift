@@ -8,12 +8,14 @@ private extension GlobalStores {
             document.store.$activeDocument.didSet
                 .sink {
                     fileBrowser.asyncSave(document: $0)
+                    symbol.loadDocument($0)
                     path.loadDocument($0)
                     pathProperty.loadDocument($0)
                     item.loadDocument($0)
                 }
             document.store.$pendingEvent.didSet
                 .sink {
+                    symbol.loadPendingEvent($0)
                     path.loadPendingEvent($0)
                     pathProperty.loadPendingEvent($0)
                     item.loadPendingEvent($0)

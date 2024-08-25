@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 private struct Context {
     var itemMap: ItemMap
     var pathMap: PathMap
-    var depthMap: [UUID: Int]
+    var itemDepthMap: [UUID: Int]
     var focusedItemId: UUID?
     var selectedItemIds: Set<UUID>
 }
@@ -138,10 +138,10 @@ private struct DraggingItemDropDelegate: DropDelegate {
 extension ItemPanel {
     struct Items: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.item.rootIds }) var rootIds
+            @Selected({ global.activeSymbol.focusedSymbolId.map { global.item.rootIds(symbolId: $0) } ?? [] }) var rootIds
             @Selected({ global.item.map }) var itemMap
             @Selected({ global.path.map }) var pathMap
-            @Selected({ global.item.depthMap }) var depthMap
+            @Selected({ global.item.itemDepthMap }) var itemDepthMap
             @Selected({ global.activeItem.focusedItemId }) var focusedItemId
             @Selected({ global.activeItem.selectedItemIds }) var selectedItemIds
         }
@@ -185,7 +185,7 @@ private extension ItemPanel.Items {
     }
 
     var context: Context {
-        .init(itemMap: selector.itemMap, pathMap: selector.pathMap, depthMap: selector.depthMap, focusedItemId: selector.focusedItemId, selectedItemIds: selector.selectedItemIds)
+        .init(itemMap: selector.itemMap, pathMap: selector.pathMap, itemDepthMap: selector.itemDepthMap, focusedItemId: selector.focusedItemId, selectedItemIds: selector.selectedItemIds)
     }
 }
 
@@ -298,7 +298,7 @@ private extension GroupRow {
         .contextualFont()
     }
 
-    var depth: Int { context.depthMap[group.id] ?? 0 }
+    var depth: Int { context.itemDepthMap[group.id] ?? 0 }
 
     var members: some View {
         VStack(spacing: 0) {

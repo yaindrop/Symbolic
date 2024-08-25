@@ -88,6 +88,19 @@ extension Symbolic_Pb_Point2: ProtobufParsable {
     }
 }
 
+extension CGSize: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Size2) {
+        pb.width = .init(width)
+        pb.height = .init(height)
+    }
+}
+
+extension Symbolic_Pb_Size2: ProtobufParsable {
+    func decoded() -> CGSize {
+        .init(.init(width), .init(height))
+    }
+}
+
 // MARK: - path types
 
 extension PathNode: ProtobufSerializable {

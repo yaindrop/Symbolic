@@ -1,42 +1,11 @@
 import Foundation
 import SwiftProtobuf
 
-// MARK: - ItemEvent
-
-extension ItemEvent.SetMembers: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_ItemEvent.SetMembers) {
-        groupId.map { pb.groupID = $0.pb }
-        pb.members = members.map { $0.pb }
-    }
-}
-
-extension Symbolic_Pb_ItemEvent.SetMembers: ProtobufParsable {
-    func decoded() -> ItemEvent.SetMembers {
-        .init(groupId: hasGroupID ? groupID.decoded() : nil, members: members.map { $0.decoded() })
-    }
-}
-
-extension ItemEvent: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_ItemEvent) {
-        switch self {
-        case let .setMembers(kind): pb.kind = .setMembers(kind.pb)
-        }
-    }
-}
-
-extension Symbolic_Pb_ItemEvent: ProtobufParsable {
-    func decoded() throws -> ItemEvent {
-        switch kind {
-        case let .setMembers(kind): .setMembers(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
-        }
-    }
-}
-
 // MARK: - PathEvent
 
 extension PathEvent.Create: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_PathEvent.Create) {
+        pb.symbolID = symbolId.pb
         pb.pathID = pathId.pb
         pb.path = path.pb
     }
@@ -44,7 +13,7 @@ extension PathEvent.Create: ProtobufSerializable {
 
 extension Symbolic_Pb_PathEvent.Create: ProtobufParsable {
     func decoded() throws -> PathEvent.Create {
-        try .init(pathId: pathID.decoded(), path: path.decoded())
+        try .init(symbolId: symbolID.decoded(), pathId: pathID.decoded(), path: path.decoded())
     }
 }
 
@@ -301,15 +270,126 @@ extension Symbolic_Pb_PathPropertyEvent: ProtobufParsable {
     }
 }
 
+// MARK: - ItemEvent
+
+extension ItemEvent.SetRoot: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.SetRoot) {
+        pb.symbolID = symbolId.pb
+        pb.members = members.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.SetRoot: ProtobufParsable {
+    func decoded() -> ItemEvent.SetRoot {
+        .init(symbolId: symbolID.decoded(), members: members.map { $0.decoded() })
+    }
+}
+
+extension ItemEvent.SetGroup: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.SetGroup) {
+        pb.groupID = groupId.pb
+        pb.members = members.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.SetGroup: ProtobufParsable {
+    func decoded() -> ItemEvent.SetGroup {
+        .init(groupId: groupID.decoded(), members: members.map { $0.decoded() })
+    }
+}
+
+extension ItemEvent: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent) {
+        switch self {
+        case let .setRoot(kind): pb.kind = .setRoot(kind.pb)
+        case let .setGroup(kind): pb.kind = .setGroup(kind.pb)
+        }
+    }
+}
+
+extension Symbolic_Pb_ItemEvent: ProtobufParsable {
+    func decoded() throws -> ItemEvent {
+        switch kind {
+        case let .setRoot(kind): .setRoot(kind.decoded())
+        case let .setGroup(kind): .setGroup(kind.decoded())
+        default: throw ProtobufParseError.invalidEmptyOneOf
+        }
+    }
+}
+
+// MARK: - SymbolEvent
+
+extension SymbolEvent.Create: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.Create) {
+        pb.symbolID = symbolId.pb
+        pb.origin = origin.pb
+        pb.size = size.pb
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.Create: ProtobufParsable {
+    func decoded() -> SymbolEvent.Create {
+        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded())
+    }
+}
+
+extension SymbolEvent.Delete: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.Delete) {
+        pb.symbolID = symbolId.pb
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.Delete: ProtobufParsable {
+    func decoded() -> SymbolEvent.Delete {
+        .init(symbolId: symbolID.decoded())
+    }
+}
+
+extension SymbolEvent.Resize: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.Resize) {
+        pb.symbolID = symbolId.pb
+        pb.origin = origin.pb
+        pb.size = size.pb
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.Resize: ProtobufParsable {
+    func decoded() -> SymbolEvent.Resize {
+        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded())
+    }
+}
+
+extension SymbolEvent: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent) {
+        switch self {
+        case let .create(kind): pb.kind = .create(kind.pb)
+        case let .delete(kind): pb.kind = .delete(kind.pb)
+        case let .resize(kind): pb.kind = .resize(kind.pb)
+        }
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent: ProtobufParsable {
+    func decoded() throws -> SymbolEvent {
+        switch kind {
+        case let .create(kind): .create(kind.decoded())
+        case let .delete(kind): .delete(kind.decoded())
+        case let .resize(kind): .resize(kind.decoded())
+        default: throw ProtobufParseError.invalidEmptyOneOf
+        }
+    }
+}
+
 // MARK: - DocumentEvent
 
 extension DocumentEvent.Single: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_DocumentEvent.Single) {
         pb.kind = {
             switch self {
-            case let .item(kind): .itemEvent(kind.pb)
             case let .path(kind): .pathEvent(kind.pb)
             case let .pathProperty(kind): .pathPropertyEvent(kind.pb)
+            case let .item(kind): .itemEvent(kind.pb)
+            case let .symbol(kind): .symbolEvent(kind.pb)
             }
         }()
     }
@@ -318,9 +398,10 @@ extension DocumentEvent.Single: ProtobufSerializable {
 extension Symbolic_Pb_DocumentEvent.Single: ProtobufParsable {
     func decoded() throws -> DocumentEvent.Single {
         switch kind {
-        case let .itemEvent(kind): try .item(kind.decoded())
         case let .pathEvent(kind): try .path(kind.decoded())
         case let .pathPropertyEvent(kind): try .pathProperty(kind.decoded())
+        case let .itemEvent(kind): try .item(kind.decoded())
+        case let .symbolEvent(kind): try .symbol(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
         }
     }

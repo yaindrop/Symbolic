@@ -3,17 +3,29 @@ import Foundation
 private let subtracer = tracer.tagged("ItemService")
 
 typealias ItemMap = [UUID: Item]
-typealias AncestorMap = [UUID: [UUID]]
+typealias SymbolRootMap = [UUID: [UUID]]
+
+typealias ItemParentMap = [UUID: UUID]
+typealias ItemAncestorMap = [UUID: [UUID]]
+typealias SymbolItemMap = [UUID: [Item]]
+typealias ItemSymbolMap = [UUID: UUID]
+typealias ItemDepthMap = [UUID: Int]
 
 // MARK: - ItemStoreProtocol
 
 protocol ItemStoreProtocol {
     var map: ItemMap { get }
-    var rootIds: [UUID] { get }
-    var ancestorMap: AncestorMap { get }
+    var symbolRootMap: SymbolRootMap { get }
+
+    var itemAncestorMap: ItemAncestorMap { get }
+    var symbolItemMap: SymbolItemMap { get }
+    var itemSymbolMap: ItemSymbolMap { get }
+    var itemDepthMap: ItemDepthMap { get }
 }
 
 extension ItemStoreProtocol {
+    // MARK: simple selectors
+
     func get(id: UUID) -> Item? {
         map.value(key: id)
     }
@@ -22,13 +34,43 @@ extension ItemStoreProtocol {
         get(id: id) != nil
     }
 
+    func group(id: UUID) -> ItemGroup? {
+        get(id: id).map { $0.group }
+    }
+
+    var symbolIds: Set<UUID> {
+        .init(symbolRootMap.keys)
+    }
+
+    func rootIds(symbolId: UUID) -> [UUID] {
+        symbolRootMap[symbolId] ?? []
+    }
+
+    func rootItems(symbolId: UUID) -> [Item] {
+        rootIds(symbolId: symbolId).compactMap { get(id: $0) }
+    }
+
     func ancestorIds(of itemId: UUID) -> [UUID] {
-        ancestorMap[itemId] ?? []
+        itemAncestorMap[itemId] ?? []
     }
 
     func parentId(of itemId: UUID) -> UUID? {
-        ancestorMap[itemId]?.first
+        itemAncestorMap[itemId]?.first
     }
+
+    func allItems(symbolId: UUID) -> [Item] {
+        symbolItemMap[symbolId] ?? []
+    }
+
+    func symbolId(of itemId: UUID) -> UUID? {
+        itemSymbolMap[itemId]
+    }
+
+    func depth(of itemId: UUID) -> Int {
+        itemDepthMap[itemId] ?? 0
+    }
+
+    // MARK: complex selectors
 
     func commonAncestorId(itemIds: [UUID]) -> UUID? {
         let ancestorLists = itemIds.map { ancestorIds(of: $0) }
@@ -39,28 +81,10 @@ extension ItemStoreProtocol {
         return highest.first { id in ancestorSets.allSatisfy { $0.contains(id) } }
     }
 
-    func group(id: UUID) -> ItemGroup? {
-        get(id: id).map { $0.group }
-    }
-
-    var rootItems: [Item] {
-        rootIds.compactMap { get(id: $0) }
-    }
-
     func height(itemId: UUID) -> Int {
         guard let item = get(id: itemId) else { return 0 }
         guard let group = item.group else { return 0 }
         return 1 + group.members.map { height(itemId: $0) }.max()!
-    }
-
-    func depth(itemId: UUID) -> Int {
-        ancestorIds(of: itemId).count
-    }
-
-    var depthMap: [UUID: Int] {
-        map.keys.reduce(into: [UUID: Int]()) { dict, itemId in
-            dict[itemId] = depth(itemId: itemId)
-        }
     }
 
     func expandedItems(rootItemId: UUID) -> [Item] {
@@ -81,26 +105,33 @@ extension ItemStoreProtocol {
         return group.members.flatMap { leafItems(rootItemId: $0) }
     }
 
-    var allExpandedItems: [Item] {
-        rootIds.flatMap { expandedItems(rootItemId: $0) }
+    func allExpandedItems(symbolId: UUID) -> [Item] {
+        rootIds(symbolId: symbolId).flatMap { expandedItems(rootItemId: $0) }
     }
 
-    var allGroups: [ItemGroup] {
-        rootIds.flatMap { groupItems(rootItemId: $0) }.compactMap { $0.group }
+    func allGroups(symbolId: UUID) -> [ItemGroup] {
+        rootIds(symbolId: symbolId).flatMap { groupItems(rootItemId: $0) }.compactMap { $0.group }
     }
 
-    var allPathIds: [UUID] {
-        rootIds.flatMap { leafItems(rootItemId: $0) }.compactMap { $0.pathId }
+    func allPathIds(symbolId: UUID) -> [UUID] {
+        rootIds(symbolId: symbolId).flatMap { leafItems(rootItemId: $0) }.compactMap { $0.pathId }
     }
+}
 
-    fileprivate var calcAncestorMap: AncestorMap {
-        let parentIdMap = allGroups.reduce(into: [UUID: UUID]()) { dict, group in
-            for member in group.members {
-                dict[member] = group.id
+private extension ItemStoreProtocol {
+    private var calcItemParentMap: ItemParentMap {
+        symbolIds
+            .flatMap { allGroups(symbolId: $0) }
+            .reduce(into: ItemParentMap()) { dict, group in
+                for member in group.members {
+                    dict[member] = group.id
+                }
             }
-        }
+    }
 
-        return parentIdMap.reduce(into: [UUID: [UUID]]()) { dict, pair in
+    var calcItemAncestorMap: ItemAncestorMap {
+        let parentMap = calcItemParentMap
+        return parentMap.reduce(into: ItemAncestorMap()) { dict, pair in
             let (id, parentId) = pair
             var ancestors: [UUID] = []
             var current: UUID? = parentId
@@ -110,10 +141,31 @@ extension ItemStoreProtocol {
                     break
                 } else {
                     ancestors.append(currentId)
-                    current = parentIdMap[currentId]
+                    current = parentMap[currentId]
                 }
             }
             dict[id] = ancestors
+        }
+    }
+
+    var calcSymbolItemMap: SymbolItemMap {
+        symbolIds.reduce(into: SymbolItemMap()) { dict, symbolId in
+            dict[symbolId] = allExpandedItems(symbolId: symbolId)
+        }
+    }
+
+    var calcItemSymbolMap: ItemSymbolMap {
+        symbolItemMap.reduce(into: ItemSymbolMap()) { dict, pair in
+            let (symbolId, items) = pair
+            for item in items {
+                dict[item.id] = symbolId
+            }
+        }
+    }
+
+    var calcItemDepthMap: ItemDepthMap {
+        map.keys.reduce(into: ItemDepthMap()) { dict, itemId in
+            dict[itemId] = ancestorIds(of: itemId).count
         }
     }
 }
@@ -122,9 +174,12 @@ extension ItemStoreProtocol {
 
 class ItemStore: Store, ItemStoreProtocol {
     @Trackable var map = ItemMap()
-    @Trackable var rootIds: [UUID] = []
+    @Trackable var symbolRootMap = SymbolRootMap()
 
-    @Derived({ $0.calcAncestorMap }) var ancestorMap
+    @Derived({ $0.calcItemAncestorMap }) var itemAncestorMap
+    @Derived({ $0.calcSymbolItemMap }) var symbolItemMap
+    @Derived({ $0.calcItemSymbolMap }) var itemSymbolMap
+    @Derived({ $0.calcItemDepthMap }) var itemDepthMap
 }
 
 private extension ItemStore {
@@ -132,8 +187,8 @@ private extension ItemStore {
         update { $0(\._map, map) }
     }
 
-    func update(rootIds: [UUID]) {
-        update { $0(\._rootIds, rootIds) }
+    func update(symbolRootMap: SymbolRootMap) {
+        update { $0(\._symbolRootMap, symbolRootMap) }
     }
 }
 
@@ -161,12 +216,20 @@ struct ItemService {
 
 extension ItemService: ItemStoreProtocol {
     var map: ItemMap { pendingStore.active ? pendingStore.map : store.map }
-    var rootIds: [UUID] { pendingStore.active ? pendingStore.rootIds : store.rootIds }
-    var ancestorMap: AncestorMap { pendingStore.active ? pendingStore.ancestorMap : store.ancestorMap }
+    var symbolRootMap: SymbolRootMap { pendingStore.active ? pendingStore.symbolRootMap : store.symbolRootMap }
 
-    var allPaths: [Path] {
+    var itemAncestorMap: ItemAncestorMap { pendingStore.active ? pendingStore.itemAncestorMap : store.itemAncestorMap }
+    var symbolItemMap: SymbolItemMap { pendingStore.active ? pendingStore.symbolItemMap : store.symbolItemMap }
+    var itemSymbolMap: ItemSymbolMap { pendingStore.active ? pendingStore.itemSymbolMap : store.itemSymbolMap }
+    var itemDepthMap: ItemDepthMap { pendingStore.active ? pendingStore.itemDepthMap : store.itemDepthMap }
+
+    func allPaths(symbolId: UUID) -> [Path] {
         let pathMap = path.map
-        return allPathIds.compactMap { pathMap.value(key: $0) }
+        return allPathIds(symbolId: symbolId).compactMap { pathMap.value(key: $0) }
+    }
+
+    func allPathsBounds(symbolId: UUID) -> CGRect? {
+        .init(union: allPaths(symbolId: symbolId).map { $0.boundingRect })
     }
 
     func groupedPathIds(groupId: UUID) -> [UUID] {
@@ -188,48 +251,67 @@ extension ItemService: ItemStoreProtocol {
         }
         return nil
     }
-
-    var allPathsBounds: CGRect? {
-        .init(union: allPaths.map { $0.boundingRect })
-    }
 }
 
 // MARK: - modify item map
 
-extension ItemService {
+private extension ItemService {
     var targetStore: ItemStore { pendingStore.active ? pendingStore : store }
 
-    private func add(item: Item) {
+    func add(symbolId: UUID, item: Item) {
         let _r = subtracer.range("add"); defer { _r() }
         guard !exists(id: item.id) else { return }
         if case let .path(path) = item.kind {
             guard self.path.exists(id: path.id) else { return }
         }
-        targetStore.update(map: map.cloned { $0[item.id] = item })
+
+        var newMap = map
+        var newSymbolRootMap = symbolRootMap
+        newMap[item.id] = item
+        newSymbolRootMap[symbolId] = (symbolRootMap[symbolId] ?? []) + [item.id]
+        targetStore.update(map: newMap)
+        targetStore.update(symbolRootMap: newSymbolRootMap)
     }
 
-    private func remove(itemId: UUID) {
+    func remove(itemId: UUID) {
         let _r = subtracer.range("remove"); defer { _r() }
         guard let item = get(id: itemId) else { return }
         if case let .path(path) = item.kind {
             guard !self.path.exists(id: path.id) else { return }
         }
-        targetStore.update(map: map.cloned { $0.removeValue(forKey: itemId) })
+        guard let symbolId = symbolId(of: itemId) else { return }
+
+        var newMap = map
+        var newSymbolRootMap = symbolRootMap
+        if let parentId = parentId(of: itemId) {
+            guard var members = group(id: parentId)?.members else { return }
+            members.removeAll { $0 == itemId }
+            newMap[parentId] = .init(kind: .group(.init(id: parentId, members: members)))
+        } else {
+            guard var members = newSymbolRootMap[symbolId] else { return }
+            members.removeAll { $0 == itemId }
+            newSymbolRootMap[symbolId] = members
+        }
+        targetStore.update(map: newMap)
+        targetStore.update(symbolRootMap: newSymbolRootMap)
     }
 
-    private func update(item: Item) {
+    func update(item: Item) {
         let _r = subtracer.range("update"); defer { _r() }
         guard exists(id: item.id) else { return }
         if case let .path(path) = item.kind {
             guard self.path.exists(id: path.id) else { remove(itemId: item.id); return }
         }
-        targetStore.update(map: map.cloned { $0[item.id] = item })
+
+        var newMap = map
+        newMap[item.id] = item
+        targetStore.update(map: newMap)
     }
 
-    private func clear() {
+    func clear() {
         let _r = subtracer.range("clear"); defer { _r() }
         targetStore.update(map: .init())
-        targetStore.update(rootIds: .init())
+        targetStore.update(symbolRootMap: .init())
     }
 }
 
@@ -252,7 +334,7 @@ extension ItemService {
             if let event {
                 pendingStore.update(active: true)
                 pendingStore.update(map: store.map.cloned)
-                pendingStore.update(rootIds: store.rootIds)
+                pendingStore.update(symbolRootMap: store.symbolRootMap)
                 loadEvent(event)
             } else {
                 pendingStore.update(active: false)
@@ -263,8 +345,8 @@ extension ItemService {
 
 // MARK: - event loaders
 
-extension ItemService {
-    private func loadEvent(_ event: DocumentEvent) {
+private extension ItemService {
+    func loadEvent(_ event: DocumentEvent) {
         let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
@@ -274,52 +356,70 @@ extension ItemService {
         }
     }
 
-    private func loadEvent(_ event: DocumentEvent.Single) {
+    func loadEvent(_ event: DocumentEvent.Single) {
         switch event {
-        case let .item(event): loadEvent(event)
         case let .path(event): loadEvent(event)
         case .pathProperty: break
-        }
-    }
-
-    // MARK: item event
-
-    private func loadEvent(_ event: ItemEvent) {
-        switch event {
-        case let .setMembers(event): loadEvent(event)
-        }
-    }
-
-    private func loadEvent(_ event: ItemEvent.SetMembers) {
-        let groupId = event.groupId,
-            members = event.members
-        if let groupId {
-            if members.isEmpty {
-                remove(itemId: groupId)
-            } else if get(id: groupId) == nil {
-                add(item: .init(kind: .group(.init(id: groupId, members: members))))
-            } else {
-                update(item: .init(kind: .group(.init(id: groupId, members: members))))
-            }
-        } else {
-            targetStore.update(rootIds: members)
+        case let .item(event): loadEvent(event)
+        case .symbol: break
         }
     }
 
     // MARK: path event
 
-    private func loadEvent(_ event: PathEvent) {
-        for pathId in event.affectedPathIds {
+    func loadEvent(_ event: PathEvent) {
+        let affectedSymbolId = event.affectedSymbolId,
+            affectedPathIds = event.affectedPathIds
+        guard let symbolId = {
+            if let id = affectedSymbolId {
+                return id
+            }
+            for pathId in affectedPathIds {
+                guard let id = symbolId(of: pathId) else { continue }
+                return id
+            }
+            return nil
+        }() else { return }
+        for pathId in affectedPathIds {
             let item = get(id: pathId)
             let path = path.get(id: pathId)
             if path == nil {
                 guard item?.pathId != nil else { continue }
                 remove(itemId: pathId)
-                targetStore.update(rootIds: rootIds.filter { $0 != pathId })
             } else if item == nil {
-                add(item: .init(kind: .path(pathId)))
-                targetStore.update(rootIds: rootIds + [pathId])
+                add(symbolId: symbolId, item: .init(kind: .path(pathId)))
             }
+        }
+    }
+
+    // MARK: item event
+
+    func loadEvent(_ event: ItemEvent) {
+        switch event {
+        case let .setRoot(event): loadEvent(event)
+        case let .setGroup(event): loadEvent(event)
+        }
+    }
+
+    func loadEvent(_ event: ItemEvent.SetRoot) {
+        let symbolId = event.symbolId,
+            members = event.members
+
+        var newSymbolRootMap = symbolRootMap
+        newSymbolRootMap[symbolId] = members
+        targetStore.update(symbolRootMap: newSymbolRootMap)
+    }
+
+    func loadEvent(_ event: ItemEvent.SetGroup) {
+        let groupId = event.groupId,
+            members = event.members
+        guard let symbolId = members.compactMap({ symbolId(of: $0) }).allSame() else { return }
+        if members.isEmpty {
+            remove(itemId: groupId)
+        } else if get(id: groupId) == nil {
+            add(symbolId: symbolId, item: .init(kind: .group(.init(id: groupId, members: members))))
+        } else {
+            update(item: .init(kind: .group(.init(id: groupId, members: members))))
         }
     }
 }

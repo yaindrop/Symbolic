@@ -29,20 +29,30 @@ private extension GlobalStores {
             onTap: { info in
                 let worldLocation = info.location.applying(viewport.toWorld)
                 let _r = tracer.range(type: .intent, "On tap \(worldLocation)"); defer { _r() }
-                let pathId = path.hitTest(position: worldLocation)
-                if toolbar.multiSelect {
-                    if let pathId {
-                        activeItem.selectAdd(itemId: pathId)
+                if let symbolId = activeSymbol.editingSymbolId {
+                    let pathId = path.hitTest(position: worldLocation)
+                    if toolbar.multiSelect {
+                        if let pathId {
+                            activeItem.selectAdd(itemId: pathId)
+                        } else {
+                            activeItem.onTap(itemId: nil)
+                        }
                     } else {
-                        activeItem.onTap(itemId: nil)
+                        if let pathId {
+                            canvasAction.on(instant: .activatePath)
+                            activeItem.onTap(itemId: pathId)
+                        } else {
+                            canvasAction.on(instant: .deactivatePath)
+                            activeItem.onTap(itemId: nil)
+                        }
                     }
                 } else {
-                    if let pathId {
-                        canvasAction.on(instant: .activatePath)
-                        activeItem.onTap(itemId: pathId)
-                    } else if !activeItem.store.activeItemIds.isEmpty {
-                        canvasAction.on(instant: .deactivatePath)
-                        activeItem.onTap(itemId: nil)
+                    let symbolId = symbol.hitTest(position: worldLocation)
+                    print("dbg symbolId", symbolId)
+                    if let symbolId {
+                        activeSymbol.setFocus(symbolId: symbolId)
+                    } else {
+                        activeSymbol.setFocus(symbolId: nil)
                     }
                 }
             },
@@ -108,7 +118,7 @@ private extension GlobalStores {
         }
 
         activeItem.store.holdCancellables {
-            activeItem.store.$focusedItemId.willNotify
+            activeItem.store.$state.willNotify
                 .sink { _ in
                     focusedPath.selectionClear()
                 }

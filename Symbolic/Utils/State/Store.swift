@@ -239,7 +239,8 @@ class Store: CancellablesHolder {
     fileprivate var trackableIdGen = IncrementalIdGenerator()
     fileprivate var trackableIdToSubscriptionIds: [Int: Set<Int>] = [:]
 
-    fileprivate private(set) var deriving: DerivingContext?
+    fileprivate private(set) var derivingStack: [DerivingContext] = []
+    fileprivate var deriving: DerivingContext? { derivingStack.last }
 }
 
 // MARK: deriving
@@ -251,15 +252,12 @@ private extension Store {
     }
 
     func withDeriving<T>(_ apply: () -> T) -> (newValue: T, DerivingContext) {
-        guard deriving == nil else {
-            fatalError("Nested deriving of store properties is not supported.")
-        }
         let _r = subtracer.range("deriving"); defer { _r() }
 
         let deriving = DerivingContext()
-        self.deriving = deriving
+        derivingStack.append(deriving)
         let result = apply()
-        self.deriving = nil
+        derivingStack.removeLast()
         subtracer.instant(.init(Tracer.DerivingResult(trackableIds: deriving.trackableIds)))
 
         return (result, deriving)

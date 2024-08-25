@@ -91,23 +91,23 @@ extension PathPropertyService {
 // MARK: load document
 
 extension PathPropertyService {
-    func loadDocument(_ document: Document) {
+    func load(document: Document) {
         let _r = subtracer.range(type: .intent, "load document, size=\(document.events.count)"); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
-                loadEvent(event)
+                load(event: event)
             }
         }
     }
 
-    func loadPendingEvent(_ event: DocumentEvent?) {
+    func load(pendingEvent: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
         withStoreUpdating {
-            if let event {
+            if let pendingEvent {
                 pendingStore.update(active: true)
                 pendingStore.update(map: store.map.cloned)
-                loadEvent(event)
+                load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)
             }
@@ -118,20 +118,20 @@ extension PathPropertyService {
 // MARK: - event loaders
 
 extension PathPropertyService {
-    private func loadEvent(_ event: DocumentEvent) {
+    private func load(event: DocumentEvent) {
         let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
-            event.events.forEach { loadEvent($0) }
+            event.events.forEach { load(event: $0) }
         case let .single(event):
-            loadEvent(event)
+            load(event: event)
         }
     }
 
-    private func loadEvent(_ event: DocumentEvent.Single) {
+    private func load(event: DocumentEvent.Single) {
         switch event {
-        case let .path(event): loadEvent(event)
-        case let .pathProperty(event): loadEvent(event)
+        case let .path(event): load(event: event)
+        case let .pathProperty(event): load(event: event)
         case .item: break
         case .symbol: break
         }
@@ -139,7 +139,7 @@ extension PathPropertyService {
 
     // MARK: path event
 
-    private func loadEvent(_ event: PathEvent) {
+    private func load(event: PathEvent) {
         for pathId in event.affectedPathIds {
             let property = get(id: pathId)
             let path = path.get(id: pathId)
@@ -153,13 +153,13 @@ extension PathPropertyService {
 
     // MARK: path property event
 
-    private func loadEvent(_ event: PathPropertyEvent) {
+    private func load(event: PathPropertyEvent) {
         switch event {
-        case let .update(event): loadEvent(event)
+        case let .update(event): load(event: event)
         }
     }
 
-    private func loadEvent(_ event: PathPropertyEvent.Update) {
+    private func load(event: PathPropertyEvent.Update) {
         let pathId = event.pathId
         guard var property = get(id: pathId) else { return }
         for kind in event.kinds {

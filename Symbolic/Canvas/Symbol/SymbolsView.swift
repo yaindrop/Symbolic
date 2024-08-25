@@ -7,6 +7,7 @@ struct SymbolsView: View, TracedView, SelectorHolder {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.symbol.symbolIds }) var symbolIds
+        @Selected({ global.symbol.map }) var symbolMap
         @Selected({ global.item.symbolItemMap }) var symbolItemMap
         @Selected({ global.path.map }) var pathMap
         @Selected({ global.activeSymbol.unfocusedSymbolIds }) var unfocusedSymbolIds
@@ -27,13 +28,28 @@ private extension SymbolsView {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
             ForEach(selector.unfocusedSymbolIds) { symbolId in
-                ForEach(selector.symbolItemMap.value(key: symbolId) ?? []) { item in
-                    SUPath { path in selector.pathMap.value(key: item.id)?.append(to: &path) }
-                        .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-                }
+                symbolView(symbolId: symbolId)
             }
             .transformEffect($0.worldToView)
         }
 //        .blur(radius: 1)
+    }
+
+    @ViewBuilder func symbolView(symbolId: UUID) -> some View {
+        if let symbol = selector.symbolMap.value(key: symbolId) {
+            symbolPaths(symbolId: symbolId)
+                .background {
+                    Rectangle()
+                        .fill(Color.label.opacity(0.05))
+                        .framePosition(rect: symbol.rect)
+                }
+        }
+    }
+
+    @ViewBuilder func symbolPaths(symbolId: UUID) -> some View {
+        ForEach(selector.symbolItemMap.value(key: symbolId) ?? []) { item in
+            SUPath { path in selector.pathMap.value(key: item.id)?.append(to: &path) }
+                .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        }
     }
 }

@@ -55,6 +55,10 @@ struct SymbolService {
 
 extension SymbolService: SymbolStoreProtocol {
     var map: SymbolMap { pendingStore.active ? pendingStore.map : store.map }
+
+    func hitTest(position: Point2) -> UUID? {
+        map.dict.first { _, symbol in symbol.rect.contains(position) }?.key
+    }
 }
 
 // MARK: load document
@@ -89,23 +93,23 @@ extension SymbolService {
 // MARK: load document
 
 extension SymbolService {
-    func loadDocument(_ document: Document) {
+    func load(document: Document) {
         let _r = subtracer.range(type: .intent, "load document, size=\(document.events.count)"); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
-                loadEvent(event)
+                load(event: event)
             }
         }
     }
 
-    func loadPendingEvent(_ event: DocumentEvent?) {
+    func load(pendingEvent: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
         withStoreUpdating {
-            if let event {
+            if let pendingEvent {
                 pendingStore.update(active: true)
                 pendingStore.update(map: store.map.cloned)
-                loadEvent(event)
+                load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)
             }
@@ -116,48 +120,48 @@ extension SymbolService {
 // MARK: - event loaders
 
 extension SymbolService {
-    private func loadEvent(_ event: DocumentEvent) {
+    private func load(event: DocumentEvent) {
         let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
-            event.events.forEach { loadEvent($0) }
+            event.events.forEach { load(event: $0) }
         case let .single(event):
-            loadEvent(event)
+            load(event: event)
         }
     }
 
-    private func loadEvent(_ event: DocumentEvent.Single) {
+    private func load(event: DocumentEvent.Single) {
         switch event {
         case .path: break
         case .pathProperty: break
         case .item: break
-        case let .symbol(event): loadEvent(event)
+        case let .symbol(event): load(event: event)
         }
     }
 
     // MARK: path property event
 
-    private func loadEvent(_ event: SymbolEvent) {
+    private func load(event: SymbolEvent) {
         switch event {
-        case let .create(event): loadEvent(event)
-        case let .delete(event): loadEvent(event)
-        case let .resize(event): loadEvent(event)
+        case let .create(event): load(event: event)
+        case let .delete(event): load(event: event)
+        case let .resize(event): load(event: event)
         }
     }
 
-    private func loadEvent(_ event: SymbolEvent.Create) {
+    private func load(event: SymbolEvent.Create) {
         let symbolId = event.symbolId,
             origin = event.origin,
             size = event.size
         add(symbol: .init(id: symbolId, origin: origin, size: size))
     }
 
-    private func loadEvent(_ event: SymbolEvent.Delete) {
+    private func load(event: SymbolEvent.Delete) {
         let symbolId = event.symbolId
         remove(symbolId: symbolId)
     }
 
-    private func loadEvent(_ event: SymbolEvent.Resize) {
+    private func load(event: SymbolEvent.Resize) {
         let symbolId = event.symbolId
         guard var symbol = get(id: symbolId) else { return }
         symbol.origin = event.origin

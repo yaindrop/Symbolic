@@ -318,24 +318,24 @@ private extension ItemService {
 // MARK: load document
 
 extension ItemService {
-    func loadDocument(_ document: Document) {
+    func load(document: Document) {
         let _r = subtracer.range(type: .intent, "load document, size=\(document.events.count)"); defer { _r() }
         withStoreUpdating {
             clear()
             for event in document.events {
-                loadEvent(event)
+                load(event: event)
             }
         }
     }
 
-    func loadPendingEvent(_ event: DocumentEvent?) {
+    func load(pendingEvent: DocumentEvent?) {
         let _r = subtracer.range("load pending event"); defer { _r() }
         withStoreUpdating {
-            if let event {
+            if let pendingEvent {
                 pendingStore.update(active: true)
                 pendingStore.update(map: store.map.cloned)
                 pendingStore.update(symbolRootMap: store.symbolRootMap)
-                loadEvent(event)
+                load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)
             }
@@ -346,28 +346,28 @@ extension ItemService {
 // MARK: - event loaders
 
 private extension ItemService {
-    func loadEvent(_ event: DocumentEvent) {
+    func load(event: DocumentEvent) {
         let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
-            event.events.forEach { loadEvent($0) }
+            event.events.forEach { load(event: $0) }
         case let .single(event):
-            loadEvent(event)
+            load(event: event)
         }
     }
 
-    func loadEvent(_ event: DocumentEvent.Single) {
+    func load(event: DocumentEvent.Single) {
         switch event {
-        case let .path(event): loadEvent(event)
+        case let .path(event): load(event: event)
         case .pathProperty: break
-        case let .item(event): loadEvent(event)
+        case let .item(event): load(event: event)
         case .symbol: break
         }
     }
 
     // MARK: path event
 
-    func loadEvent(_ event: PathEvent) {
+    func load(event: PathEvent) {
         let affectedSymbolId = event.affectedSymbolId,
             affectedPathIds = event.affectedPathIds
         guard let symbolId = {
@@ -394,14 +394,14 @@ private extension ItemService {
 
     // MARK: item event
 
-    func loadEvent(_ event: ItemEvent) {
+    func load(event: ItemEvent) {
         switch event {
-        case let .setRoot(event): loadEvent(event)
-        case let .setGroup(event): loadEvent(event)
+        case let .setRoot(event): load(event: event)
+        case let .setGroup(event): load(event: event)
         }
     }
 
-    func loadEvent(_ event: ItemEvent.SetRoot) {
+    func load(event: ItemEvent.SetRoot) {
         let symbolId = event.symbolId,
             members = event.members
 
@@ -410,7 +410,7 @@ private extension ItemService {
         targetStore.update(symbolRootMap: newSymbolRootMap)
     }
 
-    func loadEvent(_ event: ItemEvent.SetGroup) {
+    func load(event: ItemEvent.SetGroup) {
         let groupId = event.groupId,
             members = event.members
         guard let symbolId = members.compactMap({ symbolId(of: $0) }).allSame() else { return }

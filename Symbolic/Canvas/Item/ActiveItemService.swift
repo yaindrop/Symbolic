@@ -4,28 +4,20 @@ private let subtracer = tracer.tagged("ActiveItemService")
 
 // MARK: - ActiveItemStore
 
+enum ActiveItemState: Equatable {
+    case none
+    case active(Set<UUID>)
+    case focused(UUID)
+}
+
 class ActiveItemStore: Store {
-    @Trackable var activeItemIds = Set<UUID>()
-    @Trackable var focusedItemId: UUID?
+    @Trackable var state: ActiveItemState = .none
 }
 
 private extension ActiveItemStore {
-    func update(active: Set<UUID>, focused: UUID? = nil) {
+    func update(state: ActiveItemState) {
         withStoreUpdating(configs: .init(animation: .faster)) {
-            update { $0(\._activeItemIds, active) }
-            update { $0(\._focusedItemId, focused) }
-        }
-    }
-
-    func update(select itemId: UUID) {
-        withStoreUpdating(configs: .init(animation: .faster)) {
-            update(active: activeItemIds.cloned { $0.insert(itemId) })
-        }
-    }
-
-    func update(deselect itemIds: [UUID]) {
-        withStoreUpdating(configs: .init(animation: .faster)) {
-            update(active: activeItemIds.cloned { $0.subtract(itemIds) })
+            update { $0(\._state, state) }
         }
     }
 }
@@ -43,8 +35,17 @@ struct ActiveItemService {
 // MARK: selectors
 
 extension ActiveItemService {
-    var activeItemIds: Set<UUID> { store.activeItemIds }
-    var focusedItemId: UUID? { store.focusedItemId }
+    var state: ActiveItemState { store.state }
+
+    var activeItemIds: Set<UUID> {
+        switch state {
+        case .none: []
+        case let .active(ids): ids
+        case let .focused(id): .init([id] + item.ancestorIds(of: id))
+        }
+    }
+
+    var focusedItemId: UUID? { if case let .focused(id) = state { id } else { nil } }
 
     // MARK: active
 
@@ -63,7 +64,7 @@ extension ActiveItemService {
     // MARK: selected
 
     var selectedItemIds: Set<UUID> {
-        guard store.focusedItemId == nil else { return [] }
+        guard focusedItemId == nil else { return [] }
         var result = Set(activeItemIds)
         for id in activeItemIds {
             result.subtract(item.ancestorIds(of: id))
@@ -115,7 +116,7 @@ extension ActiveItemService {
 
     func activeDescendants(groupId: UUID) -> [Item] {
         item.expandedItems(rootItemId: groupId)
-            .filter { $0.id != groupId && store.activeItemIds.contains($0.id) }
+            .filter { $0.id != groupId && activeItemIds.contains($0.id) }
     }
 
     func groupOutset(id: UUID) -> Scalar {
@@ -139,18 +140,16 @@ extension ActiveItemService {
         let _r = subtracer.range(type: .intent, "tap \(itemId?.shortDescription ?? "outside")"); defer { _r() }
         if let itemId {
             let ancestors = item.ancestorIds(of: itemId)
-            if let index = ancestors.lastIndex(where: { !store.activeItemIds.contains($0) }) {
-                store.update(active: .init(ancestors[index...]), focused: ancestors[index])
+            if let index = ancestors.lastIndex(where: { !activeItemIds.contains($0) }) {
+                store.update(state: .focused(ancestors[index]))
             } else {
-                store.update(active: .init([itemId] + ancestors), focused: itemId)
+                store.update(state: .focused(itemId))
             }
         } else {
-            if let focusedItemId = store.focusedItemId {
-                let activeItemIds = store.activeItemIds.cloned { $0.remove(focusedItemId) }
-                let parentId = item.parentId(of: focusedItemId)
-                store.update(active: activeItemIds, focused: parentId)
+            if let focusedItemId, let parentId = item.parentId(of: focusedItemId) {
+                store.update(state: .focused(parentId))
             } else {
-                store.update(active: .init())
+                store.update(state: .none)
             }
         }
     }
@@ -158,39 +157,38 @@ extension ActiveItemService {
     func focus(itemId: UUID) {
         let _r = subtracer.range(type: .intent, "focus \(itemId)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
-        store.update(active: .init([itemId] + ancestors), focused: itemId)
+        store.update(state: .focused(itemId))
     }
 
     func blur() {
         let _r = subtracer.range(type: .intent, "blur"); defer { _r() }
-        store.update(active: [], focused: nil)
+        store.update(state: .none)
     }
 
     // MARK: select
 
     func select(itemIds: [UUID]) {
         let _r = subtracer.range(type: .intent, "select \(itemIds)"); defer { _r() }
-        store.update(active: .init(itemIds))
+        store.update(state: .active(.init(itemIds)))
     }
 
     func selectAdd(itemId: UUID) {
         let _r = subtracer.range(type: .intent, "select \(item)"); defer { _r() }
         let ancestors = item.ancestorIds(of: itemId)
         if ancestors.isEmpty {
-            store.update(active: store.activeItemIds.cloned { $0.insert(itemId) })
+            store.update(state: .active(activeItemIds.cloned { $0.insert(itemId) }))
             return
         }
-        let lastInactiveIndex = ancestors.lastIndex { !store.activeItemIds.contains($0) }
+        let lastInactiveIndex = ancestors.lastIndex { !activeItemIds.contains($0) }
         if let lastInactiveIndex {
-            store.update(select: ancestors[lastInactiveIndex])
-
+            store.update(state: .active(activeItemIds.cloned { $0.insert(ancestors[lastInactiveIndex]) }))
         } else {
-            store.update(select: itemId)
+            store.update(state: .active(activeItemIds.cloned { $0.insert(itemId) }))
         }
     }
 
     func selectRemove(itemIds: [UUID]) {
         let _r = subtracer.range(type: .intent, "deselect \(itemIds)"); defer { _r() }
-        store.update(deselect: itemIds)
+        store.update(state: .active(activeItemIds.cloned { $0.subtract(itemIds) }))
     }
 }

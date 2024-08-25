@@ -6,6 +6,12 @@ struct Symbol: Identifiable, Equatable, Codable, TriviallyCloneable {
     var size: CGSize
 }
 
+extension Symbol {
+    var rect: CGRect {
+        .init(origin: origin, size: size)
+    }
+}
+
 extension Symbol: CustomStringConvertible {
     var description: String {
         "Symbol(id: \(id.shortDescription), origin: \(origin), size: \(size))"

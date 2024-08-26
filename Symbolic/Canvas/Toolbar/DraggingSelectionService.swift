@@ -57,7 +57,7 @@ extension DraggingSelectionService {
     var intersectedRootItems: [Item] {
         guard let symbolId = activeSymbol.focusedSymbolId else { return [] }
         return item.rootItems(symbolId: symbolId).filter {
-            item.leafItems(rootItemId: $0.id)
+            item.leafItems(rootId: $0.id)
                 .contains { intersects(item: $0) }
         }
     }

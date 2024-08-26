@@ -6,11 +6,23 @@ struct ItemPath: Identifiable, Equatable, Codable {
     let id: UUID
 }
 
+extension ItemPath: CustomStringConvertible {
+    var description: String {
+        "Path(id: \(id))"
+    }
+}
+
 // MARK: - ItemGroup
 
 struct ItemGroup: Identifiable, Equatable, Codable {
     let id: UUID
     var members: [UUID]
+}
+
+extension ItemGroup {
+    var event: ItemEvent.SetGroup {
+        .init(groupId: id, members: members)
+    }
 }
 
 extension ItemGroup: CustomStringConvertible {
@@ -29,6 +41,10 @@ struct ItemSymbol: Identifiable, Equatable, Codable, TriviallyCloneable {
 }
 
 extension ItemSymbol {
+    var event: ItemEvent.SetSymbol {
+        .init(symbolId: id, origin: origin, size: size, members: members)
+    }
+
     var boundingRect: CGRect {
         .init(origin: origin, size: size)
     }
@@ -87,9 +103,9 @@ extension Item: Identifiable {
 extension Item: CustomStringConvertible {
     var description: String {
         switch kind {
-        case let .path(item): "Item(path: \(item))"
-        case let .group(item): "Item(group: \(item))"
-        case let .symbol(item): "Item(symbol: \(item))"
+        case let .path(kind): "Item(\(kind))"
+        case let .group(kind): "Item(\(kind))"
+        case let .symbol(kind): "Item(\(kind))"
         }
     }
 }

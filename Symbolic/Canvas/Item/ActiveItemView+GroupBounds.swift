@@ -21,7 +21,7 @@ private extension GlobalStores {
                 if activeItem.selected(id: group.id) {
                     activeItem.selectRemove(itemIds: [group.id])
                 } else {
-                    let activeDescendants = item.expandedItems(rootItemId: group.id)
+                    let activeDescendants = item.expandedItems(rootId: group.id)
                         .filter { $0.id != group.id && activeItem.activeItemIds.contains($0.id) }
                     activeItem.selectRemove(itemIds: activeDescendants.map { $0.id })
                 }

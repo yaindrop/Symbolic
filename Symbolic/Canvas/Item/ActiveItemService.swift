@@ -115,16 +115,16 @@ extension ActiveItemService {
     // MARK: group
 
     func activeDescendants(groupId: UUID) -> [Item] {
-        item.expandedItems(rootItemId: groupId)
+        item.expandedItems(rootId: groupId)
             .filter { $0.id != groupId && activeItemIds.contains($0.id) }
     }
 
     func groupOutset(id: UUID) -> Scalar {
         guard let group = item.group(id: id) else { return 0 }
         var outsetLevel = 1
-        let minHeight = activeDescendants(groupId: group.id).map { self.item.height(itemId: $0.id) }.filter { $0 > 0 }.min()
+        let minHeight = activeDescendants(groupId: group.id).map { self.item.height(of: $0.id) }.filter { $0 > 0 }.min()
         if let minHeight {
-            let height = item.height(itemId: group.id)
+            let height = item.height(of: group.id)
             outsetLevel += height - minHeight
         }
         return 6 * Scalar(outsetLevel)

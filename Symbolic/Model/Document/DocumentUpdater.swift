@@ -48,7 +48,7 @@ extension DocumentUpdater {
     func groupSelection() {
         let groupId = UUID()
         let members = activeItem.selectedItems.map { $0.id }
-        let inGroupId = global.item.commonAncestorId(itemIds: members)
+        let inGroupId = global.item.commonAncestorId(of: members)
         update(item: .group(.init(groupId: groupId, members: members, inGroupId: inGroupId)))
         activeItem.onTap(itemId: groupId)
     }
@@ -415,7 +415,7 @@ private extension DocumentUpdater {
             if inSymbolId == symbolId {
                 symbol.members.append(groupId)
             }
-            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
+            events.append(.item(.setSymbol(symbol.event)))
         }
 
         func adjustMembers(in group: ItemGroup) {
@@ -425,7 +425,7 @@ private extension DocumentUpdater {
             if inGroupId == group.id {
                 group.members.append(group.id)
             }
-            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+            events.append(.item(.setGroup(group.event)))
         }
 
         adjustRootMembers()
@@ -455,14 +455,14 @@ private extension DocumentUpdater {
             guard var symbol = itemStore.symbol(id: symbolId),
                   hasUngrouped(in: symbol.members) else { return }
             expandUngrouped(in: &symbol.members)
-            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
+            events.append(.item(.setSymbol(symbol.event)))
         }
 
         func adjustMembers(in group: ItemGroup) {
             var group = group
             guard hasUngrouped(in: group.members) else { return }
             expandUngrouped(in: &group.members)
-            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+            events.append(.item(.setGroup(group.event)))
         }
 
         for groupId in groupIds {
@@ -490,34 +490,34 @@ private extension DocumentUpdater {
                 group.members.removeAll { $0 == itemId }
                 let index = group.members.firstIndex(of: toItemId) ?? 0
                 group.members.insert(itemId, at: isAfter ? group.members.index(after: index) : index)
-                events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+                events.append(.item(.setGroup(group.event)))
             } else {
                 var symbol = symbol
                 symbol.members.removeAll { $0 == itemId }
                 let index = symbol.members.firstIndex(of: toItemId) ?? 0
                 symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
-                events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
+                events.append(.item(.setSymbol(symbol.event)))
             }
             return
         }
         guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
         if let parentId, var group = itemStore.group(id: parentId) {
             group.members.removeAll { $0 == itemId }
-            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+            events.append(.item(.setGroup(group.event)))
         } else {
             var symbol = symbol
             symbol.members.removeAll { $0 == itemId }
-            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
+            events.append(.item(.setSymbol(symbol.event)))
         }
         if let toParentId, var toGroup = itemStore.group(id: toParentId) {
             let index = toGroup.members.firstIndex(of: toItemId) ?? 0
             toGroup.members.insert(itemId, at: isAfter ? toGroup.members.index(after: index) : index)
-            events.append(.item(.setGroup(.init(groupId: toGroup.id, members: toGroup.members))))
+            events.append(.item(.setGroup(toGroup.event)))
         } else {
             var symbol = symbol
             let index = symbol.members.firstIndex(of: toItemId) ?? 0
             symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
-            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
+            events.append(.item(.setSymbol(symbol.event)))
         }
     }
 
@@ -541,7 +541,7 @@ private extension DocumentUpdater {
         for symbolId in symbolIds {
             guard var symbol = itemStore.symbol(id: symbolId) else { continue }
             symbol.origin += offset
-            events.append(.item(.setSymbol(.init(symbolId: symbolId, origin: symbol.origin, size: symbol.size, members: symbol.members))))
+            events.append(.item(.setSymbol(symbol.event)))
         }
     }
 

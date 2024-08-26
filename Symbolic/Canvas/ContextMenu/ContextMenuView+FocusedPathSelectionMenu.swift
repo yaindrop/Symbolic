@@ -101,25 +101,6 @@ extension ContextMenuView.FocusedPathSelectionMenu {
             .disabled(selected)
     }
 
-//    @ViewBuilder var segmentTypeMenu: some View {
-//        segmentTypeButton(.line)
-//        segmentTypeButton(.cubic)
-//        segmentTypeButton(.quadratic)
-//    }
-//
-//    @ViewBuilder func segmentTypeButton(_ segmentType: PathSegmentType) -> some View {
-//        var name: String {
-//            switch segmentType {
-//            case .line: "Line"
-//            case .cubic: "Cubic Bezier"
-//            case .quadratic: "Quadratic Bezier"
-//            case .auto: ""
-//            }
-//        }
-//        let selected = selector.activeSegmentType == segmentType
-//        Button(name, systemImage: selected ? "checkmark" : "") { selected ? setSegmentType(.auto) : setSegmentType(segmentType) }
-//    }
-
     @ViewBuilder var copyMenu: some View {
         Button("Copy", systemImage: "doc.on.doc") {}
         Button("Cut", systemImage: "scissors") {}

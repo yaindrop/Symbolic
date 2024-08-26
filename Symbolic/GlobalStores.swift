@@ -25,9 +25,6 @@ struct GlobalStores {
     private let documentStore = DocumentStore()
     private let documentUpdaterStore = DocumentUpdaterStore()
 
-//    private let symbolStore = SymbolStore()
-//    private let pendingSymbolStore = PendingSymbolStore()
-
     private let itemStore = ItemStore()
     private let pendingItemStore = PendingItemStore()
 

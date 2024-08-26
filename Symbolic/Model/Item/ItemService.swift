@@ -41,8 +41,10 @@ extension ItemStoreProtocol {
         get(id: id)?.symbol
     }
 
-    func rootItems(symbolId: UUID) -> [Item] {
-        symbol(id: symbolId)?.members.compactMap { get(id: $0) } ?? []
+    // MARK: derived selectors
+
+    var allSymbols: [ItemSymbol] {
+        symbolIds.compactMap { symbol(id: $0) }
     }
 
     func ancestorIds(of itemId: UUID) -> [UUID] {
@@ -53,10 +55,6 @@ extension ItemStoreProtocol {
         itemAncestorMap[itemId]?.first
     }
 
-    func allItems(symbolId: UUID) -> [Item] {
-        symbolItemMap[symbolId] ?? []
-    }
-
     func symbolId(of itemId: UUID) -> UUID? {
         itemSymbolMap[itemId]
     }
@@ -65,9 +63,15 @@ extension ItemStoreProtocol {
         itemDepthMap[itemId] ?? 0
     }
 
-    // MARK: complex selectors
+    // MARK: tree selectors
 
-    func commonAncestorId(itemIds: [UUID]) -> UUID? {
+    func height(of itemId: UUID) -> Int {
+        guard let item = get(id: itemId) else { return 0 }
+        guard let group = item.group else { return 0 }
+        return 1 + group.members.map { height(of: $0) }.max()!
+    }
+
+    func commonAncestorId(of itemIds: [UUID]) -> UUID? {
         let ancestorLists = itemIds.map { ancestorIds(of: $0) }
         let highest = ancestorLists.min { $0.count < $1.count }
         guard let highest, !highest.isEmpty else { return nil }
@@ -76,42 +80,48 @@ extension ItemStoreProtocol {
         return highest.first { id in ancestorSets.allSatisfy { $0.contains(id) } }
     }
 
-    func height(itemId: UUID) -> Int {
-        guard let item = get(id: itemId) else { return 0 }
-        guard let group = item.group else { return 0 }
-        return 1 + group.members.map { height(itemId: $0) }.max()!
-    }
-
-    func expandedItems(rootItemId: UUID) -> [Item] {
-        guard let item = get(id: rootItemId) else { return [] }
+    func expandedItems(rootId: UUID) -> [Item] {
+        guard let item = get(id: rootId) else { return [] }
         guard let group = item.group else { return [item] }
-        return [item] + group.members.flatMap { expandedItems(rootItemId: $0) }
+        return [item] + group.members.flatMap { expandedItems(rootId: $0) }
     }
 
-    func groupItems(rootItemId: UUID) -> [Item] {
-        guard let item = get(id: rootItemId) else { return [] }
+    func groupItems(rootId: UUID) -> [Item] {
+        guard let item = get(id: rootId) else { return [] }
         guard let group = item.group else { return [] }
-        return [item] + group.members.flatMap { groupItems(rootItemId: $0) }
+        return [item] + group.members.flatMap { groupItems(rootId: $0) }
     }
 
-    func leafItems(rootItemId: UUID) -> [Item] {
-        guard let item = get(id: rootItemId) else { return [] }
+    func leafItems(rootId: UUID) -> [Item] {
+        guard let item = get(id: rootId) else { return [] }
         guard let group = item.group else { return [item] }
-        return group.members.flatMap { leafItems(rootItemId: $0) }
+        return group.members.flatMap { leafItems(rootId: $0) }
+    }
+
+    // MARK: symbol selectors
+
+    func rootItems(symbolId: UUID) -> [Item] {
+        symbol(id: symbolId)?.members.compactMap { get(id: $0) } ?? []
+    }
+
+    func allItems(symbolId: UUID) -> [Item] {
+        symbolItemMap[symbolId] ?? []
     }
 
     func allExpandedItems(symbolId: UUID) -> [Item] {
-        symbol(id: symbolId)?.members.flatMap { expandedItems(rootItemId: $0) } ?? []
+        symbol(id: symbolId)?.members.flatMap { expandedItems(rootId: $0) } ?? []
     }
 
     func allGroups(symbolId: UUID) -> [ItemGroup] {
-        symbol(id: symbolId)?.members.flatMap { groupItems(rootItemId: $0) }.compactMap { $0.group } ?? []
+        symbol(id: symbolId)?.members.flatMap { groupItems(rootId: $0) }.compactMap { $0.group } ?? []
     }
 
     func allPaths(symbolId: UUID) -> [ItemPath] {
-        symbol(id: symbolId)?.members.flatMap { leafItems(rootItemId: $0) }.compactMap { $0.path } ?? []
+        symbol(id: symbolId)?.members.flatMap { leafItems(rootId: $0) }.compactMap { $0.path } ?? []
     }
 }
+
+// MARK: calc derived
 
 private extension ItemStoreProtocol {
     var calcSymbolIds: Set<UUID> {
@@ -173,7 +183,6 @@ private extension ItemStoreProtocol {
 
 class ItemStore: Store, ItemStoreProtocol {
     @Trackable var itemMap = ItemMap()
-//    @Trackable var symbolRootMap = SymbolRootMap()
 
     @Derived({ $0.calcSymbolIds }) var symbolIds: Set<UUID>
     @Derived({ $0.calcItemAncestorMap }) var itemAncestorMap
@@ -186,10 +195,6 @@ private extension ItemStore {
     func update(itemMap: ItemMap) {
         update { $0(\._itemMap, itemMap) }
     }
-
-//    func update(symbolRootMap: SymbolRootMap) {
-//        update { $0(\._symbolRootMap, symbolRootMap) }
-//    }
 }
 
 // MARK: - PendingItemStore
@@ -227,8 +232,7 @@ extension ItemService: ItemStoreProtocol {
     var itemDepthMap: ItemDepthMap { activeStore.itemDepthMap }
 
     func allPaths(symbolId: UUID) -> [Path] {
-        let pathMap = path.pathMap
-        return allPaths(symbolId: symbolId).compactMap { pathMap.get($0.id) }
+        allPaths(symbolId: symbolId).compactMap { path.pathMap.get($0.id) }
     }
 
     func allPathsBounds(symbolId: UUID) -> CGRect? {
@@ -236,7 +240,7 @@ extension ItemService: ItemStoreProtocol {
     }
 
     func groupedPathIds(groupId: UUID) -> [UUID] {
-        leafItems(rootItemId: groupId).compactMap { $0.path?.id }
+        leafItems(rootId: groupId).compactMap { $0.path?.id }
     }
 
     func boundingRect(itemId: UUID) -> CGRect? {

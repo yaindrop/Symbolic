@@ -55,15 +55,15 @@ extension GlobalStores {
     var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, panel: panel) }
 
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, itemStore: itemStore, pathPropertyStore: pathPropertyStore, activeItem: activeItem, viewport: viewport, grid: grid) }
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, pathPropertyStore: pathPropertyStore, itemStore: itemStore, symbolStore: symbolStore, activeItem: activeItem, viewport: viewport, grid: grid) }
 
-    var symbol: SymbolService { .init(store: symbolStore, pendingStore: pendingSymbolStore) }
+    var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
+
+    var pathProperty: PathPropertyService { .init(store: pathPropertyStore, pendingStore: pendingPathPropertyStore, path: path) }
 
     var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path) }
 
-    var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore, viewport: viewport) }
-
-    var pathProperty: PathPropertyService { .init(store: pathPropertyStore, pendingStore: pendingPathPropertyStore, path: path) }
+    var symbol: SymbolService { .init(store: symbolStore, pendingStore: pendingSymbolStore, viewport: viewport, path: path, item: item) }
 
     var activeSymbol: ActiveSymbolService { .init(store: activeSymbolStore, symbol: symbol) }
 

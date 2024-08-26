@@ -18,8 +18,9 @@ extension DocumentUpdaterStore {
 struct DocumentUpdater {
     let store: DocumentUpdaterStore
     let pathStore: PathStore
-    let itemStore: ItemStore
     let pathPropertyStore: PathPropertyStore
+    let itemStore: ItemStore
+    let symbolStore: SymbolStore
     let activeItem: ActiveItemService
     let viewport: ViewportService
     let grid: GridStore
@@ -28,13 +29,25 @@ struct DocumentUpdater {
 // MARK: actions
 
 extension DocumentUpdater {
+    func update(path action: PathAction, pending: Bool = false) {
+        handle(.path(action), pending: pending)
+    }
+
+    func update(pathProperty action: PathPropertyAction, pending: Bool = false) {
+        handle(.pathProperty(action), pending: pending)
+    }
+
+    func update(item action: ItemAction, pending: Bool = false) {
+        handle(.item(action), pending: pending)
+    }
+
+    func update(symbol action: SymbolAction, pending: Bool = false) {
+        handle(.symbol(action), pending: pending)
+    }
+
     func update(focusedPath kind: PathAction.Update.Kind, pending: Bool = false) {
         guard let pathId = activeItem.focusedPathId else { return }
         handle(.path(.update(.init(pathId: pathId, kind: kind))), pending: pending)
-    }
-
-    func update(path action: PathAction, pending: Bool = false) {
-        handle(.path(action), pending: pending)
     }
 
     func groupSelection() {
@@ -51,16 +64,8 @@ extension DocumentUpdater {
         global.documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
     }
 
-    func update(item action: ItemAction, pending: Bool = false) {
-        handle(.item(action), pending: pending)
-    }
-
     func cancel() {
         store.pendingEventSubject.send(nil)
-    }
-
-    func update(pathProperty action: PathPropertyAction, pending: Bool = false) {
-        handle(.pathProperty(action), pending: pending)
     }
 }
 
@@ -524,6 +529,7 @@ private extension DocumentUpdater {
         switch action {
         case let .create(action): collect(events: &events, of: action)
         case let .delete(action): collect(events: &events, of: action)
+        case let .move(action): collect(events: &events, of: action)
         case let .resize(action): collect(events: &events, of: action)
         }
     }
@@ -542,10 +548,20 @@ private extension DocumentUpdater {
         }
     }
 
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Move) {
+        let symbolIds = action.symbolIds,
+            offset = action.offset
+        for symbolId in symbolIds {
+            guard var symbol = symbolStore.get(id: symbolId) else { continue }
+            symbol.origin += offset
+            events.append(.symbol(.resize(.init(symbolId: symbolId, origin: symbol.origin, size: symbol.size))))
+        }
+    }
+
     func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Resize) {
         let symbolId = action.symbolId,
             origin = action.origin,
             size = action.size
-        events.append(.symbol(.create(.init(symbolId: symbolId, origin: origin, size: size))))
+        events.append(.symbol(.resize(.init(symbolId: symbolId, origin: origin, size: size))))
     }
 }

@@ -36,7 +36,7 @@ extension AddingPathService {
 
     var polyline: Polyline? {
         guard store.points.count > 1 else { return nil }
-        return .init(points: store.points).applying(viewport.toWorld)
+        return .init(points: store.points).applying(viewport.viewToWorld)
     }
 
     var path: Path? {
@@ -73,7 +73,7 @@ extension AddingPathService {
 struct AddingPathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.addingPath.polyline }) var polyline
-        @Selected({ global.viewport.toView }) var toView
+        @Selected({ global.viewport.worldToView }) var worldToView
     }
 
     @SelectorWrapper var selector
@@ -91,7 +91,7 @@ private extension AddingPathView {
             SUPath { polyline.append(to: &$0) }
                 .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
                 .allowsHitTesting(false)
-                .transformEffect(selector.toView)
+                .transformEffect(selector.worldToView)
 //                .id(path.id)
         }
     }

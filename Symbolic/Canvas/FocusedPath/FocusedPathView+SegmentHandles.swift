@@ -7,7 +7,7 @@ private extension GlobalStores {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             guard let fromId = focusedPath.focusedSegmentId,
                   let toId = activeItem.focusedPath?.nodeId(after: fromId) else { return }
-            let offset = v.offset.applying(viewport.toWorld)
+            let offset = v.offset.applying(viewport.viewToWorld)
             documentUpdater.update(focusedPath: .moveNodes(.init(nodeIds: [fromId, toId], offset: offset)), pending: pending)
         }
         return .init(
@@ -35,6 +35,7 @@ extension FocusedPathView {
             @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
             @Selected(configs: .init(syncNotify: true), { global.activeItem.focusedPath }) var path
             @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -52,8 +53,9 @@ extension FocusedPathView {
 private extension FocusedPathView.SegmentHandles {
     var content: some View {
         AnimatableReader(selector.viewport) {
-            shape(viewport: $0)
-            touchable(viewport: $0)
+            let transform = selector.symbolToWorld.concatenating($0.worldToView)
+            shape(transform: transform)
+            touchable(transform: transform)
         }
     }
 
@@ -62,16 +64,16 @@ private extension FocusedPathView.SegmentHandles {
     var circleSize: Scalar { 12 }
     var touchableSize: Scalar { 40 }
 
-    @ViewBuilder func shape(viewport: SizedViewportInfo) -> some View {
+    @ViewBuilder func shape(transform: CGAffineTransform) -> some View {
         let path = selector.path,
             focusedSegmentId = selector.focusedSegmentId
         if let path, let focusedSegmentId, let segment = path.segment(fromId: focusedSegmentId) {
             let tessellated = segment.tessellated(),
                 centerT = tessellated.approxPathParamT(lineParamT: 0.5).t,
-                center = segment.position(paramT: centerT).applying(viewport.worldToView),
+                center = segment.position(paramT: centerT).applying(transform),
                 fromT = tessellated.approxPathParamT(lineParamT: 0.1).t,
                 toT = tessellated.approxPathParamT(lineParamT: 0.9).t,
-                subsegment = segment.subsegment(fromT: fromT, toT: toT).applying(viewport.worldToView)
+                subsegment = segment.subsegment(fromT: fromT, toT: toT).applying(transform)
             SUPath { p in appendCircle(to: &p, at: center) }
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth))
                 .allowsHitTesting(false)
@@ -87,13 +89,13 @@ private extension FocusedPathView.SegmentHandles {
         path.addEllipse(in: .init(center: point, size: .init(squared: circleSize)))
     }
 
-    @ViewBuilder func touchable(viewport: SizedViewportInfo) -> some View {
+    @ViewBuilder func touchable(transform: CGAffineTransform) -> some View {
         let path = selector.path,
             focusedSegmentId = selector.focusedSegmentId
         if let path, let focusedSegmentId, let segment = path.segment(fromId: focusedSegmentId) {
             let tessellated = segment.tessellated(),
                 centerT = tessellated.approxPathParamT(lineParamT: 0.5).t,
-                center = segment.position(paramT: centerT).applying(viewport.worldToView)
+                center = segment.position(paramT: centerT).applying(transform)
             SUPath { p in
                 p.addRect(.init(center: center, size: .init(squared: touchableSize)))
             }

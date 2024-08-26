@@ -45,7 +45,7 @@ extension DraggingSelectionService {
         return .init(from: from, to: store.to)
     }
 
-    var rectInWorld: CGRect? { rect?.applying(viewport.toWorld) }
+    var rectInWorld: CGRect? { rect?.applying(viewport.viewToWorld) }
 
     func intersects(item: Item) -> Bool {
         guard let rectInWorld,
@@ -92,7 +92,6 @@ extension DraggingSelectionService {
 struct DraggingSelectionView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.draggingSelection.rect }) var rect
-        @Selected({ global.viewport.toView }) var toView
     }
 
     @SelectorWrapper var selector

@@ -27,38 +27,38 @@ private extension GlobalStores {
                 }
             },
             onTap: { info in
-                let worldLocation = info.location.applying(viewport.toWorld)
-                let _r = tracer.range(type: .intent, "On tap \(worldLocation)"); defer { _r() }
-                if let symbolId = activeSymbol.editingSymbolId {
-                    let pathId = path.hitTest(position: worldLocation)
-                    if toolbar.multiSelect {
-                        if let pathId {
-                            activeItem.selectAdd(itemId: pathId)
-                        } else {
-                            activeItem.onTap(itemId: nil)
-                        }
+                let worldPosition = info.location.applying(viewport.viewToWorld)
+                let _r = tracer.range(type: .intent, "On tap \(worldPosition)"); defer { _r() }
+                let editingSymbolId = activeSymbol.editingSymbolId,
+                    hitSymbolId = symbol.symbolHitTest(position: worldPosition)
+                guard let editingSymbolId else {
+                    activeSymbol.setFocus(symbolId: hitSymbolId)
+                    return
+                }
+                let hitPathId = symbol.pathHitTest(position: worldPosition)
+                if hitSymbolId != editingSymbolId, hitPathId == nil {
+                    activeSymbol.setFocus(symbolId: editingSymbolId)
+                    return
+                }
+                if toolbar.multiSelect {
+                    if let hitPathId {
+                        activeItem.selectAdd(itemId: hitPathId)
                     } else {
-                        if let pathId {
-                            canvasAction.on(instant: .activatePath)
-                            activeItem.onTap(itemId: pathId)
-                        } else {
-                            canvasAction.on(instant: .deactivatePath)
-                            activeItem.onTap(itemId: nil)
-                        }
+                        activeItem.onTap(itemId: nil)
                     }
+                    return
+                }
+                if let hitPathId {
+                    canvasAction.on(instant: .activatePath)
+                    activeItem.onTap(itemId: hitPathId)
                 } else {
-                    let symbolId = symbol.hitTest(position: worldLocation)
-                    print("dbg symbolId", symbolId)
-                    if let symbolId {
-                        activeSymbol.setFocus(symbolId: symbolId)
-                    } else {
-                        activeSymbol.setFocus(symbolId: nil)
-                    }
+                    canvasAction.on(instant: .deactivatePath)
+                    activeItem.onTap(itemId: nil)
                 }
             },
             onLongPress: { info in
-                let worldLocation = info.current.applying(viewport.toWorld)
-                let _r = tracer.range(type: .intent, "On long press \(worldLocation)"); defer { _r() }
+                let worldPosition = info.current.applying(viewport.viewToWorld)
+                let _r = tracer.range(type: .intent, "On long press \(worldPosition)"); defer { _r() }
 
                 viewportUpdater.setBlocked(true)
                 canvasAction.end(continuous: .panViewport)
@@ -185,6 +185,7 @@ private extension CanvasView {
 
     @ViewBuilder var activeObjects: some View { trace("activeObjects") {
         ZStack {
+            ActiveSymbolView()
             ActiveItemView()
             FocusedPathView()
 

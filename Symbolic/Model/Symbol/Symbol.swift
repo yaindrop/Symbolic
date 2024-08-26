@@ -7,8 +7,16 @@ struct Symbol: Identifiable, Equatable, Codable, TriviallyCloneable {
 }
 
 extension Symbol {
-    var rect: CGRect {
+    var boundingRect: CGRect {
         .init(origin: origin, size: size)
+    }
+
+    var symbolToWorld: CGAffineTransform {
+        .init(translation: .init(origin))
+    }
+
+    var worldToSymbol: CGAffineTransform {
+        symbolToWorld.inverted()
     }
 }
 

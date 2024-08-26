@@ -35,17 +35,55 @@ struct ActiveSymbolService {
 extension ActiveSymbolService {
     var state: ActiveSymbolState { store.state }
 
-    var focusedSymbolId: UUID? { if case let .focused(id) = state { id } else { nil } }
+    var activeSymbolIds: Set<UUID> {
+        switch state {
+        case .none: []
+        case let .active(ids): ids
+        case let .focused(id): [id]
+        case let .editing(id): [id]
+        }
+    }
+
+    var focusedSymbolId: UUID? {
+        switch state {
+        case let .focused(id): id
+        case let .editing(id): id
+        default: nil
+        }
+    }
 
     var editingSymbolId: UUID? { if case let .editing(id) = state { id } else { nil } }
 
-    var unfocusedSymbolIds: [UUID] { symbol.symbolIds.filter { $0 != focusedSymbolId }}
+    var focusedSymbol: Symbol? { focusedSymbolId.map { symbol.get(id: $0) } }
+
+    var symbolToWorld: CGAffineTransform { focusedSymbol?.symbolToWorld ?? .identity }
+
+    var worldToSymbol: CGAffineTransform { focusedSymbol?.worldToSymbol ?? .identity }
+
+    var selectedSymbolIds: Set<UUID> {
+        switch state {
+        case let .active(ids): ids
+        default: []
+        }
+    }
+
+    func selected(id: UUID) -> Bool {
+        selectedSymbolIds.contains(id)
+    }
 }
 
 extension ActiveSymbolService {
     func setFocus(symbolId: UUID?) {
         if let symbolId {
             store.update(state: .focused(symbolId))
+        } else {
+            store.update(state: .none)
+        }
+    }
+
+    func setEditing(symbolId: UUID?) {
+        if let symbolId {
+            store.update(state: .editing(symbolId))
         } else {
             store.update(state: .none)
         }

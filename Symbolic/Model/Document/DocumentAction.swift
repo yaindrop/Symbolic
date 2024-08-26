@@ -87,10 +87,12 @@ enum ItemAction: Equatable, Codable {
 enum SymbolAction: Equatable, Codable {
     struct Create: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
     struct Delete: Equatable, Codable { let symbolIds: [UUID] }
+    struct Move: Equatable, Codable { let symbolIds: [UUID], offset: Vector2 }
     struct Resize: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
 
     case create(Create)
     case delete(Delete)
+    case move(Move)
     case resize(Resize)
 }
 

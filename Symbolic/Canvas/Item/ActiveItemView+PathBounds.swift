@@ -14,8 +14,8 @@ private extension GlobalStores {
     }
 
     func onDrag(pathId: UUID, _ v: PanInfo, pending: Bool = false) {
-        let offset = v.offset.applying(viewport.toWorld)
-        if activeItem.selected(itemId: pathId) {
+        let offset = v.offset.applying(viewport.viewToWorld)
+        if activeItem.selected(id: pathId) {
             let pathIds = activeItem.selectedPathIds
             documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
         } else {
@@ -58,6 +58,7 @@ extension ActiveItemView {
             @Selected({ global.item.boundingRect(itemId: $0.pathId) }) var bounds
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -76,22 +77,13 @@ extension ActiveItemView.PathBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             AnimatableReader(selector.viewport) {
+                let transform = selector.symbolToWorld.concatenating($0.worldToView)
                 RoundedRectangle(cornerRadius: 2)
                     .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
                     .multipleTouchGesture(global.gesture(pathId: pathId))
-                    .framePosition(rect: bounds.applying($0.worldToView))
+                    .framePosition(rect: bounds.applying(transform))
             }
-        }
-    }
-
-    func updateDrag(_ v: PanInfo, pending: Bool = false) {
-        let offset = v.offset.applying(global.viewport.toWorld)
-        if selector.selected {
-            let pathIds = global.activeItem.selectedPathIds
-            global.documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
-        } else {
-            global.documentUpdater.update(path: .move(.init(pathIds: [pathId], offset: offset)), pending: pending)
         }
     }
 }

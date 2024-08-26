@@ -49,6 +49,9 @@ private extension PendingSymbolStore {
 struct SymbolService {
     let store: SymbolStore
     let pendingStore: PendingSymbolStore
+    let viewport: ViewportService
+    let path: PathService
+    let item: ItemService
 }
 
 // MARK: selectors
@@ -58,8 +61,23 @@ extension SymbolService: SymbolStoreProtocol {
 
     var symbolMap: SymbolMap { activeStore.symbolMap }
 
-    func hitTest(position: Point2) -> UUID? {
-        symbolMap.first { _, symbol in symbol.rect.contains(position) }?.0
+    func symbolHitTest(position: Point2) -> UUID? {
+        symbolMap.first { _, symbol in symbol.boundingRect.contains(position) }?.0
+    }
+
+    func pathHitTest(pathId: UUID, path: Path, position: Point2, threshold: Scalar = 24) -> Bool {
+        guard let symbolId = item.symbolId(of: pathId),
+              let symbol = get(id: symbolId) else { return false }
+        let worldToSymbol = symbol.worldToSymbol,
+            viewToSymbol = viewport.viewToWorld.concatenating(worldToSymbol),
+            symbolPosition = position.applying(worldToSymbol),
+            width = (threshold * Vector2.unitX).applying(viewToSymbol).dx
+        guard path.boundingRect.outset(by: width / 2).contains(symbolPosition) else { return false }
+        return path.hitPath(width: width).contains(symbolPosition)
+    }
+
+    func pathHitTest(position: Point2, threshold _: Scalar = 24) -> UUID? {
+        path.pathMap.first { pathId, path in pathHitTest(pathId: pathId, path: path, position: position) }?.key
     }
 }
 

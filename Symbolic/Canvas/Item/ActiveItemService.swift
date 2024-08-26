@@ -80,8 +80,8 @@ extension ActiveItemService {
         selectedItems.compactMap { $0.pathId }
     }
 
-    func selected(itemId: UUID) -> Bool {
-        selectedItemIds.contains(itemId)
+    func selected(id: UUID) -> Bool {
+        selectedItemIds.contains(id)
     }
 
     var selectionBounds: CGRect? {

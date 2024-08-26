@@ -90,7 +90,7 @@ extension ViewportUpdater {
         let freeSpace = global.panel.freeSpace
         let _r = subtracer.range(type: .intent, "zoomTo \(rect) in \(freeSpace)"); defer { _r() }
         let worldRect = viewport.worldRect
-        let targetRect = CGRect(center: freeSpace.center, size: freeSpace.size * ratio).applying(viewport.toWorld)
+        let targetRect = CGRect(center: freeSpace.center, size: freeSpace.size * ratio).applying(viewport.viewToWorld)
         let transform = CGAffineTransform(fit: rect, to: targetRect).inverted()
         let newWorldRect = worldRect.applying(transform)
         let origin = newWorldRect.origin

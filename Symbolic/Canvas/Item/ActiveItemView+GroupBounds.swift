@@ -4,11 +4,11 @@ import SwiftUI
 
 private extension GlobalStores {
     func onTap(group: ItemGroup, position: Point2) {
-        let worldPosition = position.applying(viewport.toWorld)
+        let worldPosition = position.applying(viewport.viewToWorld)
         let groupedPathIds = item.groupedPathIds(groupId: group.id)
         let path = groupedPathIds.first {
             guard let p = self.path.get(id: $0) else { return false }
-            return self.path.hitTest(path: p, position: worldPosition, threshold: 32)
+            return symbol.pathHitTest(pathId: $0, path: p, position: worldPosition, threshold: 32)
         }
         if let path {
             if toolbar.multiSelect {
@@ -18,7 +18,7 @@ private extension GlobalStores {
             }
         } else {
             if toolbar.multiSelect {
-                if activeItem.selected(itemId: group.id) {
+                if activeItem.selected(id: group.id) {
                     activeItem.selectRemove(itemIds: [group.id])
                 } else {
                     let activeDescendants = item.expandedItems(rootItemId: group.id)
@@ -32,8 +32,8 @@ private extension GlobalStores {
     }
 
     func onDrag(group: ItemGroup, _ v: PanInfo, pending: Bool = false) {
-        let offset = v.offset.applying(viewport.toWorld)
-        if activeItem.selected(itemId: group.id) {
+        let offset = v.offset.applying(viewport.viewToWorld)
+        if activeItem.selected(id: group.id) {
             let pathIds = activeItem.selectedPathIds
             documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
         } else {
@@ -80,6 +80,7 @@ extension ActiveItemView {
             @Selected({ global.activeItem.groupOutset(id: $0.groupId) }) var outset
             @Selected({ global.activeItem.focusedItemId == $0.groupId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.groupId) }) var selected
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -98,11 +99,13 @@ private extension ActiveItemView.GroupBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             AnimatableReader(selector.viewport) {
+                let transform = selector.symbolToWorld.concatenating($0.worldToView),
+                    bounds = bounds.applying(transform).outset(by: selector.outset)
                 RoundedRectangle(cornerRadius: 8)
                     .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
                     .multipleTouchGesture(global.gesture(group: group))
-                    .framePosition(rect: bounds.applying($0.worldToView).outset(by: selector.outset))
+                    .framePosition(rect: bounds)
             }
         }
     }

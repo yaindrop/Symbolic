@@ -63,6 +63,8 @@
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
 		57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E462BE2851D00C73434 /* MultipleGesture.swift */; };
 		57416E492BE5252000C73434 /* FlagInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E482BE5252000C73434 /* FlagInput.swift */; };
+		574411582C7C2CC700F038AD /* ActiveSymbolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574411572C7C2CC700F038AD /* ActiveSymbolView.swift */; };
+		5744115A2C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */; };
 		574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7B92BF3B2950042FEE3 /* GlobalStores.swift */; };
 		574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BB2BF44C390042FEE3 /* Memo.swift */; };
 		574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */; };
@@ -227,6 +229,8 @@
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
 		57416E462BE2851D00C73434 /* MultipleGesture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleGesture.swift; sourceTree = "<group>"; };
 		57416E482BE5252000C73434 /* FlagInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagInput.swift; sourceTree = "<group>"; };
+		574411572C7C2CC700F038AD /* ActiveSymbolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSymbolView.swift; sourceTree = "<group>"; };
+		574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveSymbolView+Bounds.swift"; sourceTree = "<group>"; };
 		574CC7B92BF3B2950042FEE3 /* GlobalStores.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalStores.swift; sourceTree = "<group>"; };
 		574CC7BB2BF44C390042FEE3 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
 		574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+UIColor.swift"; sourceTree = "<group>"; };
@@ -599,6 +603,8 @@
 			isa = PBXGroup;
 			children = (
 				5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */,
+				574411572C7C2CC700F038AD /* ActiveSymbolView.swift */,
+				574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */,
 				5790F9A72C7A25AF009E3606 /* SymbolsView.swift */,
 			);
 			path = Symbol;
@@ -1063,6 +1069,7 @@
 				57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */,
 				571B9B472C14AA5F00AAD516 /* Container+Extension.swift in Sources */,
 				572CA9E02C31A0CA003760B7 /* RootStore.swift in Sources */,
+				574411582C7C2CC700F038AD /* ActiveSymbolView.swift in Sources */,
 				578150572C6260510057D798 /* PathSelectionPopover.swift in Sources */,
 				57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */,
 				57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */,
@@ -1110,6 +1117,7 @@
 				5774B1602BFD864300C53CDD /* Background.swift in Sources */,
 				57B703F42C366B8100B60F36 /* ToolbarStore.swift in Sources */,
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
+				5744115A2C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
 				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */,

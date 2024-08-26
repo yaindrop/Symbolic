@@ -12,12 +12,12 @@ private extension GlobalStores {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
             guard let nodeId = context.nodeId else { return }
             let controlType = context.controlType,
-                offset = v.offset.applying(viewport.toWorld)
+                offset = v.offset.applying(viewport.viewToWorld)
             documentUpdater.update(focusedPath: .moveNodeControl(.init(nodeId: nodeId, controlType: controlType, offset: offset)), pending: pending)
         }
         return .init(
             onPress: { info in
-                let location = info.location.applying(viewport.toWorld)
+                let location = info.location.applying(viewport.viewToWorld)
                 guard let (nodeId, controlType) = focusedPath.controlNodeId(closestTo: location) else { return }
                 context.nodeId = nodeId
                 context.controlType = controlType
@@ -45,6 +45,7 @@ extension FocusedPathView {
             @Selected({ global.focusedPath.cubicInNodeIds }) var cubicInNodeIds
             @Selected({ global.focusedPath.cubicOutNodeIds }) var cubicOutNodeIds
             @Selected({ global.focusedPath.quadraticFromNodeIds }) var quadraticFromNodeIds
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -64,10 +65,11 @@ extension FocusedPathView {
 private extension FocusedPathView.BezierHandles {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
-            cubicIn(viewport: $0)
-            cubicOut(viewport: $0)
-            quadratic(viewport: $0)
-            touchables(viewport: $0)
+            let transform = selector.symbolToWorld.concatenating($0.worldToView)
+            cubicIn(transform: transform)
+            cubicOut(transform: transform)
+            quadratic(transform: transform)
+            touchables(transform: transform)
         }
     }
 
@@ -78,13 +80,13 @@ private extension FocusedPathView.BezierHandles {
     var circleSize: Scalar { 8 }
     var touchableSize: Scalar { 32 }
 
-    @ViewBuilder func cubicIn(viewport: SizedViewportInfo) -> some View {
+    @ViewBuilder func cubicIn(transform: CGAffineTransform) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
             for nodeId in selector.cubicInNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let position = node.position.applying(viewport.worldToView),
-                    control = node.positionIn.applying(viewport.worldToView)
+                let position = node.position.applying(transform),
+                    control = node.positionIn.applying(transform)
                 appendLine(to: &p, from: position, to: control)
                 appendCircle(to: &p, at: control)
             }
@@ -94,13 +96,13 @@ private extension FocusedPathView.BezierHandles {
         .allowsHitTesting(false)
     }
 
-    @ViewBuilder func cubicOut(viewport: SizedViewportInfo) -> some View {
+    @ViewBuilder func cubicOut(transform: CGAffineTransform) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
             for nodeId in selector.cubicOutNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let position = node.position.applying(viewport.worldToView),
-                    control = node.positionOut.applying(viewport.worldToView)
+                let position = node.position.applying(transform),
+                    control = node.positionOut.applying(transform)
                 appendLine(to: &p, from: position, to: control)
                 appendCircle(to: &p, at: control)
             }
@@ -110,15 +112,15 @@ private extension FocusedPathView.BezierHandles {
         .allowsHitTesting(false)
     }
 
-    @ViewBuilder func quadratic(viewport: SizedViewportInfo) -> some View {
+    @ViewBuilder func quadratic(transform: CGAffineTransform) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
             for nodeId in selector.quadraticFromNodeIds {
                 guard let segment = path.segment(fromId: nodeId),
                       let quadratic = segment.quadratic else { continue }
-                let from = segment.from.applying(viewport.worldToView),
-                    to = segment.to.applying(viewport.worldToView),
-                    control = quadratic.applying(viewport.worldToView)
+                let from = segment.from.applying(transform),
+                    to = segment.to.applying(transform),
+                    control = quadratic.applying(transform)
                 appendLine(to: &p, from: from, to: control)
                 appendLine(to: &p, from: to, to: control)
                 appendCircle(to: &p, at: control)
@@ -140,23 +142,23 @@ private extension FocusedPathView.BezierHandles {
         path.addEllipse(in: .init(center: point, size: .init(squared: circleSize)))
     }
 
-    @ViewBuilder func touchables(viewport: SizedViewportInfo) -> some View {
+    @ViewBuilder func touchables(transform: CGAffineTransform) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
             for nodeId in selector.cubicInNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let control = node.positionIn.applying(viewport.worldToView)
+                let control = node.positionIn.applying(transform)
                 appendTouchableRect(to: &p, at: control)
             }
             for nodeId in selector.cubicOutNodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let control = node.positionOut.applying(viewport.worldToView)
+                let control = node.positionOut.applying(transform)
                 appendTouchableRect(to: &p, at: control)
             }
             for nodeId in selector.quadraticFromNodeIds {
                 guard let segment = path.segment(fromId: nodeId),
                       let quadratic = segment.quadratic else { continue }
-                let control = quadratic.applying(viewport.worldToView)
+                let control = quadratic.applying(transform)
                 appendTouchableRect(to: &p, at: control)
             }
         }

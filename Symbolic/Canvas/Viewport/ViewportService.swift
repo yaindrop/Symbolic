@@ -29,8 +29,8 @@ extension ViewportService {
     var info: ViewportInfo { store.info }
     var viewSize: CGSize { store.viewSize }
 
-    var toWorld: CGAffineTransform { info.viewToWorld }
-    var toView: CGAffineTransform { info.worldToView }
+    var viewToWorld: CGAffineTransform { info.viewToWorld }
+    var worldToView: CGAffineTransform { info.worldToView }
 
     var sizedInfo: SizedViewportInfo { .init(size: viewSize, info: info) }
     var worldRect: CGRect { sizedInfo.worldRect }

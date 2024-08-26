@@ -49,7 +49,6 @@ private extension PendingPathStore {
 struct PathService: PathStoreProtocol {
     let store: PathStore
     let pendingStore: PendingPathStore
-    let viewport: ViewportService
 }
 
 // MARK: selectors
@@ -58,16 +57,6 @@ extension PathService {
     private var activeStore: PathStore { pendingStore.active ? pendingStore : store }
 
     var pathMap: PathMap { activeStore.pathMap }
-
-    func hitTest(path: Path, position: Point2, threshold: Scalar = 24) -> Bool {
-        let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
-        guard path.boundingRect.outset(by: width / 2).contains(position) else { return false }
-        return path.hitPath(width: width).contains(position)
-    }
-
-    func hitTest(position: Point2, threshold _: Scalar = 24) -> UUID? {
-        pathMap.first { _, path in hitTest(path: path, position: position) }?.key
-    }
 }
 
 // MARK: - modify path map

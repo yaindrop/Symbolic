@@ -10,7 +10,6 @@ struct SymbolsView: View, TracedView, SelectorHolder {
         @Selected({ global.symbol.symbolMap }) var symbolMap
         @Selected({ global.item.symbolItemMap }) var symbolItemMap
         @Selected({ global.path.pathMap }) var pathMap
-        @Selected({ global.activeSymbol.unfocusedSymbolIds }) var unfocusedSymbolIds
     }
 
     @SelectorWrapper var selector
@@ -27,7 +26,7 @@ struct SymbolsView: View, TracedView, SelectorHolder {
 private extension SymbolsView {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
-            ForEach(selector.unfocusedSymbolIds) { symbolId in
+            ForEach(selector.symbolIds) { symbolId in
                 symbolView(symbolId: symbolId)
             }
             .transformEffect($0.worldToView)
@@ -37,12 +36,13 @@ private extension SymbolsView {
 
     @ViewBuilder func symbolView(symbolId: UUID) -> some View {
         if let symbol = selector.symbolMap.get(symbolId) {
-            symbolPaths(symbolId: symbolId)
-                .background {
-                    Rectangle()
-                        .fill(Color.label.opacity(0.05))
-                        .framePosition(rect: symbol.rect)
-                }
+            ZStack {
+                Rectangle()
+                    .fill(Color.label.opacity(0.05))
+                    .framePosition(rect: symbol.boundingRect)
+                symbolPaths(symbolId: symbolId)
+                    .transformEffect(symbol.symbolToWorld)
+            }
         }
     }
 

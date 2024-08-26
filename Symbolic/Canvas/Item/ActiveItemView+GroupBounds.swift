@@ -8,7 +8,7 @@ private extension GlobalStores {
         let groupedPathIds = item.groupedPathIds(groupId: group.id)
         let path = groupedPathIds.first {
             guard let p = self.path.get(id: $0) else { return false }
-            return symbol.pathHitTest(pathId: $0, path: p, position: worldPosition, threshold: 32)
+            return item.pathHitTest(pathId: $0, path: p, position: worldPosition, threshold: 32)
         }
         if let path {
             if toolbar.multiSelect {

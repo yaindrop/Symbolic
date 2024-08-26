@@ -100,8 +100,6 @@
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
 		5790F99C2C783FEA009E3606 /* ItemPanel+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */; };
-		5790F99E2C78797A009E3606 /* Symbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F99D2C78797A009E3606 /* Symbol.swift */; };
-		5790F9A12C7882C1009E3606 /* SymbolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F9A02C7882C1009E3606 /* SymbolService.swift */; };
 		5790F9A62C7A224F009E3606 /* ActiveSymbolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */; };
 		5790F9A82C7A25AF009E3606 /* SymbolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F9A72C7A25AF009E3606 /* SymbolsView.swift */; };
 		579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */; };
@@ -266,8 +264,6 @@
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
 		5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+Selection.swift"; sourceTree = "<group>"; };
-		5790F99D2C78797A009E3606 /* Symbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Symbol.swift; sourceTree = "<group>"; };
-		5790F9A02C7882C1009E3606 /* SymbolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolService.swift; sourceTree = "<group>"; };
 		5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSymbolService.swift; sourceTree = "<group>"; };
 		5790F9A72C7A25AF009E3606 /* SymbolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolsView.swift; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
@@ -590,15 +586,6 @@
 			path = Toolbar;
 			sourceTree = "<group>";
 		};
-		5790F99F2C78797F009E3606 /* Symbol */ = {
-			isa = PBXGroup;
-			children = (
-				5790F99D2C78797A009E3606 /* Symbol.swift */,
-				5790F9A02C7882C1009E3606 /* SymbolService.swift */,
-			);
-			path = Symbol;
-			sourceTree = "<group>";
-		};
 		5790F9A42C7A2235009E3606 /* Symbol */ = {
 			isa = PBXGroup;
 			children = (
@@ -798,7 +785,6 @@
 				57DD2A142C0236B80046931C /* Item */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
 				57B8478B2C0DB06900D0E7C3 /* PathProperty */,
-				5790F99F2C78797F009E3606 /* Symbol */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1063,7 +1049,6 @@
 				571B9B362C14A77500AAD516 /* ActiveItemView+PathBounds.swift in Sources */,
 				574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */,
 				574CC7EA2BFA53310042FEE3 /* FocusedPathView+Stroke.swift in Sources */,
-				5790F9A12C7882C1009E3606 /* SymbolService.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
 				57C1690F2C6CFB2F007BFC81 /* symbolic.pb.swift in Sources */,
 				57FC33052C4E4A1000DF7DBF /* Numpad.swift in Sources */,
@@ -1095,7 +1080,6 @@
 				5790F99C2C783FEA009E3606 /* ItemPanel+Selection.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
-				5790F99E2C78797A009E3606 /* Symbol.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,
 				571B9B302C14A68A00AAD516 /* ContextMenuView+SelectionMenu.swift in Sources */,
 				574CC7C22BF44D630042FEE3 /* ManagedScrollView.swift in Sources */,

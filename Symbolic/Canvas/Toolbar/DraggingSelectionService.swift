@@ -31,8 +31,8 @@ struct DraggingSelectionService {
     let store: DraggingSelectionStore
     let viewport: ViewportService
     let activeSymbol: ActiveSymbolService
-    let item: ItemService
     let path: PathService
+    let item: ItemService
 }
 
 // MARK: selectors
@@ -49,7 +49,7 @@ extension DraggingSelectionService {
 
     func intersects(item: Item) -> Bool {
         guard let rectInWorld,
-              let pathId = item.pathId,
+              let pathId = item.path?.id,
               let path = path.get(id: pathId) else { return false }
         return path.boundingRect.intersects(rectInWorld)
     }

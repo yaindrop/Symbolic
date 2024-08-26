@@ -114,7 +114,7 @@ private struct DraggingItemDropDelegate: DropDelegate {
         model.draggingItemHovering = nil
         let isAfter = isAfter(info: info)
         loadTransferable(info: info) {
-            global.documentUpdater.update(item: .move(.init(itemId: $0.itemId, toItemId: itemId, isAfter: isAfter)))
+            global.documentUpdater.update(item: .reorder(.init(itemId: $0.itemId, toItemId: itemId, isAfter: isAfter)))
         }
         return true
     }
@@ -138,7 +138,7 @@ private struct DraggingItemDropDelegate: DropDelegate {
 extension ItemPanel {
     struct Items: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.activeSymbol.focusedSymbolId.map { global.item.rootIds(symbolId: $0) } ?? [] }) var rootIds
+            @Selected({ global.activeSymbol.focusedSymbolId.map { global.item.symbol(id: $0)?.members } ?? [] }) var rootIds
             @Selected({ global.item.itemMap }) var itemMap
             @Selected({ global.path.pathMap }) var pathMap
             @Selected({ global.item.itemDepthMap }) var itemDepthMap
@@ -206,7 +206,7 @@ private extension ItemPanel {
 
 extension ItemPanel.ItemRow {
     @ViewBuilder private var content: some View {
-        if let pathId = item?.pathId {
+        if let pathId = item?.path?.id {
             PathRow(context: context, pathId: pathId)
         } else if let group = item?.group {
             GroupRow(context: context, group: group)

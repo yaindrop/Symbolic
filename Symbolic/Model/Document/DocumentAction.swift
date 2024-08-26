@@ -75,25 +75,21 @@ extension PathPropertyAction.Update {
 enum ItemAction: Equatable, Codable {
     struct Group: Equatable, Codable { var groupId: UUID, members: [UUID], inSymbolId: UUID? = nil, inGroupId: UUID? = nil }
     struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
-    struct Move: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
+    struct Reorder: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
+
+    struct CreateSymbol: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
+    struct DeleteSymbols: Equatable, Codable { let symbolIds: [UUID] }
+    struct MoveSymbols: Equatable, Codable { let symbolIds: [UUID], offset: Vector2 }
+    struct ResizeSymbol: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
 
     case group(Group)
     case ungroup(Ungroup)
-    case move(Move)
-}
+    case reorder(Reorder)
 
-// MARK: - SymbolAction
-
-enum SymbolAction: Equatable, Codable {
-    struct Create: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
-    struct Delete: Equatable, Codable { let symbolIds: [UUID] }
-    struct Move: Equatable, Codable { let symbolIds: [UUID], offset: Vector2 }
-    struct Resize: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
-
-    case create(Create)
-    case delete(Delete)
-    case move(Move)
-    case resize(Resize)
+    case createSymbol(CreateSymbol)
+    case deleteSymbols(DeleteSymbols)
+    case moveSymbols(MoveSymbols)
+    case resizeSymbol(ResizeSymbol)
 }
 
 // MARK: - DocumentAction
@@ -102,5 +98,4 @@ enum DocumentAction: Equatable, Codable {
     case path(PathAction)
     case pathProperty(PathPropertyAction)
     case item(ItemAction)
-    case symbol(SymbolAction)
 }

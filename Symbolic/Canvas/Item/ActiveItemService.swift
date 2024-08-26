@@ -4,18 +4,18 @@ private let subtracer = tracer.tagged("ActiveItemService")
 
 // MARK: - ActiveItemStore
 
-enum ActiveItemState: Equatable {
+enum ItemActiveState: Equatable {
     case none
     case active(Set<UUID>)
     case focused(UUID)
 }
 
 class ActiveItemStore: Store {
-    @Trackable var state: ActiveItemState = .none
+    @Trackable var state: ItemActiveState = .none
 }
 
 private extension ActiveItemStore {
-    func update(state: ActiveItemState) {
+    func update(state: ItemActiveState) {
         withStoreUpdating(configs: .init(animation: .faster)) {
             update { $0(\._state, state) }
         }
@@ -35,7 +35,7 @@ struct ActiveItemService {
 // MARK: selectors
 
 extension ActiveItemService {
-    var state: ActiveItemState { store.state }
+    var state: ItemActiveState { store.state }
 
     var activeItemIds: Set<UUID> {
         switch state {
@@ -54,7 +54,7 @@ extension ActiveItemService {
     }
 
     var activePathIds: [UUID] {
-        activeItems.compactMap { $0.pathId }
+        activeItems.compactMap { $0.path?.id }
     }
 
     var activeGroups: [ItemGroup] {
@@ -77,7 +77,7 @@ extension ActiveItemService {
     }
 
     var selectedPathIds: [UUID] {
-        selectedItems.compactMap { $0.pathId }
+        selectedItems.compactMap { $0.path?.id }
     }
 
     func selected(id: UUID) -> Bool {
@@ -97,7 +97,7 @@ extension ActiveItemService {
     }
 
     var focusedPathId: UUID? {
-        focusedItem.map { $0.pathId }
+        focusedItem.map { $0.path?.id }
     }
 
     var focusedPath: Path? {

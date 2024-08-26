@@ -4,18 +4,20 @@ private let subtracer = tracer.tagged("FocusedPathService")
 
 // MARK: - FocusedPathStore
 
+enum PathNodeActiveState: Equatable {
+    case none
+    case active(Set<UUID>)
+    case focusedNode(UUID)
+    case focusedSegment(from: UUID, to: UUID)
+}
+
 class FocusedPathStore: Store {
-    @Trackable var activeNodeIds = Set<UUID>()
-    @Trackable var selectingNodes = false
+    @Trackable var state: PathNodeActiveState = .none
 }
 
 private extension FocusedPathStore {
-    func update(activeNodeIds: Set<UUID>) {
-        update { $0(\._activeNodeIds, activeNodeIds) }
-    }
-
-    func update(selectingNodes: Bool) {
-        update { $0(\._selectingNodes, selectingNodes) }
+    func update(state: PathNodeActiveState) {
+        update { $0(\._state, state) }
     }
 }
 
@@ -29,8 +31,23 @@ struct FocusedPathService {
 // MARK: selectors
 
 extension FocusedPathService {
-    var activeNodeIds: Set<UUID> { store.activeNodeIds }
-    var selectingNodes: Bool { store.selectingNodes }
+    var state: PathNodeActiveState { store.state }
+
+    var activeNodeIds: Set<UUID> {
+        switch state {
+        case let .active(ids): ids
+        case let .focusedNode(nodeId): [nodeId]
+        case let .focusedSegment(from, to): [from, to]
+        default: []
+        }
+    }
+
+    var selectingNodes: Bool {
+        switch state {
+        case .active: true
+        default: false
+        }
+    }
 
     var activeSegmentIds: Set<UUID> {
         guard let path = activeItem.focusedPath else { return [] }
@@ -40,9 +57,19 @@ extension FocusedPathService {
         }
     }
 
-    var focusedNodeId: UUID? { !selectingNodes && activeNodeIds.count == 1 ? activeNodeIds.first : nil }
+    var focusedNodeId: UUID? {
+        switch state {
+        case let .focusedNode(nodeId): nodeId
+        default: nil
+        }
+    }
 
-    var focusedSegmentId: UUID? { !selectingNodes && activeNodeIds.count == 2 ? activeSegmentIds.first : nil }
+    var focusedSegmentId: UUID? {
+        switch state {
+        case let .focusedSegment(from, _): from
+        default: nil
+        }
+    }
 
     var activeNodeIndexPairs: [Pair<Int, Int>] {
         guard let path = activeItem.focusedPath else { return [] }
@@ -162,21 +189,21 @@ extension FocusedPathService {
 extension FocusedPathService {
     func setFocus(node id: UUID) {
         let _r = subtracer.range(type: .intent, "set focus node \(id)"); defer { _r() }
-        store.update(activeNodeIds: [id])
+        store.update(state: .focusedNode(id))
     }
 
     func setFocus(segment fromNodeId: UUID) {
         let _r = subtracer.range(type: .intent, "set focus segment from \(fromNodeId)"); defer { _r() }
         guard let path = activeItem.focusedPath,
               let toId = path.nodeId(after: fromNodeId) else { return }
-        store.update(activeNodeIds: [fromNodeId, toId])
+        store.update(state: .focusedSegment(from: fromNodeId, to: toId))
     }
 
     func setSelecting(_ value: Bool) {
         let _r = subtracer.range(type: .intent, "set selecting \(value)"); defer { _r() }
         withStoreUpdating(configs: .init(animation: .fast)) {
             if value {
-                store.update(selectingNodes: true)
+                store.update(state: .active([]))
             } else {
                 selectionClear()
             }
@@ -185,12 +212,12 @@ extension FocusedPathService {
 
     func selection(add ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selection add \(ids)"); defer { _r() }
-        store.update(activeNodeIds: activeNodeIds.union(ids))
+        store.update(state: .active(activeNodeIds.union(ids)))
     }
 
     func selection(remove ids: [UUID]) {
         let _r = subtracer.range(type: .intent, "selection remove \(ids)"); defer { _r() }
-        store.update(activeNodeIds: activeNodeIds.subtracting(ids))
+        store.update(state: .active(activeNodeIds.subtracting(ids)))
     }
 
     func selection(toggle nodeIds: [UUID]) {
@@ -224,23 +251,22 @@ extension FocusedPathService {
             }
         }
         if activeNodeIds.contains(nodeId) {
-            store.update(activeNodeIds: activeNodeIds.subtracting(nodeIds))
+            store.update(state: .active(activeNodeIds.subtracting(nodeIds)))
         } else {
-            store.update(activeNodeIds: activeNodeIds.union(nodeIds))
+            store.update(state: .active(activeNodeIds.union(nodeIds)))
         }
     }
 
     func selectionInvert() {
         let _r = subtracer.range(type: .intent, "selection invert"); defer { _r() }
         guard let path = activeItem.focusedPath else { return }
-        store.update(activeNodeIds: .init(path.nodeIds.filter { !activeNodeIds.contains($0) }))
+        store.update(state: .active(.init(path.nodeIds.filter { !activeNodeIds.contains($0) })))
     }
 
     func selectionClear() {
         let _r = subtracer.range(type: .intent, "selection clear"); defer { _r() }
         withStoreUpdating {
-            store.update(activeNodeIds: [])
-            store.update(selectingNodes: false)
+            store.update(state: .none)
         }
     }
 }

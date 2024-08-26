@@ -272,19 +272,6 @@ extension Symbolic_Pb_PathPropertyEvent: ProtobufParsable {
 
 // MARK: - ItemEvent
 
-extension ItemEvent.SetRoot: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_ItemEvent.SetRoot) {
-        pb.symbolID = symbolId.pb
-        pb.members = members.map { $0.pb }
-    }
-}
-
-extension Symbolic_Pb_ItemEvent.SetRoot: ProtobufParsable {
-    func decoded() -> ItemEvent.SetRoot {
-        .init(symbolId: symbolID.decoded(), members: members.map { $0.decoded() })
-    }
-}
-
 extension ItemEvent.SetGroup: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_ItemEvent.SetGroup) {
         pb.groupID = groupId.pb
@@ -298,11 +285,39 @@ extension Symbolic_Pb_ItemEvent.SetGroup: ProtobufParsable {
     }
 }
 
+extension ItemEvent.SetSymbol: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.SetSymbol) {
+        pb.symbolID = symbolId.pb
+        pb.origin = origin.pb
+        pb.size = size.pb
+        pb.members = members.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.SetSymbol: ProtobufParsable {
+    func decoded() -> ItemEvent.SetSymbol {
+        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded(), members: members.map { $0.decoded() })
+    }
+}
+
+extension ItemEvent.DeleteSymbol: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.DeleteSymbol) {
+        pb.symbolID = symbolId.pb
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.DeleteSymbol: ProtobufParsable {
+    func decoded() -> ItemEvent.DeleteSymbol {
+        .init(symbolId: symbolID.decoded())
+    }
+}
+
 extension ItemEvent: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_ItemEvent) {
         switch self {
-        case let .setRoot(kind): pb.kind = .setRoot(kind.pb)
         case let .setGroup(kind): pb.kind = .setGroup(kind.pb)
+        case let .setSymbol(kind): pb.kind = .setSymbol(kind.pb)
+        case let .deleteSymbol(kind): pb.kind = .deleteSymbol(kind.pb)
         }
     }
 }
@@ -310,71 +325,9 @@ extension ItemEvent: ProtobufSerializable {
 extension Symbolic_Pb_ItemEvent: ProtobufParsable {
     func decoded() throws -> ItemEvent {
         switch kind {
-        case let .setRoot(kind): .setRoot(kind.decoded())
         case let .setGroup(kind): .setGroup(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
-        }
-    }
-}
-
-// MARK: - SymbolEvent
-
-extension SymbolEvent.Create: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_SymbolEvent.Create) {
-        pb.symbolID = symbolId.pb
-        pb.origin = origin.pb
-        pb.size = size.pb
-    }
-}
-
-extension Symbolic_Pb_SymbolEvent.Create: ProtobufParsable {
-    func decoded() -> SymbolEvent.Create {
-        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded())
-    }
-}
-
-extension SymbolEvent.Delete: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_SymbolEvent.Delete) {
-        pb.symbolID = symbolId.pb
-    }
-}
-
-extension Symbolic_Pb_SymbolEvent.Delete: ProtobufParsable {
-    func decoded() -> SymbolEvent.Delete {
-        .init(symbolId: symbolID.decoded())
-    }
-}
-
-extension SymbolEvent.Resize: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_SymbolEvent.Resize) {
-        pb.symbolID = symbolId.pb
-        pb.origin = origin.pb
-        pb.size = size.pb
-    }
-}
-
-extension Symbolic_Pb_SymbolEvent.Resize: ProtobufParsable {
-    func decoded() -> SymbolEvent.Resize {
-        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded())
-    }
-}
-
-extension SymbolEvent: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_SymbolEvent) {
-        switch self {
-        case let .create(kind): pb.kind = .create(kind.pb)
-        case let .delete(kind): pb.kind = .delete(kind.pb)
-        case let .resize(kind): pb.kind = .resize(kind.pb)
-        }
-    }
-}
-
-extension Symbolic_Pb_SymbolEvent: ProtobufParsable {
-    func decoded() throws -> SymbolEvent {
-        switch kind {
-        case let .create(kind): .create(kind.decoded())
-        case let .delete(kind): .delete(kind.decoded())
-        case let .resize(kind): .resize(kind.decoded())
+        case let .setSymbol(kind): .setSymbol(kind.decoded())
+        case let .deleteSymbol(kind): .deleteSymbol(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
@@ -389,7 +342,6 @@ extension DocumentEvent.Single: ProtobufSerializable {
             case let .path(kind): .pathEvent(kind.pb)
             case let .pathProperty(kind): .pathPropertyEvent(kind.pb)
             case let .item(kind): .itemEvent(kind.pb)
-            case let .symbol(kind): .symbolEvent(kind.pb)
             }
         }()
     }
@@ -401,7 +353,6 @@ extension Symbolic_Pb_DocumentEvent.Single: ProtobufParsable {
         case let .pathEvent(kind): try .path(kind.decoded())
         case let .pathPropertyEvent(kind): try .pathProperty(kind.decoded())
         case let .itemEvent(kind): try .item(kind.decoded())
-        case let .symbolEvent(kind): try .symbol(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
         }
     }

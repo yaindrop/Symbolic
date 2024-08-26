@@ -20,7 +20,6 @@ struct DocumentUpdater {
     let pathStore: PathStore
     let pathPropertyStore: PathPropertyStore
     let itemStore: ItemStore
-    let symbolStore: SymbolStore
     let activeItem: ActiveItemService
     let viewport: ViewportService
     let grid: GridStore
@@ -39,10 +38,6 @@ extension DocumentUpdater {
 
     func update(item action: ItemAction, pending: Bool = false) {
         handle(.item(action), pending: pending)
-    }
-
-    func update(symbol action: SymbolAction, pending: Bool = false) {
-        handle(.symbol(action), pending: pending)
     }
 
     func update(focusedPath kind: PathAction.Update.Kind, pending: Bool = false) {
@@ -80,7 +75,6 @@ private extension DocumentUpdater {
         case let .path(action): collect(events: &events, of: action)
         case let .pathProperty(action): collect(events: &events, of: action)
         case let .item(action): collect(events: &events, of: action)
-        case let .symbol(action): collect(events: &events, of: action)
         }
 
         guard let first = events.first else {
@@ -377,7 +371,11 @@ private extension DocumentUpdater {
         switch action {
         case let .group(action): collect(events: &events, of: action)
         case let .ungroup(action): collect(events: &events, of: action)
-        case let .move(action): collect(events: &events, of: action)
+        case let .reorder(action): collect(events: &events, of: action)
+        case let .createSymbol(action): collect(events: &events, of: action)
+        case let .deleteSymbols(action): collect(events: &events, of: action)
+        case let .moveSymbols(action): collect(events: &events, of: action)
+        case let .resizeSymbol(action): collect(events: &events, of: action)
         }
     }
 
@@ -411,23 +409,23 @@ private extension DocumentUpdater {
         func removeGrouped(from members: inout [UUID]) { members.removeAll { groupedMembers.contains($0) } }
 
         func adjustRootMembers() {
-            var members = itemStore.rootIds(symbolId: symbolId)
-            guard inSymbolId == symbolId || hasGrouped(in: members) else { return }
-            removeGrouped(from: &members)
+            guard var symbol = itemStore.symbol(id: symbolId),
+                  inSymbolId == symbolId || hasGrouped(in: symbol.members) else { return }
+            removeGrouped(from: &symbol.members)
             if inSymbolId == symbolId {
-                members.append(groupId)
+                symbol.members.append(groupId)
             }
-            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
         }
 
         func adjustMembers(in group: ItemGroup) {
-            var members = group.members
+            var group = group
             guard inGroupId == group.id || hasGrouped(in: members) else { return }
-            removeGrouped(from: &members)
+            removeGrouped(from: &group.members)
             if inGroupId == group.id {
-                members.append(group.id)
+                group.members.append(group.id)
             }
-            events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
         }
 
         adjustRootMembers()
@@ -454,17 +452,17 @@ private extension DocumentUpdater {
         }
 
         func adjustRootMembers() {
-            var members = itemStore.rootIds(symbolId: symbolId)
-            guard hasUngrouped(in: members) else { return }
-            expandUngrouped(in: &members)
-            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+            guard var symbol = itemStore.symbol(id: symbolId),
+                  hasUngrouped(in: symbol.members) else { return }
+            expandUngrouped(in: &symbol.members)
+            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
         }
 
         func adjustMembers(in group: ItemGroup) {
-            var members = group.members
-            guard hasUngrouped(in: members) else { return }
-            expandUngrouped(in: &members)
-            events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+            var group = group
+            guard hasUngrouped(in: group.members) else { return }
+            expandUngrouped(in: &group.members)
+            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
         }
 
         for groupId in groupIds {
@@ -477,91 +475,81 @@ private extension DocumentUpdater {
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.Move) {
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.Reorder) {
         let itemId = action.itemId,
             toItemId = action.toItemId,
             isAfter = action.isAfter,
             parentId = itemStore.parentId(of: itemId),
             toParentId = itemStore.parentId(of: toItemId)
-        guard let symbolId = itemStore.symbolId(of: itemId) else { return } // no symbol found
+        guard let symbolId = itemStore.symbolId(of: itemId),
+              let symbol = itemStore.symbol(id: symbolId) else { return } // no symbol found
         guard itemStore.symbolId(of: toItemId) == symbolId else { return } // not in the same symbol
         if parentId == toParentId {
             guard itemId != toItemId else { return } // not moved
-            if let parentId, let group = itemStore.group(id: parentId) {
-                var members = group.members.filter { $0 != itemId }
-                let index = members.firstIndex(of: toItemId) ?? 0
-                members.insert(itemId, at: isAfter ? members.index(after: index) : index)
-                events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+            if let parentId, var group = itemStore.group(id: parentId) {
+                group.members.removeAll { $0 == itemId }
+                let index = group.members.firstIndex(of: toItemId) ?? 0
+                group.members.insert(itemId, at: isAfter ? group.members.index(after: index) : index)
+                events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
             } else {
-                var members = itemStore.rootIds(symbolId: symbolId).filter { $0 != itemId }
-                let index = members.firstIndex(of: toItemId) ?? 0
-                members.insert(itemId, at: isAfter ? members.index(after: index) : index)
-                events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+                var symbol = symbol
+                symbol.members.removeAll { $0 == itemId }
+                let index = symbol.members.firstIndex(of: toItemId) ?? 0
+                symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
+                events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
             }
             return
         }
         guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
-        if let parentId, let group = itemStore.group(id: parentId) {
-            let members = group.members.filter { $0 != itemId }
-            events.append(.item(.setGroup(.init(groupId: group.id, members: members))))
+        if let parentId, var group = itemStore.group(id: parentId) {
+            group.members.removeAll { $0 == itemId }
+            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
         } else {
-            let members = itemStore.rootIds(symbolId: symbolId).filter { $0 != itemId }
-            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
+            var symbol = symbol
+            symbol.members.removeAll { $0 == itemId }
+            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
         }
-        if let toParentId, let toGroup = itemStore.group(id: toParentId) {
-            var members = toGroup.members
-            let index = members.firstIndex(of: toItemId) ?? 0
-            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
-            events.append(.item(.setGroup(.init(groupId: toGroup.id, members: members))))
+        if let toParentId, var toGroup = itemStore.group(id: toParentId) {
+            let index = toGroup.members.firstIndex(of: toItemId) ?? 0
+            toGroup.members.insert(itemId, at: isAfter ? toGroup.members.index(after: index) : index)
+            events.append(.item(.setGroup(.init(groupId: toGroup.id, members: toGroup.members))))
         } else {
-            var members = itemStore.rootIds(symbolId: symbolId)
-            let index = members.firstIndex(of: toItemId) ?? 0
-            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
-            events.append(.item(.setRoot(.init(symbolId: symbolId, members: members))))
-        }
-    }
-}
-
-// MARK: events of symbol action
-
-private extension DocumentUpdater {
-    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction) {
-        switch action {
-        case let .create(action): collect(events: &events, of: action)
-        case let .delete(action): collect(events: &events, of: action)
-        case let .move(action): collect(events: &events, of: action)
-        case let .resize(action): collect(events: &events, of: action)
+            var symbol = symbol
+            let index = symbol.members.firstIndex(of: toItemId) ?? 0
+            symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
+            events.append(.item(.setSymbol(.init(symbolId: symbol.id, origin: symbol.origin, size: symbol.size, members: symbol.members))))
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Create) {
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.CreateSymbol) {
         let symbolId = action.symbolId,
             origin = action.origin,
             size = action.size
-        events.append(.symbol(.create(.init(symbolId: symbolId, origin: origin, size: size))))
+        events.append(.item(.setSymbol(.init(symbolId: symbolId, origin: origin, size: size, members: []))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Delete) {
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.DeleteSymbols) {
         let symbolIds = action.symbolIds
         for symbolId in symbolIds {
-            events.append(.symbol(.delete(.init(symbolId: symbolId))))
+            events.append(.item(.deleteSymbol(.init(symbolId: symbolId))))
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Move) {
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.MoveSymbols) {
         let symbolIds = action.symbolIds,
             offset = action.offset
         for symbolId in symbolIds {
-            guard var symbol = symbolStore.get(id: symbolId) else { continue }
+            guard var symbol = itemStore.symbol(id: symbolId) else { continue }
             symbol.origin += offset
-            events.append(.symbol(.resize(.init(symbolId: symbolId, origin: symbol.origin, size: symbol.size))))
+            events.append(.item(.setSymbol(.init(symbolId: symbolId, origin: symbol.origin, size: symbol.size, members: symbol.members))))
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Resize) {
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.ResizeSymbol) {
         let symbolId = action.symbolId,
             origin = action.origin,
             size = action.size
-        events.append(.symbol(.resize(.init(symbolId: symbolId, origin: origin, size: size))))
+        guard let symbol = itemStore.symbol(id: symbolId) else { return }
+        events.append(.item(.setSymbol(.init(symbolId: symbolId, origin: origin, size: size, members: symbol.members))))
     }
 }

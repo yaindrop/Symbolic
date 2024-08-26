@@ -26,7 +26,7 @@ struct Document: Codable {
         parser.parse()
 
         let symbolId = UUID()
-        events.append(.init(kind: .single(.symbol(.create(.init(symbolId: symbolId, origin: .init(200, 300), size: .init(squared: 1000))))), action: nil))
+        events.append(.init(kind: .single(.item(.setSymbol(.init(symbolId: symbolId, origin: .init(200, 300), size: .init(squared: 1000), members: [])))), action: nil))
         for path in paths {
             events.append(.init(
                 kind: .single(.path(.create(.init(symbolId: symbolId, pathId: .init(), path: path)))),

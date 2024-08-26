@@ -61,23 +61,13 @@ extension PathPropertyEvent.Update {
 // MARK: - ItemEvent
 
 enum ItemEvent: Equatable, Codable {
-    struct SetRoot: Equatable, Codable { let symbolId: UUID, members: [UUID] }
     struct SetGroup: Equatable, Codable { let groupId: UUID, members: [UUID] }
+    struct SetSymbol: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize, members: [UUID] }
+    struct DeleteSymbol: Equatable, Codable { let symbolId: UUID }
 
-    case setRoot(SetRoot)
     case setGroup(SetGroup)
-}
-
-// MARK: - SymbolEvent
-
-enum SymbolEvent: Equatable, Codable {
-    struct Create: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
-    struct Delete: Equatable, Codable { let symbolId: UUID }
-    struct Resize: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
-
-    case create(Create)
-    case delete(Delete)
-    case resize(Resize)
+    case setSymbol(SetSymbol)
+    case deleteSymbol(DeleteSymbol)
 }
 
 // MARK: - DocumentEvent
@@ -87,7 +77,6 @@ struct DocumentEvent: Identifiable, Equatable, Codable {
         case path(PathEvent)
         case pathProperty(PathPropertyEvent)
         case item(ItemEvent)
-        case symbol(SymbolEvent)
     }
 
     struct Compound: Equatable, Codable {

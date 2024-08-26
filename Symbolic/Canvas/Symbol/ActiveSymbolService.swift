@@ -4,7 +4,7 @@ private let subtracer = tracer.tagged("ActiveSymbolService")
 
 // MARK: - ActiveSymbolStore
 
-enum ActiveSymbolState: Equatable {
+enum SymbolActiveState: Equatable {
     case none
     case active(Set<UUID>)
     case focused(UUID)
@@ -12,11 +12,11 @@ enum ActiveSymbolState: Equatable {
 }
 
 class ActiveSymbolStore: Store {
-    @Trackable var state: ActiveSymbolState = .none
+    @Trackable var state: SymbolActiveState = .none
 }
 
 private extension ActiveSymbolStore {
-    func update(state: ActiveSymbolState) {
+    func update(state: SymbolActiveState) {
         withStoreUpdating(configs: .init(animation: .faster)) {
             update { $0(\._state, state) }
         }
@@ -27,13 +27,13 @@ private extension ActiveSymbolStore {
 
 struct ActiveSymbolService {
     let store: ActiveSymbolStore
-    let symbol: SymbolService
+    let item: ItemService
 }
 
 // MARK: selectors
 
 extension ActiveSymbolService {
-    var state: ActiveSymbolState { store.state }
+    var state: SymbolActiveState { store.state }
 
     var activeSymbolIds: Set<UUID> {
         switch state {
@@ -54,7 +54,7 @@ extension ActiveSymbolService {
 
     var editingSymbolId: UUID? { if case let .editing(id) = state { id } else { nil } }
 
-    var focusedSymbol: Symbol? { focusedSymbolId.map { symbol.get(id: $0) } }
+    var focusedSymbol: ItemSymbol? { focusedSymbolId.map { item.symbol(id: $0) } }
 
     var symbolToWorld: CGAffineTransform { focusedSymbol?.symbolToWorld ?? .identity }
 

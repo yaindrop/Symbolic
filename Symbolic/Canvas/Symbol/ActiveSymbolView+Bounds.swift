@@ -11,9 +11,9 @@ private extension GlobalStores {
         let offset = v.offset.applying(viewport.viewToWorld)
         if activeSymbol.selected(id: symbolId) {
             let symbolIds = activeSymbol.selectedSymbolIds
-            documentUpdater.update(symbol: .move(.init(symbolIds: .init(symbolIds), offset: offset)), pending: pending)
+            documentUpdater.update(item: .moveSymbols(.init(symbolIds: .init(symbolIds), offset: offset)), pending: pending)
         } else {
-            documentUpdater.update(symbol: .move(.init(symbolIds: [symbolId], offset: offset)), pending: pending)
+            documentUpdater.update(item: .moveSymbols(.init(symbolIds: [symbolId], offset: offset)), pending: pending)
         }
     }
 
@@ -49,7 +49,7 @@ extension ActiveSymbolView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.viewport.sizedInfo }) var viewport
-            @Selected({ global.symbol.get(id: $0.symbolId)?.boundingRect }) var bounds
+            @Selected({ global.item.symbol(id: $0.symbolId)?.boundingRect }) var bounds
             @Selected({ global.activeSymbol.selectedSymbolIds.contains($0.symbolId) }) var selected
             @Selected({ global.activeSymbol.focusedSymbolId == $0.symbolId }) var focused
             @Selected({ global.activeSymbol.editingSymbolId == $0.symbolId }) var editing

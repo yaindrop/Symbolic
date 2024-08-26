@@ -59,11 +59,10 @@ private extension DocumentAction {
                 "Group of \(action.members.map { $0.shortDescription }.joined(separator: ", ")) as \(action.groupId.shortDescription) in \(action.inGroupId.map { $0.shortDescription } ?? "root")"
             case let .ungroup(action):
                 "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
-            case let .move(action):
-                "Move \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
+            case let .reorder(action):
+                "Reorder \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
+            default: ""
             }
-
-        case .symbol: ""
         }
     }
 }

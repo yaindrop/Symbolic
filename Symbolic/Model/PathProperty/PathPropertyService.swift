@@ -133,7 +133,6 @@ extension PathPropertyService {
         case let .path(event): load(event: event)
         case let .pathProperty(event): load(event: event)
         case .item: break
-        case .symbol: break
         }
     }
 

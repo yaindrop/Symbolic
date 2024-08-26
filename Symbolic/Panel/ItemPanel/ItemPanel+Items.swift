@@ -139,8 +139,8 @@ extension ItemPanel {
     struct Items: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             @Selected({ global.activeSymbol.focusedSymbolId.map { global.item.rootIds(symbolId: $0) } ?? [] }) var rootIds
-            @Selected({ global.item.map }) var itemMap
-            @Selected({ global.path.map }) var pathMap
+            @Selected({ global.item.itemMap }) var itemMap
+            @Selected({ global.path.pathMap }) var pathMap
             @Selected({ global.item.itemDepthMap }) var itemDepthMap
             @Selected({ global.activeItem.focusedItemId }) var focusedItemId
             @Selected({ global.activeItem.selectedItemIds }) var selectedItemIds

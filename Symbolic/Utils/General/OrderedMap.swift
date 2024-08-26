@@ -36,7 +36,7 @@ extension OrderedMap {
 
     var values: [Value] { keys.map { dict[$0]! } }
 
-    func value(key: Key) -> Value? { dict[key] }
+    func get(_ key: Key) -> Value? { dict[key] }
 
     func index(of key: Key) -> Int? { indexOf[key] }
 
@@ -51,8 +51,8 @@ extension OrderedMap {
 
 extension OrderedMap {
     subscript(key: Key) -> Value? {
-        get { value(key: key) }
-        set { setValue(key: key, value: newValue) }
+        get { get(key) }
+        set { set(key: key, value: newValue) }
     }
 
     @discardableResult
@@ -146,7 +146,7 @@ extension OrderedMap {
 // MARK: private
 
 private extension OrderedMap {
-    mutating func setValue(key: Key, value: Value?) {
+    mutating func set(key: Key, value: Value?) {
         if let value {
             updateValue(value, forKey: key)
         } else {
@@ -173,8 +173,8 @@ private extension OrderedMap {
 
 extension OrderedMap where Key == Int {
     subscript(key: Int) -> Value? {
-        get { value(key: key) }
-        set { setValue(key: key, value: newValue) }
+        get { get(key) }
+        set { set(key: key, value: newValue) }
     }
 
     subscript(index index: Int) -> Value? {

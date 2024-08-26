@@ -5,14 +5,14 @@ private let subtracer = tracer.tagged("SymbolService")
 typealias SymbolMap = OrderedMap<UUID, Symbol>
 
 protocol SymbolStoreProtocol {
-    var map: SymbolMap { get }
+    var symbolMap: SymbolMap { get }
 }
 
 extension SymbolStoreProtocol {
-    var symbolIds: [UUID] { map.keys }
+    var symbolIds: [UUID] { symbolMap.keys }
 
     func get(id: UUID) -> Symbol? {
-        map.value(key: id)
+        symbolMap.get(id)
     }
 
     func exists(id: UUID) -> Bool {
@@ -23,12 +23,12 @@ extension SymbolStoreProtocol {
 // MARK: - PathPropertyStore
 
 class SymbolStore: Store, SymbolStoreProtocol {
-    @Trackable var map = SymbolMap()
+    @Trackable var symbolMap = SymbolMap()
 }
 
 private extension SymbolStore {
-    func update(map: SymbolMap) {
-        update { $0(\._map, map) }
+    func update(symbolMap: SymbolMap) {
+        update { $0(\._symbolMap, symbolMap) }
     }
 }
 
@@ -54,39 +54,39 @@ struct SymbolService {
 // MARK: selectors
 
 extension SymbolService: SymbolStoreProtocol {
-    var map: SymbolMap { pendingStore.active ? pendingStore.map : store.map }
+    private var activeStore: SymbolStore { pendingStore.active ? pendingStore : store }
+
+    var symbolMap: SymbolMap { activeStore.symbolMap }
 
     func hitTest(position: Point2) -> UUID? {
-        map.dict.first { _, symbol in symbol.rect.contains(position) }?.key
+        symbolMap.first { _, symbol in symbol.rect.contains(position) }?.0
     }
 }
 
 // MARK: load document
 
-extension SymbolService {
-    var targetStore: SymbolStore { pendingStore.active ? pendingStore : store }
-
-    private func add(symbol: Symbol) {
+private extension SymbolService {
+    func add(symbol: Symbol) {
         let _r = subtracer.range("add"); defer { _r() }
         guard !exists(id: symbol.id) else { return }
-        targetStore.update(map: map.cloned { $0[symbol.id] = symbol })
+        activeStore.update(symbolMap: symbolMap.cloned { $0[symbol.id] = symbol })
     }
 
-    private func remove(symbolId: UUID) {
+    func remove(symbolId: UUID) {
         let _r = subtracer.range("remove"); defer { _r() }
         guard exists(id: symbolId) else { return }
-        targetStore.update(map: map.cloned { $0.removeValue(forKey: symbolId) })
+        activeStore.update(symbolMap: symbolMap.cloned { $0.removeValue(forKey: symbolId) })
     }
 
-    private func update(symbol: Symbol) {
+    func update(symbol: Symbol) {
         let _r = subtracer.range("update"); defer { _r() }
         guard exists(id: symbol.id) else { remove(symbolId: symbol.id); return }
-        targetStore.update(map: map.cloned { $0[symbol.id] = symbol })
+        activeStore.update(symbolMap: symbolMap.cloned { $0[symbol.id] = symbol })
     }
 
-    private func clear() {
+    func clear() {
         let _r = subtracer.range("clear"); defer { _r() }
-        targetStore.update(map: .init())
+        activeStore.update(symbolMap: .init())
     }
 }
 
@@ -108,7 +108,7 @@ extension SymbolService {
         withStoreUpdating {
             if let pendingEvent {
                 pendingStore.update(active: true)
-                pendingStore.update(map: store.map.cloned)
+                pendingStore.update(symbolMap: store.symbolMap.cloned)
                 load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)

@@ -6,12 +6,9 @@ private let subtracer = tracer.tagged("ActiveSymbolService")
 
 enum ActiveSymbolState: Equatable {
     case none
+    case active(Set<UUID>)
     case focused(UUID)
     case editing(UUID)
-
-    var focusedSymbolId: UUID? { if case let .focused(id) = self { id } else { nil } }
-
-    var editingSymbolId: UUID? { if case let .editing(id) = self { id } else { nil } }
 }
 
 class ActiveSymbolStore: Store {
@@ -38,9 +35,9 @@ struct ActiveSymbolService {
 extension ActiveSymbolService {
     var state: ActiveSymbolState { store.state }
 
-    var focusedSymbolId: UUID? { state.focusedSymbolId }
+    var focusedSymbolId: UUID? { if case let .focused(id) = state { id } else { nil } }
 
-    var editingSymbolId: UUID? { state.editingSymbolId }
+    var editingSymbolId: UUID? { if case let .editing(id) = state { id } else { nil } }
 
     var unfocusedSymbolIds: [UUID] { symbol.symbolIds.filter { $0 != focusedSymbolId }}
 }

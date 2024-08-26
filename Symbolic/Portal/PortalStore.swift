@@ -60,7 +60,7 @@ struct PortalReference<Content: View>: View, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let portalId: UUID? }
 
     class Selector: SelectorBase {
-        @Selected({ $0.portalId.map { global.portal.map.value(key: $0) == nil } ?? false }) var deregistered
+        @Selected({ $0.portalId.map { global.portal.map.get($0) == nil } ?? false }) var deregistered
     }
 
     @SelectorWrapper var selector

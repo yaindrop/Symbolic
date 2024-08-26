@@ -14,7 +14,7 @@ typealias ItemDepthMap = [UUID: Int]
 // MARK: - ItemStoreProtocol
 
 protocol ItemStoreProtocol {
-    var map: ItemMap { get }
+    var itemMap: ItemMap { get }
     var symbolRootMap: SymbolRootMap { get }
 
     var itemAncestorMap: ItemAncestorMap { get }
@@ -27,7 +27,7 @@ extension ItemStoreProtocol {
     // MARK: simple selectors
 
     func get(id: UUID) -> Item? {
-        map.value(key: id)
+        itemMap.get(id)
     }
 
     func exists(id: UUID) -> Bool {
@@ -164,7 +164,7 @@ private extension ItemStoreProtocol {
     }
 
     var calcItemDepthMap: ItemDepthMap {
-        map.keys.reduce(into: ItemDepthMap()) { dict, itemId in
+        itemMap.keys.reduce(into: ItemDepthMap()) { dict, itemId in
             dict[itemId] = ancestorIds(of: itemId).count
         }
     }
@@ -173,7 +173,7 @@ private extension ItemStoreProtocol {
 // MARK: - ItemStore
 
 class ItemStore: Store, ItemStoreProtocol {
-    @Trackable var map = ItemMap()
+    @Trackable var itemMap = ItemMap()
     @Trackable var symbolRootMap = SymbolRootMap()
 
     @Derived({ $0.calcItemAncestorMap }) var itemAncestorMap
@@ -183,8 +183,8 @@ class ItemStore: Store, ItemStoreProtocol {
 }
 
 private extension ItemStore {
-    func update(map: ItemMap) {
-        update { $0(\._map, map) }
+    func update(itemMap: ItemMap) {
+        update { $0(\._itemMap, itemMap) }
     }
 
     func update(symbolRootMap: SymbolRootMap) {
@@ -215,17 +215,19 @@ struct ItemService {
 // MARK: selectors
 
 extension ItemService: ItemStoreProtocol {
-    var map: ItemMap { pendingStore.active ? pendingStore.map : store.map }
-    var symbolRootMap: SymbolRootMap { pendingStore.active ? pendingStore.symbolRootMap : store.symbolRootMap }
+    private var activeStore: ItemStore { pendingStore.active ? pendingStore : store }
 
-    var itemAncestorMap: ItemAncestorMap { pendingStore.active ? pendingStore.itemAncestorMap : store.itemAncestorMap }
-    var symbolItemMap: SymbolItemMap { pendingStore.active ? pendingStore.symbolItemMap : store.symbolItemMap }
-    var itemSymbolMap: ItemSymbolMap { pendingStore.active ? pendingStore.itemSymbolMap : store.itemSymbolMap }
-    var itemDepthMap: ItemDepthMap { pendingStore.active ? pendingStore.itemDepthMap : store.itemDepthMap }
+    var itemMap: ItemMap { activeStore.itemMap }
+    var symbolRootMap: SymbolRootMap { activeStore.symbolRootMap }
+
+    var itemAncestorMap: ItemAncestorMap { activeStore.itemAncestorMap }
+    var symbolItemMap: SymbolItemMap { activeStore.symbolItemMap }
+    var itemSymbolMap: ItemSymbolMap { activeStore.itemSymbolMap }
+    var itemDepthMap: ItemDepthMap { activeStore.itemDepthMap }
 
     func allPaths(symbolId: UUID) -> [Path] {
-        let pathMap = path.map
-        return allPathIds(symbolId: symbolId).compactMap { pathMap.value(key: $0) }
+        let pathMap = path.pathMap
+        return allPathIds(symbolId: symbolId).compactMap { pathMap.get($0) }
     }
 
     func allPathsBounds(symbolId: UUID) -> CGRect? {
@@ -237,11 +239,11 @@ extension ItemService: ItemStoreProtocol {
     }
 
     func boundingRect(itemId: UUID) -> CGRect? {
-        let itemMap = map,
-            pathMap = path.map
-        guard let item = itemMap.value(key: itemId) else { return nil }
+        let itemMap = itemMap,
+            pathMap = path.pathMap
+        guard let item = itemMap.get(itemId) else { return nil }
         if let pathId = item.pathId {
-            return pathMap.value(key: pathId)?.boundingRect
+            return pathMap.get(pathId)?.boundingRect
         }
         if let group = item.group {
             let rects = group.members
@@ -256,8 +258,6 @@ extension ItemService: ItemStoreProtocol {
 // MARK: - modify item map
 
 private extension ItemService {
-    var targetStore: ItemStore { pendingStore.active ? pendingStore : store }
-
     func add(symbolId: UUID, item: Item) {
         let _r = subtracer.range("add"); defer { _r() }
         guard !exists(id: item.id) else { return }
@@ -265,12 +265,12 @@ private extension ItemService {
             guard self.path.exists(id: path.id) else { return }
         }
 
-        var newMap = map
+        var newItemMap = itemMap
         var newSymbolRootMap = symbolRootMap
-        newMap[item.id] = item
+        newItemMap[item.id] = item
         newSymbolRootMap[symbolId] = (symbolRootMap[symbolId] ?? []) + [item.id]
-        targetStore.update(map: newMap)
-        targetStore.update(symbolRootMap: newSymbolRootMap)
+        activeStore.update(itemMap: newItemMap)
+        activeStore.update(symbolRootMap: newSymbolRootMap)
     }
 
     func remove(itemId: UUID) {
@@ -281,19 +281,19 @@ private extension ItemService {
         }
         guard let symbolId = symbolId(of: itemId) else { return }
 
-        var newMap = map
+        var newItemMap = itemMap
         var newSymbolRootMap = symbolRootMap
         if let parentId = parentId(of: itemId) {
             guard var members = group(id: parentId)?.members else { return }
             members.removeAll { $0 == itemId }
-            newMap[parentId] = .init(kind: .group(.init(id: parentId, members: members)))
+            newItemMap[parentId] = .init(kind: .group(.init(id: parentId, members: members)))
         } else {
             guard var members = newSymbolRootMap[symbolId] else { return }
             members.removeAll { $0 == itemId }
             newSymbolRootMap[symbolId] = members
         }
-        targetStore.update(map: newMap)
-        targetStore.update(symbolRootMap: newSymbolRootMap)
+        activeStore.update(itemMap: newItemMap)
+        activeStore.update(symbolRootMap: newSymbolRootMap)
     }
 
     func update(item: Item) {
@@ -303,15 +303,15 @@ private extension ItemService {
             guard self.path.exists(id: path.id) else { remove(itemId: item.id); return }
         }
 
-        var newMap = map
-        newMap[item.id] = item
-        targetStore.update(map: newMap)
+        var newItemMap = itemMap
+        newItemMap[item.id] = item
+        activeStore.update(itemMap: newItemMap)
     }
 
     func clear() {
         let _r = subtracer.range("clear"); defer { _r() }
-        targetStore.update(map: .init())
-        targetStore.update(symbolRootMap: .init())
+        activeStore.update(itemMap: .init())
+        activeStore.update(symbolRootMap: .init())
     }
 }
 
@@ -333,7 +333,7 @@ extension ItemService {
         withStoreUpdating {
             if let pendingEvent {
                 pendingStore.update(active: true)
-                pendingStore.update(map: store.map.cloned)
+                pendingStore.update(itemMap: store.itemMap)
                 pendingStore.update(symbolRootMap: store.symbolRootMap)
                 load(event: pendingEvent)
             } else {
@@ -407,7 +407,7 @@ private extension ItemService {
 
         var newSymbolRootMap = symbolRootMap
         newSymbolRootMap[symbolId] = members
-        targetStore.update(symbolRootMap: newSymbolRootMap)
+        activeStore.update(symbolRootMap: newSymbolRootMap)
     }
 
     func load(event: ItemEvent.SetGroup) {

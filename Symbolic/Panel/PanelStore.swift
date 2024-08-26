@@ -74,8 +74,8 @@ extension PanelStore {
 }
 
 extension PanelStore {
-    func get(id: UUID) -> PanelData? { map.value(key: id) }
-    func style(id: UUID) -> PanelStyle? { styleMap.value(key: id) }
+    func get(id: UUID) -> PanelData? { map.get(id) }
+    func style(id: UUID) -> PanelStyle? { styleMap.get(id) }
 
     var panelIds: [UUID] { map.keys }
     var panels: [PanelData] { map.values }
@@ -165,7 +165,7 @@ private extension PanelStore {
                 let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
                 guard let neighborIndex, neighborIndex > index else { return false }
 
-                guard let frontFrame = panelFrameMap.value(key: front.id), let neighborFrame = panelFrameMap.value(key: neighbor.id) else { return false }
+                guard let frontFrame = panelFrameMap.get(front.id), let neighborFrame = panelFrameMap.get(neighbor.id) else { return false }
                 return frontFrame.height + neighborFrame.height + floatingSafeArea * 2 > rootFrame.height
             }()
         }
@@ -236,8 +236,8 @@ private extension PanelStore {
     }
 
     func spin(on id: UUID) {
-        guard let style = styleMap.value(key: id) else { return }
-        let peers = panelIds.filter { styleMap.value(key: $0)?.align == style.align }
+        guard let style = styleMap.get(id) else { return }
+        let peers = panelIds.filter { styleMap.get($0)?.align == style.align }
         guard let primaryId = peers.last,
               let primary = get(id: primaryId),
               let panel = get(id: id) else { return }
@@ -285,7 +285,7 @@ extension PanelStore {
     }
 
     func onPress(of id: UUID) {
-        guard let style = styleMap.value(key: id),
+        guard let style = styleMap.get(id),
               style.appearance == .floatingSecondary else { return }
         if style.squeezed {
             focus(on: id)
@@ -349,7 +349,7 @@ extension PanelStore {
     }
 
     private func rect(of panel: PanelData) -> CGRect {
-        let size = panelFrameMap.value(key: panel.id)?.size ?? .zero
+        let size = panelFrameMap.get(panel.id)?.size ?? .zero
         return rootFrame.alignedBox(at: panel.align, size: size, gap: floatingPadding)
     }
 
@@ -400,7 +400,7 @@ extension PanelStore {
 
     func onDragResize(of id: UUID, _ v: DragGesture.Value) {
         guard let align = style(id: id)?.align else { return }
-        let frame = panelFrameMap.value(key: id) ?? .zero
+        let frame = panelFrameMap.get(id) ?? .zero
         let oppositeY = align.isTop ? frame.minY : frame.maxY
         onResize(of: id, maxHeight: abs(v.location.y - oppositeY))
     }

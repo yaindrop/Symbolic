@@ -1,7 +1,7 @@
 import Foundation
 
 extension Dictionary {
-    func value(key: Key) -> Value? { self[key] }
+    func get(_ key: Key) -> Value? { self[key] }
 
     mutating func getOrSetDefault(key: Key, _ defaultValue: @autoclosure () -> Value) -> Value {
         if let value = self[key] {

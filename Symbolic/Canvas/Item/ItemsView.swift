@@ -7,7 +7,7 @@ struct ItemsView: View, TracedView, SelectorHolder {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.viewport.sizedInfo }) var viewport
 //        @Selected({ global.item.allPathIds }) var allPathIds
-        @Selected({ global.path.map }) var pathMap
+        @Selected({ global.path.pathMap }) var pathMap
         @Selected({ global.activeItem.focusedItemId }) var focusedItemId
     }
 
@@ -27,7 +27,7 @@ struct ItemsView: View, TracedView, SelectorHolder {
 //        AnimatableReader(selector.viewport) {
 //            let focusedItemId = selector.focusedItemId
 //            ForEach(selector.allPathIds.filter { $0 != focusedItemId }) { id in
-//                SUPath { path in selector.pathMap.value(key: id)?.append(to: &path) }
+//                SUPath { path in selector.pathMap.get(id)?.append(to: &path) }
 //                    .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
 //            }
 //            .transformEffect($0.worldToView)

@@ -7,12 +7,12 @@ typealias PathMap = [UUID: Path]
 // MARK: - PathStoreProtocol
 
 protocol PathStoreProtocol {
-    var map: PathMap { get }
+    var pathMap: PathMap { get }
 }
 
 extension PathStoreProtocol {
     func get(id: UUID) -> Path? {
-        map.value(key: id)
+        pathMap.get(id)
     }
 
     func exists(id: UUID) -> Bool {
@@ -23,12 +23,12 @@ extension PathStoreProtocol {
 // MARK: - PathStore
 
 class PathStore: Store, PathStoreProtocol {
-    @Trackable var map = PathMap()
+    @Trackable var pathMap = PathMap()
 }
 
 private extension PathStore {
-    func update(map: PathMap, forced: Bool = false) {
-        update { $0(\._map, map, forced: forced) }
+    func update(pathMap: PathMap, forced: Bool = false) {
+        update { $0(\._pathMap, pathMap, forced: forced) }
     }
 }
 
@@ -55,56 +55,56 @@ struct PathService: PathStoreProtocol {
 // MARK: selectors
 
 extension PathService {
-    var map: PathMap { pendingStore.active ? pendingStore.map : store.map }
+    private var activeStore: PathStore { pendingStore.active ? pendingStore : store }
+
+    var pathMap: PathMap { activeStore.pathMap }
 
     func hitTest(path: Path, position: Point2, threshold: Scalar = 24) -> Bool {
         let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
+        guard path.boundingRect.outset(by: width / 2).contains(position) else { return false }
         return path.hitPath(width: width).contains(position)
     }
 
-    func hitTest(position: Point2, threshold: Scalar = 24) -> UUID? {
-        let width = (threshold * Vector2.unitX).applying(viewport.toWorld).dx
-        return map.first { _, path in path.hitPath(width: width).contains(position) }?.key
+    func hitTest(position: Point2, threshold _: Scalar = 24) -> UUID? {
+        pathMap.first { _, path in hitTest(path: path, position: position) }?.key
     }
 }
 
 // MARK: - modify path map
 
 extension PathService {
-    var targetStore: PathStore { pendingStore.active ? pendingStore : store }
-
     private func add(pathId: UUID, path: Path) {
         let _r = subtracer.range("add"); defer { _r() }
-        var updated = map
+        var updated = pathMap
         guard !exists(id: pathId) else { return }
         guard path.count > 1 else { return }
         updated[pathId] = path
-        targetStore.update(map: updated)
+        activeStore.update(pathMap: updated)
     }
 
     private func remove(pathIds: [UUID]) {
         let _r = subtracer.range("remove"); defer { _r() }
-        var updated = map
+        var updated = pathMap
         for pathId in pathIds {
             updated.removeValue(forKey: pathId)
         }
-        targetStore.update(map: updated)
+        activeStore.update(pathMap: updated)
     }
 
     private func update(pathId: UUID, path: Path) {
         let _r = subtracer.range("update"); defer { _r() }
-        var updated = map
+        var updated = pathMap
         if path.count <= 1 {
             updated.removeValue(forKey: pathId)
         } else {
             updated[pathId] = path
         }
-        targetStore.update(map: updated, forced: true)
+        activeStore.update(pathMap: updated, forced: true)
     }
 
     private func clear() {
         let _r = subtracer.range("clear"); defer { _r() }
-        targetStore.update(map: .init())
+        activeStore.update(pathMap: .init())
     }
 }
 
@@ -126,7 +126,7 @@ extension PathService {
         withStoreUpdating {
             if let pendingEvent {
                 pendingStore.update(active: true)
-                pendingStore.update(map: store.map)
+                pendingStore.update(pathMap: store.pathMap)
                 load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)

@@ -5,12 +5,12 @@ private let subtracer = tracer.tagged("PathPropertyService")
 typealias PathPropertyMap = [UUID: PathProperty]
 
 protocol PathPropertyStoreProtocol {
-    var map: PathPropertyMap { get }
+    var pathPropertyMap: PathPropertyMap { get }
 }
 
 extension PathPropertyStoreProtocol {
     func get(id: UUID) -> PathProperty? {
-        map.value(key: id)
+        pathPropertyMap.get(id)
     }
 
     func exists(id: UUID) -> Bool {
@@ -21,12 +21,12 @@ extension PathPropertyStoreProtocol {
 // MARK: - PathPropertyStore
 
 class PathPropertyStore: Store, PathPropertyStoreProtocol {
-    @Trackable var map = PathPropertyMap()
+    @Trackable var pathPropertyMap = PathPropertyMap()
 }
 
 private extension PathPropertyStore {
-    func update(map: PathPropertyMap) {
-        update { $0(\._map, map) }
+    func update(pathPropertyMap: PathPropertyMap) {
+        update { $0(\._pathPropertyMap, pathPropertyMap) }
     }
 }
 
@@ -53,38 +53,38 @@ struct PathPropertyService {
 // MARK: selectors
 
 extension PathPropertyService: PathPropertyStoreProtocol {
-    var map: PathPropertyMap { pendingStore.active ? pendingStore.map : store.map }
+    private var activeStore: PathPropertyStore { pendingStore.active ? pendingStore : store }
+
+    var pathPropertyMap: PathPropertyMap { activeStore.pathPropertyMap }
 }
 
 // MARK: load document
 
 extension PathPropertyService {
-    var targetStore: PathPropertyStore { pendingStore.active ? pendingStore : store }
-
     private func add(property: PathProperty) {
         let _r = subtracer.range("add"); defer { _r() }
         guard !exists(id: property.id),
               path.exists(id: property.id) else { return }
-        targetStore.update(map: map.cloned { $0[property.id] = property })
+        activeStore.update(pathPropertyMap: pathPropertyMap.cloned { $0[property.id] = property })
     }
 
     private func remove(pathId: UUID) {
         let _r = subtracer.range("remove"); defer { _r() }
         guard exists(id: pathId),
               !path.exists(id: pathId) else { return }
-        targetStore.update(map: map.cloned { $0.removeValue(forKey: pathId) })
+        activeStore.update(pathPropertyMap: pathPropertyMap.cloned { $0.removeValue(forKey: pathId) })
     }
 
     private func update(property: PathProperty) {
         let _r = subtracer.range("update"); defer { _r() }
         guard exists(id: property.id),
               path.exists(id: property.id) else { remove(pathId: property.id); return }
-        targetStore.update(map: map.cloned { $0[property.id] = property })
+        activeStore.update(pathPropertyMap: pathPropertyMap.cloned { $0[property.id] = property })
     }
 
     private func clear() {
         let _r = subtracer.range("clear"); defer { _r() }
-        targetStore.update(map: .init())
+        activeStore.update(pathPropertyMap: .init())
     }
 }
 
@@ -106,7 +106,7 @@ extension PathPropertyService {
         withStoreUpdating {
             if let pendingEvent {
                 pendingStore.update(active: true)
-                pendingStore.update(map: store.map.cloned)
+                pendingStore.update(pathPropertyMap: store.pathPropertyMap.cloned)
                 load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)

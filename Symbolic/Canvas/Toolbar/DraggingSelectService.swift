@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 // MARK: - DraggingSelectStore
@@ -5,7 +6,8 @@ import SwiftUI
 class DraggingSelectStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
-    @Trackable var intersectedItems: [Item] = []
+    @PassThrough<[UUID]> var symbolIds
+    @PassThrough<[UUID]> var itemIds
 }
 
 private extension DraggingSelectStore {
@@ -18,10 +20,6 @@ private extension DraggingSelectStore {
 
     func update(to: Point2) {
         update { $0(\._to, to) }
-    }
-
-    func update(intersectedItems: [Item]) {
-        update { $0(\._intersectedItems, intersectedItems) }
     }
 }
 
@@ -55,14 +53,6 @@ extension DraggingSelectService {
             bounds = boundingRect.applying(transform)
         return bounds.intersects(path.boundingRect)
     }
-
-    var intersectedRootItems: [Item] {
-        guard let symbolId = activeSymbol.focusedSymbolId else { return [] }
-        return item.rootItems(symbolId: symbolId).filter {
-            item.leafItems(rootId: $0.id)
-                .contains { intersects(item: $0) }
-        }
-    }
 }
 
 // MARK: actions
@@ -80,7 +70,19 @@ extension DraggingSelectService {
         guard active, let info else { return }
         withStoreUpdating {
             store.update(to: info.current)
-            store.update(intersectedItems: intersectedRootItems)
+            if let symbol = activeSymbol.editingSymbol {
+                let intersectedItemIds = symbol.members.filter {
+                    item.leafItems(rootId: $0.id)
+                        .contains { intersects(item: $0) }
+                }
+                store.itemIds.send(intersectedItemIds)
+            } else {
+                let intersectedSymbols = item.allSymbols.filter {
+                    guard let boundingRect else { return false }
+                    return boundingRect.applying(viewport.viewToWorld).intersects($0.boundingRect)
+                }
+                store.symbolIds.send(intersectedSymbols.map { $0.id })
+            }
         }
     }
 

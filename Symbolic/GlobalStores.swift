@@ -68,7 +68,7 @@ extension GlobalStores {
 
     var draggingSelect: DraggingSelectService { .init(store: draggingSelectStore, viewport: viewport, activeSymbol: activeSymbol, path: path, item: item) }
 
-    var draggingCreate: DraggingCreateService { .init(store: draggingCreateStore, viewport: viewport, activeSymbol: activeSymbol, activeItem: activeItem, documentUpdater: documentUpdater, canvasAction: canvasAction) }
+    var draggingCreate: DraggingCreateService { .init(store: draggingCreateStore, viewport: viewport, activeSymbol: activeSymbol) }
 }
 
 let global = GlobalStores()

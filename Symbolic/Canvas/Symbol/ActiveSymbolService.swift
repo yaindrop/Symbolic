@@ -74,6 +74,8 @@ extension ActiveSymbolService {
     }
 }
 
+// MARK: actions
+
 extension ActiveSymbolService {
     func setFocus(symbolId: UUID?) {
         if let symbolId {
@@ -89,5 +91,10 @@ extension ActiveSymbolService {
         } else {
             store.update(state: .none)
         }
+    }
+
+    func select(symbolIds: [UUID]) {
+        let _r = subtracer.range(type: .intent, "select \(symbolIds)"); defer { _r() }
+        store.update(state: .active(.init(symbolIds)))
     }
 }

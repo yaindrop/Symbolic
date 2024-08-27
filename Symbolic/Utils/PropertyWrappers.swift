@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 // MARK: - Ref
@@ -29,4 +30,13 @@ struct Getter<Value> {
     init(_ callback: @escaping () -> Value) {
         self.callback = callback
     }
+}
+
+// MARK: - PassThrough
+
+@propertyWrapper
+struct PassThrough<Value> {
+    let subject = PassthroughSubject<Value, Never>()
+    var wrappedValue: PassthroughSubject<Value, Never> { subject }
+    var projectedValue: AnyPublisher<Value, Never> { subject.eraseToAnyPublisher() }
 }

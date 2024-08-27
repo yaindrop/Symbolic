@@ -1,9 +1,12 @@
+import Combine
 import SwiftUI
 
 // MARK: - DraggingCreateStore
 
 class DraggingCreateStore: Store {
     @Trackable var points: [Point2] = []
+    @PassThrough<CGRect> var symbolRect
+    @PassThrough<Path> var path
 }
 
 private extension DraggingCreateStore {
@@ -18,9 +21,6 @@ struct DraggingCreateService {
     let store: DraggingCreateStore
     let viewport: ViewportService
     let activeSymbol: ActiveSymbolService
-    let activeItem: ActiveItemService
-    let documentUpdater: DocumentUpdater
-    let canvasAction: CanvasActionStore
 }
 
 // MARK: selectors
@@ -59,22 +59,15 @@ extension DraggingCreateService {
 
     func onEnd() {
         if let symbolRect {
-            let newSymbolId = UUID()
-            documentUpdater.update(item: .createSymbol(.init(symbolId: newSymbolId, origin: symbolRect.origin, size: symbolRect.size)))
-            activeSymbol.setFocus(symbolId: newSymbolId)
-            canvasAction.on(instant: .addSymbol)
-        } else if let path, let editingSymbolId = activeSymbol.editingSymbolId {
-            let newPathId = UUID()
-            documentUpdater.update(path: .create(.init(symbolId: editingSymbolId, pathId: newPathId, path: path)))
-            activeItem.focus(itemId: newPathId)
-            canvasAction.on(instant: .addPath)
+            store.symbolRect.send(symbolRect)
+        } else if let path {
+            store.path.send(path)
         }
         store.update(points: [])
     }
 
     func onDrag(_ info: PanInfo?) {
         guard active, let info else { return }
-//        let snapped = grid.snap(info.current)
         store.update(points: store.points.cloned { $0.append(info.current) })
     }
 

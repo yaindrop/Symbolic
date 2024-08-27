@@ -105,21 +105,43 @@ private extension GlobalStores {
 
     func setupDraggingFlow() {
         draggingSelect.store.holdCancellables {
-            draggingSelect.store.$intersectedItems.willNotify
+            $0.$symbolIds
                 .sink {
-                    activeItem.select(itemIds: $0.map { $0.id })
+                    activeSymbol.select(symbolIds: $0)
+                }
+            $0.$itemIds
+                .sink {
+                    activeItem.select(itemIds: $0)
+                }
+        }
+
+        draggingCreate.store.holdCancellables {
+            $0.$symbolRect
+                .sink {
+                    let newSymbolId = UUID()
+                    documentUpdater.update(item: .createSymbol(.init(symbolId: newSymbolId, origin: $0.origin, size: $0.size)))
+                    activeSymbol.setFocus(symbolId: newSymbolId)
+                    canvasAction.on(instant: .addSymbol)
+                }
+            $0.$path
+                .sink {
+                    guard let editingSymbolId = activeSymbol.editingSymbolId else { return }
+                    let newPathId = UUID()
+                    documentUpdater.update(path: .create(.init(symbolId: editingSymbolId, pathId: newPathId, path: $0)))
+                    activeItem.focus(itemId: newPathId)
+                    canvasAction.on(instant: .addPath)
                 }
         }
 
         activeItem.store.holdCancellables {
-            activeItem.store.$state.willNotify
+            $0.$state.willNotify
                 .sink { _ in
                     focusedPath.selectionClear()
                 }
         }
 
         activeSymbol.store.holdCancellables {
-            activeSymbol.store.$state.willNotify
+            $0.$state.willNotify
                 .sink { _ in
                     activeItem.blur()
                 }

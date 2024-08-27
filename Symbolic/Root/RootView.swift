@@ -4,15 +4,15 @@ import SwiftUI
 
 private extension GlobalStores {
     func setupDocumentFlow() {
-        fileBrowser.holdCancellables {
-            document.store.$activeDocument.didSet
+        document.store.holdCancellables {
+            $0.$activeDocument.didSet
                 .sink {
                     fileBrowser.asyncSave(document: $0)
                     path.load(document: $0)
                     pathProperty.load(document: $0)
                     item.load(document: $0)
                 }
-            document.store.$pendingEvent.didSet
+            $0.$pendingEvent.didSet
                 .sink {
                     path.load(pendingEvent: $0)
                     pathProperty.load(pendingEvent: $0)
@@ -22,12 +22,12 @@ private extension GlobalStores {
     }
 
     func setupDocumentUpdaterFlow() {
-        document.store.holdCancellables {
-            documentUpdater.store.pendingEventPublisher
+        documentUpdater.store.holdCancellables {
+            $0.pendingEventPublisher
                 .sink {
                     document.setPendingEvent($0)
                 }
-            documentUpdater.store.eventPublisher
+            $0.eventPublisher
                 .sink {
                     document.sendEvent($0)
                 }

@@ -13,7 +13,7 @@ private extension GlobalStores {
         func split(_ v: DragGesture.Value) {
             guard let segmentId = context.segmentId,
                   let segment = activeItem.focusedPath?.segment(fromId: segmentId) else { return }
-            let location = v.location.applying(viewport.viewToWorld)
+            let location = v.location.applying(activeSymbol.viewToSymbol)
             let paramT = segment.paramT(closestTo: location).t
             context.longPressParamT = paramT
             let id = UUID()
@@ -28,7 +28,7 @@ private extension GlobalStores {
             }
         }
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            let offset = v.offset.applying(viewport.viewToWorld)
+            let offset = v.offset.applying(activeSymbol.viewToSymbol)
             if let paramT = context.longPressParamT, let newNodeId = context.longPressSplitNodeId {
                 moveSplitNode(paramT: paramT, newNodeId: newNodeId, offset: offset, pending: pending)
             } else if let pathId = activeItem.focusedPathId {
@@ -44,7 +44,7 @@ private extension GlobalStores {
         return .init(
             configs: .init(durationThreshold: 0.2),
             onPress: { info in
-                let location = info.location.applying(viewport.viewToWorld)
+                let location = info.location.applying(activeSymbol.viewToSymbol)
                 guard let segmentId = activeItem.focusedPath?.segmentId(closestTo: location) else { return }
                 context.segmentId = segmentId
                 canvasAction.start(continuous: .movePath)
@@ -83,11 +83,11 @@ private extension GlobalStores {
 
 extension FocusedPathView {
     struct Stroke: View, TracedView, SelectorHolder {
+        @Environment(\.transformToView) var transformToView
+
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.activeItem.focusedPath }) var path
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -106,23 +106,20 @@ extension FocusedPathView {
 
 private extension FocusedPathView.Stroke {
     @ViewBuilder var content: some View {
-        AnimatableReader(selector.viewport) {
-            let transform = selector.symbolToWorld.concatenating($0.worldToView)
-//            outline(transform: transform)
-            touchable(transform: transform)
-        }
+//            outline
+        touchable
     }
 
-    @ViewBuilder func outline(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var outline: some View {
         SUPath { p in selector.path?.append(to: &p) }
             .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-            .transformEffect(transform)
+            .transformEffect(transformToView)
             .allowsHitTesting(false)
     }
 
-    @ViewBuilder func touchable(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var touchable: some View {
         SUPath { p in selector.path?.append(to: &p) }
-            .transform(transform)
+            .transform(transformToView)
             .stroke(.yellow.opacity(0.05), style: StrokeStyle(lineWidth: 24, lineCap: .round))
             .multipleGesture(global.segmentGesture(context: gestureContext))
     }

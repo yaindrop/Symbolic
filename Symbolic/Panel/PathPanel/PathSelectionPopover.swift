@@ -6,7 +6,6 @@ struct PathSelectionPopover: View, TracedView, SelectorHolder {
     @Environment(\.portalId) var portalId
 
     class Selector: SelectorBase {
-        @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.focusedPath.activeNodesBounds }) var bounds
         @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
         @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds

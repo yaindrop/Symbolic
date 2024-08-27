@@ -14,7 +14,7 @@ private extension GlobalStores {
     }
 
     func onDrag(pathId: UUID, _ v: PanInfo, pending: Bool = false) {
-        let offset = v.offset.applying(viewport.viewToWorld)
+        let offset = v.offset.applying(activeSymbol.viewToSymbol)
         if activeItem.selected(id: pathId) {
             let pathIds = activeItem.selectedPathIds
             documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
@@ -47,6 +47,8 @@ private extension GlobalStores {
 
 extension ActiveItemView {
     struct PathBounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
+        @Environment(\.transformToView) var transformToView
+
         let pathId: UUID
 
         var equatableBy: some Equatable { pathId }
@@ -54,11 +56,9 @@ extension ActiveItemView {
         struct SelectorProps: Equatable { let pathId: UUID }
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.item.boundingRect(itemId: $0.pathId) }) var bounds
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -76,14 +76,12 @@ extension ActiveItemView {
 extension ActiveItemView.PathBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            AnimatableReader(selector.viewport) {
-                let transform = selector.symbolToWorld.concatenating($0.worldToView)
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
-                    .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
-                    .multipleTouchGesture(global.gesture(pathId: pathId))
-                    .framePosition(rect: bounds.applying(transform))
-            }
+            let bounds = bounds.applying(transformToView)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
+                .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
+                .multipleTouchGesture(global.gesture(pathId: pathId))
+                .framePosition(rect: bounds)
         }
     }
 }

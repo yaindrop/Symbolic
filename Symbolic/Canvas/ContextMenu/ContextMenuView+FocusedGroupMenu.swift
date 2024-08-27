@@ -4,9 +4,11 @@ import SwiftUI
 
 extension ContextMenuView {
     struct FocusedGroupMenu: View, TracedView, SelectorHolder {
+        @Environment(\.sizedViewport) var viewport
+
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
             @Selected({ global.activeItem.focusedGroup.map { global.item.boundingRect(itemId: $0.id) } }) var bounds
             @Selected({ global.activeItem.focusedGroup.map { global.activeItem.groupOutset(id: $0.id) } ?? 0 }) var outset
         }
@@ -26,9 +28,9 @@ extension ContextMenuView {
 extension ContextMenuView.FocusedGroupMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            AnimatableReader(selector.viewport) {
-                menu.contextMenu(bounds: bounds.applying($0.worldToView).outset(by: selector.outset))
-            }
+            let transform = selector.symbolToWorld.concatenating(viewport.worldToView),
+                bounds = bounds.applying(transform).outset(by: selector.outset)
+            menu.contextMenu(bounds: bounds)
         }
     }
 

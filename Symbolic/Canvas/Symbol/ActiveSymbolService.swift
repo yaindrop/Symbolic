@@ -27,7 +27,9 @@ private extension ActiveSymbolStore {
 
 struct ActiveSymbolService {
     let store: ActiveSymbolStore
+    let path: PathService
     let item: ItemService
+    let viewport: ViewportService
 }
 
 // MARK: selectors
@@ -62,6 +64,10 @@ extension ActiveSymbolService {
 
     var worldToSymbol: CGAffineTransform { focusedSymbol?.worldToSymbol ?? .identity }
 
+    var symbolToView: CGAffineTransform { symbolToWorld.concatenating(viewport.worldToView) }
+
+    var viewToSymbol: CGAffineTransform { viewport.viewToWorld.concatenating(worldToSymbol) }
+
     var selectedSymbolIds: Set<UUID> {
         switch state {
         case let .active(ids): ids
@@ -71,6 +77,20 @@ extension ActiveSymbolService {
 
     func selected(id: UUID) -> Bool {
         selectedSymbolIds.contains(id)
+    }
+
+    func pathHitTest(pathId: UUID, worldPosition: Point2, threshold: Scalar = 24) -> Bool {
+        guard let focusedSymbol,
+              let path = path.get(id: pathId) else { return false }
+        let symbolPosition = worldPosition.applying(worldToSymbol),
+            width = (threshold * Vector2.unitX).applying(viewToSymbol).dx
+        guard path.boundingRect.outset(by: width / 2).contains(symbolPosition) else { return false }
+        return path.hitPath(width: width).contains(symbolPosition)
+    }
+
+    func pathHitTest(worldPosition: Point2, threshold _: Scalar = 24) -> UUID? {
+        guard let focusedSymbolId else { return nil }
+        return item.allPathItems(symbolId: focusedSymbolId).first { pathHitTest(pathId: $0.id, worldPosition: worldPosition) }?.id
     }
 }
 

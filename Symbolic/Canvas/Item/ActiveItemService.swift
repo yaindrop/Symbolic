@@ -27,9 +27,9 @@ private extension ActiveItemStore {
 struct ActiveItemService {
     let store: ActiveItemStore
     let toolbar: ToolbarStore
-    let item: ItemService
     let path: PathService
     let pathProperty: PathPropertyService
+    let item: ItemService
 }
 
 // MARK: selectors
@@ -156,7 +156,6 @@ extension ActiveItemService {
 
     func focus(itemId: UUID) {
         let _r = subtracer.range(type: .intent, "focus \(itemId)"); defer { _r() }
-        let ancestors = item.ancestorIds(of: itemId)
         store.update(state: .focused(itemId))
     }
 

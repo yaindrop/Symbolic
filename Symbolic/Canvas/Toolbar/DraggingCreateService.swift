@@ -80,9 +80,9 @@ extension DraggingCreateService {
 
 struct DraggingCreateView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
+        @Selected({ global.viewport.worldToView }) var worldToView
         @Selected({ global.draggingCreate.polyline }) var polyline
         @Selected({ global.draggingCreate.symbolRect }) var symbolRect
-        @Selected({ global.viewport.worldToView }) var worldToView
     }
 
     @SelectorWrapper var selector
@@ -102,9 +102,10 @@ private extension DraggingCreateView {
                 .allowsHitTesting(false)
                 .transformEffect(selector.worldToView)
         } else if let symbolRect = selector.symbolRect {
+            let bounds = symbolRect.applying(selector.worldToView)
             Rectangle()
                 .fill(Color.label.opacity(0.05))
-                .framePosition(rect: symbolRect.applying(selector.worldToView))
+                .framePosition(rect: bounds)
         }
     }
 }

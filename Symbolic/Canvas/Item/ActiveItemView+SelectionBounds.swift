@@ -4,12 +4,12 @@ import SwiftUI
 
 extension ActiveItemView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
+        @Environment(\.transformToView) var transformToView
+
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.viewport.sizedInfo }) var viewport
             @Selected({ global.activeItem.selectionBounds }) var bounds
             @Selected({ global.activeItem.selectionOutset }) var outset
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -32,14 +32,11 @@ extension ActiveItemView.SelectionBounds {
 
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            AnimatableReader(selector.viewport) {
-                let transform = selector.symbolToWorld.concatenating($0.worldToView),
-                    bounds = bounds.applying(transform).outset(by: selector.outset)
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
-                    .framePosition(rect: bounds)
-                    .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
-            }
+            let bounds = bounds.applying(transformToView).outset(by: selector.outset)
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
+                .framePosition(rect: bounds)
+                .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
         }
     }
 }

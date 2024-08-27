@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ActiveSymbolView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
+        @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.activeSymbol.activeSymbolIds }) var activeSymbolIds
     }
 
@@ -18,8 +19,12 @@ struct ActiveSymbolView: View, TracedView, SelectorHolder {
 
 private extension ActiveSymbolView {
     @ViewBuilder var content: some View {
-        ForEach(Array(selector.activeSymbolIds)) {
-            Bounds(symbolId: $0)
+        AnimatableReader(selector.viewport) {
+            let transform = $0.worldToView
+            ForEach(Array(selector.activeSymbolIds)) {
+                Bounds(symbolId: $0)
+            }
+            .environment(\.transformToView, transform)
         }
 //        SelectionBounds()
     }

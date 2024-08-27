@@ -20,7 +20,7 @@ class PanelStore: Store {
     @Trackable var popoverButtonFrame: CGRect = .zero
     @Trackable var popoverPanelIds: Set<UUID> = []
 
-    @Derived({ $0.calcStyleMap }) var styleMap
+    @Derived({ $0.deriveStyleMap }) var styleMap
 }
 
 private extension PanelStore {
@@ -131,10 +131,10 @@ extension PanelStore {
     }
 }
 
-// MARK: calc derived
+// MARK: derived
 
-private extension PanelStore {
-    var calcStyleMap: [UUID: PanelStyle] {
+extension PanelStore {
+    private var deriveStyleMap: [UUID: PanelStyle] {
         let alignMap = panels.reduce(into: [UUID: PlaneInnerAlign]()) { dict, panel in
             dict[panel.id] = {
                 if let moving, moving.id == panel.id {

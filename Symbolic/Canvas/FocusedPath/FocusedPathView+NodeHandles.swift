@@ -57,7 +57,7 @@ private extension GlobalStores {
 
     func nodesGesture(context: GestureContext) -> MultipleGesture {
         func updateDrag(_ v: DragGesture.Value, pending: Bool = false) {
-            let offset = v.offset.applying(viewport.viewToWorld)
+            let offset = v.offset.applying(activeSymbol.viewToSymbol)
             dragActionWheel(v)
             dragPendingSelection(offset: offset)
             guard context.pendingSelection == nil,
@@ -105,7 +105,7 @@ private extension GlobalStores {
             configs: .init(durationThreshold: 0.2),
             onPress: { info in
                 contextMenu.setHidden(true)
-                let location = info.location.applying(viewport.viewToWorld)
+                let location = info.location.applying(activeSymbol.viewToSymbol)
                 guard let path = activeItem.focusedPath,
                       let nodeId = path.nodeId(closestTo: location) else { return }
                 context.setup(nodeId)
@@ -166,7 +166,7 @@ private extension GlobalStores {
             segmentType = segment.map { pathProperty.segmentType(id: nodeId).activeType(segment: $0) },
             hasCubicOut = segmentType == .cubic
 
-        var offset: Vector2? { context.pendingActionWheel?.offset.applying(viewport.viewToWorld) }
+        var offset: Vector2? { context.pendingActionWheel?.offset.applying(activeSymbol.viewToSymbol) }
         return [
             .init(name: "Delete", imageName: "trash", tintColor: .red) {
                 documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: [nodeId])))
@@ -210,15 +210,15 @@ private extension GlobalStores {
 
 extension FocusedPathView {
     struct NodeHandles: View, TracedView, SelectorHolder {
+        @Environment(\.transformToView) var transformToView
+
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
             @Selected(configs: .init(syncNotify: true), { global.activeItem.focusedPath }) var path
             @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
             @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
             @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.grid.gridStack }) var gridStack
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -230,25 +230,6 @@ extension FocusedPathView {
         var body: some View { trace {
             setupSelector {
                 content
-                    .onAppear {
-                        if let path = selector.path {
-                            let pb = tracer.range("dbg 1") {
-                                let pb = path.pb
-                                return pb
-                            }
-                            let data = tracer.range("dbg 1.5") {
-                                let data = try? pb.serializedData()
-                                return data
-                            }
-                            tracer.range("dbg 1.8") {
-                                data.map { try? Symbolic_Pb_Path(serializedData: $0) }
-                            }
-                            tracer.range("dbg 2") {
-                                try? pb.decoded()
-                            }
-                            print("dbg v", path, try? pb.decoded())
-                        }
-                    }
             }
         } }
     }
@@ -258,24 +239,21 @@ extension FocusedPathView {
 
 private extension FocusedPathView.NodeHandles {
     @ViewBuilder var content: some View {
-        AnimatableReader(selector.viewport) {
-            let transform = selector.symbolToWorld.concatenating($0.worldToView)
-            indexMarks(transform: transform)
-            snappedMarks(transform: transform)
-            shapes(nodeType: .corner, transform: transform)
-            shapes(nodeType: .locked, transform: transform)
-            shapes(nodeType: .mirrored, transform: transform)
-            activeMarks(transform: transform)
-            touchables(transform: transform)
-            actionWheel(transform: transform)
-        }
+        indexMarks
+        snappedMarks
+        shapes(nodeType: .corner)
+        shapes(nodeType: .locked)
+        shapes(nodeType: .mirrored)
+        activeMarks
+        touchables
+        actionWheel
     }
 
     var circleSize: Scalar { 12 }
     var rectSize: Scalar { circleSize / 2 * 1.7725 } // sqrt of pi
     var touchableSize: Scalar { 40 }
 
-    @ViewBuilder func indexMarks(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var indexMarks: some View {
         Canvas { ctx, _ in
             guard let path = selector.path else { return }
             for index in path.nodes.indices {
@@ -283,14 +261,14 @@ private extension FocusedPathView.NodeHandles {
                 let text = Text("\(index)").font(.system(size: 8)).foregroundStyle(.blue),
                     resolved = ctx.resolve(text),
                     size = resolved.measure(in: .init(squared: touchableSize)),
-                    position = node.position.applying(transform) - Vector2(circleSize + size.width + 4, 0) / 2
+                    position = node.position.applying(transformToView) - Vector2(circleSize + size.width + 4, 0) / 2
                 ctx.draw(resolved, in: .init(center: position, size: size))
             }
         }
         .allowsHitTesting(false)
     }
 
-    @ViewBuilder func shapes(nodeType: PathNodeType, transform: CGAffineTransform) -> some View {
+    @ViewBuilder func shapes(nodeType: PathNodeType) -> some View {
         SUPath { p in
             guard let path = selector.path else { return }
             let pathProperty = selector.pathProperty,
@@ -298,7 +276,7 @@ private extension FocusedPathView.NodeHandles {
             for nodeId in path.nodeIds {
                 guard pathProperty?.nodeType(id: nodeId) == nodeType,
                       let node = path.node(id: nodeId) else { continue }
-                let position = node.position.applying(transform)
+                let position = node.position.applying(transformToView)
                 if nodeType == .corner {
                     let size = rectSize * (selectingNodes ? 1.5 : 1)
                     p.addRoundedRect(in: .init(center: position, size: .init(squared: size)), cornerSize: .init(2, 2))
@@ -313,12 +291,12 @@ private extension FocusedPathView.NodeHandles {
         .allowsHitTesting(false)
     }
 
-    @ViewBuilder func touchables(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var touchables: some View {
         SUPath { p in
             guard let path = selector.path else { return }
             for nodeId in path.nodeIds {
                 guard let node = path.node(id: nodeId) else { continue }
-                let position = node.position.applying(transform),
+                let position = node.position.applying(transformToView),
                     size = CGSize(squared: touchableSize)
                 p.addRect(.init(center: position, size: size))
             }
@@ -327,7 +305,7 @@ private extension FocusedPathView.NodeHandles {
         .multipleGesture(global.nodesGesture(context: gestureContext))
     }
 
-    @ViewBuilder func activeMarks(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var activeMarks: some View {
         SUPath { p in
             guard let path = selector.path else { return }
             let activeNodeIds = selector.activeNodeIds,
@@ -336,7 +314,7 @@ private extension FocusedPathView.NodeHandles {
                 guard !selectingNodes,
                       activeNodeIds.contains(nodeId),
                       let node = path.node(id: nodeId) else { continue }
-                let position = node.position.applying(transform),
+                let position = node.position.applying(transformToView),
                     size = CGSize(squared: circleSize / 2)
                 p.addEllipse(in: .init(center: position, size: size))
             }
@@ -345,7 +323,7 @@ private extension FocusedPathView.NodeHandles {
         .allowsHitTesting(false)
     }
 
-    @ViewBuilder func snappedMarks(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var snappedMarks: some View {
         SUPath { p in
             guard let path = selector.path else { return }
             let activeNodeIds = selector.activeNodeIds,
@@ -356,7 +334,7 @@ private extension FocusedPathView.NodeHandles {
                       activeNodeIds.contains(nodeId),
                       let node = path.node(id: nodeId),
                       let grid = gridStack.first(where: { $0.snapped(node.position) }) else { continue }
-                let position = node.position.applying(transform)
+                let position = node.position.applying(transformToView)
                 p.move(to: position - .init(9, 0))
                 p.addLine(to: position + .init(9, 0))
                 p.move(to: position - .init(0, 9))
@@ -367,14 +345,14 @@ private extension FocusedPathView.NodeHandles {
         .allowsHitTesting(false)
     }
 
-    @ViewBuilder func actionWheel(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var actionWheel: some View {
         if let pendingActionWheel = gestureContext.pendingActionWheel, let path = selector.path, let node = path.node(id: pendingActionWheel.nodeId) {
             ActionWheel(
                 offset: pendingActionWheel.offset,
                 options: global.actionWheelOptions(context: gestureContext),
                 hovering: .init(gestureContext, \.pendingActionWheelOption)
             )
-            .position(node.position.applying(transform))
+            .position(node.position.applying(transformToView))
         }
     }
 }

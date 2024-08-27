@@ -116,19 +116,31 @@ extension ItemStoreProtocol {
         symbol(id: symbolId)?.members.flatMap { groupItems(rootId: $0) }.compactMap { $0.group } ?? []
     }
 
-    func allPaths(symbolId: UUID) -> [ItemPath] {
+    func allPathItems(symbolId: UUID) -> [ItemPath] {
         symbol(id: symbolId)?.members.flatMap { leafItems(rootId: $0) }.compactMap { $0.path } ?? []
     }
 }
 
-// MARK: calc derived
+// MARK: - ItemStore
 
-private extension ItemStoreProtocol {
-    var calcSymbolIds: Set<UUID> {
+class ItemStore: Store, ItemStoreProtocol {
+    @Trackable var itemMap = ItemMap()
+
+    @Derived({ $0.deriveSymbolIds }) var symbolIds: Set<UUID>
+    @Derived({ $0.deriveItemAncestorMap }) var itemAncestorMap
+    @Derived({ $0.deriveSymbolItemMap }) var symbolItemMap
+    @Derived({ $0.deriveItemSymbolMap }) var itemSymbolMap
+    @Derived({ $0.deriveItemDepthMap }) var itemDepthMap
+}
+
+// MARK: derived
+
+extension ItemStore {
+    private var deriveSymbolIds: Set<UUID> {
         .init(itemMap.values.compactMap { $0.symbol?.id })
     }
 
-    private var calcItemParentMap: ItemParentMap {
+    private var deriveItemParentMap: ItemParentMap {
         symbolIds
             .flatMap { allGroups(symbolId: $0) }
             .reduce(into: ItemParentMap()) { dict, group in
@@ -138,8 +150,8 @@ private extension ItemStoreProtocol {
             }
     }
 
-    var calcItemAncestorMap: ItemAncestorMap {
-        let parentMap = calcItemParentMap
+    private var deriveItemAncestorMap: ItemAncestorMap {
+        let parentMap = deriveItemParentMap
         return parentMap.reduce(into: ItemAncestorMap()) { dict, pair in
             let (id, parentId) = pair
             var ancestors: [UUID] = []
@@ -157,13 +169,13 @@ private extension ItemStoreProtocol {
         }
     }
 
-    var calcSymbolItemMap: SymbolItemMap {
+    private var deriveSymbolItemMap: SymbolItemMap {
         symbolIds.reduce(into: SymbolItemMap()) { dict, symbolId in
             dict[symbolId] = allExpandedItems(symbolId: symbolId)
         }
     }
 
-    var calcItemSymbolMap: ItemSymbolMap {
+    private var deriveItemSymbolMap: ItemSymbolMap {
         symbolItemMap.reduce(into: ItemSymbolMap()) { dict, pair in
             let (symbolId, items) = pair
             for item in items {
@@ -172,23 +184,11 @@ private extension ItemStoreProtocol {
         }
     }
 
-    var calcItemDepthMap: ItemDepthMap {
+    private var deriveItemDepthMap: ItemDepthMap {
         itemMap.keys.reduce(into: ItemDepthMap()) { dict, itemId in
             dict[itemId] = ancestorIds(of: itemId).count
         }
     }
-}
-
-// MARK: - ItemStore
-
-class ItemStore: Store, ItemStoreProtocol {
-    @Trackable var itemMap = ItemMap()
-
-    @Derived({ $0.calcSymbolIds }) var symbolIds: Set<UUID>
-    @Derived({ $0.calcItemAncestorMap }) var itemAncestorMap
-    @Derived({ $0.calcSymbolItemMap }) var symbolItemMap
-    @Derived({ $0.calcItemSymbolMap }) var itemSymbolMap
-    @Derived({ $0.calcItemDepthMap }) var itemDepthMap
 }
 
 private extension ItemStore {
@@ -214,8 +214,8 @@ private extension PendingItemStore {
 struct ItemService {
     let store: ItemStore
     let pendingStore: PendingItemStore
-    let viewport: ViewportService
     let path: PathService
+    let viewport: ViewportService
 }
 
 // MARK: selectors
@@ -232,7 +232,7 @@ extension ItemService: ItemStoreProtocol {
     var itemDepthMap: ItemDepthMap { activeStore.itemDepthMap }
 
     func allPaths(symbolId: UUID) -> [Path] {
-        allPaths(symbolId: symbolId).compactMap { path.pathMap.get($0.id) }
+        allPathItems(symbolId: symbolId).compactMap { path.pathMap.get($0.id) }
     }
 
     func allPathsBounds(symbolId: UUID) -> CGRect? {
@@ -259,26 +259,11 @@ extension ItemService: ItemStoreProtocol {
         return nil
     }
 
-    func symbolHitTest(position: Point2) -> UUID? {
+    func symbolHitTest(worldPosition: Point2) -> UUID? {
         symbolIds.first {
             guard let symbol = self.symbol(id: $0) else { return false }
-            return symbol.boundingRect.contains(position)
+            return symbol.boundingRect.contains(worldPosition)
         }
-    }
-
-    func pathHitTest(pathId: UUID, path: Path, position: Point2, threshold: Scalar = 24) -> Bool {
-        guard let symbolId = symbolId(of: pathId),
-              let symbol = symbol(id: symbolId) else { return false }
-        let worldToSymbol = symbol.worldToSymbol,
-            viewToSymbol = viewport.viewToWorld.concatenating(worldToSymbol),
-            symbolPosition = position.applying(worldToSymbol),
-            width = (threshold * Vector2.unitX).applying(viewToSymbol).dx
-        guard path.boundingRect.outset(by: width / 2).contains(symbolPosition) else { return false }
-        return path.hitPath(width: width).contains(symbolPosition)
-    }
-
-    func pathHitTest(position: Point2, threshold _: Scalar = 24) -> UUID? {
-        path.pathMap.first { pathId, path in pathHitTest(pathId: pathId, path: path, position: position) }?.key
     }
 }
 

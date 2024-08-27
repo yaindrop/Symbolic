@@ -4,6 +4,9 @@ import SwiftUI
 
 struct ActiveItemView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
+        @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
+        @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
+        @Selected({ !global.activeItem.activeItems.isEmpty }) var active
         @Selected({ global.activeItem.activePathIds }) var activePathIds
         @Selected({ global.activeItem.activeGroups }) var activeGroups
     }
@@ -19,12 +22,20 @@ struct ActiveItemView: View, TracedView, SelectorHolder {
 
 private extension ActiveItemView {
     @ViewBuilder var content: some View {
-        ForEach(selector.activeGroups) {
-            GroupBounds(group: $0)
+        if selector.active {
+            AnimatableReader(selector.viewport) {
+                let transform = selector.symbolToWorld.concatenating($0.worldToView)
+                ZStack {
+                    ForEach(selector.activeGroups) {
+                        GroupBounds(group: $0)
+                    }
+                    ForEach(selector.activePathIds) {
+                        PathBounds(pathId: $0)
+                    }
+                    SelectionBounds()
+                }
+                .environment(\.transformToView, transform)
+            }
         }
-        ForEach(selector.activePathIds) {
-            PathBounds(pathId: $0)
-        }
-        SelectionBounds()
     }
 }

@@ -15,8 +15,8 @@ struct DocumentUpdater {
     let pathStore: PathStore
     let pathPropertyStore: PathPropertyStore
     let itemStore: ItemStore
-    let activeItem: ActiveItemService
     let viewport: ViewportService
+    let activeItem: ActiveItemService
     let grid: GridStore
 }
 

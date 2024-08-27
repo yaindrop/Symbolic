@@ -4,11 +4,11 @@ import SwiftUI
 
 extension FocusedPathView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
+        @Environment(\.transformToView) var transformToView
+
         class Selector: SelectorBase {
-            @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
             @Selected(configs: .init(syncNotify: true), { global.activeItem.focusedPath }) var path
             @Selected({ global.focusedPath.activeNodeIndexPairs }) var nodeIndexPairs
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         }
 
         @SelectorWrapper var selector
@@ -27,10 +27,7 @@ extension FocusedPathView {
 
 private extension FocusedPathView.SelectionBounds {
     @ViewBuilder var content: some View {
-        AnimatableReader(selector.viewport) {
-            let transform = selector.symbolToWorld.concatenating($0.worldToView)
-            shape(transform: transform)
-        }
+        shape
     }
 
     var strokedWidth: Scalar { 24 }
@@ -38,13 +35,13 @@ private extension FocusedPathView.SelectionBounds {
     var dashSize: Scalar { 8 }
     var color: Color { .blue.opacity(0.5) }
 
-    @ViewBuilder func shape(transform: CGAffineTransform) -> some View {
+    @ViewBuilder var shape: some View {
         SUPath { p in
             for pair in selector.nodeIndexPairs {
                 if pair.first == pair.second {
-                    appendNode(to: &p, at: pair.first, transform: transform)
+                    appendNode(to: &p, at: pair.first)
                 } else {
-                    appendSubpath(to: &p, from: pair.first, to: pair.second, transform: transform)
+                    appendSubpath(to: &p, from: pair.first, to: pair.second)
                 }
             }
         }
@@ -52,17 +49,17 @@ private extension FocusedPathView.SelectionBounds {
         .animatedValue($dashPhase, from: 0, to: dashSize * 2, .linear(duration: 0.4).repeatForever(autoreverses: false))
     }
 
-    func appendSubpath(to p: inout SUPath, from: Int, to: Int, transform: CGAffineTransform) {
+    func appendSubpath(to p: inout SUPath, from: Int, to: Int) {
         guard let path = selector.path,
-              let subpath = path.subpath(from: from, to: to)?.applying(transform) else { return }
+              let subpath = path.subpath(from: from, to: to)?.applying(transformToView) else { return }
         let stroked = SUPath { p in subpath.append(to: &p) }
             .strokedPath(.init(lineWidth: strokedWidth, lineCap: .round, lineJoin: .round))
         p.addPath(stroked)
     }
 
-    func appendNode(to p: inout SUPath, at i: Int, transform: CGAffineTransform) {
+    func appendNode(to p: inout SUPath, at i: Int) {
         guard let path = selector.path,
-              let node = path.node(at: i)?.applying(transform) else { return }
+              let node = path.node(at: i)?.applying(transformToView) else { return }
         p.addEllipse(in: .init(center: node.position, size: .init(squared: strokedWidth)))
     }
 }

@@ -30,12 +30,12 @@ private extension GlobalStores {
                 let worldPosition = info.location.applying(viewport.viewToWorld)
                 let _r = tracer.range(type: .intent, "On tap \(worldPosition)"); defer { _r() }
                 let editingSymbolId = activeSymbol.editingSymbolId,
-                    hitSymbolId = item.symbolHitTest(position: worldPosition)
+                    hitSymbolId = item.symbolHitTest(worldPosition: worldPosition)
                 guard let editingSymbolId else {
                     activeSymbol.setFocus(symbolId: hitSymbolId)
                     return
                 }
-                let hitPathId = item.pathHitTest(position: worldPosition)
+                let hitPathId = activeSymbol.pathHitTest(worldPosition: worldPosition)
                 if hitSymbolId != editingSymbolId, hitPathId == nil {
                     activeSymbol.setFocus(symbolId: editingSymbolId)
                     return

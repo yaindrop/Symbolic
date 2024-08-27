@@ -4,9 +4,11 @@ import SwiftUI
 
 extension ContextMenuView {
     struct FocusedPathMenu: View, TracedView, SelectorHolder {
+        @Environment(\.sizedViewport) var viewport
+
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.viewport.sizedInfo }) var viewport
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
             @Selected({ global.activeItem.focusedPathId.map { global.item.boundingRect(itemId: $0) } }) var bounds
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeNodeIds.isEmpty }) var visible
@@ -27,9 +29,9 @@ extension ContextMenuView {
 extension ContextMenuView.FocusedPathMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds, selector.visible {
-            AnimatableReader(selector.viewport) {
-                menu.contextMenu(bounds: bounds.applying($0.worldToView))
-            }
+            let transform = selector.symbolToWorld.concatenating(viewport.worldToView),
+                bounds = bounds.applying(transform)
+            menu.contextMenu(bounds: bounds)
         }
     }
 

@@ -67,3 +67,25 @@ extension SizedViewportInfo: Animatable {
         }
     }
 }
+
+// MARK: - EnvironmentValues
+
+private struct SizedViewportInfoKey: EnvironmentKey {
+    static let defaultValue: SizedViewportInfo = .init(size: .zero, info: .init())
+}
+
+private struct TransformToViewKey: EnvironmentKey {
+    static let defaultValue: CGAffineTransform = .identity
+}
+
+extension EnvironmentValues {
+    var sizedViewport: SizedViewportInfo {
+        get { self[SizedViewportInfoKey.self] }
+        set { self[SizedViewportInfoKey.self] = newValue }
+    }
+
+    var transformToView: CGAffineTransform {
+        get { self[TransformToViewKey.self] }
+        set { self[TransformToViewKey.self] = newValue }
+    }
+}

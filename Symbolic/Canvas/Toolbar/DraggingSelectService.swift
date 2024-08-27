@@ -27,10 +27,10 @@ private extension DraggingSelectStore {
 
 struct DraggingSelectService {
     let store: DraggingSelectStore
-    let viewport: ViewportService
-    let activeSymbol: ActiveSymbolService
     let path: PathService
     let item: ItemService
+    let viewport: ViewportService
+    let activeSymbol: ActiveSymbolService
 }
 
 // MARK: selectors
@@ -49,8 +49,7 @@ extension DraggingSelectService {
         guard let pathId = item.path?.id,
               let path = path.get(id: pathId),
               let boundingRect else { return false }
-        let transform = viewport.viewToWorld.concatenating(activeSymbol.worldToSymbol),
-            bounds = boundingRect.applying(transform)
+        let bounds = boundingRect.applying(activeSymbol.viewToSymbol)
         return bounds.intersects(path.boundingRect)
     }
 }

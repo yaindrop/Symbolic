@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ContextMenuRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
+        @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.contextMenu.menus }) var menus
         @Selected({ global.contextMenu.hidden }) var hidden
     }
@@ -12,10 +13,13 @@ struct ContextMenuRoot: View, TracedView, SelectorHolder {
 
     var body: some View { trace {
         setupSelector {
-            ZStack {
-                ForEach(Array(selector.menus)) { ContextMenuView(data: $0) }
-                    .opacity(selector.hidden ? 0 : 1)
-                    .animation(.fast, value: selector.hidden)
+            AnimatableReader(selector.viewport) {
+                ZStack {
+                    ForEach(Array(selector.menus)) { ContextMenuView(data: $0) }
+                        .opacity(selector.hidden ? 0 : 1)
+                        .animation(.fast, value: selector.hidden)
+                }
+                .environment(\.sizedViewport, $0)
             }
         }
     } }

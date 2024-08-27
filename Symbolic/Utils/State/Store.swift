@@ -148,7 +148,7 @@ extension StoreManager {
     class UpdatingContext {
         let configs: PartialSelectorConfigs
         var subscriptions: [StoreSubscription] = []
-        var willNotifySubject = PassthroughSubject<Void, Never>()
+        @Passthrough<Void> var willNotify
 
         var subscriptionIds: Set<Int> { .init(subscriptions.map { $0.id }) }
 
@@ -157,7 +157,7 @@ extension StoreManager {
         }
     }
 
-    var updatingWillNotify: AnyPublisher<Void, Never>? { updating?.willNotifySubject.eraseToAnyPublisher() }
+    var updatingWillNotify: AnyPublisher<Void, Never>? { updating?.$willNotify }
 
     func withUpdating(configs: PartialSelectorConfigs = .init(), _ apply: () -> Void) {
         if updating != nil {
@@ -173,7 +173,7 @@ extension StoreManager {
             var subscriptionIds: Set<Int> = []
             while updating.subscriptionIds != subscriptionIds {
                 subscriptionIds = updating.subscriptionIds
-                updating.willNotifySubject.send()
+                updating.willNotify.send()
             }
         }
 
@@ -300,7 +300,7 @@ private extension _StoreProtocol {
         if let deriving, !deriving.trackableIds.contains(id) {
             let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
             deriving.trackableIds.insert(id)
-            deriving.publishers.append(wrapper.willNotifySubject.map { _ in () }.eraseToAnyPublisher())
+            deriving.publishers.append(wrapper.willNotify.map { _ in () }.eraseToAnyPublisher())
         }
         return wrapper.value
     }
@@ -323,7 +323,7 @@ private extension _StoreProtocol {
         }
         if let deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
             deriving.trackableIds.formUnion(wrapper.trackableIds)
-            deriving.publishers.append(wrapper.willNotifySubject.map { _ in () }.eraseToAnyPublisher())
+            deriving.publishers.append(wrapper.willNotify.map { _ in () }.eraseToAnyPublisher())
         }
         return value
     }
@@ -342,7 +342,7 @@ private extension _StoreProtocol {
         guard forced || wrapper.value != newValue else { return }
         let _r = subtracer.range(.init(Tracer.StoreUpdate(keyPath: keyPath))); defer { _r() }
         wrapper.value = newValue
-        wrapper.didSetSubject.send(newValue)
+        wrapper.didSet.send(newValue)
 
         if let subscriptionIds = trackableIdToSubscriptionIds.removeValue(forKey: id) {
             manager.notify(subscriptionIds: subscriptionIds)
@@ -351,7 +351,7 @@ private extension _StoreProtocol {
         if wrapper.willNotifyCancellable == nil {
             wrapper.willNotifyCancellable = manager.updatingWillNotify?.sink {
                 let _r = subtracer.range(.init(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue))); defer { _r() }
-                wrapper.willNotifySubject.send(wrapper.value)
+                wrapper.willNotify.send(wrapper.value)
                 wrapper.willNotifyCancellable = nil
             }
         }
@@ -365,7 +365,7 @@ private extension _StoreProtocol {
         let _r = subtracer.range(.init(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue))); defer { _r() }
 
         wrapper.value = newValue
-        wrapper.willNotifySubject.send(newValue)
+        wrapper.willNotify.send(newValue)
 
         wrapper.trackableIds = context.trackableIds
         wrapper.cancellables.removeAll()
@@ -414,8 +414,8 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var value: Value
     fileprivate var updatingValue: Value?
 
-    fileprivate let didSetSubject = PassthroughSubject<Value, Never>()
-    fileprivate let willNotifySubject = PassthroughSubject<Value, Never>()
+    @Passthrough<Value> fileprivate var didSet
+    @Passthrough<Value> fileprivate var willNotify
 
     fileprivate var willNotifyCancellable: AnyCancellable?
 
@@ -427,7 +427,7 @@ struct _Trackable<Instance: _StoreProtocol, Value: Equatable> {
         let willNotify: AnyPublisher<Value, Never>
     }
 
-    var projectedValue: Projected { .init(didSet: didSetSubject.eraseToAnyPublisher(), willNotify: willNotifySubject.eraseToAnyPublisher()) }
+    var projectedValue: Projected { .init(didSet: $didSet, willNotify: $willNotify) }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -451,7 +451,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
     fileprivate var value: Value?
 
     fileprivate var trackableIds: Set<Int> = []
-    fileprivate let willNotifySubject = PassthroughSubject<Value, Never>()
+    @Passthrough<Value> fileprivate var willNotify
 
     fileprivate var cancellables = Set<AnyCancellable>()
 
@@ -462,7 +462,7 @@ struct _Derived<Instance: _StoreProtocol, Value: Equatable> {
         let willNotify: AnyPublisher<Value, Never>
     }
 
-    var projectedValue: Projected { .init(willNotify: willNotifySubject.eraseToAnyPublisher()) }
+    var projectedValue: Projected { .init(willNotify: $willNotify) }
 
     static subscript(
         _enclosingInstance instance: Instance,
@@ -489,7 +489,7 @@ class _Selector<Props>: ObservableObject, CancellablesHolder {
 
     var asyncNotifyTask: Task<Void, Never>?
 
-    fileprivate let retrackSubject = PassthroughSubject<Void, Never>()
+    @Passthrough<Void> fileprivate var retrack
 
     required init() {}
 }
@@ -506,7 +506,7 @@ private extension _Selector {
 
     func update(_ props: Props) {
         self.props = props
-        retrackSubject.send()
+        retrack.send()
     }
 }
 
@@ -532,7 +532,7 @@ extension _Selector: _SelectorProtocol {
     }
 
     func setupRetrack(callback: @escaping () -> Void) {
-        retrackSubject
+        $retrack
             .sink(receiveValue: callback)
             .store(in: self)
     }

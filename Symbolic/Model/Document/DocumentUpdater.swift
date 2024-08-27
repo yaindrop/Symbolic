@@ -4,13 +4,8 @@ import SwiftUI
 private let subtracer = tracer.tagged("DocumentUpdater")
 
 class DocumentUpdaterStore: Store {
-    fileprivate let eventSubject = PassthroughSubject<DocumentEvent, Never>()
-    fileprivate let pendingEventSubject = PassthroughSubject<DocumentEvent?, Never>()
-}
-
-extension DocumentUpdaterStore {
-    var eventPublisher: AnyPublisher<DocumentEvent, Never> { eventSubject.eraseToAnyPublisher() }
-    var pendingEventPublisher: AnyPublisher<DocumentEvent?, Never> { pendingEventSubject.eraseToAnyPublisher() }
+    @Passthrough<DocumentEvent> var event
+    @Passthrough<DocumentEvent?> var pendingEvent
 }
 
 // MARK: - DocumentUpdater
@@ -60,7 +55,7 @@ extension DocumentUpdater {
     }
 
     func cancel() {
-        store.pendingEventSubject.send(nil)
+        store.pendingEvent.send(nil)
     }
 }
 
@@ -93,10 +88,10 @@ private extension DocumentUpdater {
 
         if pending {
             let _r = subtracer.range("send pending event \(event)"); defer { _r() }
-            store.pendingEventSubject.send(event)
+            store.pendingEvent.send(event)
         } else {
             let _r = subtracer.range("send event \(event)"); defer { _r() }
-            store.eventSubject.send(event)
+            store.event.send(event)
         }
     }
 }

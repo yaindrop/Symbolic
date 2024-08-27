@@ -23,11 +23,11 @@ private extension GlobalStores {
 
     func setupDocumentUpdaterFlow() {
         documentUpdater.store.holdCancellables {
-            $0.pendingEventPublisher
+            $0.$pendingEvent
                 .sink {
                     document.setPendingEvent($0)
                 }
-            $0.eventPublisher
+            $0.$event
                 .sink {
                     document.sendEvent($0)
                 }

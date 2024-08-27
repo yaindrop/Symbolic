@@ -5,8 +5,8 @@ import SwiftUI
 
 class DraggingCreateStore: Store {
     @Trackable var points: [Point2] = []
-    @PassThrough<CGRect> var symbolRect
-    @PassThrough<Path> var path
+    @Passthrough<CGRect> var symbolRect
+    @Passthrough<Path> var path
 }
 
 private extension DraggingCreateStore {

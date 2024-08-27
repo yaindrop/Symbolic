@@ -7,7 +7,7 @@ class SVGParserDelegate: NSObject, XMLParserDelegate, CancellablesHolder {
     var cancellables = Set<AnyCancellable>()
 
     func onPath(_ callback: @escaping (SVGPath) -> Void) {
-        pathSubject
+        $svgPath
             .sink(receiveValue: callback)
             .store(in: self)
     }
@@ -40,8 +40,7 @@ class SVGParserDelegate: NSObject, XMLParserDelegate, CancellablesHolder {
 
     // MARK: private
 
-    private let pathSubject = PassthroughSubject<SVGPath, Never>()
-    private var subscriptions = Set<AnyCancellable>()
+    @Passthrough<SVGPath> private var svgPath
 
     private func onPathElement(with attributes: [String: String]) {
         guard let definitions = attributes["d"] else { return }
@@ -49,7 +48,7 @@ class SVGParserDelegate: NSObject, XMLParserDelegate, CancellablesHolder {
         do {
             try parser.parse()
             for path in parser.paths {
-                pathSubject.send(path)
+                svgPath.send(path)
             }
         } catch let error as SVGPathParserError {
             logError("SVGPathParserError: \(error).")

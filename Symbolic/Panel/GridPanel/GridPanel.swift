@@ -29,7 +29,7 @@ struct GridPanel: View, TracedView, SelectorHolder {
 
 extension GridPanel {
     class ViewModel: ObservableObject {
-        @State var intervalCommit = PassthroughSubject<Void, Never>()
+        @Passthrough<Void> var intervalCommit
     }
 }
 
@@ -86,7 +86,7 @@ private extension GridPanel {
             content
                 .onChange(of: grid, initial: true) { updateViewport() }
                 .animation(.fast, value: viewport)
-                .onReceive(viewModel.intervalCommit) { _viewport.delayEnd() }
+                .onReceive(viewModel.$intervalCommit) { _viewport.delayEnd() }
         } }
     }
 }

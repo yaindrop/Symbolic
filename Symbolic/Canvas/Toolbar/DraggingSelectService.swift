@@ -6,8 +6,8 @@ import SwiftUI
 class DraggingSelectStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
-    @PassThrough<[UUID]> var symbolIds
-    @PassThrough<[UUID]> var itemIds
+    @Passthrough<[UUID]> var symbolIds
+    @Passthrough<[UUID]> var itemIds
 }
 
 private extension DraggingSelectStore {

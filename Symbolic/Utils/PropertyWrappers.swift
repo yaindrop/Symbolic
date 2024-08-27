@@ -32,10 +32,10 @@ struct Getter<Value> {
     }
 }
 
-// MARK: - PassThrough
+// MARK: - Passthrough
 
 @propertyWrapper
-struct PassThrough<Value> {
+struct Passthrough<Value> {
     let subject = PassthroughSubject<Value, Never>()
     var wrappedValue: PassthroughSubject<Value, Never> { subject }
     var projectedValue: AnyPublisher<Value, Never> { subject.eraseToAnyPublisher() }

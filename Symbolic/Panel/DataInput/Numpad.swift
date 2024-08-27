@@ -97,8 +97,8 @@ private extension Numpad {
 
         @Published var decomposed: Decomposed
 
-        private let doneSubject = PassthroughSubject<Void, Never>()
-        private let warningSubject = PassthroughSubject<Warning?, Never>()
+        @Passthrough<Void> var done
+        @Passthrough<Warning?> var warning
 
         init(initialValue: Double, configs: Configs) {
             self.configs = configs
@@ -110,9 +110,6 @@ private extension Numpad {
 // MARK: private
 
 private extension Numpad.Model {
-    var donePublisher: AnyPublisher<Void, Never> { doneSubject.eraseToAnyPublisher() }
-    var warningPublisher: AnyPublisher<Numpad.Warning?, Never> { warningSubject.eraseToAnyPublisher() }
-
     var negated: Bool { decomposed.negated }
 
     var integer: String { decomposed.integer }
@@ -170,11 +167,11 @@ private extension Numpad.Model {
         case .negate:
             tmp.negated.toggle()
         case .done:
-            doneSubject.send()
+            done.send()
             return
         }
         let warning = configs.validate(tmp)
-        warningSubject.send(warning)
+        self.warning.send(warning)
         if warning == nil {
             decomposed = tmp
         }
@@ -204,7 +201,7 @@ struct Numpad: View {
                 guard let v = model.value else { return }
                 onChange?(v)
             }
-            .onReceive(model.donePublisher) {
+            .onReceive(model.$done) {
                 guard let v = model.value else { return }
                 onDone?(v)
             }
@@ -283,7 +280,7 @@ private extension Numpad {
         var body: some View {
             content
                 .animation(.normal, value: activeWarning)
-                .onReceive(model.warningPublisher) { warning in
+                .onReceive(model.$warning) { warning in
                     activeWarning = warning
                     if warning != nil {
                         shaking = true

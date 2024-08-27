@@ -106,7 +106,8 @@ private class StoreManager {
 
     private var tracking: TrackingContext?
     private var updating: UpdatingContext?
-    private var notifying: [NotifyingContext] = []
+    private var notifyingStack: [NotifyingContext] = []
+    private var notifying: NotifyingContext? { notifyingStack.last }
 }
 
 // MARK: tracking
@@ -122,6 +123,10 @@ extension StoreManager {
 
     var trackingId: Int? { tracking?.subscriptionId }
 
+    func expire(subscriptionId: Int) {
+        idToSubscription.removeValue(forKey: subscriptionId)
+    }
+
     func withTracking<T>(_ apply: () -> T, onNotify: @escaping () -> Void) -> (value: T, subscriptionId: Int) {
         guard tracking == nil else {
             fatalError("Nested tracking of store properties is not supported.")
@@ -130,27 +135,22 @@ extension StoreManager {
         let _r = subtracer.range(.init(Tracer.Tracking(subscriptionId: id))); defer { _r() }
 
         let tracking = TrackingContext(subscriptionId: id)
-        self.tracking = tracking
-        let result = apply()
-        self.tracking = nil
+        let result = withAssigned(self, \.tracking, tracking, apply)
 
         idToSubscription[id] = .init(id: id, callback: onNotify)
         return (result, tracking.subscriptionId)
-    }
-
-    func expire(subscriptionId: Int) {
-        idToSubscription.removeValue(forKey: subscriptionId)
     }
 }
 
 // MARK: updating
 
 extension StoreManager {
-    class UpdatingContext: CancellablesHolder {
+    class UpdatingContext {
         let configs: PartialSelectorConfigs
-        var cancellables = Set<AnyCancellable>()
         var subscriptions: [StoreSubscription] = []
         var willNotifySubject = PassthroughSubject<Void, Never>()
+
+        var subscriptionIds: Set<Int> { .init(subscriptions.map { $0.id }) }
 
         init(configs: PartialSelectorConfigs) {
             self.configs = configs
@@ -168,12 +168,16 @@ extension StoreManager {
         let _r = subtracer.range(.init(Tracer.Updating(configs: configs))); defer { _r() }
 
         let updating = UpdatingContext(configs: configs)
-        self.updating = updating
-        apply()
-        updating.willNotifySubject.send()
-        self.updating = nil
+        withAssigned(self, \.updating, updating) {
+            apply()
+            var subscriptionIds: Set<Int> = []
+            while updating.subscriptionIds != subscriptionIds {
+                subscriptionIds = updating.subscriptionIds
+                updating.willNotifySubject.send()
+            }
+        }
 
-        notifyAll(updating)
+        withNotifying(updating)
     }
 }
 
@@ -189,9 +193,9 @@ extension StoreManager {
         }
     }
 
-    var notifyingConfigs: PartialSelectorConfigs? { notifying.last?.configs }
+    var notifyingConfigs: PartialSelectorConfigs? { notifying?.configs }
 
-    var notifyingId: Int? { notifying.last?.subscriptionId }
+    var notifyingId: Int? { notifying?.subscriptionId }
 
     func notify(subscriptionIds: Set<Int>) {
         let _r = subtracer.range("notify"); defer { _r() }
@@ -207,15 +211,15 @@ extension StoreManager {
         }
     }
 
-    private func notifyAll(_ context: UpdatingContext) {
+    private func withNotifying(_ context: UpdatingContext) {
         let _r = subtracer.range(.init(Tracer.NotifyingAll(subscriptionIds: context.subscriptions.map { $0.id }))); defer { _r() }
-        notifying.append(.init(configs: context.configs))
-        for subscription in context.subscriptions {
-            let _r = subtracer.range(.init(Tracer.NotifyingCallback(subscriptionId: subscription.id))); defer { _r() }
-            notifying.last?.subscriptionId = subscription.id
-            subscription.callback()
+        withLast(self, \.notifyingStack, .init(configs: context.configs)) {
+            for subscription in context.subscriptions {
+                let _r = subtracer.range(.init(Tracer.NotifyingCallback(subscriptionId: subscription.id))); defer { _r() }
+                notifying?.subscriptionId = subscription.id
+                subscription.callback()
+            }
         }
-        notifying.removeLast()
     }
 }
 
@@ -255,9 +259,7 @@ private extension Store {
         let _r = subtracer.range("deriving"); defer { _r() }
 
         let deriving = DerivingContext()
-        derivingStack.append(deriving)
-        let result = apply()
-        derivingStack.removeLast()
+        let result = withLast(self, \.derivingStack, deriving, apply)
         subtracer.instant(.init(Tracer.DerivingResult(trackableIds: deriving.trackableIds)))
 
         return (result, deriving)

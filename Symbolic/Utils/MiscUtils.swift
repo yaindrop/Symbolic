@@ -65,6 +65,22 @@ func modify<T>(_ value: T, _ modifier: (inout T) -> Void) -> T {
     return value
 }
 
+func withAssigned<T, Value, Result>(_ instance: T, _ keyPath: ReferenceWritableKeyPath<T, Value?>, _ value: Value, _ work: () -> Result) -> Result {
+    @Ref(instance, keyPath) var ref
+    ref = value
+    let result = work()
+    ref = nil
+    return result
+}
+
+func withLast<T, Value, Result>(_ instance: T, _ keyPath: ReferenceWritableKeyPath<T, [Value]>, _ value: Value, _ work: () -> Result) -> Result {
+    @Ref(instance, keyPath) var ref
+    ref.append(value)
+    let result = work()
+    ref.removeLast()
+    return result
+}
+
 // MARK: - builder helper
 
 func build<Content: View>(@ViewBuilder _ builder: () -> Content) -> Content { builder() }

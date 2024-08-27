@@ -123,6 +123,13 @@ private extension GlobalStores {
                     focusedPath.selectionClear()
                 }
         }
+
+        activeSymbol.store.holdCancellables {
+            activeSymbol.store.$state.willNotify
+                .sink { _ in
+                    activeItem.blur()
+                }
+        }
     }
 }
 

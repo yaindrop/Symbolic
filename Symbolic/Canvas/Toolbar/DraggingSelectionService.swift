@@ -40,18 +40,20 @@ struct DraggingSelectionService {
 extension DraggingSelectionService {
     var active: Bool { store.from != nil }
 
-    var rect: CGRect? {
+    var boundingRect: CGRect? {
         guard let from = store.from else { return nil }
         return .init(from: from, to: store.to)
     }
 
-    var rectInWorld: CGRect? { rect?.applying(viewport.viewToWorld) }
+    var rectInWorld: CGRect? { boundingRect?.applying(viewport.viewToWorld) }
 
     func intersects(item: Item) -> Bool {
-        guard let rectInWorld,
-              let pathId = item.path?.id,
-              let path = path.get(id: pathId) else { return false }
-        return path.boundingRect.intersects(rectInWorld)
+        guard let pathId = item.path?.id,
+              let path = path.get(id: pathId),
+              let boundingRect else { return false }
+        let transform = viewport.viewToWorld.concatenating(activeSymbol.worldToSymbol),
+            bounds = boundingRect.applying(transform)
+        return bounds.intersects(path.boundingRect)
     }
 
     var intersectedRootItems: [Item] {
@@ -91,7 +93,7 @@ extension DraggingSelectionService {
 
 struct DraggingSelectionView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.draggingSelection.rect }) var rect
+        @Selected({ global.draggingSelection.boundingRect }) var boundingRect
     }
 
     @SelectorWrapper var selector
@@ -107,7 +109,7 @@ struct DraggingSelectionView: View, TracedView, SelectorHolder {
 
 private extension DraggingSelectionView {
     @ViewBuilder var content: some View {
-        if let rect = selector.rect {
+        if let rect = selector.boundingRect {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.gray.opacity(0.2))
                 .stroke(.gray.opacity(0.5))

@@ -300,7 +300,7 @@ private extension _StoreProtocol {
         if let deriving, !deriving.trackableIds.contains(id) {
             let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
             deriving.trackableIds.insert(id)
-            deriving.publishers.append(wrapper.willNotify.map { _ in () }.eraseToAnyPublisher())
+            deriving.publishers.append(wrapper.$willNotify.eraseToVoidPublisher())
         }
         return wrapper.value
     }
@@ -323,7 +323,7 @@ private extension _StoreProtocol {
         }
         if let deriving, !deriving.trackableIds.contains(wrapper.trackableIds) {
             deriving.trackableIds.formUnion(wrapper.trackableIds)
-            deriving.publishers.append(wrapper.willNotify.map { _ in () }.eraseToAnyPublisher())
+            deriving.publishers.append(wrapper.$willNotify.eraseToVoidPublisher())
         }
         return value
     }

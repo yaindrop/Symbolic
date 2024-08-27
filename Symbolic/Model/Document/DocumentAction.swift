@@ -73,7 +73,7 @@ extension PathPropertyAction.Update {
 // MARK: - ItemAction
 
 enum ItemAction: Equatable, Codable {
-    struct Group: Equatable, Codable { var groupId: UUID, members: [UUID], inSymbolId: UUID? = nil, inGroupId: UUID? = nil }
+    struct Group: Equatable, Codable { var groupId: UUID, members: [UUID], inSymbolId: UUID?, inGroupId: UUID? }
     struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
     struct Reorder: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
 

@@ -41,10 +41,13 @@ extension DocumentUpdater {
     }
 
     func groupSelection() {
-        let groupId = UUID()
-        let members = activeItem.selectedItems.map { $0.id }
-        let inGroupId = global.item.commonAncestorId(of: members)
-        update(item: .group(.init(groupId: groupId, members: members, inGroupId: inGroupId)))
+        let groupId = UUID(),
+            members = activeItem.selectedItems.map { $0.id }
+        // TODO: fixme
+        guard !members.isEmpty else { return }
+        let inGroupId = itemStore.commonAncestorId(of: members),
+            inSymbolId = inGroupId == nil ? itemStore.symbolId(of: members[0]) : nil
+        update(item: .group(.init(groupId: groupId, members: members, inSymbolId: inSymbolId, inGroupId: inGroupId)))
         activeItem.onTap(itemId: groupId)
     }
 
@@ -379,24 +382,24 @@ private extension DocumentUpdater {
             members = action.members,
             inSymbolId = action.inSymbolId,
             inGroupId = action.inGroupId
-        guard itemStore.get(id: groupId) == nil else { return } // new group id already exists
+        guard itemStore.get(id: groupId) == nil else { print("dbg 0"); return } // new group id already exists
         if let inGroupId {
             let ancestors = itemStore.ancestorIds(of: inGroupId)
-            guard !ancestors.contains(inGroupId) else { return } // cyclic grouping
+            guard !ancestors.contains(inGroupId) else { print("dbg a"); return } // cyclic grouping
         }
 
         let symbolId: UUID
         if let inGroupId {
-            guard let id = itemStore.symbolId(of: inGroupId) else { return } // no symbol found
+            guard let id = itemStore.symbolId(of: inGroupId) else { print("dbg b"); return } // no symbol found
             symbolId = id
         } else if let inSymbolId {
             symbolId = inSymbolId
         } else {
-            return // no grouping target
+            print("dbg c"); return // no grouping target
         }
 
         for itemId in members {
-            guard itemStore.symbolId(of: itemId) == symbolId else { return } // members not in the same symbol
+            guard itemStore.symbolId(of: itemId) == symbolId else { print("dbg d"); return } // members not in the same symbol
         }
 
         let groupedMembers = Set(members)

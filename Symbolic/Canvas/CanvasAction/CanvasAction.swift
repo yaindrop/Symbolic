@@ -13,8 +13,8 @@ enum CanvasAction: Equatable {
         case panViewport
         case pinchViewport
 
-        case draggingSelection
-        case addingPath
+        case draggingSelect
+        case draggingCreate
 
         case movePath
         case moveSelection
@@ -37,6 +37,7 @@ enum CanvasAction: Equatable {
         case selectPaths
         case cancelSelection
         case addPath
+        case addSymbol
 
         case undo
     }
@@ -65,8 +66,8 @@ extension CanvasAction.Continuous {
         case .panViewport: "Move"
         case .pinchViewport: "Move and scale"
 
-        case .addingPath: "Drag to add path"
-        case .draggingSelection: "Drag to select"
+        case .draggingCreate: "Drag to creare"
+        case .draggingSelect: "Drag to select"
 
         case .movePath: "Drag to move path"
         case .moveSelection: "Drag to move selection"
@@ -93,6 +94,7 @@ extension CanvasAction.Instant {
         case .selectPaths: "Select paths"
         case .cancelSelection: "Cancel selection"
         case .addPath: "Add path"
+        case .addSymbol: "Add symbol"
 
         case .undo: "Undo"
         }

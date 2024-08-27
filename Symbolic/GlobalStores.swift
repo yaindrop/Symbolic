@@ -40,9 +40,9 @@ struct GlobalStores {
 
     private let focusedPathStore = FocusedPathStore()
 
-    private let draggingSelectionStore = DraggingSelectionStore()
+    private let draggingSelectStore = DraggingSelectStore()
 
-    private let addingPathStore = AddingPathStore()
+    private let draggingCreateStore = DraggingCreateStore()
 }
 
 // MARK: services
@@ -66,9 +66,9 @@ extension GlobalStores {
 
     var focusedPath: FocusedPathService { .init(store: focusedPathStore, activeItem: activeItem) }
 
-    var draggingSelection: DraggingSelectionService { .init(store: draggingSelectionStore, viewport: viewport, activeSymbol: activeSymbol, path: path, item: item) }
+    var draggingSelect: DraggingSelectService { .init(store: draggingSelectStore, viewport: viewport, activeSymbol: activeSymbol, path: path, item: item) }
 
-    var addingPath: AddingPathService { .init(store: addingPathStore, viewport: viewport, grid: grid) }
+    var draggingCreate: DraggingCreateService { .init(store: draggingCreateStore, viewport: viewport, activeSymbol: activeSymbol, activeItem: activeItem, documentUpdater: documentUpdater, canvasAction: canvasAction) }
 }
 
 let global = GlobalStores()

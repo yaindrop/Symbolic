@@ -19,11 +19,11 @@ private extension GlobalStores {
                 canvasAction.end(triggering: .addPath)
                 if cancelled {
                     viewportUpdater.setBlocked(false)
-                    canvasAction.end(continuous: .draggingSelection)
-                    canvasAction.end(continuous: .addingPath)
+                    canvasAction.end(continuous: .draggingSelect)
+                    canvasAction.end(continuous: .draggingCreate)
 
-                    draggingSelection.cancel()
-                    addingPath.cancel()
+                    draggingSelect.cancel()
+                    draggingCreate.cancel()
                 }
             },
             onTap: { info in
@@ -68,14 +68,14 @@ private extension GlobalStores {
 
                 switch toolbar.mode {
                 case .select:
-                    if !draggingSelection.active {
-                        canvasAction.start(continuous: .draggingSelection)
-                        draggingSelection.onStart(from: info.current)
+                    if !draggingSelect.active {
+                        canvasAction.start(continuous: .draggingSelect)
+                        draggingSelect.onStart(from: info.current)
                     }
                 case .addPath:
-                    if !addingPath.active {
-                        canvasAction.start(continuous: .addingPath)
-                        addingPath.onStart(from: info.current)
+                    if !draggingCreate.active {
+                        canvasAction.start(continuous: .draggingCreate)
+                        draggingCreate.onStart(from: info.current)
                     }
                 }
             },
@@ -83,24 +83,18 @@ private extension GlobalStores {
                 let _r = tracer.range(type: .intent, "On long press end"); defer { _r() }
                 viewportUpdater.setBlocked(false)
 
-                draggingSelection.onEnd()
-                canvasAction.end(continuous: .draggingSelection)
+                draggingSelect.onEnd()
+                canvasAction.end(continuous: .draggingSelect)
 
-                if let path = addingPath.path {
-                    let newPathId = UUID()
-                    documentUpdater.update(path: .create(.init(symbolId: .init(), pathId: newPathId, path: path)))
-                    activeItem.focus(itemId: newPathId)
-                    canvasAction.on(instant: .addPath)
-                }
-                addingPath.onEnd()
-                canvasAction.end(continuous: .addingPath)
+                draggingCreate.onEnd()
+                canvasAction.end(continuous: .draggingCreate)
             },
             onDrag: {
                 canvasAction.end(triggering: .select)
                 canvasAction.end(triggering: .addPath)
 
-                draggingSelection.onDrag($0)
-                addingPath.onDrag($0)
+                draggingSelect.onDrag($0)
+                draggingCreate.onDrag($0)
             },
             onPan: { viewportUpdater.onPan($0) },
             onPanEnd: { _ in viewportUpdater.onCommit() },
@@ -110,8 +104,8 @@ private extension GlobalStores {
     }
 
     func setupDraggingFlow() {
-        draggingSelection.store.holdCancellables {
-            draggingSelection.store.$intersectedItems.willNotify
+        draggingSelect.store.holdCancellables {
+            draggingSelect.store.$intersectedItems.willNotify
                 .sink {
                     activeItem.select(itemIds: $0.map { $0.id })
                 }
@@ -196,8 +190,8 @@ private extension CanvasView {
             ActiveItemView()
             FocusedPathView()
 
-            DraggingSelectionView()
-            AddingPathView()
+            DraggingSelectView()
+            DraggingCreateView()
         }
         .allowsHitTesting(!selector.viewportUpdating)
     } }

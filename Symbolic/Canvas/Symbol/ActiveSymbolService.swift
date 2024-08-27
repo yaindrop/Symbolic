@@ -56,6 +56,8 @@ extension ActiveSymbolService {
 
     var focusedSymbol: ItemSymbol? { focusedSymbolId.map { item.symbol(id: $0) } }
 
+    var editingSymbol: ItemSymbol? { editingSymbolId.map { item.symbol(id: $0) } }
+
     var symbolToWorld: CGAffineTransform { focusedSymbol?.symbolToWorld ?? .identity }
 
     var worldToSymbol: CGAffineTransform { focusedSymbol?.worldToSymbol ?? .identity }

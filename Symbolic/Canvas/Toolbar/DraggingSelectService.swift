@@ -1,14 +1,14 @@
 import SwiftUI
 
-// MARK: - DraggingSelectionStore
+// MARK: - DraggingSelectStore
 
-class DraggingSelectionStore: Store {
+class DraggingSelectStore: Store {
     @Trackable var from: Point2? = nil
     @Trackable var to: Point2 = .zero
     @Trackable var intersectedItems: [Item] = []
 }
 
-private extension DraggingSelectionStore {
+private extension DraggingSelectStore {
     func update(from: Point2?) {
         update {
             $0(\._from, from)
@@ -25,10 +25,10 @@ private extension DraggingSelectionStore {
     }
 }
 
-// MARK: - DraggingSelectionService
+// MARK: - DraggingSelectService
 
-struct DraggingSelectionService {
-    let store: DraggingSelectionStore
+struct DraggingSelectService {
+    let store: DraggingSelectStore
     let viewport: ViewportService
     let activeSymbol: ActiveSymbolService
     let path: PathService
@@ -37,7 +37,7 @@ struct DraggingSelectionService {
 
 // MARK: selectors
 
-extension DraggingSelectionService {
+extension DraggingSelectService {
     var active: Bool { store.from != nil }
 
     var boundingRect: CGRect? {
@@ -67,7 +67,7 @@ extension DraggingSelectionService {
 
 // MARK: actions
 
-extension DraggingSelectionService {
+extension DraggingSelectService {
     func onStart(from: Point2) {
         store.update(from: from)
     }
@@ -89,11 +89,11 @@ extension DraggingSelectionService {
     }
 }
 
-// MARK: - DraggingSelectionView
+// MARK: - DraggingSelectView
 
-struct DraggingSelectionView: View, TracedView, SelectorHolder {
+struct DraggingSelectView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.draggingSelection.boundingRect }) var boundingRect
+        @Selected({ global.draggingSelect.boundingRect }) var boundingRect
     }
 
     @SelectorWrapper var selector
@@ -107,7 +107,7 @@ struct DraggingSelectionView: View, TracedView, SelectorHolder {
 
 // MARK: private
 
-private extension DraggingSelectionView {
+private extension DraggingSelectView {
     @ViewBuilder var content: some View {
         if let rect = selector.boundingRect {
             RoundedRectangle(cornerRadius: 8)

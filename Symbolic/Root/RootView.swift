@@ -9,13 +9,13 @@ private extension GlobalStores {
                 .sink {
                     fileBrowser.asyncSave(document: $0)
                     path.load(document: $0)
-                    pathProperty.load(document: $0)
+                    symbol.load(document: $0)
                     item.load(document: $0)
                 }
             $0.$pendingEvent.didSet
                 .sink {
                     path.load(pendingEvent: $0)
-                    pathProperty.load(pendingEvent: $0)
+                    symbol.load(pendingEvent: $0)
                     item.load(pendingEvent: $0)
                 }
         }

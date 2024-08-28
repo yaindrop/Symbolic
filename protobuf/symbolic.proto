@@ -30,6 +30,15 @@ message Size2 {
   double height = 2;
 }
 
+message Angle { double radians = 1; }
+
+message Color {
+  double red = 1;
+  double green = 2;
+  double blue = 3;
+  double alpha = 4;
+}
+
 // MARK: - path types
 
 message PathNode {
@@ -66,4 +75,29 @@ enum PathNodeType {
 enum PathSegmentType {
   cubic = 0;
   quadratic = 1;
+}
+
+// MARK: - grid
+
+message Grid {
+  message Cartesian { double interval = 1; }
+
+  message Isometric {
+    double interval = 1;
+    Angle angle0 = 2;
+    Angle angle1 = 3;
+  }
+
+  message Radial {
+    double interval = 1;
+    uint32 angular_divisions = 2;
+  }
+
+  Color tint_color = 1;
+
+  oneof kind {
+    Cartesian cartesian = 101;
+    Isometric isometric = 102;
+    Radial radial = 103;
+  }
 }

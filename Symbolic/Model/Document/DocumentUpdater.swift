@@ -13,7 +13,6 @@ class DocumentUpdaterStore: Store {
 struct DocumentUpdater {
     let store: DocumentUpdaterStore
     let pathStore: PathStore
-    let pathPropertyStore: PathPropertyStore
     let itemStore: ItemStore
     let viewport: ViewportService
     let activeItem: ActiveItemService
@@ -27,8 +26,8 @@ extension DocumentUpdater {
         handle(.path(action), pending: pending)
     }
 
-    func update(pathProperty action: PathPropertyAction, pending: Bool = false) {
-        handle(.pathProperty(action), pending: pending)
+    func update(symbol action: SymbolAction, pending: Bool = false) {
+        handle(.symbol(action), pending: pending)
     }
 
     func update(item action: ItemAction, pending: Bool = false) {
@@ -71,7 +70,7 @@ private extension DocumentUpdater {
 
         switch action {
         case let .path(action): collect(events: &events, of: action)
-        case let .pathProperty(action): collect(events: &events, of: action)
+        case let .symbol(action): collect(events: &events, of: action)
         case let .item(action): collect(events: &events, of: action)
         }
 
@@ -105,10 +104,11 @@ private extension DocumentUpdater {
     func collect(events: inout [DocumentEvent.Single], of action: PathAction) {
         switch action {
         case let .load(action): collect(events: &events, of: action)
+
         case let .create(action): collect(events: &events, of: action)
-        case let .delete(action): collect(events: &events, of: action)
         case let .update(action): collect(events: &events, of: action)
 
+        case let .delete(action): collect(events: &events, of: action)
         case let .move(action): collect(events: &events, of: action)
         }
     }
@@ -117,36 +117,23 @@ private extension DocumentUpdater {
         let symbolId = action.symbolId,
             pathIds = action.pathIds,
             paths = action.paths
-        guard pathIds.count == paths.count else { return }
+        guard pathIds.count == paths.count,
+              let symbol = itemStore.symbol(id: symbolId) else { return }
         for i in pathIds.indices {
             let pathId = pathIds[i], path = paths[i]
-            events.append(.path(.create(.init(symbolId: symbolId, pathId: pathId, path: path))))
+            events.append(.path(.init(pathId: pathId, .create(.init(path: path)))))
         }
+        events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members + pathIds)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], of action: PathAction.Create) {
         let symbolId = action.symbolId,
             pathId = action.pathId,
             path = action.path
-        events.append(.path(.create(.init(symbolId: symbolId, pathId: pathId, path: path))))
+        guard let symbol = itemStore.symbol(id: symbolId) else { return }
+        events.append(.path(.init(pathId: pathId, .create(.init(path: path)))))
+        events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members + [pathId])))))
     }
-
-    func collect(events: inout [DocumentEvent.Single], of action: PathAction.Delete) {
-        let pathIds = action.pathIds
-        for pathId in pathIds {
-            events.append(.path(.delete(.init(pathId: pathId))))
-        }
-    }
-
-    func collect(events: inout [DocumentEvent.Single], of action: PathAction.Move) {
-        let pathIds = action.pathIds,
-            offset = action.offset
-        for pathId in pathIds {
-            events.append(.path(.update(.init(pathId: pathId, kinds: [.move(.init(offset: offset))]))))
-        }
-    }
-
-    // MARK: single path update actions
 
     func collect(events: inout [DocumentEvent.Single], of action: PathAction.Update) {
         let pathId = action.pathId
@@ -163,8 +150,25 @@ private extension DocumentUpdater {
 
         case let .merge(action): collect(events: &events, pathId: pathId, of: action)
         case let .split(action): collect(events: &events, pathId: pathId, of: action)
+
+        case let .setName(action): collect(events: &events, pathId: pathId, of: action)
+        case let .setNodeType(action): collect(events: &events, pathId: pathId, of: action)
+        case let .setSegmentType(action): collect(events: &events, pathId: pathId, of: action)
         }
     }
+
+    func collect(events: inout [DocumentEvent.Single], of action: PathAction.Delete) {
+        let pathIds = action.pathIds
+        events.append(.path(.init(pathIds: pathIds, .delete(.init()))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: PathAction.Move) {
+        let pathIds = action.pathIds,
+            offset = action.offset
+        events.append(.path(.init(pathIds: pathIds, .move(.init(offset: offset)))))
+    }
+
+    // MARK: single path update actions
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.AddEndingNode) {
         let endingNodeId = action.endingNodeId,
@@ -182,7 +186,7 @@ private extension DocumentUpdater {
         }
         let snappedOffset = endingNode.position.offset(to: grid.snap(endingNode.position + offset))
         guard !snappedOffset.isZero else { return }
-        events.append(.path(.init(in: pathId, .nodeCreate(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: .init(position: endingNode.position + snappedOffset))))))
+        events.append(.path(.init(pathId: pathId, .createNode(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: .init(position: endingNode.position + snappedOffset))))))
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SplitSegment) {
@@ -203,10 +207,10 @@ private extension DocumentUpdater {
         fromNode.cubicOut = before.fromCubicOut
         toNode.cubicIn = after.toCubicIn
 
-        events.append(.path(.init(in: pathId, [
-            .nodeCreate(.init(prevNodeId: fromNodeId, nodeId: newNodeId, node: newNode)),
-            .nodeUpdate(.init(nodeId: fromNodeId, node: fromNode)),
-            .nodeUpdate(.init(nodeId: toNodeId, node: toNode)),
+        events.append(.path(.init(pathId: pathId, [
+            .createNode(.init(prevNodeId: fromNodeId, nodeId: newNodeId, node: newNode)),
+            .updateNode(.init(nodeId: fromNodeId, node: fromNode)),
+            .updateNode(.init(nodeId: toNodeId, node: toNode)),
         ])))
     }
 
@@ -214,17 +218,18 @@ private extension DocumentUpdater {
         let nodeIds = action.nodeIds
         guard let path = pathStore.get(id: pathId) else { return }
         if path.nodes.count - nodeIds.count < 2 {
-            events.append(.path(.delete(.init(pathId: pathId))))
+            events.append(.path(.init(pathId: pathId, .delete(.init()))))
             return
         }
         for nodeId in nodeIds {
-            events.append(.path(.init(in: pathId, .nodeDelete(.init(nodeId: nodeId)))))
+            events.append(.path(.init(pathId: pathId, .deleteNode(.init(nodeIds: [nodeId])))))
         }
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.UpdateNode) {
-        let nodeId = action.nodeId, node = action.node
-        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: nodeId, node: node)))))
+        let nodeId = action.nodeId,
+            node = action.node
+        events.append(.path(.init(pathId: pathId, .updateNode(.init(nodeId: nodeId, node: node)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.UpdateSegment) {
@@ -238,8 +243,10 @@ private extension DocumentUpdater {
         fromNode.cubicOut = segment.fromCubicOut
         toNode.position = segment.to
         toNode.cubicIn = segment.toCubicIn
-        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: fromNodeId, node: fromNode)))))
-        events.append(.path(.init(in: pathId, .nodeUpdate(.init(nodeId: toNodeId, node: toNode)))))
+        events.append(.path(.init(pathId: pathId, [
+            .updateNode(.init(nodeId: fromNodeId, node: fromNode)),
+            .updateNode(.init(nodeId: toNodeId, node: toNode)),
+        ])))
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.MoveNodes) {
@@ -251,13 +258,13 @@ private extension DocumentUpdater {
         let snappedOffset = firstNode.position.offset(to: grid.snap(firstNode.position + offset))
         guard !snappedOffset.isZero else { return }
 
-        var kinds: [PathEvent.Update.Kind] = []
-        defer { events.append(.path(.init(in: pathId, kinds))) }
+        var kinds: [PathEvent.Kind] = []
+        defer { events.append(.path(.init(pathId: pathId, kinds))) }
 
         for nodeId in nodeIds {
             guard var node = path.node(id: nodeId) else { continue }
             node.position += snappedOffset
-            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: node)))
+            kinds.append(.updateNode(.init(nodeId: nodeId, node: node)))
         }
     }
 
@@ -268,9 +275,9 @@ private extension DocumentUpdater {
         guard let path = pathStore.get(id: pathId),
               let node = path.node(id: nodeId) else { return }
 
-        var snappedCubicInOffset: Vector2 = .zero
-        var snappedCubicOutOffset: Vector2 = .zero
-        var snappedQuadraticOffset: Vector2 = .zero
+        var snappedCubicInOffset: Vector2 = .zero,
+            snappedCubicOutOffset: Vector2 = .zero,
+            snappedQuadraticOffset: Vector2 = .zero
         switch controlType {
         case .cubicIn:
             let snappedCubicIn = grid.snap(node.positionIn + offset)
@@ -288,20 +295,20 @@ private extension DocumentUpdater {
             guard !snappedQuadraticOffset.isZero else { return }
         }
 
-        var kinds: [PathEvent.Update.Kind] = []
-        defer { events.append(.path(.init(in: pathId, kinds))) }
+        var kinds: [PathEvent.Kind] = []
+        defer { events.append(.path(.init(pathId: pathId, kinds))) }
 
-        guard let property = pathPropertyStore.get(id: pathId) else { return }
+        guard let property = pathStore.property(id: pathId) else { return }
         let nodeType = property.nodeType(id: nodeId)
         switch controlType {
         case .cubicIn:
             let newCubicIn = node.cubicIn + snappedCubicInOffset,
                 newCubicOut = nodeType.map(current: node.cubicOut, opposite: newCubicIn)
-            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
+            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
         case .cubicOut:
             let newCubicOut = node.cubicOut + snappedCubicOutOffset,
                 newCubicIn = nodeType.map(current: node.cubicIn, opposite: newCubicOut)
-            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
+            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
         case .quadraticOut:
             guard let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic,
@@ -309,8 +316,8 @@ private extension DocumentUpdater {
                   let next = path.node(id: nextId) else { return }
             let newQuadratic = quadratic + snappedQuadraticOffset,
                 newSegment = PathSegment(from: segment.from, to: segment.to, quadratic: newQuadratic)
-            kinds.append(.nodeUpdate(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: node.cubicIn, cubicOut: newSegment.fromCubicOut))))
-            kinds.append(.nodeUpdate(.init(nodeId: nextId, node: .init(position: next.position, cubicIn: newSegment.toCubicIn, cubicOut: next.cubicOut))))
+            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: node.cubicIn, cubicOut: newSegment.fromCubicOut))))
+            kinds.append(.updateNode(.init(nodeId: nextId, node: .init(position: next.position, cubicIn: newSegment.toCubicIn, cubicOut: next.cubicOut))))
         }
     }
 
@@ -318,47 +325,71 @@ private extension DocumentUpdater {
         let endingNodeId = action.endingNodeId,
             mergedPathId = action.mergedPathId,
             mergedEndingNodeId = action.mergedEndingNodeId
-        events.append(.path(.merge(.init(pathId: pathId, endingNodeId: endingNodeId, mergedPathId: mergedPathId, mergedEndingNodeId: mergedEndingNodeId))))
+        events.append(.path(.init(pathId: pathId, .merge(.init(endingNodeId: endingNodeId, mergedPathId: mergedPathId, mergedEndingNodeId: mergedEndingNodeId)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.Split) {
         let nodeId = action.nodeId,
             newNodeId = action.newNodeId,
             newPathId = action.newPathId
-        events.append(.path(.split(.init(pathId: pathId, nodeId: nodeId, newPathId: newPathId, newNodeId: newNodeId))))
+        events.append(.path(.init(pathId: pathId, .split(.init(nodeId: nodeId, newPathId: newPathId, newNodeId: newNodeId)))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetName) {
+        let name = action.name
+        events.append(.path(.init(pathId: pathId, .setName(.init(name: name)))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetNodeType) {
+        let nodeIds = action.nodeIds,
+            nodeType = action.nodeType
+        events.append(.path(.init(pathId: pathId, .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetSegmentType) {
+        let fromNodeIds = action.fromNodeIds,
+            segmentType = action.segmentType
+        events.append(.path(.init(pathId: pathId, .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
     }
 }
 
-// MARK: events of path property action
+// MARK: events of symbol action
 
 private extension DocumentUpdater {
-    func collect(events: inout [DocumentEvent.Single], of action: PathPropertyAction) {
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction) {
         switch action {
-        case let .update(action):
-            let pathId = action.pathId
-            switch action.kind {
-            case let .setName(action): collect(events: &events, pathId: pathId, of: action)
-            case let .setNodeType(action): collect(events: &events, pathId: pathId, of: action)
-            case let .setSegmentType(action): collect(events: &events, pathId: pathId, of: action)
-            }
+        case let .create(action): collect(events: &events, of: action)
+        case let .resize(action): collect(events: &events, of: action)
+
+        case let .delete(action): collect(events: &events, of: action)
+        case let .move(action): collect(events: &events, of: action)
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathPropertyAction.Update.SetName) {
-        let name = action.name
-        events.append(.pathProperty(.update(.init(pathId: pathId, kinds: [.setName(.init(name: name))]))))
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Create) {
+        let symbolId = action.symbolId,
+            origin = action.origin,
+            size = action.size
+        events.append(.symbol(.init(symbolId: symbolId, .create(.init(origin: origin, size: size, grids: [])))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathPropertyAction.Update.SetNodeType) {
-        let nodeIds = action.nodeIds,
-            nodeType = action.nodeType
-        events.append(.pathProperty(.update(.init(pathId: pathId, kinds: [.setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType))]))))
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Resize) {
+        let symbolId = action.symbolId,
+            origin = action.origin,
+            size = action.size
+        guard let symbol = itemStore.symbol(id: symbolId) else { return }
+        events.append(.symbol(.init(symbolId: symbolId, .create(.init(origin: origin, size: size, grids: [])))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathPropertyAction.Update.SetSegmentType) {
-        let fromNodeIds = action.fromNodeIds,
-            segmentType = action.segmentType
-        events.append(.pathProperty(.update(.init(pathId: pathId, kinds: [.setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType))]))))
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Delete) {
+        let symbolIds = action.symbolIds
+        events.append(.symbol(.init(symbolIds: symbolIds, .delete(.init()))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Move) {
+        let symbolIds = action.symbolIds,
+            offset = action.offset
+        events.append(.symbol(.init(symbolIds: symbolIds, .move(.init(offset: offset)))))
     }
 }
 
@@ -370,10 +401,6 @@ private extension DocumentUpdater {
         case let .group(action): collect(events: &events, of: action)
         case let .ungroup(action): collect(events: &events, of: action)
         case let .reorder(action): collect(events: &events, of: action)
-        case let .createSymbol(action): collect(events: &events, of: action)
-        case let .deleteSymbols(action): collect(events: &events, of: action)
-        case let .moveSymbols(action): collect(events: &events, of: action)
-        case let .resizeSymbol(action): collect(events: &events, of: action)
         }
     }
 
@@ -382,24 +409,24 @@ private extension DocumentUpdater {
             members = action.members,
             inSymbolId = action.inSymbolId,
             inGroupId = action.inGroupId
-        guard itemStore.get(id: groupId) == nil else { print("dbg 0"); return } // new group id already exists
+        guard itemStore.get(id: groupId) == nil else { return } // new group id already exists
         if let inGroupId {
             let ancestors = itemStore.ancestorIds(of: inGroupId)
-            guard !ancestors.contains(inGroupId) else { print("dbg a"); return } // cyclic grouping
+            guard !ancestors.contains(inGroupId) else { return } // cyclic grouping
         }
 
         let symbolId: UUID
         if let inGroupId {
-            guard let id = itemStore.symbolId(of: inGroupId) else { print("dbg b"); return } // no symbol found
+            guard let id = itemStore.symbolId(of: inGroupId) else { return } // no symbol found
             symbolId = id
         } else if let inSymbolId {
             symbolId = inSymbolId
         } else {
-            print("dbg c"); return // no grouping target
+            return // no grouping target
         }
 
         for itemId in members {
-            guard itemStore.symbolId(of: itemId) == symbolId else { print("dbg d"); return } // members not in the same symbol
+            guard itemStore.symbolId(of: itemId) == symbolId else { return } // members not in the same symbol
         }
 
         let groupedMembers = Set(members)
@@ -413,17 +440,17 @@ private extension DocumentUpdater {
             if inSymbolId == symbolId {
                 symbol.members.append(groupId)
             }
-            events.append(.item(.setSymbol(symbol.event)))
+            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
         }
 
-        func adjustMembers(in group: ItemGroup) {
+        func adjustMembers(in group: Item.Group) {
             var group = group
             guard inGroupId == group.id || hasGrouped(in: members) else { return }
             removeGrouped(from: &group.members)
             if inGroupId == group.id {
                 group.members.append(group.id)
             }
-            events.append(.item(.setGroup(group.event)))
+            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
         }
 
         adjustRootMembers()
@@ -453,14 +480,14 @@ private extension DocumentUpdater {
             guard var symbol = itemStore.symbol(id: symbolId),
                   hasUngrouped(in: symbol.members) else { return }
             expandUngrouped(in: &symbol.members)
-            events.append(.item(.setSymbol(symbol.event)))
+            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
         }
 
-        func adjustMembers(in group: ItemGroup) {
+        func adjustMembers(in group: Item.Group) {
             var group = group
             guard hasUngrouped(in: group.members) else { return }
             expandUngrouped(in: &group.members)
-            events.append(.item(.setGroup(group.event)))
+            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
         }
 
         for groupId in groupIds {
@@ -488,66 +515,34 @@ private extension DocumentUpdater {
                 group.members.removeAll { $0 == itemId }
                 let index = group.members.firstIndex(of: toItemId) ?? 0
                 group.members.insert(itemId, at: isAfter ? group.members.index(after: index) : index)
-                events.append(.item(.setGroup(group.event)))
+                events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
             } else {
                 var symbol = symbol
                 symbol.members.removeAll { $0 == itemId }
                 let index = symbol.members.firstIndex(of: toItemId) ?? 0
                 symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
-                events.append(.item(.setSymbol(symbol.event)))
+                events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
             }
             return
         }
         guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
         if let parentId, var group = itemStore.group(id: parentId) {
             group.members.removeAll { $0 == itemId }
-            events.append(.item(.setGroup(group.event)))
+            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
         } else {
             var symbol = symbol
             symbol.members.removeAll { $0 == itemId }
-            events.append(.item(.setSymbol(symbol.event)))
+            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
         }
         if let toParentId, var toGroup = itemStore.group(id: toParentId) {
             let index = toGroup.members.firstIndex(of: toItemId) ?? 0
             toGroup.members.insert(itemId, at: isAfter ? toGroup.members.index(after: index) : index)
-            events.append(.item(.setGroup(toGroup.event)))
+            events.append(.item(.setGroup(.init(groupId: toGroup.id, members: toGroup.members))))
         } else {
             var symbol = symbol
             let index = symbol.members.firstIndex(of: toItemId) ?? 0
             symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
-            events.append(.item(.setSymbol(symbol.event)))
+            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
         }
-    }
-
-    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.CreateSymbol) {
-        let symbolId = action.symbolId,
-            origin = action.origin,
-            size = action.size
-        events.append(.item(.setSymbol(.init(symbolId: symbolId, origin: origin, size: size, members: []))))
-    }
-
-    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.DeleteSymbols) {
-        let symbolIds = action.symbolIds
-        for symbolId in symbolIds {
-            events.append(.item(.deleteSymbol(.init(symbolId: symbolId))))
-        }
-    }
-
-    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.MoveSymbols) {
-        let symbolIds = action.symbolIds,
-            offset = action.offset
-        for symbolId in symbolIds {
-            guard var symbol = itemStore.symbol(id: symbolId) else { continue }
-            symbol.origin += offset
-            events.append(.item(.setSymbol(symbol.event)))
-        }
-    }
-
-    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.ResizeSymbol) {
-        let symbolId = action.symbolId,
-            origin = action.origin,
-            size = action.size
-        guard let symbol = itemStore.symbol(id: symbolId) else { return }
-        events.append(.item(.setSymbol(.init(symbolId: symbolId, origin: origin, size: size, members: symbol.members))))
     }
 }

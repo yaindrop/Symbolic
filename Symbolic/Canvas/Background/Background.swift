@@ -26,11 +26,11 @@ private extension Background {
             switch selector.grid.kind {
             case let .cartesian(grid):
                 AnimatableReader(grid) { grid in
-                    GridView(grid: .init(kind: .cartesian(grid)), viewport: viewport, color: selector.grid.tintColor, type: .background)
+                    GridView(grid: .init(kind: .cartesian(grid)), viewport: viewport, color: selector.grid.tintColor.cgColor, type: .background)
                 }
             case let .isometric(grid):
                 AnimatableReader(grid) { grid in
-                    GridView(grid: .init(kind: .isometric(grid)), viewport: viewport, color: selector.grid.tintColor, type: .background)
+                    GridView(grid: .init(kind: .isometric(grid)), viewport: viewport, color: selector.grid.tintColor.cgColor, type: .background)
                 }
             default: EmptyView()
             }

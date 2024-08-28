@@ -1,5 +1,5 @@
-import Foundation
 import SwiftProtobuf
+import SwiftUI
 
 protocol ProtobufSerializable {
     associatedtype T: SwiftProtobuf.Message
@@ -101,6 +101,34 @@ extension Symbolic_Pb_Size2: ProtobufParsable {
     }
 }
 
+extension Angle: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Angle) {
+        pb.radians = radians
+    }
+}
+
+extension Symbolic_Pb_Angle: ProtobufParsable {
+    func decoded() -> Angle {
+        .init(radians: radians)
+    }
+}
+
+extension CGColor: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Color) {
+        guard let components else { return }
+        pb.red = components[0]
+        pb.green = components[1]
+        pb.blue = components[2]
+        pb.alpha = components[3]
+    }
+}
+
+extension Symbolic_Pb_Color: ProtobufParsable {
+    func decoded() -> CGColor {
+        .init(red: red, green: green, blue: blue, alpha: alpha)
+    }
+}
+
 // MARK: - path types
 
 extension PathNode: ProtobufSerializable {
@@ -194,5 +222,73 @@ extension Symbolic_Pb_PathSegmentType: ProtobufParsable {
         case .quadratic: .quadratic
         default: .cubic
         }
+    }
+}
+
+// MARK: - grid
+
+extension Grid.Cartesian: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Grid.Cartesian) {
+        pb.interval = interval
+    }
+}
+
+extension Symbolic_Pb_Grid.Cartesian: ProtobufParsable {
+    func decoded() -> Grid.Cartesian {
+        .init(interval: interval)
+    }
+}
+
+extension Grid.Isometric: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Grid.Isometric) {
+        pb.interval = interval
+        pb.angle0 = angle0.pb
+        pb.angle1 = angle1.pb
+    }
+}
+
+extension Symbolic_Pb_Grid.Isometric: ProtobufParsable {
+    func decoded() -> Grid.Isometric {
+        .init(interval: interval, angle0: angle0.decoded(), angle1: angle1.decoded())
+    }
+}
+
+extension Grid.Radial: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Grid.Radial) {
+        pb.interval = interval
+        pb.angularDivisions = .init(angularDivisions)
+    }
+}
+
+extension Symbolic_Pb_Grid.Radial: ProtobufParsable {
+    func decoded() -> Grid.Radial {
+        .init(interval: interval, angularDivisions: .init(angularDivisions))
+    }
+}
+
+extension Grid: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Grid) {
+        pb.tintColor = tintColor.cgColor.pb
+        pb.kind = {
+            switch kind {
+            case let .cartesian(kind): .cartesian(kind.pb)
+            case let .isometric(kind): .isometric(kind.pb)
+            case let .radial(kind): .radial(kind.pb)
+            }
+        }()
+    }
+}
+
+extension Symbolic_Pb_Grid: ProtobufParsable {
+    func decoded() throws -> Grid {
+        let kind: Grid.Kind = try {
+            switch self.kind {
+            case let .cartesian(kind): .cartesian(kind.decoded())
+            case let .isometric(kind): .isometric(kind.decoded())
+            case let .radial(kind): .radial(kind.decoded())
+            default: throw ProtobufParseError.invalidEmptyOneOf
+            }
+        }()
+        return .init(tintColor: .init(cgColor: tintColor.decoded()), kind: kind)
     }
 }

@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - global actions
 
 private extension GlobalStores {
-    func onTap(group: ItemGroup, position: Point2) {
+    func onTap(group: Item.Group, position: Point2) {
         let worldPosition = position.applying(viewport.viewToWorld)
         let groupedPathIds = item.groupedPathIds(groupId: group.id)
         let path = groupedPathIds.first {
@@ -30,7 +30,7 @@ private extension GlobalStores {
         }
     }
 
-    func onDrag(group: ItemGroup, _ v: PanInfo, pending: Bool = false) {
+    func onDrag(group: Item.Group, _ v: PanInfo, pending: Bool = false) {
         let offset = v.offset.applying(activeSymbol.viewToSymbol)
         if activeItem.selected(id: group.id) {
             let pathIds = activeItem.selectedPathIds
@@ -41,7 +41,7 @@ private extension GlobalStores {
         }
     }
 
-    func gesture(group: ItemGroup) -> MultipleTouchGesture {
+    func gesture(group: Item.Group) -> MultipleTouchGesture {
         .init(
             onPress: {
                 canvasAction.start(continuous: .moveSelection)
@@ -69,7 +69,7 @@ extension ActiveItemView {
     struct GroupBounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
         @Environment(\.transformToView) var transformToView
 
-        let group: ItemGroup
+        let group: Item.Group
 
         var equatableBy: some Equatable { group }
 

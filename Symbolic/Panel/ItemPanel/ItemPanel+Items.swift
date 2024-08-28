@@ -222,7 +222,7 @@ private struct GroupRow: View, TracedView {
     @Environment(\.contextualViewData) var contextualViewData
     @EnvironmentObject var model: Model
 
-    let context: Context, group: ItemGroup
+    let context: Context, group: Item.Group
 
     @State private var expanded = true
     @State private var size: CGSize = .zero

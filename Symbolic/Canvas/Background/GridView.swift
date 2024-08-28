@@ -71,7 +71,7 @@ enum GridLineType: CaseIterable {
 struct GridView: View, TracedView {
     let grid: Grid
     let viewport: SizedViewportInfo
-    let color: Color
+    let color: CGColor
     let type: GridViewType
 
     var body: some View { trace {
@@ -135,7 +135,8 @@ extension GridView {
 
     @ViewBuilder func lines(lineSets: [ParallelLineSet]) -> some View {
         ForEach(GridLineType.allCases, id: \.self) { type in
-            let lines = path(type: type, lineSets: lineSets)
+            let lines = path(type: type, lineSets: lineSets),
+                color = Color(cgColor: color)
             switch type {
             case .normal: lines.stroke(color.opacity(0.3), style: .init(lineWidth: 0.5))
             case .principal: lines.stroke(color.opacity(0.5), style: .init(lineWidth: 1))
@@ -165,7 +166,7 @@ extension GridView {
                 }
             }
         }
-        .foregroundStyle(color)
+        .foregroundStyle(Color(cgColor: color))
     }
 }
 

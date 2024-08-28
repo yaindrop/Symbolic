@@ -2,59 +2,63 @@ import Foundation
 
 // MARK: - PathEvent
 
-enum PathEvent: Equatable, Codable {
-    struct Create: Equatable, Codable { let symbolId: UUID, pathId: UUID, path: Path }
-    struct Delete: Equatable, Codable { let pathId: UUID }
-    struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
+struct PathEvent: Equatable, Codable {
+    let pathIds: [UUID], kinds: [Kind]
 
+    struct Create: Equatable, Codable { let path: Path }
+    struct CreateNode: Equatable, Codable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
+    struct UpdateNode: Equatable, Codable { let nodeId: UUID, node: PathNode }
+    struct DeleteNode: Equatable, Codable { let nodeIds: [UUID] }
     // merge two paths at given ending nodes
-    struct Merge: Equatable, Codable { let pathId: UUID, endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct Merge: Equatable, Codable { let endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     // split path at node, optionally creating a new ending node at the same position, and a new path when the current path is not closed
-    struct Split: Equatable, Codable { let pathId: UUID, nodeId: UUID, newPathId: UUID?, newNodeId: UUID? }
+    struct Split: Equatable, Codable { let nodeId: UUID, newPathId: UUID?, newNodeId: UUID? }
 
-    case create(Create)
-    case delete(Delete)
-    case update(Update)
-
-    case merge(Merge)
-    case split(Split)
-}
-
-// MARK: Update
-
-extension PathEvent.Update {
+    struct Delete: Equatable, Codable {}
     struct Move: Equatable, Codable { let offset: Vector2 }
 
-    struct NodeCreate: Equatable, Codable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
-    struct NodeDelete: Equatable, Codable { let nodeId: UUID }
-    struct NodeUpdate: Equatable, Codable { let nodeId: UUID, node: PathNode }
-
-    enum Kind: Equatable, Codable {
-        case move(Move)
-
-        case nodeCreate(NodeCreate)
-        case nodeDelete(NodeDelete)
-        case nodeUpdate(NodeUpdate)
-    }
-}
-
-// MARK: - PathPropertyEvent
-
-enum PathPropertyEvent: Equatable, Codable {
-    struct Update: Equatable, Codable { let pathId: UUID, kinds: [Kind] }
-
-    case update(Update)
-}
-
-extension PathPropertyEvent.Update {
     struct SetName: Equatable, Codable { let name: String? }
     struct SetNodeType: Equatable, Codable { let nodeIds: [UUID], nodeType: PathNodeType? }
     struct SetSegmentType: Equatable, Codable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
     enum Kind: Equatable, Codable {
+        case create(Create)
+        case createNode(CreateNode)
+        case updateNode(UpdateNode)
+        case deleteNode(DeleteNode)
+        case merge(Merge)
+        case split(Split)
+
+        case delete(Delete)
+        case move(Move)
+
         case setName(SetName)
         case setNodeType(SetNodeType)
         case setSegmentType(SetSegmentType)
+    }
+}
+
+// MARK: - SymbolEvent
+
+struct SymbolEvent: Equatable, Codable {
+    let symbolIds: [UUID], kinds: [Kind]
+
+    struct Create: Equatable, Codable { let origin: Point2, size: CGSize, grids: [Grid] }
+    struct SetBounds: Equatable, Codable { let origin: Point2, size: CGSize }
+    struct SetGrid: Equatable, Codable { let index: Int, grid: Grid? }
+    struct SetMembers: Equatable, Codable { let members: [UUID] }
+
+    struct Delete: Equatable, Codable {}
+    struct Move: Equatable, Codable { let offset: Vector2 }
+
+    enum Kind: Equatable, Codable {
+        case create(Create)
+        case setBounds(SetBounds)
+        case setGrid(SetGrid)
+        case setMembers(SetMembers)
+
+        case delete(Delete)
+        case move(Move)
     }
 }
 
@@ -62,12 +66,8 @@ extension PathPropertyEvent.Update {
 
 enum ItemEvent: Equatable, Codable {
     struct SetGroup: Equatable, Codable { let groupId: UUID, members: [UUID] }
-    struct SetSymbol: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize, members: [UUID] }
-    struct DeleteSymbol: Equatable, Codable { let symbolId: UUID }
 
     case setGroup(SetGroup)
-    case setSymbol(SetSymbol)
-    case deleteSymbol(DeleteSymbol)
 }
 
 // MARK: - DocumentEvent
@@ -75,7 +75,7 @@ enum ItemEvent: Equatable, Codable {
 struct DocumentEvent: Identifiable, Equatable, Codable {
     enum Single: Equatable, Codable {
         case path(PathEvent)
-        case pathProperty(PathPropertyEvent)
+        case symbol(SymbolEvent)
         case item(ItemEvent)
     }
 
@@ -109,35 +109,40 @@ struct DocumentEvent: Identifiable, Equatable, Codable {
 }
 
 extension PathEvent {
-    var affectedSymbolId: UUID? {
-        switch self {
-        case let .create(event):
-            event.symbolId
-        default: nil
-        }
-    }
-
     var affectedPathIds: [UUID] {
-        switch self {
-        case let .create(event):
-            [event.pathId]
-        case let .delete(event):
-            [event.pathId]
-        case let .update(event):
-            [event.pathId]
-        case let .merge(event):
-            [event.pathId, event.mergedPathId]
-        case let .split(event):
-            [event.pathId, event.newPathId].compact()
+        var pathIds = pathIds
+        for kind in kinds {
+            switch kind {
+            case let .merge(event):
+                pathIds.append(event.mergedPathId)
+            case let .split(event):
+                event.newPathId.map { pathIds.append($0) }
+            default: break
+            }
         }
+        return pathIds
     }
 
-    init(in pathId: UUID, _ kind: PathEvent.Update.Kind) {
-        self = .update(.init(pathId: pathId, kinds: [kind]))
+    init(pathId: UUID, _ kind: PathEvent.Kind) {
+        self = .init(pathIds: [pathId], kinds: [kind])
     }
 
-    init(in pathId: UUID, _ kinds: [PathEvent.Update.Kind]) {
-        self = .update(.init(pathId: pathId, kinds: kinds))
+    init(pathId: UUID, _ kinds: [PathEvent.Kind]) {
+        self = .init(pathIds: [pathId], kinds: kinds)
+    }
+
+    init(pathIds: [UUID], _ kind: PathEvent.Kind) {
+        self = .init(pathIds: pathIds, kinds: [kind])
+    }
+}
+
+extension SymbolEvent {
+    init(symbolId: UUID, _ kind: SymbolEvent.Kind) {
+        self = .init(symbolIds: [symbolId], kinds: [kind])
+    }
+
+    init(symbolIds: [UUID], _ kind: SymbolEvent.Kind) {
+        self = .init(symbolIds: symbolIds, kinds: [kind])
     }
 }
 

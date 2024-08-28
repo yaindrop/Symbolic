@@ -28,6 +28,7 @@ private extension ActiveSymbolStore {
 struct ActiveSymbolService {
     let store: ActiveSymbolStore
     let path: PathService
+    let symbol: SymbolService
     let item: ItemService
     let viewport: ViewportService
 }
@@ -56,9 +57,9 @@ extension ActiveSymbolService {
 
     var editingSymbolId: UUID? { if case let .editing(id) = state { id } else { nil } }
 
-    var focusedSymbol: ItemSymbol? { focusedSymbolId.map { item.symbol(id: $0) } }
+    var focusedSymbol: Symbol? { focusedSymbolId.map { symbol.get(id: $0) } }
 
-    var editingSymbol: ItemSymbol? { editingSymbolId.map { item.symbol(id: $0) } }
+    var editingSymbol: Symbol? { editingSymbolId.map { symbol.get(id: $0) } }
 
     var symbolToWorld: CGAffineTransform { focusedSymbol?.symbolToWorld ?? .identity }
 

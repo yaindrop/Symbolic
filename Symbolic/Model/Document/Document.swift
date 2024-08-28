@@ -26,10 +26,10 @@ struct Document: Codable {
         parser.parse()
 
         let symbolId = UUID()
-        events.append(.init(kind: .single(.item(.setSymbol(.init(symbolId: symbolId, origin: .init(200, 300), size: .init(squared: 1000), members: [])))), action: nil))
+        events.append(.init(kind: .single(.symbol(.init(symbolId: symbolId, .create(.init(origin: .init(200, 300), size: .init(squared: 1000), grids: []))))), action: nil))
         for path in paths {
             events.append(.init(
-                kind: .single(.path(.create(.init(symbolId: symbolId, pathId: .init(), path: path)))),
+                kind: .single(.path(.init(pathId: .init(), .create(.init(path: path))))),
                 action: .path(.load(.init(symbolId: symbolId, pathIds: .init(repeating: .init(), count: paths.count).map { _ in UUID() }, paths: paths)))
             ))
         }

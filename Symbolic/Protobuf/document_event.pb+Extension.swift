@@ -5,122 +5,57 @@ import SwiftProtobuf
 
 extension PathEvent.Create: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_PathEvent.Create) {
-        pb.symbolID = symbolId.pb
-        pb.pathID = pathId.pb
         pb.path = path.pb
     }
 }
 
 extension Symbolic_Pb_PathEvent.Create: ProtobufParsable {
     func decoded() throws -> PathEvent.Create {
-        try .init(symbolId: symbolID.decoded(), pathId: pathID.decoded(), path: path.decoded())
+        try .init(path: path.decoded())
     }
 }
 
-extension PathEvent.Delete: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Delete) {
-        pb.pathID = pathId.pb
-    }
-}
-
-extension Symbolic_Pb_PathEvent.Delete: ProtobufParsable {
-    func decoded() -> PathEvent.Delete {
-        .init(pathId: pathID.decoded())
-    }
-}
-
-extension PathEvent.Update.Move: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Update.Move) {
-        pb.offset = offset.pb
-    }
-}
-
-extension Symbolic_Pb_PathEvent.Update.Move: ProtobufParsable {
-    func decoded() -> PathEvent.Update.Move {
-        .init(offset: offset.decoded())
-    }
-}
-
-extension PathEvent.Update.NodeCreate: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Update.NodeCreate) {
+extension PathEvent.CreateNode: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.CreateNode) {
         prevNodeId.map { pb.prevNodeID = $0.pb }
         pb.nodeID = nodeId.pb
         pb.node = node.pb
     }
 }
 
-extension Symbolic_Pb_PathEvent.Update.NodeCreate: ProtobufParsable {
-    func decoded() -> PathEvent.Update.NodeCreate {
+extension Symbolic_Pb_PathEvent.CreateNode: ProtobufParsable {
+    func decoded() -> PathEvent.CreateNode {
         .init(prevNodeId: hasPrevNodeID ? prevNodeID.decoded() : nil, nodeId: nodeID.decoded(), node: node.decoded())
     }
 }
 
-extension PathEvent.Update.NodeDelete: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Update.NodeDelete) {
-        pb.nodeID = nodeId.pb
-    }
-}
-
-extension Symbolic_Pb_PathEvent.Update.NodeDelete: ProtobufParsable {
-    func decoded() -> PathEvent.Update.NodeDelete {
-        .init(nodeId: nodeID.decoded())
-    }
-}
-
-extension PathEvent.Update.NodeUpdate: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Update.NodeUpdate) {
+extension PathEvent.UpdateNode: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.UpdateNode) {
         pb.nodeID = nodeId.pb
         pb.node = node.pb
     }
 }
 
-extension Symbolic_Pb_PathEvent.Update.NodeUpdate: ProtobufParsable {
-    func decoded() -> PathEvent.Update.NodeUpdate {
+extension Symbolic_Pb_PathEvent.UpdateNode: ProtobufParsable {
+    func decoded() -> PathEvent.UpdateNode {
         .init(nodeId: nodeID.decoded(), node: node.decoded())
     }
 }
 
-extension PathEvent.Update.Kind: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Update.Kind) {
-        pb.kind = {
-            switch self {
-            case let .move(kind): .move(kind.pb)
-            case let .nodeCreate(kind): .nodeCreate(kind.pb)
-            case let .nodeDelete(kind): .nodeDelete(kind.pb)
-            case let .nodeUpdate(kind): .nodeUpdate(kind.pb)
-            }
-        }()
+extension PathEvent.DeleteNode: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.DeleteNode) {
+        pb.nodeIds = nodeIds.map { $0.pb }
     }
 }
 
-extension Symbolic_Pb_PathEvent.Update.Kind: ProtobufParsable {
-    func decoded() throws -> PathEvent.Update.Kind {
-        switch kind {
-        case let .move(kind): .move(kind.decoded())
-        case let .nodeCreate(kind): .nodeCreate(kind.decoded())
-        case let .nodeDelete(kind): .nodeDelete(kind.decoded())
-        case let .nodeUpdate(kind): .nodeUpdate(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
-        }
-    }
-}
-
-extension PathEvent.Update: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.Update) {
-        pb.pathID = pathId.pb
-        pb.kinds = kinds.map { $0.pb }
-    }
-}
-
-extension Symbolic_Pb_PathEvent.Update: ProtobufParsable {
-    func decoded() throws -> PathEvent.Update {
-        try .init(pathId: pathID.decoded(), kinds: kinds.map { try $0.decoded() })
+extension Symbolic_Pb_PathEvent.DeleteNode: ProtobufParsable {
+    func decoded() -> PathEvent.DeleteNode {
+        .init(nodeIds: nodeIds.map { $0.decoded() })
     }
 }
 
 extension PathEvent.Merge: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_PathEvent.Merge) {
-        pb.pathID = pathId.pb
         pb.endingNodeID = endingNodeId.pb
         pb.mergedPathID = mergedPathId.pb
         pb.mergedEndingNodeID = mergedEndingNodeId.pb
@@ -129,13 +64,12 @@ extension PathEvent.Merge: ProtobufSerializable {
 
 extension Symbolic_Pb_PathEvent.Merge: ProtobufParsable {
     func decoded() -> PathEvent.Merge {
-        .init(pathId: pathID.decoded(), endingNodeId: endingNodeID.decoded(), mergedPathId: mergedPathID.decoded(), mergedEndingNodeId: mergedEndingNodeID.decoded())
+        .init(endingNodeId: endingNodeID.decoded(), mergedPathId: mergedPathID.decoded(), mergedEndingNodeId: mergedEndingNodeID.decoded())
     }
 }
 
 extension PathEvent.Split: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_PathEvent.Split) {
-        pb.pathID = pathId.pb
         pb.nodeID = nodeId.pb
         newPathId.map { pb.newPathID = $0.pb }
         newNodeId.map { pb.newNodeID = $0.pb }
@@ -144,81 +78,82 @@ extension PathEvent.Split: ProtobufSerializable {
 
 extension Symbolic_Pb_PathEvent.Split: ProtobufParsable {
     func decoded() -> PathEvent.Split {
-        .init(pathId: pathID.decoded(), nodeId: nodeID.decoded(), newPathId: hasNewPathID ? newPathID.decoded() : nil, newNodeId: hasNewNodeID ? newNodeID.decoded() : nil)
+        .init(nodeId: nodeID.decoded(), newPathId: hasNewPathID ? newPathID.decoded() : nil, newNodeId: hasNewNodeID ? newNodeID.decoded() : nil)
     }
 }
 
-extension PathEvent: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent) {
-        pb.kind = {
-            switch self {
-            case let .create(kind): .create(kind.pb)
-            case let .delete(kind): .delete(kind.pb)
-            case let .update(kind): .update(kind.pb)
-            case let .merge(kind): .merge(kind.pb)
-            case let .split(kind): .split(kind.pb)
-            }
-        }()
+extension PathEvent.Delete: ProtobufSerializable {
+    func encode(pb _: inout Symbolic_Pb_PathEvent.Delete) {}
+}
+
+extension Symbolic_Pb_PathEvent.Delete: ProtobufParsable {
+    func decoded() -> PathEvent.Delete { .init() }
+}
+
+extension PathEvent.Move: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.Move) {
+        pb.offset = offset.pb
     }
 }
 
-extension Symbolic_Pb_PathEvent: ProtobufParsable {
-    func decoded() throws -> PathEvent {
-        switch kind {
-        case let .create(kind): try .create(kind.decoded())
-        case let .delete(kind): .delete(kind.decoded())
-        case let .update(kind): try .update(kind.decoded())
-        case let .merge(kind): .merge(kind.decoded())
-        case let .split(kind): .split(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
-        }
+extension Symbolic_Pb_PathEvent.Move: ProtobufParsable {
+    func decoded() -> PathEvent.Move {
+        .init(offset: offset.decoded())
     }
 }
 
-// MARK: - PathPropertyEvent
-
-extension PathPropertyEvent.Update.SetName: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathPropertyEvent.Update.SetName) {
+extension PathEvent.SetName: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.SetName) {
         name.map { pb.name = $0 }
     }
 }
 
-extension Symbolic_Pb_PathPropertyEvent.Update.SetName: ProtobufParsable {
-    func decoded() -> PathPropertyEvent.Update.SetName {
+extension Symbolic_Pb_PathEvent.SetName: ProtobufParsable {
+    func decoded() -> PathEvent.SetName {
         .init(name: hasName ? name : nil)
     }
 }
 
-extension PathPropertyEvent.Update.SetNodeType: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathPropertyEvent.Update.SetNodeType) {
+extension PathEvent.SetNodeType: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.SetNodeType) {
         pb.nodeIds = nodeIds.map { $0.pb }
         nodeType.map { pb.nodeType = $0.pb }
     }
 }
 
-extension Symbolic_Pb_PathPropertyEvent.Update.SetNodeType: ProtobufParsable {
-    func decoded() -> PathPropertyEvent.Update.SetNodeType {
+extension Symbolic_Pb_PathEvent.SetNodeType: ProtobufParsable {
+    func decoded() -> PathEvent.SetNodeType {
         .init(nodeIds: nodeIds.map { $0.decoded() }, nodeType: nodeType.decoded())
     }
 }
 
-extension PathPropertyEvent.Update.SetSegmentType: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathPropertyEvent.Update.SetSegmentType) {
+extension PathEvent.SetSegmentType: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.SetSegmentType) {
         pb.fromNodeIds = fromNodeIds.map { $0.pb }
         segmentType.map { pb.segmentType = $0.pb }
     }
 }
 
-extension Symbolic_Pb_PathPropertyEvent.Update.SetSegmentType: ProtobufParsable {
-    func decoded() -> PathPropertyEvent.Update.SetSegmentType {
+extension Symbolic_Pb_PathEvent.SetSegmentType: ProtobufParsable {
+    func decoded() -> PathEvent.SetSegmentType {
         .init(fromNodeIds: fromNodeIds.map { $0.decoded() }, segmentType: segmentType.decoded())
     }
 }
 
-extension PathPropertyEvent.Update.Kind: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathPropertyEvent.Update.Kind) {
+extension PathEvent.Kind: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent.Kind) {
         pb.kind = {
             switch self {
+            case let .create(kind): .create(kind.pb)
+            case let .createNode(kind): .createNode(kind.pb)
+            case let .updateNode(kind): .updateNode(kind.pb)
+            case let .deleteNode(kind): .deleteNode(kind.pb)
+            case let .merge(kind): .merge(kind.pb)
+            case let .split(kind): .split(kind.pb)
+
+            case let .delete(kind): .delete(kind.pb)
+            case let .move(kind): .move(kind.pb)
+
             case let .setName(kind): .setName(kind.pb)
             case let .setNodeType(kind): .setNodeType(kind.pb)
             case let .setSegmentType(kind): .setSegmentType(kind.pb)
@@ -227,9 +162,19 @@ extension PathPropertyEvent.Update.Kind: ProtobufSerializable {
     }
 }
 
-extension Symbolic_Pb_PathPropertyEvent.Update.Kind: ProtobufParsable {
-    func decoded() throws -> PathPropertyEvent.Update.Kind {
+extension Symbolic_Pb_PathEvent.Kind: ProtobufParsable {
+    func decoded() throws -> PathEvent.Kind {
         switch kind {
+        case let .create(kind): try .create(kind.decoded())
+        case let .createNode(kind): .createNode(kind.decoded())
+        case let .updateNode(kind): .updateNode(kind.decoded())
+        case let .deleteNode(kind): .deleteNode(kind.decoded())
+        case let .merge(kind): .merge(kind.decoded())
+        case let .split(kind): .split(kind.decoded())
+
+        case let .delete(kind): .delete(kind.decoded())
+        case let .move(kind): .move(kind.decoded())
+
         case let .setName(kind): .setName(kind.decoded())
         case let .setNodeType(kind): .setNodeType(kind.decoded())
         case let .setSegmentType(kind): .setSegmentType(kind.decoded())
@@ -238,35 +183,134 @@ extension Symbolic_Pb_PathPropertyEvent.Update.Kind: ProtobufParsable {
     }
 }
 
-extension PathPropertyEvent.Update: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathPropertyEvent.Update) {
-        pb.pathID = pathId.pb
+extension PathEvent: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathEvent) {
+        pb.pathIds = pathIds.map { $0.pb }
         pb.kinds = kinds.map { $0.pb }
     }
 }
 
-extension Symbolic_Pb_PathPropertyEvent.Update: ProtobufParsable {
-    func decoded() throws -> PathPropertyEvent.Update {
-        try .init(pathId: pathID.decoded(), kinds: kinds.map { try $0.decoded() })
+extension Symbolic_Pb_PathEvent: ProtobufParsable {
+    func decoded() throws -> PathEvent {
+        try .init(pathIds: pathIds.map { $0.decoded() }, kinds: kinds.map { try $0.decoded() })
     }
 }
 
-extension PathPropertyEvent: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathPropertyEvent) {
+// MARK: - SymbolEvent
+
+extension SymbolEvent.Create: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.Create) {
+        pb.origin = origin.pb
+        pb.size = size.pb
+        pb.grids = grids.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.Create: ProtobufParsable {
+    func decoded() throws -> SymbolEvent.Create {
+        try .init(origin: origin.decoded(), size: size.decoded(), grids: grids.map { try $0.decoded() })
+    }
+}
+
+extension SymbolEvent.SetBounds: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.SetBounds) {
+        pb.origin = origin.pb
+        pb.size = size.pb
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.SetBounds: ProtobufParsable {
+    func decoded() -> SymbolEvent.SetBounds {
+        .init(origin: origin.decoded(), size: size.decoded())
+    }
+}
+
+extension SymbolEvent.SetGrid: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.SetGrid) {
+        pb.index = .init(index)
+        grid.map { pb.grid = $0.pb }
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.SetGrid: ProtobufParsable {
+    func decoded() throws -> SymbolEvent.SetGrid {
+        try .init(index: .init(index), grid: hasGrid ? grid.decoded() : nil)
+    }
+}
+
+extension SymbolEvent.SetMembers: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.SetMembers) {
+        pb.members = members.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.SetMembers: ProtobufParsable {
+    func decoded() -> SymbolEvent.SetMembers {
+        .init(members: members.map { $0.decoded() })
+    }
+}
+
+extension SymbolEvent.Delete: ProtobufSerializable {
+    func encode(pb _: inout Symbolic_Pb_SymbolEvent.Delete) {}
+}
+
+extension Symbolic_Pb_SymbolEvent.Delete: ProtobufParsable {
+    func decoded() -> SymbolEvent.Delete { .init() }
+}
+
+extension SymbolEvent.Move: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.Move) {
+        pb.offset = offset.pb
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent.Move: ProtobufParsable {
+    func decoded() -> SymbolEvent.Move {
+        .init(offset: offset.decoded())
+    }
+}
+
+extension SymbolEvent.Kind: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent.Kind) {
         pb.kind = {
             switch self {
-            case let .update(kind): .update(kind.pb)
+            case let .create(kind): .create(kind.pb)
+            case let .setBounds(kind): .setBounds(kind.pb)
+            case let .setGrid(kind): .setGrid(kind.pb)
+            case let .setMembers(kind): .setMembers(kind.pb)
+
+            case let .delete(kind): .delete(kind.pb)
+            case let .move(kind): .move(kind.pb)
             }
         }()
     }
 }
 
-extension Symbolic_Pb_PathPropertyEvent: ProtobufParsable {
-    func decoded() throws -> PathPropertyEvent {
+extension Symbolic_Pb_SymbolEvent.Kind: ProtobufParsable {
+    func decoded() throws -> SymbolEvent.Kind {
         switch kind {
-        case let .update(kind): try .update(kind.decoded())
+        case let .create(kind): try .create(kind.decoded())
+        case let .setBounds(kind): .setBounds(kind.decoded())
+        case let .setGrid(kind): try .setGrid(kind.decoded())
+        case let .setMembers(kind): .setMembers(kind.decoded())
+
+        case let .delete(kind): .delete(kind.decoded())
+        case let .move(kind): .move(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
         }
+    }
+}
+
+extension SymbolEvent: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolEvent) {
+        pb.symbolIds = symbolIds.map { $0.pb }
+        pb.kinds = kinds.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_SymbolEvent: ProtobufParsable {
+    func decoded() throws -> SymbolEvent {
+        try .init(symbolIds: symbolIds.map { $0.decoded() }, kinds: kinds.map { try $0.decoded() })
     }
 }
 
@@ -285,39 +329,10 @@ extension Symbolic_Pb_ItemEvent.SetGroup: ProtobufParsable {
     }
 }
 
-extension ItemEvent.SetSymbol: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_ItemEvent.SetSymbol) {
-        pb.symbolID = symbolId.pb
-        pb.origin = origin.pb
-        pb.size = size.pb
-        pb.members = members.map { $0.pb }
-    }
-}
-
-extension Symbolic_Pb_ItemEvent.SetSymbol: ProtobufParsable {
-    func decoded() -> ItemEvent.SetSymbol {
-        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded(), members: members.map { $0.decoded() })
-    }
-}
-
-extension ItemEvent.DeleteSymbol: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_ItemEvent.DeleteSymbol) {
-        pb.symbolID = symbolId.pb
-    }
-}
-
-extension Symbolic_Pb_ItemEvent.DeleteSymbol: ProtobufParsable {
-    func decoded() -> ItemEvent.DeleteSymbol {
-        .init(symbolId: symbolID.decoded())
-    }
-}
-
 extension ItemEvent: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_ItemEvent) {
         switch self {
         case let .setGroup(kind): pb.kind = .setGroup(kind.pb)
-        case let .setSymbol(kind): pb.kind = .setSymbol(kind.pb)
-        case let .deleteSymbol(kind): pb.kind = .deleteSymbol(kind.pb)
         }
     }
 }
@@ -326,8 +341,6 @@ extension Symbolic_Pb_ItemEvent: ProtobufParsable {
     func decoded() throws -> ItemEvent {
         switch kind {
         case let .setGroup(kind): .setGroup(kind.decoded())
-        case let .setSymbol(kind): .setSymbol(kind.decoded())
-        case let .deleteSymbol(kind): .deleteSymbol(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
@@ -340,7 +353,7 @@ extension DocumentEvent.Single: ProtobufSerializable {
         pb.kind = {
             switch self {
             case let .path(kind): .pathEvent(kind.pb)
-            case let .pathProperty(kind): .pathPropertyEvent(kind.pb)
+            case let .symbol(kind): .symbolEvent(kind.pb)
             case let .item(kind): .itemEvent(kind.pb)
             }
         }()
@@ -351,7 +364,7 @@ extension Symbolic_Pb_DocumentEvent.Single: ProtobufParsable {
     func decoded() throws -> DocumentEvent.Single {
         switch kind {
         case let .pathEvent(kind): try .path(kind.decoded())
-        case let .pathPropertyEvent(kind): try .pathProperty(kind.decoded())
+        case let .symbolEvent(kind): try .symbol(kind.decoded())
         case let .itemEvent(kind): try .item(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
         }

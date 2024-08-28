@@ -191,6 +191,36 @@ struct Symbolic_Pb_Size2: Sendable {
   init() {}
 }
 
+struct Symbolic_Pb_Angle: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var radians: Double = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Symbolic_Pb_Color: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var red: Double = 0
+
+  var green: Double = 0
+
+  var blue: Double = 0
+
+  var alpha: Double = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 struct Symbolic_Pb_PathNode: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -297,6 +327,119 @@ struct Symbolic_Pb_Path: Sendable {
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
+}
+
+struct Symbolic_Pb_Grid: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var tintColor: Symbolic_Pb_Color {
+    get {return _tintColor ?? Symbolic_Pb_Color()}
+    set {_tintColor = newValue}
+  }
+  /// Returns true if `tintColor` has been explicitly set.
+  var hasTintColor: Bool {return self._tintColor != nil}
+  /// Clears the value of `tintColor`. Subsequent reads from it will return its default value.
+  mutating func clearTintColor() {self._tintColor = nil}
+
+  var kind: Symbolic_Pb_Grid.OneOf_Kind? = nil
+
+  var cartesian: Symbolic_Pb_Grid.Cartesian {
+    get {
+      if case .cartesian(let v)? = kind {return v}
+      return Symbolic_Pb_Grid.Cartesian()
+    }
+    set {kind = .cartesian(newValue)}
+  }
+
+  var isometric: Symbolic_Pb_Grid.Isometric {
+    get {
+      if case .isometric(let v)? = kind {return v}
+      return Symbolic_Pb_Grid.Isometric()
+    }
+    set {kind = .isometric(newValue)}
+  }
+
+  var radial: Symbolic_Pb_Grid.Radial {
+    get {
+      if case .radial(let v)? = kind {return v}
+      return Symbolic_Pb_Grid.Radial()
+    }
+    set {kind = .radial(newValue)}
+  }
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  enum OneOf_Kind: Equatable, Sendable {
+    case cartesian(Symbolic_Pb_Grid.Cartesian)
+    case isometric(Symbolic_Pb_Grid.Isometric)
+    case radial(Symbolic_Pb_Grid.Radial)
+
+  }
+
+  struct Cartesian: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var interval: Double = 0
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  struct Isometric: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var interval: Double = 0
+
+    var angle0: Symbolic_Pb_Angle {
+      get {return _angle0 ?? Symbolic_Pb_Angle()}
+      set {_angle0 = newValue}
+    }
+    /// Returns true if `angle0` has been explicitly set.
+    var hasAngle0: Bool {return self._angle0 != nil}
+    /// Clears the value of `angle0`. Subsequent reads from it will return its default value.
+    mutating func clearAngle0() {self._angle0 = nil}
+
+    var angle1: Symbolic_Pb_Angle {
+      get {return _angle1 ?? Symbolic_Pb_Angle()}
+      set {_angle1 = newValue}
+    }
+    /// Returns true if `angle1` has been explicitly set.
+    var hasAngle1: Bool {return self._angle1 != nil}
+    /// Clears the value of `angle1`. Subsequent reads from it will return its default value.
+    mutating func clearAngle1() {self._angle1 = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _angle0: Symbolic_Pb_Angle? = nil
+    fileprivate var _angle1: Symbolic_Pb_Angle? = nil
+  }
+
+  struct Radial: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var interval: Double = 0
+
+    var angularDivisions: UInt32 = 0
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+  }
+
+  init() {}
+
+  fileprivate var _tintColor: Symbolic_Pb_Color? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -478,6 +621,88 @@ extension Symbolic_Pb_Size2: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
+extension Symbolic_Pb_Angle: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Angle"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "radians"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.radians) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.radians.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.radians, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Angle, rhs: Symbolic_Pb_Angle) -> Bool {
+    if lhs.radians != rhs.radians {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_Color: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Color"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "red"),
+    2: .same(proto: "green"),
+    3: .same(proto: "blue"),
+    4: .same(proto: "alpha"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.red) }()
+      case 2: try { try decoder.decodeSingularDoubleField(value: &self.green) }()
+      case 3: try { try decoder.decodeSingularDoubleField(value: &self.blue) }()
+      case 4: try { try decoder.decodeSingularDoubleField(value: &self.alpha) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.red.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.red, fieldNumber: 1)
+    }
+    if self.green.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.green, fieldNumber: 2)
+    }
+    if self.blue.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.blue, fieldNumber: 3)
+    }
+    if self.alpha.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.alpha, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Color, rhs: Symbolic_Pb_Color) -> Bool {
+    if lhs.red != rhs.red {return false}
+    if lhs.green != rhs.green {return false}
+    if lhs.blue != rhs.blue {return false}
+    if lhs.alpha != rhs.alpha {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Symbolic_Pb_PathNode: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PathNode"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -619,6 +844,218 @@ extension Symbolic_Pb_Path: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     if lhs.nodeIds != rhs.nodeIds {return false}
     if lhs.nodes != rhs.nodes {return false}
     if lhs.isClosed != rhs.isClosed {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_Grid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Grid"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "tint_color"),
+    101: .same(proto: "cartesian"),
+    102: .same(proto: "isometric"),
+    103: .same(proto: "radial"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._tintColor) }()
+      case 101: try {
+        var v: Symbolic_Pb_Grid.Cartesian?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .cartesian(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .cartesian(v)
+        }
+      }()
+      case 102: try {
+        var v: Symbolic_Pb_Grid.Isometric?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .isometric(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .isometric(v)
+        }
+      }()
+      case 103: try {
+        var v: Symbolic_Pb_Grid.Radial?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .radial(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .radial(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._tintColor {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    switch self.kind {
+    case .cartesian?: try {
+      guard case .cartesian(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 101)
+    }()
+    case .isometric?: try {
+      guard case .isometric(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 102)
+    }()
+    case .radial?: try {
+      guard case .radial(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 103)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Grid, rhs: Symbolic_Pb_Grid) -> Bool {
+    if lhs._tintColor != rhs._tintColor {return false}
+    if lhs.kind != rhs.kind {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_Grid.Cartesian: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Symbolic_Pb_Grid.protoMessageName + ".Cartesian"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "interval"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.interval) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.interval.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.interval, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Grid.Cartesian, rhs: Symbolic_Pb_Grid.Cartesian) -> Bool {
+    if lhs.interval != rhs.interval {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_Grid.Isometric: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Symbolic_Pb_Grid.protoMessageName + ".Isometric"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "interval"),
+    2: .same(proto: "angle0"),
+    3: .same(proto: "angle1"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.interval) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._angle0) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._angle1) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.interval.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.interval, fieldNumber: 1)
+    }
+    try { if let v = self._angle0 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try { if let v = self._angle1 {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Grid.Isometric, rhs: Symbolic_Pb_Grid.Isometric) -> Bool {
+    if lhs.interval != rhs.interval {return false}
+    if lhs._angle0 != rhs._angle0 {return false}
+    if lhs._angle1 != rhs._angle1 {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_Grid.Radial: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Symbolic_Pb_Grid.protoMessageName + ".Radial"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "interval"),
+    2: .standard(proto: "angular_divisions"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularDoubleField(value: &self.interval) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.angularDivisions) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.interval.bitPattern != 0 {
+      try visitor.visitSingularDoubleField(value: self.interval, fieldNumber: 1)
+    }
+    if self.angularDivisions != 0 {
+      try visitor.visitSingularUInt32Field(value: self.angularDivisions, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Grid.Radial, rhs: Symbolic_Pb_Grid.Radial) -> Bool {
+    if lhs.interval != rhs.interval {return false}
+    if lhs.angularDivisions != rhs.angularDivisions {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

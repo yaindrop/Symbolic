@@ -8,95 +8,110 @@ package symbolic.pb;
 // MARK: - PathEvent
 
 message PathEvent {
-  message Create {
-    UUID symbol_id = 1;
-    UUID path_id = 2;
-    Path path = 3;
+  message Create { Path path = 1; }
+
+  message CreateNode {
+    optional UUID prev_node_id = 1;
+    UUID node_id = 2;
+    PathNode node = 3;
   }
 
-  message Delete { UUID path_id = 1; }
-
-  message Update {
-    message Move { Vector2 offset = 1; }
-
-    message NodeCreate {
-      optional UUID prev_node_id = 1;
-      UUID node_id = 2;
-      PathNode node = 3;
-    }
-
-    message NodeDelete { UUID node_id = 1; }
-
-    message NodeUpdate {
-      UUID node_id = 1;
-      PathNode node = 2;
-    }
-
-    message Kind {
-      oneof kind {
-        Move move = 101;
-        NodeCreate node_create = 102;
-        NodeDelete node_delete = 103;
-        NodeUpdate node_update = 104;
-      }
-    }
-
-    UUID path_id = 1;
-    repeated Kind kinds = 2;
+  message UpdateNode {
+    UUID node_id = 1;
+    PathNode node = 2;
   }
+
+  message DeleteNode { repeated UUID node_ids = 1; }
 
   message Merge {
-    UUID path_id = 1;
-    UUID ending_node_id = 2;
-    UUID merged_path_id = 3;
-    UUID merged_ending_node_id = 4;
+    UUID ending_node_id = 1;
+    UUID merged_path_id = 2;
+    UUID merged_ending_node_id = 3;
   }
 
   message Split {
-    UUID path_id = 1;
-    UUID node_id = 2;
-    optional UUID new_path_id = 3;
-    optional UUID new_node_id = 4;
+    UUID node_id = 1;
+    optional UUID new_path_id = 2;
+    optional UUID new_node_id = 3;
   }
 
-  oneof kind {
-    Create create = 101;
-    Delete delete = 102;
-    Update update = 103;
-    Merge merge = 104;
-    Split split = 105;
+  message Delete {}
+
+  message Move { Vector2 offset = 1; }
+
+  message SetName { optional string name = 1; }
+
+  message SetNodeType {
+    repeated UUID node_ids = 1;
+    optional PathNodeType node_type = 2;
   }
+
+  message SetSegmentType {
+    repeated UUID from_node_ids = 1;
+    optional PathSegmentType segment_type = 2;
+  }
+
+  message Kind {
+    oneof kind {
+      Create create = 101;
+      CreateNode createNode = 102;
+      UpdateNode updateNode = 103;
+      DeleteNode deleteNode = 104;
+      Merge merge = 105;
+      Split split = 106;
+
+      Delete delete = 201;
+      Move move = 202;
+
+      SetName set_name = 301;
+      SetNodeType set_node_type = 302;
+      SetSegmentType set_segment_type = 303;
+    }
+  }
+
+  repeated UUID path_ids = 1;
+  repeated Kind kinds = 2;
 }
 
-// MARK: - PathPropertyEvent
+// MARK: - SymbolEvent
 
-message PathPropertyEvent {
-  message Update {
-    message SetName { optional string name = 1; }
-
-    message SetNodeType {
-      repeated UUID node_ids = 1;
-      optional PathNodeType node_type = 2;
-    }
-
-    message SetSegmentType {
-      repeated UUID from_node_ids = 1;
-      optional PathSegmentType segment_type = 2;
-    }
-
-    message Kind {
-      oneof kind {
-        SetName set_name = 101;
-        SetNodeType set_node_type = 102;
-        SetSegmentType set_segment_type = 103;
-      }
-    }
-
-    UUID path_id = 1;
-    repeated Kind kinds = 2;
+message SymbolEvent {
+  message Create {
+    Point2 origin = 1;
+    Size2 size = 2;
+    repeated Grid grids = 3;
   }
 
-  oneof kind { Update update = 101; }
+  message SetBounds {
+    Point2 origin = 1;
+    Size2 size = 2;
+  }
+
+  message SetGrid {
+    uint32 index = 1;
+    optional Grid grid = 2;
+  }
+
+  message SetMembers { repeated UUID members = 1; }
+
+  message Delete {}
+
+  message Move { Vector2 offset = 1; }
+
+  message Kind {
+    oneof kind {
+      Create create = 101;
+      SetBounds set_bounds = 102;
+      SetGrid set_grid = 103;
+      SetMembers set_members = 104;
+
+      Delete delete = 201;
+      Move move = 202;
+    }
+  }
+
+  repeated UUID symbol_ids = 1;
+  repeated Kind kinds = 2;
 }
 
 // MARK: - ItemEvent
@@ -107,20 +122,7 @@ message ItemEvent {
     repeated UUID members = 2;
   }
 
-  message SetSymbol {
-    UUID symbol_id = 1;
-    Point2 origin = 2;
-    Size2 size = 3;
-    repeated UUID members = 4;
-  }
-
-  message DeleteSymbol { UUID symbol_id = 1; }
-
-  oneof kind {
-    SetGroup set_group = 101;
-    SetSymbol set_symbol = 102;
-    DeleteSymbol delete_symbol = 103;
-  }
+  oneof kind { SetGroup set_group = 101; }
 }
 
 // MARK: - DocumentEvent
@@ -129,7 +131,7 @@ message DocumentEvent {
   message Single {
     oneof kind {
       PathEvent path_event = 101;
-      PathPropertyEvent path_property_event = 102;
+      SymbolEvent symbol_event = 102;
       ItemEvent item_event = 103;
     }
   }

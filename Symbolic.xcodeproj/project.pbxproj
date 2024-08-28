@@ -66,6 +66,9 @@
 		574411582C7C2CC700F038AD /* ActiveSymbolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574411572C7C2CC700F038AD /* ActiveSymbolView.swift */; };
 		5744115A2C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */; };
 		5744115C2C7D894600F038AD /* Combine+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5744115B2C7D894600F038AD /* Combine+Extension.swift */; };
+		5744115E2C7F4FF300F038AD /* Path+PathEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5744115D2C7F4FF300F038AD /* Path+PathEvent.swift */; };
+		574411602C7F67B200F038AD /* Symbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5744115F2C7F67B200F038AD /* Symbol.swift */; };
+		574411632C7F6A3A00F038AD /* SymbolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574411622C7F6A3A00F038AD /* SymbolService.swift */; };
 		574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7B92BF3B2950042FEE3 /* GlobalStores.swift */; };
 		574CC7BC2BF44C390042FEE3 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BB2BF44C390042FEE3 /* Memo.swift */; };
 		574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */; };
@@ -127,7 +130,6 @@
 		57B703FF2C38F18500B60F36 /* GridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B703FE2C38F18500B60F36 /* GridView.swift */; };
 		57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */; };
 		57B8478D2C0DB07700D0E7C3 /* PathProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */; };
-		57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */; };
 		57C168FF2C6CB449007BFC81 /* document_event.pb+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C168FB2C6CB449007BFC81 /* document_event.pb+Extension.swift */; };
 		57C1690D2C6CFB2F007BFC81 /* document_action.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C169092C6CFB2F007BFC81 /* document_action.pb.swift */; };
 		57C1690E2C6CFB2F007BFC81 /* document_event.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C1690A2C6CFB2F007BFC81 /* document_event.pb.swift */; };
@@ -231,6 +233,9 @@
 		574411572C7C2CC700F038AD /* ActiveSymbolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSymbolView.swift; sourceTree = "<group>"; };
 		574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveSymbolView+Bounds.swift"; sourceTree = "<group>"; };
 		5744115B2C7D894600F038AD /* Combine+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Combine+Extension.swift"; sourceTree = "<group>"; };
+		5744115D2C7F4FF300F038AD /* Path+PathEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Path+PathEvent.swift"; sourceTree = "<group>"; };
+		5744115F2C7F67B200F038AD /* Symbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Symbol.swift; sourceTree = "<group>"; };
+		574411622C7F6A3A00F038AD /* SymbolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolService.swift; sourceTree = "<group>"; };
 		574CC7B92BF3B2950042FEE3 /* GlobalStores.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalStores.swift; sourceTree = "<group>"; };
 		574CC7BB2BF44C390042FEE3 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
 		574CC7BF2BF44CE30042FEE3 /* Color+UIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+UIColor.swift"; sourceTree = "<group>"; };
@@ -291,7 +296,6 @@
 		57B703FE2C38F18500B60F36 /* GridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridView.swift; sourceTree = "<group>"; };
 		57B847872C0C9DE100D0E7C3 /* EquatableBy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquatableBy.swift; sourceTree = "<group>"; };
 		57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathProperty.swift; sourceTree = "<group>"; };
-		57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPropertyService.swift; sourceTree = "<group>"; };
 		57C168FB2C6CB449007BFC81 /* document_event.pb+Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "document_event.pb+Extension.swift"; sourceTree = "<group>"; };
 		57C169092C6CFB2F007BFC81 /* document_action.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = document_action.pb.swift; sourceTree = "<group>"; };
 		57C1690A2C6CFB2F007BFC81 /* document_event.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = document_event.pb.swift; sourceTree = "<group>"; };
@@ -514,6 +518,15 @@
 			path = FileBrowser;
 			sourceTree = "<group>";
 		};
+		574411612C7F67B700F038AD /* Symbol */ = {
+			isa = PBXGroup;
+			children = (
+				5744115F2C7F67B200F038AD /* Symbol.swift */,
+				574411622C7F6A3A00F038AD /* SymbolService.swift */,
+			);
+			path = Symbol;
+			sourceTree = "<group>";
+		};
 		574CC7C82BF4FCE60042FEE3 /* UI */ = {
 			isa = PBXGroup;
 			children = (
@@ -639,8 +652,10 @@
 				57416E392BE0BAB600C73434 /* Line.swift */,
 				57416E422BE12D7100C73434 /* LineSegment.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
+				5744115D2C7F4FF300F038AD /* Path+PathEvent.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathNode.swift */,
+				57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
 				57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */,
 				57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */,
@@ -700,15 +715,6 @@
 				578535282C3ED3AC00EEDF1A /* GridPanel+Configs.swift */,
 			);
 			path = GridPanel;
-			sourceTree = "<group>";
-		};
-		57B8478B2C0DB06900D0E7C3 /* PathProperty */ = {
-			isa = PBXGroup;
-			children = (
-				57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */,
-				57B847902C0E12AC00D0E7C3 /* PathPropertyService.swift */,
-			);
-			path = PathProperty;
 			sourceTree = "<group>";
 		};
 		57C168FD2C6CB449007BFC81 /* Protobuf */ = {
@@ -787,7 +793,7 @@
 				574CC7F02BFCCFBF0042FEE3 /* Grid */,
 				57DD2A142C0236B80046931C /* Item */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
-				57B8478B2C0DB06900D0E7C3 /* PathProperty */,
+				574411612C7F67B700F038AD /* Symbol */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -979,7 +985,6 @@
 				5700C2CD2BED169D00481FA7 /* PanelData.swift in Sources */,
 				574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */,
 				578150512C5E6A930057D798 /* ActionWheel.swift in Sources */,
-				57B847912C0E12AC00D0E7C3 /* PathPropertyService.swift in Sources */,
 				574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */,
 				573204DA2C15D8BF008E0DED /* ItemsView.swift in Sources */,
 				57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */,
@@ -1021,6 +1026,7 @@
 				57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */,
 				57B703F02C366ABD00B60F36 /* ViewportUpdater.swift in Sources */,
 				5744115C2C7D894600F038AD /* Combine+Extension.swift in Sources */,
+				5744115E2C7F4FF300F038AD /* Path+PathEvent.swift in Sources */,
 				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				571B9B3D2C14A97D00AAD516 /* UUID+Extension.swift in Sources */,
@@ -1099,6 +1105,7 @@
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
+				574411632C7F6A3A00F038AD /* SymbolService.swift in Sources */,
 				5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,
@@ -1108,6 +1115,7 @@
 				5744115A2C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift in Sources */,
 				574CC7D02BF4FDAF0042FEE3 /* MathProtocols.swift in Sources */,
 				572CA9DE2C31A001003760B7 /* FileEntryCard.swift in Sources */,
+				574411602C7F67B200F038AD /* Symbol.swift in Sources */,
 				572487852BDF832D0096DDE4 /* FocusedPathView+SegmentHandles.swift in Sources */,
 				5790F9A62C7A224F009E3606 /* ActiveSymbolService.swift in Sources */,
 			);

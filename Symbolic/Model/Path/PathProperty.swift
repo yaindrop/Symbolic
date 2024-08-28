@@ -93,3 +93,24 @@ extension PathProperty {
         segmentTypeMap[id] ?? .cubic
     }
 }
+
+extension PathProperty {
+    mutating func update(_ event: PathEvent.SetName) {
+        let _r = tracer.range("PathProperty set name"); defer { _r() }
+        name = event.name
+    }
+
+    mutating func update(_ event: PathEvent.SetNodeType) {
+        let _r = tracer.range("PathProperty set node type"); defer { _r() }
+        for nodeId in event.nodeIds {
+            nodeTypeMap[nodeId] = event.nodeType
+        }
+    }
+
+    mutating func update(_ event: PathEvent.SetSegmentType) {
+        let _r = tracer.range("PathProperty set segment type"); defer { _r() }
+        for fromNodeId in event.fromNodeIds {
+            segmentTypeMap[fromNodeId] = event.segmentType
+        }
+    }
+}

@@ -13,8 +13,8 @@ struct GlobalStores {
     private let pathStore = PathStore()
     private let pendingPathStore = PendingPathStore()
 
-    private let pathPropertyStore = PathPropertyStore()
-    private let pendingPathPropertyStore = PendingPathPropertyStore()
+    private let symbolStore = SymbolStore()
+    private let pendingSymbolStore = PendingSymbolStore()
 
     private let itemStore = ItemStore()
     private let pendingItemStore = PendingItemStore()
@@ -49,24 +49,24 @@ struct GlobalStores {
 
 extension GlobalStores {
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, pathPropertyStore: pathPropertyStore, itemStore: itemStore, viewport: viewport, activeItem: activeItem, grid: grid) }
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, itemStore: itemStore, viewport: viewport, activeItem: activeItem, grid: grid) }
 
     var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
 
-    var pathProperty: PathPropertyService { .init(store: pathPropertyStore, pendingStore: pendingPathPropertyStore, path: path) }
+    var symbol: SymbolService { .init(store: symbolStore, pendingStore: pendingSymbolStore) }
 
     var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path, viewport: viewport) }
 
     var viewport: ViewportService { .init(store: viewportStore) }
     var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, panel: panel) }
 
-    var activeSymbol: ActiveSymbolService { .init(store: activeSymbolStore, path: path, item: item, viewport: viewport) }
+    var activeSymbol: ActiveSymbolService { .init(store: activeSymbolStore, path: path, symbol: symbol, item: item, viewport: viewport) }
 
-    var activeItem: ActiveItemService { .init(store: activeItemStore, toolbar: toolbar, path: path, pathProperty: pathProperty, item: item) }
+    var activeItem: ActiveItemService { .init(store: activeItemStore, toolbar: toolbar, path: path, item: item) }
 
     var focusedPath: FocusedPathService { .init(store: focusedPathStore, activeItem: activeItem) }
 
-    var draggingSelect: DraggingSelectService { .init(store: draggingSelectStore, path: path, item: item, viewport: viewport, activeSymbol: activeSymbol) }
+    var draggingSelect: DraggingSelectService { .init(store: draggingSelectStore, path: path, symbol: symbol, item: item, viewport: viewport, activeSymbol: activeSymbol) }
 
     var draggingCreate: DraggingCreateService { .init(store: draggingCreateStore, viewport: viewport, activeSymbol: activeSymbol) }
 }

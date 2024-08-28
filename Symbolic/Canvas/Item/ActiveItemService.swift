@@ -28,7 +28,6 @@ struct ActiveItemService {
     let store: ActiveItemStore
     let toolbar: ToolbarStore
     let path: PathService
-    let pathProperty: PathPropertyService
     let item: ItemService
 }
 
@@ -57,7 +56,7 @@ extension ActiveItemService {
         activeItems.compactMap { $0.path?.id }
     }
 
-    var activeGroups: [ItemGroup] {
+    var activeGroups: [Item.Group] {
         activeItems.compactMap { $0.group }
     }
 
@@ -105,10 +104,10 @@ extension ActiveItemService {
     }
 
     var focusedPathProperty: PathProperty? {
-        focusedItemId.map { pathProperty.get(id: $0) }
+        focusedItemId.map { path.property(id: $0) }
     }
 
-    var focusedGroup: ItemGroup? {
+    var focusedGroup: Item.Group? {
         focusedItemId.map { item.group(id: $0) }
     }
 

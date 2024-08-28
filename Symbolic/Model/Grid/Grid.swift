@@ -2,23 +2,23 @@ import SwiftUI
 
 // MARK: - Grid
 
-struct Grid: Equatable {
-    var tintColor: Color = .gray
+struct Grid: Equatable, Codable {
+    var tintColor: CodableColor = .init(uiColor: .gray)
     var kind: Kind
 
-    struct Cartesian: Equatable {
+    struct Cartesian: Equatable, Codable {
         var interval: Scalar
     }
 
-    struct Isometric: Equatable {
+    struct Isometric: Equatable, Codable {
         var interval: Scalar, angle0: Angle, angle1: Angle
     }
 
-    struct Radial: Equatable {
-        var radialSize: Scalar, angularDivision: Int
+    struct Radial: Equatable, Codable {
+        var interval: Scalar, angularDivisions: Int
     }
 
-    enum Kind: Equatable {
+    enum Kind: Equatable, Codable {
         case cartesian(Cartesian)
         case isometric(Isometric)
         case radial(Radial)
@@ -41,6 +41,8 @@ func adjusted(from interval: Scalar, target: Scalar) -> Scalar {
     interval * pow(2, max(0, ceil(log2(target / interval))))
 }
 
+// MARK: - Cartesian
+
 extension Grid.Cartesian {
     var verticalLineSet: ParallelLineSet { .vertical(interval: interval) }
 
@@ -54,6 +56,8 @@ extension Grid.Cartesian {
         return [.vertical(interval: interval), .horizontal(interval: interval)]
     }
 }
+
+// MARK: - Isometric
 
 extension Grid.Isometric {
     var intercept: Scalar { interval * abs(tan(angle0.radians) + tan(-angle1.radians)) }

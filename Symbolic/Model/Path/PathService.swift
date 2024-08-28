@@ -3,16 +3,22 @@ import Foundation
 private let subtracer = tracer.tagged("PathService")
 
 typealias PathMap = [UUID: Path]
+typealias PathPropertyMap = [UUID: PathProperty]
 
 // MARK: - PathStoreProtocol
 
 protocol PathStoreProtocol {
     var pathMap: PathMap { get }
+    var pathPropertyMap: PathPropertyMap { get }
 }
 
 extension PathStoreProtocol {
     func get(id: UUID) -> Path? {
         pathMap.get(id)
+    }
+
+    func property(id: UUID) -> PathProperty? {
+        pathPropertyMap.get(id)
     }
 
     func exists(id: UUID) -> Bool {
@@ -24,11 +30,16 @@ extension PathStoreProtocol {
 
 class PathStore: Store, PathStoreProtocol {
     @Trackable var pathMap = PathMap()
+    @Trackable var pathPropertyMap = PathPropertyMap()
 }
 
 private extension PathStore {
     func update(pathMap: PathMap, forced: Bool = false) {
         update { $0(\._pathMap, pathMap, forced: forced) }
+    }
+
+    func update(pathPropertyMap: PathPropertyMap) {
+        update { $0(\._pathPropertyMap, pathPropertyMap) }
     }
 }
 
@@ -57,6 +68,8 @@ extension PathService {
     private var activeStore: PathStore { pendingStore.active ? pendingStore : store }
 
     var pathMap: PathMap { activeStore.pathMap }
+
+    var pathPropertyMap: PathPropertyMap { activeStore.pathPropertyMap }
 }
 
 // MARK: - modify path map
@@ -64,31 +77,38 @@ extension PathService {
 extension PathService {
     private func add(pathId: UUID, path: Path) {
         let _r = subtracer.range("add"); defer { _r() }
-        var updated = pathMap
-        guard !exists(id: pathId) else { return }
-        guard path.count > 1 else { return }
-        updated[pathId] = path
-        activeStore.update(pathMap: updated)
-    }
-
-    private func remove(pathIds: [UUID]) {
-        let _r = subtracer.range("remove"); defer { _r() }
-        var updated = pathMap
-        for pathId in pathIds {
-            updated.removeValue(forKey: pathId)
-        }
-        activeStore.update(pathMap: updated)
+        var newPathMap = pathMap
+        guard !exists(id: pathId),
+              path.count > 1 else { return }
+        newPathMap[pathId] = path
+        activeStore.update(pathMap: newPathMap)
     }
 
     private func update(pathId: UUID, path: Path) {
         let _r = subtracer.range("update"); defer { _r() }
-        var updated = pathMap
-        if path.count <= 1 {
-            updated.removeValue(forKey: pathId)
-        } else {
-            updated[pathId] = path
+        var newPathMap = pathMap
+        newPathMap[pathId] = path
+        activeStore.update(pathMap: newPathMap, forced: true)
+    }
+
+    private func update(pathId: UUID, pathProperty: PathProperty) {
+        let _r = subtracer.range("update property"); defer { _r() }
+        guard exists(id: pathId) else { return }
+        var newPathPropertyMap = pathPropertyMap
+        newPathPropertyMap[pathId] = pathProperty
+        activeStore.update(pathPropertyMap: newPathPropertyMap)
+    }
+
+    private func remove(pathIds: [UUID]) {
+        let _r = subtracer.range("remove"); defer { _r() }
+        var newPathMap = pathMap
+        var newPathPropertyMap = pathPropertyMap
+        for pathId in pathIds {
+            newPathMap.removeValue(forKey: pathId)
+            newPathPropertyMap.removeValue(forKey: pathId)
         }
-        activeStore.update(pathMap: updated, forced: true)
+        activeStore.update(pathMap: newPathMap)
+        activeStore.update(pathPropertyMap: newPathPropertyMap)
     }
 
     private func clear() {
@@ -140,7 +160,7 @@ extension PathService {
     private func load(event: DocumentEvent.Single) {
         switch event {
         case let .path(event): load(event: event)
-        case let .pathProperty(event): load(event: event)
+        case .symbol: break
         case .item: break
         }
     }
@@ -149,84 +169,109 @@ extension PathService {
 
     private func load(event: PathEvent) {
         let _r = subtracer.range("load event"); defer { _r() }
-        switch event {
-        case let .create(event): load(event: event)
-        case let .delete(event): load(event: event)
-        case let .update(event): load(event: event)
-        case let .merge(event): load(event: event)
-        case let .split(event): load(event: event)
-        }
-    }
-
-    private func load(event: PathEvent.Create) {
-        add(pathId: event.pathId, path: event.path)
-    }
-
-    private func load(event: PathEvent.Delete) {
-        remove(pathIds: [event.pathId])
-    }
-
-    private func load(event: PathEvent.Update) {
-        let pathId = event.pathId
-        guard var path = get(id: pathId) else { return }
-        for kind in event.kinds {
+        let pathIds = event.pathIds,
+            kinds = event.kinds
+        for kind in kinds {
             switch kind {
-            case let .move(event):
-                path.update(move: event)
-            case let .nodeCreate(event):
-                path.update(nodeCreate: event)
-            case let .nodeDelete(event):
-                path.update(nodeDelete: event)
-            case let .nodeUpdate(event):
-                path.update(nodeUpdate: event)
+            case let .create(event): load(pathIds: pathIds, event)
+            case let .createNode(event): load(pathIds: pathIds, event)
+            case let .updateNode(event): load(pathIds: pathIds, event)
+            case let .deleteNode(event): load(pathIds: pathIds, event)
+            case let .merge(event): load(pathIds: pathIds, event)
+            case let .split(event): load(pathIds: pathIds, event)
+            case let .delete(event): load(pathIds: pathIds, event)
+            case let .move(event): load(pathIds: pathIds, event)
+            case let .setName(event): load(pathIds: pathIds, event)
+            case let .setNodeType(event): load(pathIds: pathIds, event)
+            case let .setSegmentType(event): load(pathIds: pathIds, event)
             }
         }
+    }
+
+    private func load(pathIds: [UUID], _ event: PathEvent.Create) {
+        guard let pathId = pathIds.first else { return }
+        add(pathId: pathId, path: event.path)
+    }
+
+    private func load(pathIds: [UUID], _ event: PathEvent.CreateNode) {
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId) else { return }
+        path.update(event)
         update(pathId: pathId, path: path)
     }
 
-    // MARK: path multi update
+    private func load(pathIds: [UUID], _ event: PathEvent.UpdateNode) {
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId) else { return }
+        path.update(event)
+        update(pathId: pathId, path: path)
+    }
 
-    private func load(event: PathEvent.Merge) {
-        let pathId = event.pathId, mergedPathId = event.mergedPathId
-        guard var path = get(id: pathId),
+    private func load(pathIds: [UUID], _ event: PathEvent.DeleteNode) {
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId) else { return }
+        path.update(event)
+        update(pathId: pathId, path: path)
+    }
+
+    private func load(pathIds: [UUID], _ event: PathEvent.Merge) {
+        let mergedPathId = event.mergedPathId
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId),
               let mergedPath = get(id: mergedPathId) else { return }
-        if mergedPath != path {
+        if mergedPathId != pathId {
             remove(pathIds: [mergedPathId])
         }
-        path.update(merge: event, mergedPath: mergedPath)
+        path.update(event, mergedPath: mergedPath)
         update(pathId: pathId, path: path)
     }
 
-    private func load(event: PathEvent.Split) {
-        let pathId = event.pathId
-        guard var path = get(id: pathId) else { return }
-        let newPath = path.update(nodeBreak: event)
+    private func load(pathIds: [UUID], _ event: PathEvent.Split) {
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId) else { return }
+        let newPath = path.update(event)
         update(pathId: pathId, path: path)
         if let newPath, let newPathId = event.newPathId {
             add(pathId: newPathId, path: newPath)
         }
     }
 
-    // MARK: path property event
+    private func load(pathIds: [UUID], _: PathEvent.Delete) {
+        remove(pathIds: pathIds)
+    }
 
-    private func load(event: PathPropertyEvent) {
-        switch event {
-        case let .update(event): load(event: event)
+    private func load(pathIds: [UUID], _ event: PathEvent.Move) {
+        for pathId in pathIds {
+            guard var path = get(id: pathId) else { continue }
+            path.update(event)
+            update(pathId: pathId, path: path)
         }
     }
 
-    private func load(event: PathPropertyEvent.Update) {
-        let pathId = event.pathId
-        guard var path = get(id: pathId) else { return }
-        for kind in event.kinds {
-            switch kind {
-            case let .setName(event): break
-            case let .setNodeType(event):
-                path.update(setNodeType: event)
-            case let .setSegmentType(event):
-                path.update(setSegmentType: event)
-            }
-        }
+    private func load(pathIds: [UUID], _ event: PathEvent.SetName) {
+        guard let pathId = pathIds.first,
+              var property = property(id: pathId) else { return }
+        property.update(event)
+        update(pathId: pathId, pathProperty: property)
+    }
+
+    private func load(pathIds: [UUID], _ event: PathEvent.SetNodeType) {
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId),
+              var property = property(id: pathId) else { return }
+        path.update(event)
         update(pathId: pathId, path: path)
+        property.update(event)
+        update(pathId: pathId, pathProperty: property)
+    }
+
+    private func load(pathIds: [UUID], _ event: PathEvent.SetSegmentType) {
+        guard let pathId = pathIds.first,
+              var path = get(id: pathId),
+              var property = property(id: pathId) else { return }
+        path.update(event)
+        update(pathId: pathId, path: path)
+        property.update(event)
+        update(pathId: pathId, pathProperty: property)
     }
 }

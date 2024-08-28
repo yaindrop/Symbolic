@@ -6,10 +6,10 @@ struct SymbolsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .init(syncNotify: true) }
         @Selected({ global.viewport.sizedInfo }) var viewport
-        @Selected({ global.item.symbolIds }) var symbolIds
-        @Selected({ global.item.itemMap }) var itemMap
-        @Selected({ global.item.symbolItemMap }) var symbolItemMap
         @Selected({ global.path.pathMap }) var pathMap
+        @Selected({ global.symbol.symbolMap }) var symbolMap
+        @Selected({ global.item.symbolIds }) var symbolIds
+        @Selected({ global.item.symbolItemMap }) var symbolItemMap
     }
 
     @SelectorWrapper var selector
@@ -35,7 +35,7 @@ private extension SymbolsView {
     }
 
     @ViewBuilder func symbolView(symbolId: UUID) -> some View {
-        if let symbol = selector.itemMap.get(symbolId)?.symbol {
+        if let symbol = selector.symbolMap.get(symbolId) {
             ZStack {
                 Rectangle()
                     .fill(Color.label.opacity(0.05))

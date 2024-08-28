@@ -33,17 +33,17 @@ extension ItemStoreProtocol {
         get(id: id) != nil
     }
 
-    func group(id: UUID) -> ItemGroup? {
+    func group(id: UUID) -> Item.Group? {
         get(id: id)?.group
     }
 
-    func symbol(id: UUID) -> ItemSymbol? {
+    func symbol(id: UUID) -> Item.Symbol? {
         get(id: id)?.symbol
     }
 
     // MARK: derived selectors
 
-    var allSymbols: [ItemSymbol] {
+    var allSymbols: [Item.Symbol] {
         symbolIds.compactMap { symbol(id: $0) }
     }
 
@@ -112,11 +112,11 @@ extension ItemStoreProtocol {
         symbol(id: symbolId)?.members.flatMap { expandedItems(rootId: $0) } ?? []
     }
 
-    func allGroups(symbolId: UUID) -> [ItemGroup] {
+    func allGroups(symbolId: UUID) -> [Item.Group] {
         symbol(id: symbolId)?.members.flatMap { groupItems(rootId: $0) }.compactMap { $0.group } ?? []
     }
 
-    func allPathItems(symbolId: UUID) -> [ItemPath] {
+    func allPathItems(symbolId: UUID) -> [Item.Path] {
         symbol(id: symbolId)?.members.flatMap { leafItems(rootId: $0) }.compactMap { $0.path } ?? []
     }
 }
@@ -258,34 +258,32 @@ extension ItemService: ItemStoreProtocol {
         }
         return nil
     }
-
-    func symbolHitTest(worldPosition: Point2) -> UUID? {
-        symbolIds.first {
-            guard let symbol = self.symbol(id: $0) else { return false }
-            return symbol.boundingRect.contains(worldPosition)
-        }
-    }
 }
 
 // MARK: - modify item map
 
 private extension ItemService {
-    func add(symbol: ItemSymbol) {
+    func add(symbol: Item.Symbol) {
         let _r = subtracer.range("add symbol"); defer { _r() }
         guard !exists(id: symbol.id) else { return }
-
         var newItemMap = itemMap
         newItemMap[symbol.id] = .init(kind: .symbol(symbol))
+        activeStore.update(itemMap: newItemMap)
+    }
+
+    func remove(symbolIds _: [UUID]) {
+        let _r = subtracer.range("remove"); defer { _r() }
+        var newItemMap = itemMap
+        for symbolId in symbolIds {
+            newItemMap.removeValue(forKey: symbolId)
+        }
         activeStore.update(itemMap: newItemMap)
     }
 
     func add(symbolId: UUID, item: Item) {
         let _r = subtracer.range("add"); defer { _r() }
         guard !exists(id: item.id),
-              var symbol = get(id: symbolId)?.symbol else { return }
-        if case let .path(path) = item.kind {
-            guard self.path.exists(id: path.id) else { return }
-        }
+              var symbol = symbol(id: symbolId) else { return }
         symbol.members += [item.id]
         var newItemMap = itemMap
         newItemMap[item.id] = item
@@ -293,34 +291,30 @@ private extension ItemService {
         activeStore.update(itemMap: newItemMap)
     }
 
-    func remove(itemId: UUID) {
-        let _r = subtracer.range("remove"); defer { _r() }
-        guard let item = get(id: itemId) else { return }
-        if case let .path(path) = item.kind {
-            guard !self.path.exists(id: path.id) else { return }
-        }
-        guard let symbolId = symbolId(of: itemId),
-              var symbol = get(id: symbolId)?.symbol else { return }
-        var newItemMap = itemMap
-        if let parentId = parentId(of: itemId) {
-            guard var group = group(id: parentId) else { return }
-            group.members.removeAll { $0 == itemId }
-            newItemMap[parentId] = .init(kind: .group(group))
-        } else {
-            symbol.members.removeAll { $0 == itemId }
-            newItemMap[symbolId] = .init(kind: .symbol(symbol))
-        }
-        activeStore.update(itemMap: newItemMap)
-    }
-
     func update(item: Item) {
         let _r = subtracer.range("update"); defer { _r() }
         guard exists(id: item.id) else { return }
-        if case let .path(path) = item.kind {
-            guard self.path.exists(id: path.id) else { remove(itemId: item.id); return }
-        }
         var newItemMap = itemMap
         newItemMap[item.id] = item
+        activeStore.update(itemMap: newItemMap)
+    }
+
+    func remove(itemIds: [UUID]) {
+        let _r = subtracer.range("remove"); defer { _r() }
+        var newItemMap = itemMap
+        for itemId in itemIds {
+            guard let item = get(id: itemId),
+                  let symbolId = symbolId(of: itemId),
+                  var symbol = symbol(id: symbolId) else { continue }
+            if let parentId = parentId(of: itemId) {
+                guard var group = group(id: parentId) else { continue }
+                group.members.removeAll { $0 == itemId }
+                newItemMap[parentId] = .init(kind: .group(group))
+            } else {
+                symbol.members.removeAll { $0 == itemId }
+                newItemMap[symbolId] = .init(kind: .symbol(symbol))
+            }
+        }
         activeStore.update(itemMap: newItemMap)
     }
 
@@ -373,7 +367,7 @@ private extension ItemService {
     func load(event: DocumentEvent.Single) {
         switch event {
         case let .path(event): load(event: event)
-        case .pathProperty: break
+        case let .symbol(event): load(event: event)
         case let .item(event): load(event: event)
         }
     }
@@ -381,28 +375,66 @@ private extension ItemService {
     // MARK: path event
 
     func load(event: PathEvent) {
-        let affectedSymbolId = event.affectedSymbolId,
-            affectedPathIds = event.affectedPathIds
-        guard let symbolId = {
-            if let id = affectedSymbolId {
-                return id
-            }
-            for pathId in affectedPathIds {
-                guard let id = symbolId(of: pathId) else { continue }
-                return id
-            }
-            return nil
-        }() else { return }
-        for pathId in affectedPathIds {
-            let item = get(id: pathId)
-            let path = path.get(id: pathId)
-            if path == nil {
-                guard item?.path?.id != nil else { continue }
-                remove(itemId: pathId)
-            } else if item == nil {
-                add(symbolId: symbolId, item: .init(kind: .path(.init(id: pathId))))
+        for kind in event.kinds {
+            switch kind {
+            case let .delete(event): break
+            case let .merge(event): break
+            case let .split(event): break
+            default: break
             }
         }
+    }
+
+    func load(pathIds: [UUID], _: PathEvent.Delete) {
+        remove(itemIds: pathIds)
+    }
+
+    func load(pathIds _: [UUID], _ event: PathEvent.Merge) {
+        let mergedPathId = event.mergedPathId
+        if !path.exists(id: mergedPathId) {
+            remove(itemIds: [mergedPathId])
+        }
+    }
+
+    func load(pathIds: [UUID], _ event: PathEvent.Split) {
+        let newPathId = event.newPathId
+        guard let newPathId,
+              let pathId = pathIds.first,
+              let symbolId = symbolId(of: pathId) else { return }
+        if path.exists(id: newPathId) {
+            add(symbolId: symbolId, item: .init(kind: .path(.init(id: newPathId))))
+        }
+    }
+
+    // MARK: symbol event
+
+    func load(event: SymbolEvent) {
+        let symbolIds = event.symbolIds
+        for kind in event.kinds {
+            switch kind {
+            case let .create(event): load(symbolIds: symbolIds, event)
+            case let .delete(event): load(symbolIds: symbolIds, event)
+            default: break
+            }
+        }
+    }
+
+    func load(symbolIds: [UUID], _: SymbolEvent.Create) {
+        guard let symbolId = symbolIds.first,
+              symbol(id: symbolId) == nil else { return }
+        add(symbol: .init(id: symbolId, members: []))
+    }
+
+    func load(symbolIds: [UUID], event: SymbolEvent.SetMembers) {
+        let members = event.members
+        guard let symbolId = symbolIds.first,
+              var symbol = symbol(id: symbolId) else { return }
+        symbol.members = members
+        update(item: .init(kind: .symbol(symbol)))
+    }
+
+    func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
+        remove(symbolIds: symbolIds)
     }
 
     // MARK: item event
@@ -410,8 +442,6 @@ private extension ItemService {
     func load(event: ItemEvent) {
         switch event {
         case let .setGroup(event): load(event: event)
-        case let .setSymbol(event): load(event: event)
-        case let .deleteSymbol(event): load(event: event)
         }
     }
 
@@ -420,7 +450,7 @@ private extension ItemService {
             members = event.members
         guard let symbolId = members.compactMap({ symbolId(of: $0) }).allSame() else { return }
         if members.isEmpty {
-            remove(itemId: groupId)
+            remove(itemIds: [groupId])
             return
         }
         let item: Item = .init(kind: .group(.init(id: groupId, members: members)))
@@ -429,24 +459,5 @@ private extension ItemService {
         } else {
             update(item: item)
         }
-    }
-
-    func load(event: ItemEvent.SetSymbol) {
-        let symbolId = event.symbolId,
-            origin = event.origin,
-            size = event.size,
-            members = event.members
-        let symbol: ItemSymbol = .init(id: symbolId, origin: origin, size: size, members: members)
-        if get(id: symbolId) == nil {
-            add(symbol: symbol)
-        } else {
-            update(item: .init(kind: .symbol(symbol)))
-        }
-    }
-
-    func load(event: ItemEvent.DeleteSymbol) {
-        let symbolId = event.symbolId
-        guard get(id: symbolId)?.symbol != nil else { return }
-        remove(itemId: symbolId)
     }
 }

@@ -30,7 +30,7 @@ private extension GlobalStores {
                 let worldPosition = info.location.applying(viewport.viewToWorld)
                 let _r = tracer.range(type: .intent, "On tap \(worldPosition)"); defer { _r() }
                 let editingSymbolId = activeSymbol.editingSymbolId,
-                    hitSymbolId = item.symbolHitTest(worldPosition: worldPosition)
+                    hitSymbolId = symbol.symbolHitTest(worldPosition: worldPosition)
                 guard let editingSymbolId else {
                     activeSymbol.setFocus(symbolId: hitSymbolId)
                     return
@@ -119,7 +119,7 @@ private extension GlobalStores {
             $0.$symbolRect
                 .sink {
                     let newSymbolId = UUID()
-                    documentUpdater.update(item: .createSymbol(.init(symbolId: newSymbolId, origin: $0.origin, size: $0.size)))
+                    documentUpdater.update(symbol: .create(.init(symbolId: newSymbolId, origin: $0.origin, size: $0.size)))
                     activeSymbol.setFocus(symbolId: newSymbolId)
                     canvasAction.on(instant: .addSymbol)
                 }

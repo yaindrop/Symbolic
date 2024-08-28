@@ -10,10 +10,10 @@ private extension GlobalStores {
     func onDrag(symbolId: UUID, _ v: PanInfo, pending: Bool = false) {
         let offset = v.offset.applying(viewport.viewToWorld)
         if activeSymbol.selected(id: symbolId) {
-            let symbolIds = activeSymbol.selectedSymbolIds
-            documentUpdater.update(item: .moveSymbols(.init(symbolIds: .init(symbolIds), offset: offset)), pending: pending)
+            let symbolIds = Array(activeSymbol.selectedSymbolIds)
+            documentUpdater.update(symbol: .move(.init(symbolIds: symbolIds, offset: offset)), pending: pending)
         } else {
-            documentUpdater.update(item: .moveSymbols(.init(symbolIds: [symbolId], offset: offset)), pending: pending)
+            documentUpdater.update(symbol: .move(.init(symbolIds: [symbolId], offset: offset)), pending: pending)
         }
     }
 
@@ -50,7 +50,7 @@ extension ActiveSymbolView {
         struct SelectorProps: Equatable { let symbolId: UUID }
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.item.symbol(id: $0.symbolId)?.boundingRect }) var bounds
+            @Selected({ global.symbol.get(id: $0.symbolId)?.boundingRect }) var bounds
             @Selected({ global.activeSymbol.selectedSymbolIds.contains($0.symbolId) }) var selected
             @Selected({ global.activeSymbol.focusedSymbolId == $0.symbolId }) var focused
             @Selected({ global.activeSymbol.editingSymbolId == $0.symbolId }) var editing

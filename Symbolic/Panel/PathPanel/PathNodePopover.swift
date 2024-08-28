@@ -9,7 +9,7 @@ struct PathNodePopover: View, TracedView, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
     class Selector: SelectorBase {
         @Selected({ global.path.get(id: $0.pathId) }) var path
-        @Selected({ global.pathProperty.get(id: $0.pathId) }) var pathProperty
+        @Selected({ global.path.property(id: $0.pathId) }) var pathProperty
     }
 
     @SelectorWrapper var selector
@@ -84,7 +84,7 @@ private extension PathNodePopover {
     }
 
     func update(nodeType: PathNodeType) {
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: [nodeId], nodeType: nodeType)))))
+        global.documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: [nodeId], nodeType: nodeType)))))
     }
 
     func focusNode() {

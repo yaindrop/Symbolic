@@ -28,6 +28,7 @@ private extension DraggingSelectStore {
 struct DraggingSelectService {
     let store: DraggingSelectStore
     let path: PathService
+    let symbol: SymbolService
     let item: ItemService
     let viewport: ViewportService
     let activeSymbol: ActiveSymbolService
@@ -69,14 +70,14 @@ extension DraggingSelectService {
         guard active, let info else { return }
         withStoreUpdating {
             store.update(to: info.current)
-            if let symbol = activeSymbol.editingSymbol {
-                let intersectedItemIds = symbol.members.filter {
+            if let symbol = activeSymbol.editingSymbol, let symbolItem = item.symbol(id: symbol.id) {
+                let intersectedItemIds = symbolItem.members.filter {
                     item.leafItems(rootId: $0.id)
                         .contains { intersects(item: $0) }
                 }
                 store.itemIds.send(intersectedItemIds)
             } else {
-                let intersectedSymbols = item.allSymbols.filter {
+                let intersectedSymbols = symbol.symbolMap.values.filter {
                     guard let boundingRect else { return false }
                     return boundingRect.applying(viewport.viewToWorld).intersects($0.boundingRect)
                 }

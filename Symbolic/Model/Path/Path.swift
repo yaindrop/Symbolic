@@ -11,8 +11,8 @@ protocol SUPathAppendable {
 struct Path: Codable, Equatable {
     typealias NodeMap = OrderedMap<UUID, PathNode>
 
-    private(set) var nodeMap: NodeMap
-    private(set) var isClosed: Bool
+    var nodeMap: NodeMap
+    var isClosed: Bool
 
     init(nodeMap: NodeMap, isClosed: Bool) {
         self.nodeMap = nodeMap
@@ -229,121 +229,5 @@ extension Path: SUPathAppendable {
 extension Path: CustomStringConvertible {
     var description: String {
         "Path(nodes: \(nodes), isClosed: \(isClosed))"
-    }
-}
-
-// MARK: - handle events
-
-extension Path {
-    func with(nodeMap: NodeMap, isClosed: Bool? = nil) -> Self {
-        .init(nodeMap: nodeMap, isClosed: isClosed ?? self.isClosed)
-    }
-
-    mutating func update(move: PathEvent.Update.Move) {
-        let _r = tracer.range("Path.update move"); defer { _r() }
-        for id in nodeIds {
-            nodeMap[id]?.position += move.offset
-        }
-    }
-
-    mutating func update(nodeCreate: PathEvent.Update.NodeCreate) {
-        let _r = tracer.range("Path.update nodeCreate"); defer { _r() }
-        let prevNodeId = nodeCreate.prevNodeId, nodeId = nodeCreate.nodeId, node = nodeCreate.node
-        var i = 0
-        if let prevNodeId {
-            guard let prev = nodeIndex(id: prevNodeId) else { return }
-            i = prev + 1
-        }
-        nodeMap.insert((nodeId, node), at: i)
-    }
-
-    mutating func update(nodeDelete: PathEvent.Update.NodeDelete) {
-        let _r = tracer.range("Path.update nodeDelete"); defer { _r() }
-        nodeMap.removeValue(forKey: nodeDelete.nodeId)
-    }
-
-    mutating func update(nodeUpdate: PathEvent.Update.NodeUpdate) {
-        let _r = tracer.range("Path.update nodeUpdate"); defer { _r() }
-        nodeMap[nodeUpdate.nodeId] = nodeUpdate.node
-    }
-
-    mutating func update(merge: PathEvent.Merge, mergedPath: Path) {
-        let endingNodeId = merge.endingNodeId, mergedEndingNodeId = merge.mergedEndingNodeId
-        let _r = tracer.range("Path.update move"); defer { _r() }
-        guard let endingNode = node(id: endingNodeId),
-              let mergedEndingNode = mergedPath.node(id: mergedEndingNodeId),
-              isEndingNode(id: endingNodeId),
-              mergedPath.isEndingNode(id: mergedEndingNodeId),
-              endingNodeId != mergedEndingNodeId else { return }
-        let mergePosition = endingNode.position == mergedEndingNode.position
-        if mergedPath == self {
-            if mergePosition {
-                nodeMap.removeValue(forKey: nodeIds.last!)
-            }
-            isClosed = true
-            return
-        }
-//        let reversed = isLastEndingNode(id: endingNodeId) && mergedPath.isLastEndingNode(id: mergedEndingNodeId)
-//            || isFirstEndingNode(id: endingNodeId) && mergedPath.isFirstEndingNode(id: mergedEndingNodeId)
-//        let mergedPairs = reversed ? mergedPath.pairs.values.reversed() : mergedPath.pairs.values
-//        let prepend = isFirstEndingNode(id: endingNodeId)
-//        for pair in mergedPairs {
-//            if prepend {
-//                pairs.insert((pair.id, pair), at: 0)
-//            } else {
-//                pairs.append((pair.id, pair))
-//            }
-//        }
-    }
-
-    mutating func update(nodeBreak: PathEvent.Split) -> Path? {
-        let nodeId = nodeBreak.nodeId,
-            newNodeId = nodeBreak.newNodeId
-        let _r = tracer.range("Path.update nodeBreak"); defer { _r() }
-        guard let i = nodeIndex(id: nodeId),
-              let node = node(id: nodeId) else { return nil }
-        let newNode = PathNode(position: node.position, cubicOut: node.cubicOut)
-        if isClosed {
-            nodeMap.mutateKeys { $0 = Array($0[(i + 1)...] + $0[...i]) }
-            if let newNodeId {
-                nodeMap.insert((newNodeId, newNode), at: 0)
-            }
-            isClosed = false
-            return nil
-        } else {
-            var newNodeMap = nodeMap
-            nodeMap.mutateKeys { $0 = Array($0[...i]) }
-            newNodeMap.mutateKeys { $0 = Array($0[(i + 1)...]) }
-            if let newNodeId {
-                newNodeMap.insert((newNodeId, newNode), at: 0)
-            }
-            return .init(nodeMap: newNodeMap, isClosed: false)
-        }
-    }
-
-    mutating func update(setNodeType: PathPropertyEvent.Update.SetNodeType) {
-        for nodeId in setNodeType.nodeIds {
-            guard let node = node(id: nodeId) else { continue }
-            switch setNodeType.nodeType {
-            case .locked:
-                nodeMap[nodeId]?.cubicOut = node.cubicIn.with(length: -node.cubicOut.length)
-            case .mirrored:
-                nodeMap[nodeId]?.cubicOut = -node.cubicIn
-            default: break
-            }
-        }
-    }
-
-    mutating func update(setSegmentType: PathPropertyEvent.Update.SetSegmentType) {
-        for fromNodeId in setSegmentType.fromNodeIds {
-            switch setSegmentType.segmentType {
-            case .quadratic:
-                guard let toNodeId = nodeId(after: fromNodeId),
-                      let segment = segment(fromId: fromNodeId)?.toQuradratic else { return }
-                nodeMap[fromNodeId]?.cubicOut = segment.fromCubicOut
-                nodeMap[toNodeId]?.cubicIn = segment.toCubicIn
-            default: break
-            }
-        }
     }
 }

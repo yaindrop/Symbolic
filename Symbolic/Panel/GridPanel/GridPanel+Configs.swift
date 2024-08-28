@@ -11,7 +11,7 @@ extension GridPanel {
 
         @SelectorWrapper var selector
 
-        @State private var tintColor = Color.red
+        @State private var tintColor = UIColor.red.cgColor
 
         @State private var gridCase: Grid.Case = .cartesian
 
@@ -19,9 +19,9 @@ extension GridPanel {
             setupSelector {
                 content
                     .onChange(of: tintColor) {
-                        guard tintColor != selector.grid.tintColor else { return }
+                        guard tintColor != selector.grid.tintColor.cgColor else { return }
                         var grid = selector.grid
-                        grid.tintColor = tintColor
+                        grid.tintColor = .init(cgColor: tintColor)
                         global.grid.update(grid: grid)
                     }
                     .onChange(of: gridCase) {
@@ -34,7 +34,7 @@ extension GridPanel {
                         }
                         global.grid.update(grid: grid)
                     }
-                    .bind(selector.grid.tintColor, to: $tintColor)
+                    .bind(selector.grid.tintColor.cgColor, to: $tintColor)
                     .bind(selector.grid.case, to: $gridCase)
             }
         } }

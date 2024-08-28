@@ -7,13 +7,9 @@ private extension DocumentAction {
             switch action {
             case let .load(action):
                 "Load path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
+
             case let .create(action):
                 "Create path \(action.pathId.shortDescription)"
-            case let .move(action):
-                "Move path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
-            case let .delete(action):
-                "Delete path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
-
             case let .update(update):
                 switch update.kind {
                 case let .addEndingNode(action):
@@ -37,13 +33,7 @@ private extension DocumentAction {
                     "In path \(update.pathId.shortDescription) merge node \(action.endingNodeId.shortDescription) with path \(action.mergedPathId.shortDescription) node \(action.mergedEndingNodeId.shortDescription)"
                 case let .split(action):
                     "In path \(update.pathId.shortDescription) split at node \(action.nodeId.shortDescription) with new node \(action.newNodeId?.shortDescription ?? "nil")"
-                }
-            }
 
-        case let .pathProperty(action):
-            switch action {
-            case let .update(update):
-                switch update.kind {
                 case let .setName(action):
                     "Set path \(update.pathId.shortDescription) name \(action.name ?? "nil")"
                 case let .setNodeType(action):
@@ -51,6 +41,24 @@ private extension DocumentAction {
                 case let .setSegmentType(action):
                     "Set path \(update.pathId.shortDescription) segment from \(action.fromNodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.segmentType?.description ?? "nil")"
                 }
+
+            case let .delete(action):
+                "Delete path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
+            case let .move(action):
+                "Move path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
+            }
+
+        case let .symbol(action):
+            switch action {
+            case let .create(action):
+                "Create symbol \(action.symbolId.shortDescription)"
+            case let .resize(action):
+                "Resize symbol \(action.symbolId.shortDescription) with origin \(action.origin.shortDescription) and size \(action.size.shortDescription)"
+
+            case let .delete(action):
+                "Delete symbol \(action.symbolIds.map { $0.shortDescription }.joined(separator: ", "))"
+            case let .move(action):
+                "Move symbol \(action.symbolIds.map { $0.shortDescription }.joined(separator: ", ")) by \(action.offset.shortDescription)"
             }
 
         case let .item(action):
@@ -61,7 +69,6 @@ private extension DocumentAction {
                 "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
             case let .reorder(action):
                 "Reorder \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
-            default: ""
             }
         }
     }

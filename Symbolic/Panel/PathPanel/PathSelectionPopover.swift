@@ -97,13 +97,13 @@ private extension PathSelectionPopover {
     func update(segmentType: PathSegmentType) {
         guard let pathId = global.activeItem.focusedPathId else { return }
         let fromNodeIds = Array(global.focusedPath.activeSegmentIds)
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
+        global.documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
     }
 
     func update(nodeType: PathNodeType) {
         guard let pathId = global.activeItem.focusedPathId else { return }
         let nodeIds = Array(global.focusedPath.activeNodeIds)
-        global.documentUpdater.update(pathProperty: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
+        global.documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
     }
 
 //    func focusSegment() {

@@ -75,6 +75,7 @@ private extension DocumentUpdater {
         }
 
         guard let first = events.first else {
+            let _r = subtracer.range("cancelled"); defer { _r() }
             if pending {
                 cancel()
             }
@@ -130,7 +131,8 @@ private extension DocumentUpdater {
         let symbolId = action.symbolId,
             pathId = action.pathId,
             path = action.path
-        guard let symbol = itemStore.symbol(id: symbolId) else { return }
+        print("dbg a", action)
+        guard let symbol = itemStore.symbol(id: symbolId) else { print("dbg b"); return }
         events.append(.path(.init(pathId: pathId, .create(.init(path: path)))))
         events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members + [pathId])))))
     }
@@ -506,9 +508,8 @@ private extension DocumentUpdater {
             isAfter = action.isAfter,
             parentId = itemStore.parentId(of: itemId),
             toParentId = itemStore.parentId(of: toItemId)
-        guard let symbolId = itemStore.symbolId(of: itemId),
-              let symbol = itemStore.symbol(id: symbolId) else { return } // no symbol found
-        guard itemStore.symbolId(of: toItemId) == symbolId else { return } // not in the same symbol
+        guard let symbol = itemStore.symbol(of: itemId),
+              itemStore.symbolId(of: toItemId) == symbol.id else { return } // not in the same symbol
         if parentId == toParentId {
             guard itemId != toItemId else { return } // not moved
             if let parentId, var group = itemStore.group(id: parentId) {

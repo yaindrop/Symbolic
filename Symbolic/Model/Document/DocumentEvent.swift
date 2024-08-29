@@ -38,6 +38,20 @@ struct PathEvent: Equatable, Codable {
     }
 }
 
+extension PathEvent {
+    init(pathId: UUID, _ kind: PathEvent.Kind) {
+        self = .init(pathIds: [pathId], kinds: [kind])
+    }
+
+    init(pathId: UUID, _ kinds: [PathEvent.Kind]) {
+        self = .init(pathIds: [pathId], kinds: kinds)
+    }
+
+    init(pathIds: [UUID], _ kind: PathEvent.Kind) {
+        self = .init(pathIds: pathIds, kinds: [kind])
+    }
+}
+
 // MARK: - SymbolEvent
 
 struct SymbolEvent: Equatable, Codable {
@@ -59,6 +73,16 @@ struct SymbolEvent: Equatable, Codable {
 
         case delete(Delete)
         case move(Move)
+    }
+}
+
+extension SymbolEvent {
+    init(symbolId: UUID, _ kind: SymbolEvent.Kind) {
+        self = .init(symbolIds: [symbolId], kinds: [kind])
+    }
+
+    init(symbolIds: [UUID], _ kind: SymbolEvent.Kind) {
+        self = .init(symbolIds: symbolIds, kinds: [kind])
     }
 }
 
@@ -105,44 +129,6 @@ struct DocumentEvent: Identifiable, Equatable, Codable {
         self.time = time
         self.kind = kind
         action = nil
-    }
-}
-
-extension PathEvent {
-    var affectedPathIds: [UUID] {
-        var pathIds = pathIds
-        for kind in kinds {
-            switch kind {
-            case let .merge(event):
-                pathIds.append(event.mergedPathId)
-            case let .split(event):
-                event.newPathId.map { pathIds.append($0) }
-            default: break
-            }
-        }
-        return pathIds
-    }
-
-    init(pathId: UUID, _ kind: PathEvent.Kind) {
-        self = .init(pathIds: [pathId], kinds: [kind])
-    }
-
-    init(pathId: UUID, _ kinds: [PathEvent.Kind]) {
-        self = .init(pathIds: [pathId], kinds: kinds)
-    }
-
-    init(pathIds: [UUID], _ kind: PathEvent.Kind) {
-        self = .init(pathIds: pathIds, kinds: [kind])
-    }
-}
-
-extension SymbolEvent {
-    init(symbolId: UUID, _ kind: SymbolEvent.Kind) {
-        self = .init(symbolIds: [symbolId], kinds: [kind])
-    }
-
-    init(symbolIds: [UUID], _ kind: SymbolEvent.Kind) {
-        self = .init(symbolIds: symbolIds, kinds: [kind])
     }
 }
 

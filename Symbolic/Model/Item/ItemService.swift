@@ -55,8 +55,16 @@ extension ItemStoreProtocol {
         itemAncestorMap[itemId]?.first
     }
 
+    func parent(of itemId: UUID) -> Item.Group? {
+        parentId(of: itemId).map { group(id: $0) }
+    }
+
     func symbolId(of itemId: UUID) -> UUID? {
         itemSymbolMap[itemId]
+    }
+
+    func symbol(of itemId: UUID) -> Item.Symbol? {
+        symbolId(of: itemId).map { symbol(id: $0) }
     }
 
     func depth(of itemId: UUID) -> Int {
@@ -263,59 +271,50 @@ extension ItemService: ItemStoreProtocol {
 // MARK: - modify item map
 
 private extension ItemService {
-    func add(symbol: Item.Symbol) {
-        let _r = subtracer.range("add symbol"); defer { _r() }
-        guard !exists(id: symbol.id) else { return }
-        var newItemMap = itemMap
-        newItemMap[symbol.id] = .init(kind: .symbol(symbol))
-        activeStore.update(itemMap: newItemMap)
-    }
-
-    func remove(symbolIds _: [UUID]) {
-        let _r = subtracer.range("remove"); defer { _r() }
-        var newItemMap = itemMap
-        for symbolId in symbolIds {
-            newItemMap.removeValue(forKey: symbolId)
-        }
-        activeStore.update(itemMap: newItemMap)
-    }
-
-    func add(symbolId: UUID, item: Item) {
-        let _r = subtracer.range("add"); defer { _r() }
-        guard !exists(id: item.id),
-              var symbol = symbol(id: symbolId) else { return }
-        symbol.members += [item.id]
-        var newItemMap = itemMap
-        newItemMap[item.id] = item
-        newItemMap[symbolId] = .init(kind: .symbol(symbol))
-        activeStore.update(itemMap: newItemMap)
+    func add(item: Item) {
+        let _r = subtracer.range("add \(item)"); defer { _r() }
+        guard !exists(id: item.id) else { return }
+        activeStore.update(itemMap: itemMap.cloned { $0[item.id] = item })
     }
 
     func update(item: Item) {
-        let _r = subtracer.range("update"); defer { _r() }
+        let _r = subtracer.range("update \(item)"); defer { _r() }
         guard exists(id: item.id) else { return }
-        var newItemMap = itemMap
-        newItemMap[item.id] = item
-        activeStore.update(itemMap: newItemMap)
+        activeStore.update(itemMap: itemMap.cloned { $0[item.id] = item })
     }
 
     func remove(itemIds: [UUID]) {
-        let _r = subtracer.range("remove"); defer { _r() }
-        var newItemMap = itemMap
+        let _r = subtracer.range("remove \(itemIds)"); defer { _r() }
         for itemId in itemIds {
-            guard let item = get(id: itemId),
-                  let symbolId = symbolId(of: itemId),
-                  var symbol = symbol(id: symbolId) else { continue }
-            if let parentId = parentId(of: itemId) {
-                guard var group = group(id: parentId) else { continue }
+            guard exists(id: itemId) else { continue }
+            activeStore.update(itemMap: itemMap.cloned { $0.removeValue(forKey: itemId) })
+        }
+    }
+
+    func add(member newItemId: UUID, nextTo itemId: UUID) {
+        if var group = parent(of: itemId) {
+            guard let index = group.members.firstIndex(of: itemId) else { return }
+            let nextIndex = group.members.index(after: index)
+            group.members.insert(newItemId, at: nextIndex)
+            activeStore.update(itemMap: itemMap.cloned { $0[group.id] = .init(kind: .group(group)) })
+        } else if var symbol = symbol(of: itemId) {
+            guard let index = symbol.members.firstIndex(of: itemId) else { return }
+            let nextIndex = symbol.members.index(after: index)
+            symbol.members.insert(newItemId, at: nextIndex)
+            activeStore.update(itemMap: itemMap.cloned { $0[symbol.id] = .init(kind: .symbol(symbol)) })
+        }
+    }
+
+    func remove(members itemIds: [UUID]) {
+        for itemId in itemIds {
+            if var group = parent(of: itemId) {
                 group.members.removeAll { $0 == itemId }
-                newItemMap[parentId] = .init(kind: .group(group))
-            } else {
+                activeStore.update(itemMap: itemMap.cloned { $0[group.id] = .init(kind: .group(group)) })
+            } else if var symbol = symbol(of: itemId) {
                 symbol.members.removeAll { $0 == itemId }
-                newItemMap[symbolId] = .init(kind: .symbol(symbol))
+                activeStore.update(itemMap: itemMap.cloned { $0[symbol.id] = .init(kind: .symbol(symbol)) })
             }
         }
-        activeStore.update(itemMap: newItemMap)
     }
 
     func clear() {
@@ -375,35 +374,44 @@ private extension ItemService {
     // MARK: path event
 
     func load(event: PathEvent) {
+        let pathIds = event.pathIds
         for kind in event.kinds {
             switch kind {
-            case let .delete(event): break
-            case let .merge(event): break
-            case let .split(event): break
+            case let .create(event): load(pathIds: pathIds, event)
+            case let .merge(event): load(pathIds: pathIds, event)
+            case let .split(event): load(pathIds: pathIds, event)
+            case let .delete(event): load(pathIds: pathIds, event)
             default: break
             }
         }
     }
 
-    func load(pathIds: [UUID], _: PathEvent.Delete) {
-        remove(itemIds: pathIds)
+    func load(pathIds: [UUID], _: PathEvent.Create) {
+        guard let pathId = pathIds.first else { return }
+        add(item: .init(kind: .path(.init(id: pathId))))
     }
 
-    func load(pathIds _: [UUID], _ event: PathEvent.Merge) {
+    func load(pathIds: [UUID], _: PathEvent.Delete) {
+        remove(itemIds: pathIds)
+        remove(members: pathIds)
+    }
+
+    func load(pathIds: [UUID], _ event: PathEvent.Merge) {
         let mergedPathId = event.mergedPathId
-        if !path.exists(id: mergedPathId) {
-            remove(itemIds: [mergedPathId])
-        }
+        guard let pathId = pathIds.first,
+              pathId != mergedPathId,
+              !path.exists(id: mergedPathId) else { return }
+        remove(itemIds: [mergedPathId])
+        remove(members: [mergedPathId])
     }
 
     func load(pathIds: [UUID], _ event: PathEvent.Split) {
         let newPathId = event.newPathId
-        guard let newPathId,
-              let pathId = pathIds.first,
-              let symbolId = symbolId(of: pathId) else { return }
-        if path.exists(id: newPathId) {
-            add(symbolId: symbolId, item: .init(kind: .path(.init(id: newPathId))))
-        }
+        guard let pathId = pathIds.first,
+              let newPathId,
+              path.exists(id: newPathId) else { return }
+        add(item: .init(kind: .path(.init(id: newPathId))))
+        add(member: newPathId, nextTo: pathId)
     }
 
     // MARK: symbol event
@@ -413,6 +421,7 @@ private extension ItemService {
         for kind in event.kinds {
             switch kind {
             case let .create(event): load(symbolIds: symbolIds, event)
+            case let .setMembers(event): load(symbolIds: symbolIds, event)
             case let .delete(event): load(symbolIds: symbolIds, event)
             default: break
             }
@@ -422,10 +431,10 @@ private extension ItemService {
     func load(symbolIds: [UUID], _: SymbolEvent.Create) {
         guard let symbolId = symbolIds.first,
               symbol(id: symbolId) == nil else { return }
-        add(symbol: .init(id: symbolId, members: []))
+        add(item: .init(kind: .symbol(.init(id: symbolId, members: []))))
     }
 
-    func load(symbolIds: [UUID], event: SymbolEvent.SetMembers) {
+    func load(symbolIds: [UUID], _ event: SymbolEvent.SetMembers) {
         let members = event.members
         guard let symbolId = symbolIds.first,
               var symbol = symbol(id: symbolId) else { return }
@@ -434,7 +443,7 @@ private extension ItemService {
     }
 
     func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
-        remove(symbolIds: symbolIds)
+        remove(itemIds: symbolIds)
     }
 
     // MARK: item event
@@ -448,14 +457,13 @@ private extension ItemService {
     func load(event: ItemEvent.SetGroup) {
         let groupId = event.groupId,
             members = event.members
-        guard let symbolId = members.compactMap({ symbolId(of: $0) }).allSame() else { return }
         if members.isEmpty {
             remove(itemIds: [groupId])
             return
         }
         let item: Item = .init(kind: .group(.init(id: groupId, members: members)))
         if get(id: groupId) == nil {
-            add(symbolId: symbolId, item: item)
+            add(item: item)
         } else {
             update(item: item)
         }

@@ -8,6 +8,9 @@ package symbolic.pb;
 // MARK: - PathEvent
 
 message PathEvent {
+  repeated UUID path_ids = 1;
+  repeated Kind kinds = 2;
+
   message Create { Path path = 1; }
 
   message CreateNode {
@@ -68,14 +71,14 @@ message PathEvent {
       SetSegmentType set_segment_type = 303;
     }
   }
-
-  repeated UUID path_ids = 1;
-  repeated Kind kinds = 2;
 }
 
 // MARK: - SymbolEvent
 
 message SymbolEvent {
+  repeated UUID symbol_ids = 1;
+  repeated Kind kinds = 2;
+
   message Create {
     Point2 origin = 1;
     Size2 size = 2;
@@ -109,25 +112,30 @@ message SymbolEvent {
       Move move = 202;
     }
   }
-
-  repeated UUID symbol_ids = 1;
-  repeated Kind kinds = 2;
 }
 
 // MARK: - ItemEvent
 
 message ItemEvent {
+  oneof kind { SetGroup set_group = 101; }
+
   message SetGroup {
     UUID group_id = 1;
     repeated UUID members = 2;
   }
-
-  oneof kind { SetGroup set_group = 101; }
 }
 
 // MARK: - DocumentEvent
 
 message DocumentEvent {
+  UUID id = 1;
+  google.protobuf.Timestamp time = 2;
+
+  oneof kind {
+    Single single = 101;
+    Compound compound = 102;
+  }
+
   message Single {
     oneof kind {
       PathEvent path_event = 101;
@@ -137,12 +145,4 @@ message DocumentEvent {
   }
 
   message Compound { repeated Single events = 1; }
-
-  UUID id = 1;
-  google.protobuf.Timestamp time = 2;
-
-  oneof kind {
-    Single single = 101;
-    Compound compound = 102;
-  }
 }

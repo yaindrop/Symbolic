@@ -9,7 +9,7 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
-            @Selected({ global.activeItem.focusedGroup.map { global.item.boundingRect(itemId: $0.id) } }) var bounds
+            @Selected({ global.activeItem.focusedGroup.map { global.item.boundingRect(of: $0.id) } }) var bounds
             @Selected({ global.activeItem.focusedGroup.map { global.activeItem.groupOutset(id: $0.id) } ?? 0 }) var outset
         }
 

@@ -138,10 +138,10 @@ private struct DraggingItemDropDelegate: DropDelegate {
 extension ItemPanel {
     struct Items: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.activeSymbol.focusedSymbolId.map { global.item.symbol(id: $0)?.members } ?? [] }) var rootIds
-            @Selected({ global.item.itemMap }) var itemMap
             @Selected({ global.path.pathMap }) var pathMap
+            @Selected({ global.item.itemMap }) var itemMap
             @Selected({ global.item.itemDepthMap }) var itemDepthMap
+            @Selected({ global.activeSymbol.focusedSymbolItem?.members ?? [] }) var rootIds
             @Selected({ global.activeItem.focusedItemId }) var focusedItemId
             @Selected({ global.activeItem.selectedItemIds }) var selectedItemIds
         }
@@ -287,7 +287,7 @@ private extension GroupRow {
         Menu {
             Button("Focus") {
                 global.activeItem.focus(itemId: group.id)
-                guard let bounds = global.item.boundingRect(itemId: group.id) else { return }
+                guard let bounds = global.item.boundingRect(of: group.id) else { return }
                 global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
             }
         } label: {
@@ -389,7 +389,7 @@ private extension PathRow {
         Menu {
             Button("Focus") {
                 global.activeItem.focus(itemId: pathId)
-                guard let bounds = global.item.boundingRect(itemId: pathId) else { return }
+                guard let bounds = global.item.boundingRect(of: pathId) else { return }
                 global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
             }
         } label: {

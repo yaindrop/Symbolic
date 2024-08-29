@@ -21,11 +21,13 @@ private extension ActiveSymbolView {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
             let transform = $0.worldToView
-            ForEach(Array(selector.activeSymbolIds)) {
-                Bounds(symbolId: $0)
+            ZStack {
+                ForEach(Array(selector.activeSymbolIds)) {
+                    Bounds(symbolId: $0)
+                }
+                SelectionBounds()
             }
             .environment(\.transformToView, transform)
         }
-//        SelectionBounds()
     }
 }

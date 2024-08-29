@@ -8,14 +8,14 @@ extension ContextMenuView {
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
-            @Selected({ global.activeItem.focusedPathId }) var focusedPathId
             @Selected({ global.focusedPath.activeNodesBounds }) var bounds
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
             @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeNodeIds.map { global.activeItem.focusedPathProperty?.nodeType(id: $0) }.allSame() }) var activeNodeType
             @Selected({ global.focusedPath.activeSegmentIds.map { global.activeItem.focusedPathProperty?.segmentType(id: $0) }.allSame() }) var activeSegmentType
+            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
+            @Selected({ global.activeItem.focusedPathId }) var focusedPathId
         }
 
         @SelectorWrapper var selector

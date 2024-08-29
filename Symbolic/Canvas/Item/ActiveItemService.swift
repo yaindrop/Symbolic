@@ -84,7 +84,7 @@ extension ActiveItemService {
     }
 
     var selectionBounds: CGRect? {
-        .init(union: selectedItemIds.compactMap { item.boundingRect(itemId: $0.id) })
+        .init(union: selectedItemIds.compactMap { item.boundingRect(of: $0.id) })
     }
 
     var selectionOutset: Scalar { 12 }

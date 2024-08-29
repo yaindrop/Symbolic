@@ -251,7 +251,7 @@ extension ItemService: ItemStoreProtocol {
         leafItems(rootId: groupId).compactMap { $0.path?.id }
     }
 
-    func boundingRect(itemId: UUID) -> CGRect? {
+    func boundingRect(of itemId: UUID) -> CGRect? {
         let itemMap = itemMap,
             pathMap = path.pathMap
         guard let item = itemMap.get(itemId) else { return nil }
@@ -261,7 +261,7 @@ extension ItemService: ItemStoreProtocol {
         if let group = item.group {
             let rects = group.members
                 .compactMap { self.get(id: $0) }
-                .compactMap { self.boundingRect(itemId: $0.id) }
+                .compactMap { self.boundingRect(of: $0.id) }
             return .init(union: rects)
         }
         return nil

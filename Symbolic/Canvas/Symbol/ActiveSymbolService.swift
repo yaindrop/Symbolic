@@ -61,6 +61,10 @@ extension ActiveSymbolService {
 
     var editingSymbol: Symbol? { editingSymbolId.map { symbol.get(id: $0) } }
 
+    var focusedSymbolItem: Item.Symbol? { focusedSymbolId.map { item.symbol(id: $0) } }
+
+    var editingSymbolItem: Item.Symbol? { editingSymbolId.map { item.symbol(id: $0) } }
+
     var symbolToWorld: CGAffineTransform { focusedSymbol?.symbolToWorld ?? .identity }
 
     var worldToSymbol: CGAffineTransform { focusedSymbol?.worldToSymbol ?? .identity }
@@ -79,6 +83,12 @@ extension ActiveSymbolService {
     func selected(id: UUID) -> Bool {
         selectedSymbolIds.contains(id)
     }
+
+    var selectionBounds: CGRect? {
+        .init(union: selectedSymbolIds.compactMap { symbol.get(id: $0.id)?.boundingRect })
+    }
+
+    var selectionOutset: Scalar { 12 }
 
     func pathHitTest(pathId: UUID, worldPosition: Point2, threshold: Scalar = 24) -> Bool {
         guard let focusedSymbol,

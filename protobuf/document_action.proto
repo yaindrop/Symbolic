@@ -7,58 +7,21 @@ package symbolic.pb;
 // MARK: - PathAction
 
 message PathAction {
+  oneof kind {
+    Create create = 101;
+    Update update = 102;
+
+    Delete delete = 201;
+    Move move = 202;
+  }
+
   message Create {
     UUID symbol_id = 1;
     UUID path_id = 2;
-    Path paths = 3;
+    Path path = 3;
   }
 
-  message Delete { repeated UUID path_ids = 1; }
-
   message Update {
-    message AddEndingNode {
-      UUID ending_node_id = 1;
-      UUID new_node_id = 2;
-      Vector2 offset = 3;
-    }
-    message SplitSegment {
-      UUID from_node_id = 1;
-      double paramT = 2;
-      UUID new_node_id = 3;
-      Vector2 offset = 4;
-    }
-    message DeleteNodes { repeated UUID node_ids = 1; }
-
-    message UpdateNode {
-      UUID node_id = 1;
-      PathNode node = 2;
-    }
-    message UpdateSegment {
-      UUID from_node_id = 1;
-      PathSegment segment = 2;
-    }
-
-    message MoveNodes {
-      repeated UUID node_ids = 1;
-      Vector2 offset = 2;
-    }
-    message MoveNodeControl {
-      UUID node_id = 1;
-      PathNodeControlType control_type = 2;
-      Vector2 offset = 3;
-    }
-
-    message Merge {
-      UUID ending_node_id = 1;
-      UUID merged_path_id = 2;
-      UUID merged_ending_node_id = 3;
-    }
-    message Split {
-      UUID node_id = 1;
-      UUID new_path_id = 2;
-      optional UUID new_node_id = 3;
-    }
-
     UUID path_id = 1;
     oneof kind {
       AddEndingNode add_ending_node = 101;
@@ -73,26 +36,60 @@ message PathAction {
 
       Merge merge = 108;
       Split split = 109;
+
+      SetName set_name = 201;
+      SetNodeType set_node_type = 202;
+      SetSegmentType set_segment_type = 203;
     }
-  }
 
-  message Move {
-    repeated UUID path_ids = 1;
-    Vector2 offset = 2;
-  }
+    message AddEndingNode {
+      UUID ending_node_id = 1;
+      UUID new_node_id = 2;
+      Vector2 offset = 3;
+    }
 
-  oneof kind {
-    Create create = 101;
-    Delete delete = 102;
-    Update update = 103;
-    Move move = 104;
-  }
-}
+    message SplitSegment {
+      UUID from_node_id = 1;
+      double paramT = 2;
+      UUID new_node_id = 3;
+      Vector2 offset = 4;
+    }
 
-// MARK: - PathPropertyAction
+    message DeleteNodes { repeated UUID node_ids = 1; }
 
-message PathPropertyAction {
-  message Update {
+    message UpdateNode {
+      UUID node_id = 1;
+      PathNode node = 2;
+    }
+
+    message UpdateSegment {
+      UUID from_node_id = 1;
+      PathSegment segment = 2;
+    }
+
+    message MoveNodes {
+      repeated UUID node_ids = 1;
+      Vector2 offset = 2;
+    }
+
+    message MoveNodeControl {
+      UUID node_id = 1;
+      PathNodeControlType control_type = 2;
+      Vector2 offset = 3;
+    }
+
+    message Merge {
+      UUID ending_node_id = 1;
+      UUID merged_path_id = 2;
+      UUID merged_ending_node_id = 3;
+    }
+
+    message Split {
+      UUID node_id = 1;
+      UUID new_path_id = 2;
+      optional UUID new_node_id = 3;
+    }
+
     message SetName { optional string name = 1; }
 
     message SetNodeType {
@@ -104,16 +101,45 @@ message PathPropertyAction {
       repeated UUID from_node_ids = 1;
       optional PathSegmentType segment_type = 2;
     }
-
-    UUID path_id = 1;
-    oneof kind {
-      SetName set_name = 101;
-      SetNodeType set_node_type = 102;
-      SetSegmentType set_segment_type = 103;
-    }
   }
 
-  oneof kind { Update update = 101; }
+  message Delete { repeated UUID path_ids = 1; }
+
+  message Move {
+    repeated UUID path_ids = 1;
+    Vector2 offset = 2;
+  }
+}
+
+// MARK: - SymbolAction
+
+message SymbolAction {
+  oneof kind {
+    Create create = 101;
+    Resize resize = 102;
+
+    Delete delete = 201;
+    Move move = 202;
+  }
+
+  message Create {
+    UUID symbol_id = 1;
+    Point2 origin = 2;
+    Size2 size = 3;
+  }
+
+  message Resize {
+    UUID symbol_id = 1;
+    Point2 origin = 2;
+    Size2 size = 3;
+  }
+
+  message Delete { repeated UUID symbol_ids = 1; }
+
+  message Move {
+    repeated UUID symbol_ids = 1;
+    Vector2 offset = 2;
+  }
 }
 
 // MARK: - ItemAction
@@ -128,7 +154,7 @@ message ItemAction {
 
   message Ungroup { repeated UUID group_ids = 1; }
 
-  message Move {
+  message Reorder {
     UUID item_id = 1;
     UUID to_item_id = 2;
     bool is_after = 3;
@@ -137,23 +163,7 @@ message ItemAction {
   oneof kind {
     Group group = 101;
     Ungroup ungroup = 102;
-    Move move = 103;
-  }
-}
-
-message SymbolAction {
-  message Create {
-    UUID symbol_id = 1;
-    Point2 origin = 2;
-    Size2 size = 3;
-  }
-
-  message Delete { repeated UUID symbol_ids = 1; }
-
-  message Resize {
-    UUID symbol_id = 1;
-    Point2 origin = 2;
-    Size2 size = 3;
+    Reorder reorder = 103;
   }
 }
 
@@ -162,8 +172,7 @@ message SymbolAction {
 message DocumentAction {
   oneof kind {
     PathAction path_action = 101;
-    PathPropertyAction path_property_action = 102;
+    SymbolAction symbol_action = 102;
     ItemAction item_action = 103;
-    SymbolAction symbol_action = 104;
   }
 }

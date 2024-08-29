@@ -64,8 +64,7 @@ extension DocumentUpdater {
 // MARK: handle action
 
 private extension DocumentUpdater {
-    func handle(_ action: DocumentAction, pending: Bool) {
-        let _r = subtracer.range(type: .intent, "handle action, pending: \(pending)"); defer { _r() }
+    func makeEvent(action: DocumentAction) -> DocumentEvent? {
         var events: [DocumentEvent.Single] = []
 
         switch action {
@@ -74,19 +73,22 @@ private extension DocumentUpdater {
         case let .item(action): collect(events: &events, of: action)
         }
 
-        guard let first = events.first else {
+        guard let first = events.first else { return nil }
+        if events.count == 1 {
+            return .init(kind: .single(first), action: action)
+        } else {
+            return .init(kind: .compound(.init(events: events)), action: action)
+        }
+    }
+
+    func handle(_ action: DocumentAction, pending: Bool) {
+        let _r = subtracer.range(type: .intent, "handle action, pending: \(pending)"); defer { _r() }
+        guard let event = makeEvent(action: action) else {
             let _r = subtracer.range("cancelled"); defer { _r() }
             if pending {
                 cancel()
             }
             return
-        }
-
-        let event: DocumentEvent
-        if events.count == 1 {
-            event = .init(kind: .single(first), action: action)
-        } else {
-            event = .init(kind: .compound(.init(events: events)), action: action)
         }
 
         if pending {
@@ -104,8 +106,6 @@ private extension DocumentUpdater {
 private extension DocumentUpdater {
     func collect(events: inout [DocumentEvent.Single], of action: PathAction) {
         switch action {
-        case let .load(action): collect(events: &events, of: action)
-
         case let .create(action): collect(events: &events, of: action)
         case let .update(action): collect(events: &events, of: action)
 
@@ -114,25 +114,11 @@ private extension DocumentUpdater {
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: PathAction.Load) {
-        let symbolId = action.symbolId,
-            pathIds = action.pathIds,
-            paths = action.paths
-        guard pathIds.count == paths.count,
-              let symbol = itemStore.symbol(id: symbolId) else { return }
-        for i in pathIds.indices {
-            let pathId = pathIds[i], path = paths[i]
-            events.append(.path(.init(pathId: pathId, .create(.init(path: path)))))
-        }
-        events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members + pathIds)))))
-    }
-
     func collect(events: inout [DocumentEvent.Single], of action: PathAction.Create) {
         let symbolId = action.symbolId,
             pathId = action.pathId,
             path = action.path
-        print("dbg a", action)
-        guard let symbol = itemStore.symbol(id: symbolId) else { print("dbg b"); return }
+        guard let symbol = itemStore.symbol(id: symbolId) else { return }
         events.append(.path(.init(pathId: pathId, .create(.init(path: path)))))
         events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members + [pathId])))))
     }

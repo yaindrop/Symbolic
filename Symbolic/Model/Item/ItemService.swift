@@ -285,36 +285,44 @@ private extension ItemService {
 
     func remove(itemIds: [UUID]) {
         let _r = subtracer.range("remove \(itemIds)"); defer { _r() }
+        var itemMap = itemMap
         for itemId in itemIds {
             guard exists(id: itemId) else { continue }
-            activeStore.update(itemMap: itemMap.cloned { $0.removeValue(forKey: itemId) })
+            itemMap.removeValue(forKey: itemId)
         }
+        activeStore.update(itemMap: itemMap)
     }
 
     func add(member newItemId: UUID, nextTo itemId: UUID) {
+        let _r = subtracer.range("add member \(newItemId) next to \(itemId)"); defer { _r() }
+        var itemMap = itemMap
         if var group = parent(of: itemId) {
             guard let index = group.members.firstIndex(of: itemId) else { return }
             let nextIndex = group.members.index(after: index)
             group.members.insert(newItemId, at: nextIndex)
-            activeStore.update(itemMap: itemMap.cloned { $0[group.id] = .init(kind: .group(group)) })
+            itemMap[group.id] = .init(kind: .group(group))
         } else if var symbol = symbol(of: itemId) {
             guard let index = symbol.members.firstIndex(of: itemId) else { return }
             let nextIndex = symbol.members.index(after: index)
             symbol.members.insert(newItemId, at: nextIndex)
-            activeStore.update(itemMap: itemMap.cloned { $0[symbol.id] = .init(kind: .symbol(symbol)) })
+            itemMap[symbol.id] = .init(kind: .symbol(symbol))
         }
+        activeStore.update(itemMap: itemMap)
     }
 
     func remove(members itemIds: [UUID]) {
+        let _r = subtracer.range("remove members \(itemIds)"); defer { _r() }
+        var itemMap = itemMap
         for itemId in itemIds {
             if var group = parent(of: itemId) {
                 group.members.removeAll { $0 == itemId }
-                activeStore.update(itemMap: itemMap.cloned { $0[group.id] = .init(kind: .group(group)) })
+                itemMap[group.id] = .init(kind: .group(group))
             } else if var symbol = symbol(of: itemId) {
                 symbol.members.removeAll { $0 == itemId }
-                activeStore.update(itemMap: itemMap.cloned { $0[symbol.id] = .init(kind: .symbol(symbol)) })
+                itemMap[symbol.id] = .init(kind: .symbol(symbol))
             }
         }
+        activeStore.update(itemMap: itemMap)
     }
 
     func clear() {

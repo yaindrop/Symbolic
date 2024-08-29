@@ -3,15 +3,11 @@ import Foundation
 // MARK: - PathAction
 
 enum PathAction: Equatable, Codable {
-    struct Load: Equatable, Codable { var symbolId: UUID, pathIds: [UUID], paths: [Path] }
-
     struct Create: Equatable, Codable { var symbolId: UUID, pathId: UUID, path: Path }
     struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }
 
     struct Delete: Equatable, Codable { var pathIds: [UUID] }
     struct Move: Equatable, Codable { var pathIds: [UUID], offset: Vector2 }
-
-    case load(Load)
 
     case create(Create)
     case update(Update)

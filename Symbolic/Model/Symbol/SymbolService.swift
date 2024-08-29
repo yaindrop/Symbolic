@@ -67,7 +67,7 @@ extension SymbolService: SymbolStoreProtocol {
 
 extension SymbolService {
     private func add(symbolId: UUID, symbol: Symbol) {
-        let _r = subtracer.range("add"); defer { _r() }
+        let _r = subtracer.range("add \(symbolId)"); defer { _r() }
         var newSymbolMap = symbolMap
         guard !exists(id: symbolId) else { return }
         guard symbol.size.width > 0, symbol.size.height > 0 else { return }
@@ -76,14 +76,14 @@ extension SymbolService {
     }
 
     private func update(symbolId: UUID, symbol: Symbol) {
-        let _r = subtracer.range("update"); defer { _r() }
+        let _r = subtracer.range("update \(symbolId)"); defer { _r() }
         var newSymbolMap = symbolMap
         newSymbolMap[symbolId] = symbol
         activeStore.update(symbolMap: newSymbolMap)
     }
 
     private func remove(symbolIds: [UUID]) {
-        let _r = subtracer.range("remove"); defer { _r() }
+        let _r = subtracer.range("remove \(symbolIds)"); defer { _r() }
         var newSymbolMap = symbolMap
         for symbolId in symbolIds {
             newSymbolMap.removeValue(forKey: symbolId)

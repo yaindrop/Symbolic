@@ -5,9 +5,6 @@ private extension DocumentAction {
         switch self {
         case let .path(action):
             switch action {
-            case let .load(action):
-                "Load path \(action.pathIds.map { $0.shortDescription }.joined(separator: ", "))"
-
             case let .create(action):
                 "Create path \(action.pathId.shortDescription)"
             case let .update(update):

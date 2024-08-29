@@ -76,39 +76,39 @@ extension PathService {
 
 extension PathService {
     private func add(pathId: UUID, path: Path) {
-        let _r = subtracer.range("add"); defer { _r() }
-        var newPathMap = pathMap
+        let _r = subtracer.range("add \(pathId)"); defer { _r() }
+        var pathMap = pathMap
         guard !exists(id: pathId),
               path.count > 1 else { return }
-        newPathMap[pathId] = path
-        activeStore.update(pathMap: newPathMap)
+        pathMap[pathId] = path
+        activeStore.update(pathMap: pathMap)
     }
 
     private func update(pathId: UUID, path: Path) {
-        let _r = subtracer.range("update"); defer { _r() }
-        var newPathMap = pathMap
-        newPathMap[pathId] = path
-        activeStore.update(pathMap: newPathMap, forced: true)
+        let _r = subtracer.range("update \(pathId)"); defer { _r() }
+        var pathMap = pathMap
+        pathMap[pathId] = path
+        activeStore.update(pathMap: pathMap, forced: true)
     }
 
     private func update(pathId: UUID, pathProperty: PathProperty) {
-        let _r = subtracer.range("update property"); defer { _r() }
+        let _r = subtracer.range("update property \(pathId)"); defer { _r() }
         guard exists(id: pathId) else { return }
-        var newPathPropertyMap = pathPropertyMap
-        newPathPropertyMap[pathId] = pathProperty
-        activeStore.update(pathPropertyMap: newPathPropertyMap)
+        var pathPropertyMap = pathPropertyMap
+        pathPropertyMap[pathId] = pathProperty
+        activeStore.update(pathPropertyMap: pathPropertyMap)
     }
 
     private func remove(pathIds: [UUID]) {
-        let _r = subtracer.range("remove"); defer { _r() }
-        var newPathMap = pathMap
-        var newPathPropertyMap = pathPropertyMap
+        let _r = subtracer.range("remove \(pathIds)"); defer { _r() }
+        var pathMap = pathMap
+        var pathPropertyMap = pathPropertyMap
         for pathId in pathIds {
-            newPathMap.removeValue(forKey: pathId)
-            newPathPropertyMap.removeValue(forKey: pathId)
+            pathMap.removeValue(forKey: pathId)
+            pathPropertyMap.removeValue(forKey: pathId)
         }
-        activeStore.update(pathMap: newPathMap)
-        activeStore.update(pathPropertyMap: newPathPropertyMap)
+        activeStore.update(pathMap: pathMap)
+        activeStore.update(pathPropertyMap: pathPropertyMap)
     }
 
     private func clear() {

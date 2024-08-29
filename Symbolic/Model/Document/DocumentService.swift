@@ -32,12 +32,7 @@ extension DocumentService {
 
     var undoable: Bool {
         guard let last = store.activeDocument.events.last else { return false }
-        if case let .path(p) = last.action {
-            if case .load = p {
-                return false
-            }
-        }
-        return true
+        return last.action != nil
     }
 }
 

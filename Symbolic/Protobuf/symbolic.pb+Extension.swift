@@ -166,6 +166,21 @@ extension Symbolic_Pb_PathNodeControlType: ProtobufParsable {
     }
 }
 
+extension PathSegment: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_PathSegment) {
+        pb.from = from.pb
+        pb.to = to.pb
+        pb.fromCubicOut = fromCubicOut.pb
+        pb.toCubicIn = toCubicIn.pb
+    }
+}
+
+extension Symbolic_Pb_PathSegment: ProtobufParsable {
+    func decoded() -> PathSegment {
+        .init(from: from.decoded(), to: to.decoded(), fromCubicOut: fromCubicOut.decoded(), toCubicIn: toCubicIn.decoded())
+    }
+}
+
 extension Path: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_Path) {
         pb.nodeIds = nodeIds.map { $0.pb }

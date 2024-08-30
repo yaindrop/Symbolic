@@ -696,7 +696,7 @@ struct Symbolic_Pb_ItemEvent: Sendable {
   init() {}
 }
 
-struct Symbolic_Pb_DocumentEvent: Sendable {
+struct Symbolic_Pb_DocumentEvent: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -718,6 +718,8 @@ struct Symbolic_Pb_DocumentEvent: Sendable {
   var hasTime: Bool {return self._time != nil}
   /// Clears the value of `time`. Subsequent reads from it will return its default value.
   mutating func clearTime() {self._time = nil}
+
+  var actionData: Data = Data()
 
   var kind: Symbolic_Pb_DocumentEvent.OneOf_Kind? = nil
 
@@ -804,6 +806,29 @@ struct Symbolic_Pb_DocumentEvent: Sendable {
 
   fileprivate var _id: Symbolic_Pb_UUID? = nil
   fileprivate var _time: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+}
+
+struct Symbolic_Pb_Document: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var id: Symbolic_Pb_UUID {
+    get {return _id ?? Symbolic_Pb_UUID()}
+    set {_id = newValue}
+  }
+  /// Returns true if `id` has been explicitly set.
+  var hasID: Bool {return self._id != nil}
+  /// Clears the value of `id`. Subsequent reads from it will return its default value.
+  mutating func clearID() {self._id = nil}
+
+  var events: [Symbolic_Pb_DocumentEvent] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _id: Symbolic_Pb_UUID? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -2003,6 +2028,7 @@ extension Symbolic_Pb_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._Messa
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "id"),
     2: .same(proto: "time"),
+    3: .standard(proto: "action_data"),
     101: .same(proto: "single"),
     102: .same(proto: "compound"),
   ]
@@ -2015,6 +2041,7 @@ extension Symbolic_Pb_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._Messa
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._id) }()
       case 2: try { try decoder.decodeSingularMessageField(value: &self._time) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.actionData) }()
       case 101: try {
         var v: Symbolic_Pb_DocumentEvent.Single?
         var hadOneofValue = false
@@ -2057,6 +2084,9 @@ extension Symbolic_Pb_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._Messa
     try { if let v = self._time {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     } }()
+    if !self.actionData.isEmpty {
+      try visitor.visitSingularBytesField(value: self.actionData, fieldNumber: 3)
+    }
     switch self.kind {
     case .single?: try {
       guard case .single(let v)? = self.kind else { preconditionFailure() }
@@ -2074,6 +2104,7 @@ extension Symbolic_Pb_DocumentEvent: SwiftProtobuf.Message, SwiftProtobuf._Messa
   static func ==(lhs: Symbolic_Pb_DocumentEvent, rhs: Symbolic_Pb_DocumentEvent) -> Bool {
     if lhs._id != rhs._id {return false}
     if lhs._time != rhs._time {return false}
+    if lhs.actionData != rhs.actionData {return false}
     if lhs.kind != rhs.kind {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -2194,6 +2225,48 @@ extension Symbolic_Pb_DocumentEvent.Compound: SwiftProtobuf.Message, SwiftProtob
   }
 
   static func ==(lhs: Symbolic_Pb_DocumentEvent.Compound, rhs: Symbolic_Pb_DocumentEvent.Compound) -> Bool {
+    if lhs.events != rhs.events {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_Document: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Document"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "id"),
+    2: .same(proto: "events"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._id) }()
+      case 2: try { try decoder.decodeRepeatedMessageField(value: &self.events) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._id {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.events.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.events, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_Document, rhs: Symbolic_Pb_Document) -> Bool {
+    if lhs._id != rhs._id {return false}
     if lhs.events != rhs.events {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

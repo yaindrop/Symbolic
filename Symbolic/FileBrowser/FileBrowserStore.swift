@@ -90,8 +90,7 @@ extension FileBrowserStore {
             guard let data = try? Data(contentsOf: entry.url) else { return }
             subtracer.instant("data size=\(data.count)")
 
-            let decoder = JSONDecoder()
-            guard let document = try? decoder.decode(Document.self, from: data) else { return }
+            guard let document = try? Symbolic_Pb_Document(serializedBytes: data).decoded() else { return }
             subtracer.instant("document size=\(document.events.count)")
 
             withStoreUpdating {
@@ -135,8 +134,7 @@ extension FileBrowserStore {
     func newDocument(in entry: FileEntry) {
         let _r = subtracer.range(type: .intent, "new document in directory \(entry)"); defer { _r() }
         let document = Document(from: fooSvg)
-        let encoder = JSONEncoder()
-        guard let data = try? encoder.encode(document),
+        guard let data = try? document.pb.serializedData(),
               let newUrl = try? entry.newFile(ext: "symbolic", data: data) else { return }
 
         subtracer.instant("newUrl=\(newUrl)")
@@ -220,8 +218,7 @@ extension FileBrowserStore {
         let _r = subtracer.range(type: .intent, "save document"); defer { _r() }
         guard let activeDocument else { return }
 
-        let encoder = JSONEncoder()
-        guard let data = try? encoder.encode(document) else { return }
+        guard let data = try? document.pb.serializedData() else { return }
         subtracer.instant("data size=\(data.count)")
 
         do {

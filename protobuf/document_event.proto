@@ -130,6 +130,7 @@ message ItemEvent {
 message DocumentEvent {
   UUID id = 1;
   google.protobuf.Timestamp time = 2;
+  bytes action_data = 3;
 
   oneof kind {
     Single single = 101;
@@ -145,4 +146,9 @@ message DocumentEvent {
   }
 
   message Compound { repeated Single events = 1; }
+}
+
+message Document {
+  UUID id = 1;
+  repeated DocumentEvent events = 2;
 }

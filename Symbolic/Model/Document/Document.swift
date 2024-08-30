@@ -6,6 +6,11 @@ struct Document: Codable {
     let id: UUID
     var events: [DocumentEvent] = []
 
+    init(id: UUID, events: [DocumentEvent] = []) {
+        self.id = id
+        self.events = events
+    }
+
     init(events: [DocumentEvent] = []) {
         id = .init()
         self.events = events

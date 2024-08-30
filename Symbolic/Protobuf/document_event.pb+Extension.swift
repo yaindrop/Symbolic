@@ -387,6 +387,7 @@ extension DocumentEvent: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_DocumentEvent) {
         pb.id = id.pb
         pb.time = time.pb
+        action.map { (try? $0.pb.serializedData()).map { pb.actionData = $0 }}
         pb.kind = {
             switch kind {
             case let .single(kind): .single(kind.pb)
@@ -398,6 +399,7 @@ extension DocumentEvent: ProtobufSerializable {
 
 extension Symbolic_Pb_DocumentEvent: ProtobufParsable {
     func decoded() throws -> DocumentEvent {
+        let action = try? Symbolic_Pb_DocumentAction(serializedBytes: actionData).decoded()
         let kind: DocumentEvent.Kind = try {
             switch self.kind {
             case let .single(kind): try .single(kind.decoded())
@@ -405,6 +407,19 @@ extension Symbolic_Pb_DocumentEvent: ProtobufParsable {
             default: throw ProtobufParseError.invalidEmptyOneOf
             }
         }()
-        return .init(id: id.decoded(), time: time.decoded(), kind: kind)
+        return .init(id: id.decoded(), time: time.decoded(), action: action, kind: kind)
+    }
+}
+
+extension Document: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_Document) {
+        pb.id = id.pb
+        pb.events = events.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_Document: ProtobufParsable {
+    func decoded() throws -> Document {
+        try .init(id: id.decoded(), events: events.map { try $0.decoded() })
     }
 }

@@ -99,8 +99,8 @@ enum ItemEvent: Equatable, Codable {
 struct DocumentEvent: Identifiable, Equatable, Codable {
     let id: UUID
     let time: Date
-    let kind: Kind
     let action: DocumentAction?
+    let kind: Kind
 
     enum Single: Equatable, Codable {
         case path(PathEvent)
@@ -117,18 +117,18 @@ struct DocumentEvent: Identifiable, Equatable, Codable {
         case compound(Compound)
     }
 
+    init(id: UUID, time: Date, action: DocumentAction?, kind: Kind) {
+        self.id = id
+        self.time = time
+        self.action = action
+        self.kind = kind
+    }
+
     init(kind: Kind, action: DocumentAction?) {
         id = .init()
         time = .init()
         self.kind = kind
         self.action = action
-    }
-
-    init(id: UUID, time: Date, kind: Kind) {
-        self.id = id
-        self.time = time
-        self.kind = kind
-        action = nil
     }
 }
 

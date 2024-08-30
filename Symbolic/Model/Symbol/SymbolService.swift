@@ -77,15 +77,16 @@ extension SymbolService {
     }
 
     func load(pendingEvent: DocumentEvent?) {
-        let _r = subtracer.range("load pending event"); defer { _r() }
-        withStoreUpdating {
-            if let pendingEvent {
+        if let pendingEvent {
+            let _r = subtracer.range("load pending event \(pendingEvent.id)"); defer { _r() }
+            withStoreUpdating {
                 pendingStore.update(active: true)
                 pendingStore.update(symbolMap: store.symbolMap)
                 load(event: pendingEvent)
-            } else {
-                pendingStore.update(active: false)
             }
+        } else {
+            let _r = subtracer.range("clear pending event"); defer { _r() }
+            pendingStore.update(active: false)
         }
     }
 }
@@ -148,7 +149,6 @@ private extension SymbolService {
     // MARK: load symbol event
 
     func load(event: SymbolEvent) {
-        let _r = subtracer.range("load event"); defer { _r() }
         let symbolIds = event.symbolIds,
             kinds = event.kinds
         for kind in kinds {

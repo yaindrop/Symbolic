@@ -282,15 +282,16 @@ extension ItemService {
     }
 
     func load(pendingEvent: DocumentEvent?) {
-        let _r = subtracer.range("load pending event"); defer { _r() }
-        withStoreUpdating {
-            if let pendingEvent {
+        if let pendingEvent {
+            let _r = subtracer.range("load pending event \(pendingEvent.id)"); defer { _r() }
+            withStoreUpdating {
                 pendingStore.update(active: true)
                 pendingStore.update(itemMap: store.itemMap)
                 load(event: pendingEvent)
-            } else {
-                pendingStore.update(active: false)
             }
+        } else {
+            let _r = subtracer.range("clear pending event"); defer { _r() }
+            pendingStore.update(active: false)
         }
     }
 }

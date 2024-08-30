@@ -365,7 +365,6 @@ private extension DocumentUpdater {
         let symbolId = action.symbolId,
             origin = action.origin,
             size = action.size
-        guard let symbol = itemStore.symbol(id: symbolId) else { return }
         events.append(.symbol(.init(symbolId: symbolId, .create(.init(origin: origin, size: size, grids: [])))))
     }
 

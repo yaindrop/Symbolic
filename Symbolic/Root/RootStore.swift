@@ -10,8 +10,6 @@ enum RootNavigationValue: CaseIterable, SelfIdentifiable {
 // MARK: - RootStore
 
 class RootStore: Store {
-    @Trackable var rootPanLocation: Point2?
-
     @Trackable var selected: RootNavigationValue = .documents
 
     @Trackable var navigationSize: CGSize = .zero
@@ -35,10 +33,6 @@ private extension RootStore {
 // MARK: actions
 
 extension RootStore {
-    func update(rootPanLocation: Point2?) {
-        update { $0(\._rootPanLocation, rootPanLocation) }
-    }
-
     func setSelected(_ selected: RootNavigationValue) {
         update(selected: selected)
     }

@@ -1,37 +1,30 @@
+import Combine
 import SwiftUI
+
+let appEvent = CurrentValueSubject<UIEvent?, Never>(nil)
 
 @main
 struct SymbolicApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .onAppear(perform: UIApplication.shared.addTapGestureRecognizer)
+                .onAppear {
+                    UIWindow.modify()
+                }
         }
     }
 }
 
-extension UIApplication {
-    func addTapGestureRecognizer() {
-        guard let windowScene = Self.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-        let tapGesture = UIPanGestureRecognizer(target: self, action: #selector(panAction))
-        tapGesture.maximumNumberOfTouches = 1
-        tapGesture.requiresExclusiveTouchType = false
-        tapGesture.cancelsTouchesInView = false
-        tapGesture.delegate = self
-        window.addGestureRecognizer(tapGesture)
-    }
-}
-
-extension UIApplication: UIGestureRecognizerDelegate {
-    public func gestureRecognizer(_: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer) -> Bool {
-        true
+extension UIWindow {
+    @objc(sendEventModified:) func sendEventModified(_ event: UIEvent) {
+        appEvent.send(event)
+        sendEventModified(event)
+        appEvent.send(nil)
     }
 
-    @objc func panAction(_ recognizer: UIPanGestureRecognizer) {
-        global.root.update(rootPanLocation: recognizer.location(in: nil))
-        if recognizer.state == .ended {
-            global.root.update(rootPanLocation: nil)
-        }
+    @objc fileprivate static func modify(_: Bool = true) {
+        guard let originalMethod = class_getInstanceMethod(UIWindow.self, #selector(sendEvent(_:))),
+              let modifiedMethod = class_getInstanceMethod(UIWindow.self, #selector(sendEventModified(_:))) else { return }
+        method_exchangeImplementations(originalMethod, modifiedMethod)
     }
 }

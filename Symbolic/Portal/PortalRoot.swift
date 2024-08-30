@@ -7,12 +7,12 @@ struct PortalWrapper: View, TracedView, SelectorHolder {
 
     class Selector: SelectorBase {
         @Selected({ global.portal.rootFrame }) var rootFrame
-        @Selected({ global.root.rootPanLocation }) var rootPanLocation
     }
 
     @SelectorWrapper var selector
 
     @State private var size: CGSize = .zero
+    @State private var frame: CGRect = .zero
 
     var body: some View { trace {
         setupSelector {
@@ -28,20 +28,14 @@ extension PortalWrapper {
         portal.view
             .transaction { $0.animation = nil }
             .sizeReader { size = $0 }
+            .geometryReader { frame = $0.frame(in: .global) }
             .transition(.scale(scale: 0, anchor: anchor).combined(with: .opacity))
-            .if(portal.configs.isModal) {
-                $0.overlay {
-                    GeometryReader { ctx in
-                        let frame = ctx.frame(in: .global),
-                            dismissed = selector.rootPanLocation.map { !frame.contains($0) } ?? false
-                        Color.clear
-                            .onChange(of: dismissed) {
-                                if dismissed {
-                                    global.portal.deregister(id: portal.id)
-                                }
-                            }
-                    }
-                }
+            .onReceive(appEvent) {
+                guard portal.configs.isModal,
+                      let touches = $0?.allTouches else { return }
+                let dismiss = touches.map { $0.location(in: nil) }.contains { !frame.contains($0) }
+                guard dismiss else { return }
+                global.portal.deregister(id: portal.id)
             }
             .position(box.center)
             .environment(\.portalId, portal.id)

@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - PathNode
 
-struct PathNode: Equatable, Codable {
+struct PathNode: Equatable {
     var position: Point2
     var cubicIn: Vector2
     var cubicOut: Vector2
@@ -39,7 +39,7 @@ extension PathNode: Transformable {
 
 // MARK: - PathSegment
 
-struct PathSegment: Equatable, Codable {
+struct PathSegment: Equatable {
     var from: Point2
     var to: Point2
     var fromCubicOut: Vector2

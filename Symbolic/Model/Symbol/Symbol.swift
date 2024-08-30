@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Symbol
 
-struct Symbol: Identifiable, Equatable, Codable, TriviallyCloneable {
+struct Symbol: Identifiable, Equatable, TriviallyCloneable {
     let id: UUID
     var origin: Point2
     var size: CGSize

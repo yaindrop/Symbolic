@@ -2,26 +2,26 @@ import Foundation
 
 // MARK: - PathEvent
 
-struct PathEvent: Equatable, Codable {
+struct PathEvent: Equatable {
     let pathIds: [UUID], kinds: [Kind]
 
-    struct Create: Equatable, Codable { let path: Path }
-    struct CreateNode: Equatable, Codable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
-    struct UpdateNode: Equatable, Codable { let nodeId: UUID, node: PathNode }
-    struct DeleteNode: Equatable, Codable { let nodeIds: [UUID] }
+    struct Create: Equatable { let path: Path }
+    struct CreateNode: Equatable { let prevNodeId: UUID?, nodeId: UUID, node: PathNode }
+    struct UpdateNode: Equatable { let nodeId: UUID, node: PathNode }
+    struct DeleteNode: Equatable { let nodeIds: [UUID] }
     // merge two paths at given ending nodes
-    struct Merge: Equatable, Codable { let endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct Merge: Equatable { let endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     // split path at node, optionally creating a new ending node at the same position, and a new path when the current path is not closed
-    struct Split: Equatable, Codable { let nodeId: UUID, newPathId: UUID?, newNodeId: UUID? }
+    struct Split: Equatable { let nodeId: UUID, newPathId: UUID?, newNodeId: UUID? }
 
-    struct Delete: Equatable, Codable {}
-    struct Move: Equatable, Codable { let offset: Vector2 }
+    struct Delete: Equatable {}
+    struct Move: Equatable { let offset: Vector2 }
 
-    struct SetName: Equatable, Codable { let name: String? }
-    struct SetNodeType: Equatable, Codable { let nodeIds: [UUID], nodeType: PathNodeType? }
-    struct SetSegmentType: Equatable, Codable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
+    struct SetName: Equatable { let name: String? }
+    struct SetNodeType: Equatable { let nodeIds: [UUID], nodeType: PathNodeType? }
+    struct SetSegmentType: Equatable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
-    enum Kind: Equatable, Codable {
+    enum Kind: Equatable {
         case create(Create)
         case createNode(CreateNode)
         case updateNode(UpdateNode)
@@ -54,18 +54,18 @@ extension PathEvent {
 
 // MARK: - SymbolEvent
 
-struct SymbolEvent: Equatable, Codable {
+struct SymbolEvent: Equatable {
     let symbolIds: [UUID], kinds: [Kind]
 
-    struct Create: Equatable, Codable { let origin: Point2, size: CGSize, grids: [Grid] }
-    struct SetBounds: Equatable, Codable { let origin: Point2, size: CGSize }
-    struct SetGrid: Equatable, Codable { let index: Int, grid: Grid? }
-    struct SetMembers: Equatable, Codable { let members: [UUID] }
+    struct Create: Equatable { let origin: Point2, size: CGSize, grids: [Grid] }
+    struct SetBounds: Equatable { let origin: Point2, size: CGSize }
+    struct SetGrid: Equatable { let index: Int, grid: Grid? }
+    struct SetMembers: Equatable { let members: [UUID] }
 
-    struct Delete: Equatable, Codable {}
-    struct Move: Equatable, Codable { let offset: Vector2 }
+    struct Delete: Equatable {}
+    struct Move: Equatable { let offset: Vector2 }
 
-    enum Kind: Equatable, Codable {
+    enum Kind: Equatable {
         case create(Create)
         case setBounds(SetBounds)
         case setGrid(SetGrid)
@@ -88,31 +88,31 @@ extension SymbolEvent {
 
 // MARK: - ItemEvent
 
-enum ItemEvent: Equatable, Codable {
-    struct SetGroup: Equatable, Codable { let groupId: UUID, members: [UUID] }
+enum ItemEvent: Equatable {
+    struct SetGroup: Equatable { let groupId: UUID, members: [UUID] }
 
     case setGroup(SetGroup)
 }
 
 // MARK: - DocumentEvent
 
-struct DocumentEvent: Identifiable, Equatable, Codable {
+struct DocumentEvent: Identifiable, Equatable {
     let id: UUID
     let time: Date
     let action: DocumentAction?
     let kind: Kind
 
-    enum Single: Equatable, Codable {
+    enum Single: Equatable {
         case path(PathEvent)
         case symbol(SymbolEvent)
         case item(ItemEvent)
     }
 
-    struct Compound: Equatable, Codable {
+    struct Compound: Equatable {
         let events: [Single]
     }
 
-    enum Kind: Equatable, Codable {
+    enum Kind: Equatable {
         case single(Single)
         case compound(Compound)
     }
@@ -134,12 +134,6 @@ struct DocumentEvent: Identifiable, Equatable, Codable {
 
 extension DocumentEvent: CustomStringConvertible {
     var description: String {
-        do {
-            let encoder = JSONEncoder()
-            let data = try encoder.encode(self)
-            return String(data: data, encoding: .utf8) ?? String(reflecting: self)
-        } catch {
-            return String(reflecting: self)
-        }
+        (try? pb.jsonString()) ?? String(reflecting: self)
     }
 }

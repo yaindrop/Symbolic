@@ -2,23 +2,23 @@ import SwiftUI
 
 // MARK: - Grid
 
-struct Grid: Equatable, Codable {
-    var tintColor: CodableColor = .init(uiColor: .gray)
+struct Grid: Equatable {
+    var tintColor: CGColor = UIColor.gray.cgColor
     var kind: Kind
 
-    struct Cartesian: Equatable, Codable {
+    struct Cartesian: Equatable {
         var interval: Scalar
     }
 
-    struct Isometric: Equatable, Codable {
+    struct Isometric: Equatable {
         var interval: Scalar, angle0: Angle, angle1: Angle
     }
 
-    struct Radial: Equatable, Codable {
+    struct Radial: Equatable {
         var interval: Scalar, angularDivisions: Int
     }
 
-    enum Kind: Equatable, Codable {
+    enum Kind: Equatable {
         case cartesian(Cartesian)
         case isometric(Isometric)
         case radial(Radial)

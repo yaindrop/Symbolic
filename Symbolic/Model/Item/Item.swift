@@ -2,22 +2,22 @@ import Foundation
 
 // MARK: - Item
 
-struct Item: TriviallyCloneable, Equatable, Codable {
-    struct Path: Identifiable, Equatable, Codable {
+struct Item: TriviallyCloneable, Equatable {
+    struct Path: Identifiable, Equatable {
         let id: UUID
     }
 
-    struct Group: Identifiable, Equatable, Codable {
-        let id: UUID
-        var members: [UUID]
-    }
-
-    struct Symbol: Identifiable, Equatable, Codable {
+    struct Group: Identifiable, Equatable {
         let id: UUID
         var members: [UUID]
     }
 
-    enum Kind: Equatable, Codable {
+    struct Symbol: Identifiable, Equatable {
+        let id: UUID
+        var members: [UUID]
+    }
+
+    enum Kind: Equatable {
         case path(Path)
         case group(Group)
         case symbol(Symbol)

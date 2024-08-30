@@ -2,12 +2,12 @@ import Foundation
 
 // MARK: - PathAction
 
-enum PathAction: Equatable, Codable {
-    struct Create: Equatable, Codable { var symbolId: UUID, pathId: UUID, path: Path }
-    struct Update: Equatable, Codable { var pathId: UUID, kind: Kind }
+enum PathAction: Equatable {
+    struct Create: Equatable { var symbolId: UUID, pathId: UUID, path: Path }
+    struct Update: Equatable { var pathId: UUID, kind: Kind }
 
-    struct Delete: Equatable, Codable { var pathIds: [UUID] }
-    struct Move: Equatable, Codable { var pathIds: [UUID], offset: Vector2 }
+    struct Delete: Equatable { var pathIds: [UUID] }
+    struct Move: Equatable { var pathIds: [UUID], offset: Vector2 }
 
     case create(Create)
     case update(Update)
@@ -19,24 +19,24 @@ enum PathAction: Equatable, Codable {
 // MARK: Update
 
 extension PathAction.Update {
-    struct AddEndingNode: Equatable, Codable { var endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
-    struct SplitSegment: Equatable, Codable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
-    struct DeleteNodes: Equatable, Codable { var nodeIds: [UUID] }
+    struct AddEndingNode: Equatable { var endingNodeId: UUID, newNodeId: UUID, offset: Vector2 }
+    struct SplitSegment: Equatable { var fromNodeId: UUID, paramT: Scalar, newNodeId: UUID, offset: Vector2 }
+    struct DeleteNodes: Equatable { var nodeIds: [UUID] }
 
-    struct UpdateNode: Equatable, Codable { var nodeId: UUID, node: PathNode }
-    struct UpdateSegment: Equatable, Codable { var fromNodeId: UUID, segment: PathSegment }
+    struct UpdateNode: Equatable { var nodeId: UUID, node: PathNode }
+    struct UpdateSegment: Equatable { var fromNodeId: UUID, segment: PathSegment }
 
-    struct MoveNodes: Equatable, Codable { var nodeIds: [UUID], offset: Vector2 }
-    struct MoveNodeControl: Equatable, Codable { var nodeId: UUID, controlType: PathNodeControlType, offset: Vector2 }
+    struct MoveNodes: Equatable { var nodeIds: [UUID], offset: Vector2 }
+    struct MoveNodeControl: Equatable { var nodeId: UUID, controlType: PathNodeControlType, offset: Vector2 }
 
-    struct Merge: Equatable, Codable { var endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
-    struct Split: Equatable, Codable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID? }
+    struct Merge: Equatable { var endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
+    struct Split: Equatable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID? }
 
-    struct SetName: Equatable, Codable { var name: String? }
-    struct SetNodeType: Equatable, Codable { var nodeIds: [UUID], nodeType: PathNodeType? }
-    struct SetSegmentType: Equatable, Codable { var fromNodeIds: [UUID], segmentType: PathSegmentType? }
+    struct SetName: Equatable { var name: String? }
+    struct SetNodeType: Equatable { var nodeIds: [UUID], nodeType: PathNodeType? }
+    struct SetSegmentType: Equatable { var fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
-    enum Kind: Equatable, Codable {
+    enum Kind: Equatable {
         case addEndingNode(AddEndingNode)
         case splitSegment(SplitSegment)
         case deleteNodes(DeleteNodes)
@@ -56,12 +56,12 @@ extension PathAction.Update {
     }
 }
 
-enum SymbolAction: Equatable, Codable {
-    struct Create: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
-    struct Resize: Equatable, Codable { let symbolId: UUID, origin: Point2, size: CGSize }
+enum SymbolAction: Equatable {
+    struct Create: Equatable { let symbolId: UUID, origin: Point2, size: CGSize }
+    struct Resize: Equatable { let symbolId: UUID, origin: Point2, size: CGSize }
 
-    struct Delete: Equatable, Codable { let symbolIds: [UUID] }
-    struct Move: Equatable, Codable { let symbolIds: [UUID], offset: Vector2 }
+    struct Delete: Equatable { let symbolIds: [UUID] }
+    struct Move: Equatable { let symbolIds: [UUID], offset: Vector2 }
 
     case create(Create)
     case resize(Resize)
@@ -72,10 +72,10 @@ enum SymbolAction: Equatable, Codable {
 
 // MARK: - ItemAction
 
-enum ItemAction: Equatable, Codable {
-    struct Group: Equatable, Codable { var groupId: UUID, members: [UUID], inSymbolId: UUID?, inGroupId: UUID? }
-    struct Ungroup: Equatable, Codable { var groupIds: [UUID] }
-    struct Reorder: Equatable, Codable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
+enum ItemAction: Equatable {
+    struct Group: Equatable { var groupId: UUID, members: [UUID], inSymbolId: UUID?, inGroupId: UUID? }
+    struct Ungroup: Equatable { var groupIds: [UUID] }
+    struct Reorder: Equatable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
 
     case group(Group)
     case ungroup(Ungroup)
@@ -84,7 +84,7 @@ enum ItemAction: Equatable, Codable {
 
 // MARK: - DocumentAction
 
-enum DocumentAction: Equatable, Codable {
+enum DocumentAction: Equatable {
     case path(PathAction)
     case symbol(SymbolAction)
     case item(ItemAction)

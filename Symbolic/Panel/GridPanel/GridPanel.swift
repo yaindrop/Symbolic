@@ -117,11 +117,11 @@ private extension GridPanel.Preview {
             switch grid.kind {
             case let .cartesian(grid):
                 AnimatableReader(grid) {
-                    GridView(grid: .init(kind: .cartesian($0)), viewport: viewport, color: self.grid.tintColor.cgColor, type: .preview)
+                    GridView(grid: .init(kind: .cartesian($0)), viewport: viewport, color: self.grid.tintColor, type: .preview)
                 }
             case let .isometric(grid):
                 AnimatableReader(grid) {
-                    GridView(grid: .init(kind: .isometric($0)), viewport: viewport, color: self.grid.tintColor.cgColor, type: .preview)
+                    GridView(grid: .init(kind: .isometric($0)), viewport: viewport, color: self.grid.tintColor, type: .preview)
                 }
             default: EmptyView()
             }

@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Document
 
-struct Document: Codable {
+struct Document {
     let id: UUID
     var events: [DocumentEvent] = []
 

@@ -283,7 +283,7 @@ extension Symbolic_Pb_Grid.Radial: ProtobufParsable {
 
 extension Grid: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_Grid) {
-        pb.tintColor = tintColor.cgColor.pb
+        pb.tintColor = tintColor.pb
         pb.kind = {
             switch kind {
             case let .cartesian(kind): .cartesian(kind.pb)
@@ -304,6 +304,6 @@ extension Symbolic_Pb_Grid: ProtobufParsable {
             default: throw ProtobufParseError.invalidEmptyOneOf
             }
         }()
-        return .init(tintColor: .init(cgColor: tintColor.decoded()), kind: kind)
+        return .init(tintColor: tintColor.decoded(), kind: kind)
     }
 }

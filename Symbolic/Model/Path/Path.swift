@@ -8,7 +8,7 @@ protocol SUPathAppendable {
 
 // MARK: - Path
 
-struct Path: Codable, Equatable {
+struct Path: Equatable {
     typealias NodeMap = OrderedMap<UUID, PathNode>
 
     var nodeMap: NodeMap
@@ -17,32 +17,6 @@ struct Path: Codable, Equatable {
     init(nodeMap: NodeMap, isClosed: Bool) {
         self.nodeMap = nodeMap
         self.isClosed = isClosed
-    }
-
-    // MARK: Codable
-
-    private enum CodingKeys: String, CodingKey {
-        case nodeIds, nodes, isClosed
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(nodeIds, forKey: .nodeIds)
-        try container.encode(nodes, forKey: .nodes)
-        try container.encode(isClosed, forKey: .isClosed)
-    }
-
-    init(from decoder: any Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        nodeMap = .init()
-        isClosed = try values.decode(Bool.self, forKey: .isClosed)
-
-        let nodeIds = try values.decode([UUID].self, forKey: .nodeIds)
-        let nodes = try values.decode([PathNode].self, forKey: .nodes)
-        assert(nodeIds.count == nodes.count)
-        for i in nodeIds.indices {
-            nodeMap[nodeIds[i]] = nodes[i]
-        }
     }
 }
 

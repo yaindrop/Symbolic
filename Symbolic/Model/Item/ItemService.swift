@@ -268,7 +268,34 @@ extension ItemService: ItemStoreProtocol {
     }
 }
 
-// MARK: - modify item map
+// MARK: load document
+
+extension ItemService {
+    func load(document: Document) {
+        let _r = subtracer.range(type: .intent, "load document, size=\(document.events.count)"); defer { _r() }
+        withStoreUpdating {
+            clear()
+            for event in document.events {
+                load(event: event)
+            }
+        }
+    }
+
+    func load(pendingEvent: DocumentEvent?) {
+        let _r = subtracer.range("load pending event"); defer { _r() }
+        withStoreUpdating {
+            if let pendingEvent {
+                pendingStore.update(active: true)
+                pendingStore.update(itemMap: store.itemMap)
+                load(event: pendingEvent)
+            } else {
+                pendingStore.update(active: false)
+            }
+        }
+    }
+}
+
+// MARK: - modify
 
 private extension ItemService {
     func add(item: Item) {
@@ -331,34 +358,7 @@ private extension ItemService {
     }
 }
 
-// MARK: load document
-
-extension ItemService {
-    func load(document: Document) {
-        let _r = subtracer.range(type: .intent, "load document, size=\(document.events.count)"); defer { _r() }
-        withStoreUpdating {
-            clear()
-            for event in document.events {
-                load(event: event)
-            }
-        }
-    }
-
-    func load(pendingEvent: DocumentEvent?) {
-        let _r = subtracer.range("load pending event"); defer { _r() }
-        withStoreUpdating {
-            if let pendingEvent {
-                pendingStore.update(active: true)
-                pendingStore.update(itemMap: store.itemMap)
-                load(event: pendingEvent)
-            } else {
-                pendingStore.update(active: false)
-            }
-        }
-    }
-}
-
-// MARK: - event loaders
+// MARK: - load event
 
 private extension ItemService {
     func load(event: DocumentEvent) {
@@ -379,7 +379,7 @@ private extension ItemService {
         }
     }
 
-    // MARK: path event
+    // MARK: load path event
 
     func load(event: PathEvent) {
         let pathIds = event.pathIds
@@ -422,7 +422,7 @@ private extension ItemService {
         add(member: newPathId, nextTo: pathId)
     }
 
-    // MARK: symbol event
+    // MARK: load symbol event
 
     func load(event: SymbolEvent) {
         let symbolIds = event.symbolIds
@@ -454,7 +454,7 @@ private extension ItemService {
         remove(itemIds: symbolIds)
     }
 
-    // MARK: item event
+    // MARK: load item event
 
     func load(event: ItemEvent) {
         switch event {

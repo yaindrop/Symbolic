@@ -63,40 +63,6 @@ extension SymbolService: SymbolStoreProtocol {
     }
 }
 
-// MARK: - modify map
-
-extension SymbolService {
-    private func add(symbolId: UUID, symbol: Symbol) {
-        let _r = subtracer.range("add \(symbolId)"); defer { _r() }
-        var symbolMap = symbolMap
-        guard !exists(id: symbolId) else { return }
-        guard symbol.size.width > 0, symbol.size.height > 0 else { return }
-        symbolMap[symbolId] = symbol
-        activeStore.update(symbolMap: symbolMap)
-    }
-
-    private func update(symbolId: UUID, symbol: Symbol) {
-        let _r = subtracer.range("update \(symbolId)"); defer { _r() }
-        var symbolMap = symbolMap
-        symbolMap[symbolId] = symbol
-        activeStore.update(symbolMap: symbolMap)
-    }
-
-    private func remove(symbolIds: [UUID]) {
-        let _r = subtracer.range("remove \(symbolIds)"); defer { _r() }
-        var symbolMap = symbolMap
-        for symbolId in symbolIds {
-            symbolMap.removeValue(forKey: symbolId)
-        }
-        activeStore.update(symbolMap: symbolMap)
-    }
-
-    private func clear() {
-        let _r = subtracer.range("clear"); defer { _r() }
-        activeStore.update(symbolMap: .init())
-    }
-}
-
 // MARK: load document
 
 extension SymbolService {
@@ -124,10 +90,44 @@ extension SymbolService {
     }
 }
 
-// MARK: - event loaders
+// MARK: - modify
 
-extension SymbolService {
-    private func load(event: DocumentEvent) {
+private extension SymbolService {
+    func add(symbolId: UUID, symbol: Symbol) {
+        let _r = subtracer.range("add \(symbolId)"); defer { _r() }
+        var symbolMap = symbolMap
+        guard !exists(id: symbolId) else { return }
+        guard symbol.size.width > 0, symbol.size.height > 0 else { return }
+        symbolMap[symbolId] = symbol
+        activeStore.update(symbolMap: symbolMap)
+    }
+
+    func update(symbolId: UUID, symbol: Symbol) {
+        let _r = subtracer.range("update \(symbolId)"); defer { _r() }
+        var symbolMap = symbolMap
+        symbolMap[symbolId] = symbol
+        activeStore.update(symbolMap: symbolMap)
+    }
+
+    func remove(symbolIds: [UUID]) {
+        let _r = subtracer.range("remove \(symbolIds)"); defer { _r() }
+        var symbolMap = symbolMap
+        for symbolId in symbolIds {
+            symbolMap.removeValue(forKey: symbolId)
+        }
+        activeStore.update(symbolMap: symbolMap)
+    }
+
+    func clear() {
+        let _r = subtracer.range("clear"); defer { _r() }
+        activeStore.update(symbolMap: .init())
+    }
+}
+
+// MARK: - load event
+
+private extension SymbolService {
+    func load(event: DocumentEvent) {
         let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
@@ -137,7 +137,7 @@ extension SymbolService {
         }
     }
 
-    private func load(event: DocumentEvent.Single) {
+    func load(event: DocumentEvent.Single) {
         switch event {
         case .path: break
         case let .symbol(event): load(event: event)
@@ -145,9 +145,9 @@ extension SymbolService {
         }
     }
 
-    // MARK: path event
+    // MARK: load symbol event
 
-    private func load(event: SymbolEvent) {
+    func load(event: SymbolEvent) {
         let _r = subtracer.range("load event"); defer { _r() }
         let symbolIds = event.symbolIds,
             kinds = event.kinds
@@ -164,30 +164,30 @@ extension SymbolService {
         }
     }
 
-    private func load(symbolIds: [UUID], _ event: SymbolEvent.Create) {
+    func load(symbolIds: [UUID], _ event: SymbolEvent.Create) {
         guard let symbolId = symbolIds.first else { return }
         add(symbolId: symbolId, symbol: .init(id: symbolId, origin: event.origin, size: event.size, grids: event.grids))
     }
 
-    private func load(symbolIds: [UUID], _ event: SymbolEvent.SetBounds) {
+    func load(symbolIds: [UUID], _ event: SymbolEvent.SetBounds) {
         guard let symbolId = symbolIds.first,
               var symbol = get(id: symbolId) else { return }
         symbol.update(event)
         update(symbolId: symbolId, symbol: symbol)
     }
 
-    private func load(symbolIds: [UUID], _ event: SymbolEvent.SetGrid) {
+    func load(symbolIds: [UUID], _ event: SymbolEvent.SetGrid) {
         guard let symbolId = symbolIds.first,
               var symbol = get(id: symbolId) else { return }
         symbol.update(event)
         update(symbolId: symbolId, symbol: symbol)
     }
 
-    private func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
+    func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
         remove(symbolIds: symbolIds)
     }
 
-    private func load(symbolIds: [UUID], _ event: SymbolEvent.Move) {
+    func load(symbolIds: [UUID], _ event: SymbolEvent.Move) {
         for symbolId in symbolIds {
             guard var symbol = get(id: symbolId) else { continue }
             symbol.update(event)

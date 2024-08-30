@@ -72,51 +72,6 @@ extension PathService {
     var pathPropertyMap: PathPropertyMap { activeStore.pathPropertyMap }
 }
 
-// MARK: - modify path map
-
-extension PathService {
-    private func add(pathId: UUID, path: Path) {
-        let _r = subtracer.range("add \(pathId)"); defer { _r() }
-        var pathMap = pathMap
-        guard !exists(id: pathId),
-              path.count > 1 else { return }
-        pathMap[pathId] = path
-        activeStore.update(pathMap: pathMap)
-    }
-
-    private func update(pathId: UUID, path: Path) {
-        let _r = subtracer.range("update \(pathId)"); defer { _r() }
-        var pathMap = pathMap
-        pathMap[pathId] = path
-        activeStore.update(pathMap: pathMap, forced: true)
-    }
-
-    private func update(pathId: UUID, pathProperty: PathProperty) {
-        let _r = subtracer.range("update property \(pathId)"); defer { _r() }
-        guard exists(id: pathId) else { return }
-        var pathPropertyMap = pathPropertyMap
-        pathPropertyMap[pathId] = pathProperty
-        activeStore.update(pathPropertyMap: pathPropertyMap)
-    }
-
-    private func remove(pathIds: [UUID]) {
-        let _r = subtracer.range("remove \(pathIds)"); defer { _r() }
-        var pathMap = pathMap
-        var pathPropertyMap = pathPropertyMap
-        for pathId in pathIds {
-            pathMap.removeValue(forKey: pathId)
-            pathPropertyMap.removeValue(forKey: pathId)
-        }
-        activeStore.update(pathMap: pathMap)
-        activeStore.update(pathPropertyMap: pathPropertyMap)
-    }
-
-    private func clear() {
-        let _r = subtracer.range("clear"); defer { _r() }
-        activeStore.update(pathMap: .init())
-    }
-}
-
 // MARK: load document
 
 extension PathService {
@@ -136,6 +91,7 @@ extension PathService {
             if let pendingEvent {
                 pendingStore.update(active: true)
                 pendingStore.update(pathMap: store.pathMap)
+                pendingStore.update(pathPropertyMap: store.pathPropertyMap)
                 load(event: pendingEvent)
             } else {
                 pendingStore.update(active: false)
@@ -144,10 +100,58 @@ extension PathService {
     }
 }
 
-// MARK: - event loaders
+// MARK: - modify
 
-extension PathService {
-    private func load(event: DocumentEvent) {
+private extension PathService {
+    func add(pathId: UUID, path: Path) {
+        let _r = subtracer.range("add \(pathId)"); defer { _r() }
+        var pathMap = pathMap
+        var pathPropertyMap = pathPropertyMap
+        guard !exists(id: pathId),
+              path.count > 1 else { return }
+        pathMap[pathId] = path
+        pathPropertyMap[pathId] = .init(id: pathId)
+        activeStore.update(pathMap: pathMap)
+        activeStore.update(pathPropertyMap: pathPropertyMap)
+    }
+
+    func update(pathId: UUID, path: Path) {
+        let _r = subtracer.range("update \(pathId)"); defer { _r() }
+        var pathMap = pathMap
+        pathMap[pathId] = path
+        activeStore.update(pathMap: pathMap, forced: true)
+    }
+
+    func update(pathId: UUID, pathProperty: PathProperty) {
+        let _r = subtracer.range("update property \(pathId)"); defer { _r() }
+        guard exists(id: pathId) else { return }
+        var pathPropertyMap = pathPropertyMap
+        pathPropertyMap[pathId] = pathProperty
+        activeStore.update(pathPropertyMap: pathPropertyMap)
+    }
+
+    func remove(pathIds: [UUID]) {
+        let _r = subtracer.range("remove \(pathIds)"); defer { _r() }
+        var pathMap = pathMap
+        var pathPropertyMap = pathPropertyMap
+        for pathId in pathIds {
+            pathMap.removeValue(forKey: pathId)
+            pathPropertyMap.removeValue(forKey: pathId)
+        }
+        activeStore.update(pathMap: pathMap)
+        activeStore.update(pathPropertyMap: pathPropertyMap)
+    }
+
+    func clear() {
+        let _r = subtracer.range("clear"); defer { _r() }
+        activeStore.update(pathMap: .init())
+    }
+}
+
+// MARK: - load event
+
+private extension PathService {
+    func load(event: DocumentEvent) {
         let _r = subtracer.range(type: .intent, "load document event \(event.id)"); defer { _r() }
         switch event.kind {
         case let .compound(event):
@@ -157,7 +161,7 @@ extension PathService {
         }
     }
 
-    private func load(event: DocumentEvent.Single) {
+    func load(event: DocumentEvent.Single) {
         switch event {
         case let .path(event): load(event: event)
         case .symbol: break
@@ -165,9 +169,9 @@ extension PathService {
         }
     }
 
-    // MARK: path event
+    // MARK: load path event
 
-    private func load(event: PathEvent) {
+    func load(event: PathEvent) {
         let _r = subtracer.range("load event"); defer { _r() }
         let pathIds = event.pathIds,
             kinds = event.kinds
@@ -188,33 +192,33 @@ extension PathService {
         }
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.Create) {
+    func load(pathIds: [UUID], _ event: PathEvent.Create) {
         guard let pathId = pathIds.first else { return }
         add(pathId: pathId, path: event.path)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.CreateNode) {
+    func load(pathIds: [UUID], _ event: PathEvent.CreateNode) {
         guard let pathId = pathIds.first,
               var path = get(id: pathId) else { return }
         path.update(event)
         update(pathId: pathId, path: path)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.UpdateNode) {
+    func load(pathIds: [UUID], _ event: PathEvent.UpdateNode) {
         guard let pathId = pathIds.first,
               var path = get(id: pathId) else { return }
         path.update(event)
         update(pathId: pathId, path: path)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.DeleteNode) {
+    func load(pathIds: [UUID], _ event: PathEvent.DeleteNode) {
         guard let pathId = pathIds.first,
               var path = get(id: pathId) else { return }
         path.update(event)
         update(pathId: pathId, path: path)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.Merge) {
+    func load(pathIds: [UUID], _ event: PathEvent.Merge) {
         let mergedPathId = event.mergedPathId
         guard let pathId = pathIds.first,
               var path = get(id: pathId),
@@ -226,7 +230,7 @@ extension PathService {
         update(pathId: pathId, path: path)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.Split) {
+    func load(pathIds: [UUID], _ event: PathEvent.Split) {
         guard let pathId = pathIds.first,
               var path = get(id: pathId) else { return }
         let newPath = path.update(event)
@@ -236,11 +240,11 @@ extension PathService {
         }
     }
 
-    private func load(pathIds: [UUID], _: PathEvent.Delete) {
+    func load(pathIds: [UUID], _: PathEvent.Delete) {
         remove(pathIds: pathIds)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.Move) {
+    func load(pathIds: [UUID], _ event: PathEvent.Move) {
         for pathId in pathIds {
             guard var path = get(id: pathId) else { continue }
             path.update(event)
@@ -248,14 +252,14 @@ extension PathService {
         }
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.SetName) {
+    func load(pathIds: [UUID], _ event: PathEvent.SetName) {
         guard let pathId = pathIds.first,
               var property = property(id: pathId) else { return }
         property.update(event)
         update(pathId: pathId, pathProperty: property)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.SetNodeType) {
+    func load(pathIds: [UUID], _ event: PathEvent.SetNodeType) {
         guard let pathId = pathIds.first,
               var path = get(id: pathId),
               var property = property(id: pathId) else { return }
@@ -265,7 +269,7 @@ extension PathService {
         update(pathId: pathId, pathProperty: property)
     }
 
-    private func load(pathIds: [UUID], _ event: PathEvent.SetSegmentType) {
+    func load(pathIds: [UUID], _ event: PathEvent.SetSegmentType) {
         guard let pathId = pathIds.first,
               var path = get(id: pathId),
               var property = property(id: pathId) else { return }

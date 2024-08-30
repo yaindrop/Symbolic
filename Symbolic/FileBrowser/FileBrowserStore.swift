@@ -218,14 +218,13 @@ extension FileBrowserStore {
         let _r = subtracer.range(type: .intent, "save document"); defer { _r() }
         guard let activeDocument else { return }
 
-        guard let data = try? document.pb.serializedData() else { return }
+        let pb = subtracer.range("convert pb") { document.pb }
+        let data = subtracer.range("serialize") { try? pb.serializedData() }
+
+        guard let data else { return }
         subtracer.instant("data size=\(data.count)")
 
-        do {
-            try data.write(to: activeDocument.url)
-        } catch {
-            return
-        }
+        try? data.write(to: activeDocument.url)
     }
 
     func asyncSave(document: Document) {

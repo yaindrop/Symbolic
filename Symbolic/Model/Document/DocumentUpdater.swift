@@ -13,6 +13,7 @@ class DocumentUpdaterStore: Store {
 struct DocumentUpdater {
     let store: DocumentUpdaterStore
     let pathStore: PathStore
+    let symbolStore: SymbolStore
     let itemStore: ItemStore
     let viewport: ViewportService
     let activeItem: ActiveItemService
@@ -363,9 +364,31 @@ private extension DocumentUpdater {
 
     func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Resize) {
         let symbolId = action.symbolId,
-            origin = action.origin,
-            size = action.size
-        events.append(.symbol(.init(symbolId: symbolId, .create(.init(origin: origin, size: size, grids: [])))))
+            align = action.align,
+            offset = action.offset
+        guard let symbol = symbolStore.get(id: symbolId) else { return }
+        var origin = symbol.origin,
+            size = symbol.size
+        switch align {
+        case .topLeading:
+            origin += offset
+            size -= offset
+        case .topTrailing:
+            origin.y += offset.dy
+            size.width += offset.dx
+            size.height -= offset.dy
+        case .bottomLeading:
+            origin.x += offset.dx
+            size.width -= offset.dx
+            size.height += offset.dy
+        case .bottomTrailing:
+            size += offset
+        default:
+            return
+        }
+        size.width = max(size.width, 16)
+        size.height = max(size.height, 16)
+        events.append(.symbol(.init(symbolId: symbolId, .setBounds(.init(origin: origin, size: size)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Delete) {

@@ -58,7 +58,7 @@ extension PathAction.Update {
 
 enum SymbolAction: Equatable {
     struct Create: Equatable { let symbolId: UUID, origin: Point2, size: CGSize }
-    struct Resize: Equatable { let symbolId: UUID, origin: Point2, size: CGSize }
+    struct Resize: Equatable { let symbolId: UUID, align: PlaneInnerAlign, offset: Vector2 }
 
     struct Delete: Equatable { let symbolIds: [UUID] }
     struct Move: Equatable { let symbolIds: [UUID], offset: Vector2 }

@@ -129,6 +129,39 @@ extension Symbolic_Pb_Color: ProtobufParsable {
     }
 }
 
+extension PlaneInnerAlign {
+    var pb: Symbolic_Pb_PlaneInnerAlign {
+        switch self {
+        case .topLeading: .topLeading
+        case .topCenter: .topCenter
+        case .topTrailing: .topTrailing
+        case .centerLeading: .centerLeading
+        case .center: .center
+        case .centerTrailing: .centerTrailing
+        case .bottomLeading: .bottomLeading
+        case .bottomCenter: .bottomCenter
+        case .bottomTrailing: .bottomTrailing
+        }
+    }
+}
+
+extension Symbolic_Pb_PlaneInnerAlign: ProtobufParsable {
+    func decoded() -> PlaneInnerAlign {
+        switch self {
+        case .topLeading: .topLeading
+        case .topCenter: .topCenter
+        case .topTrailing: .topTrailing
+        case .centerLeading: .centerLeading
+        case .center: .center
+        case .centerTrailing: .centerTrailing
+        case .bottomLeading: .bottomLeading
+        case .bottomCenter: .bottomCenter
+        case .bottomTrailing: .bottomTrailing
+        default: .center
+        }
+    }
+}
+
 // MARK: - path types
 
 extension PathNode: ProtobufSerializable {

@@ -49,7 +49,7 @@ struct GlobalStores {
 
 extension GlobalStores {
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, itemStore: itemStore, viewport: viewport, activeItem: activeItem, grid: grid) }
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, viewport: viewport, activeItem: activeItem, grid: grid) }
 
     var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
 

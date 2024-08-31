@@ -50,7 +50,7 @@ private extension DocumentAction {
             case let .create(action):
                 "Create symbol \(action.symbolId.shortDescription)"
             case let .resize(action):
-                "Resize symbol \(action.symbolId.shortDescription) with origin \(action.origin.shortDescription) and size \(action.size.shortDescription)"
+                "Resize symbol \(action.symbolId.shortDescription) with align \(action.align) and offset \(action.offset.shortDescription)"
 
             case let .delete(action):
                 "Delete symbol \(action.symbolIds.map { $0.shortDescription }.joined(separator: ", "))"

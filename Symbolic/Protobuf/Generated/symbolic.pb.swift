@@ -20,6 +20,68 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
+enum Symbolic_Pb_PlaneInnerAlign: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+  case topLeading // = 0
+  case topCenter // = 1
+  case topTrailing // = 2
+  case centerLeading // = 3
+  case center // = 4
+  case centerTrailing // = 5
+  case bottomLeading // = 6
+  case bottomCenter // = 7
+  case bottomTrailing // = 8
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .topLeading
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .topLeading
+    case 1: self = .topCenter
+    case 2: self = .topTrailing
+    case 3: self = .centerLeading
+    case 4: self = .center
+    case 5: self = .centerTrailing
+    case 6: self = .bottomLeading
+    case 7: self = .bottomCenter
+    case 8: self = .bottomTrailing
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .topLeading: return 0
+    case .topCenter: return 1
+    case .topTrailing: return 2
+    case .centerLeading: return 3
+    case .center: return 4
+    case .centerTrailing: return 5
+    case .bottomLeading: return 6
+    case .bottomCenter: return 7
+    case .bottomTrailing: return 8
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [Symbolic_Pb_PlaneInnerAlign] = [
+    .topLeading,
+    .topCenter,
+    .topTrailing,
+    .centerLeading,
+    .center,
+    .centerTrailing,
+    .bottomLeading,
+    .bottomCenter,
+    .bottomTrailing,
+  ]
+
+}
+
 enum Symbolic_Pb_PathNodeControlType: SwiftProtobuf.Enum, Swift.CaseIterable {
   typealias RawValue = Int
   case cubicIn // = 0
@@ -445,6 +507,20 @@ struct Symbolic_Pb_Grid: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "symbolic.pb"
+
+extension Symbolic_Pb_PlaneInnerAlign: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    0: .same(proto: "topLeading"),
+    1: .same(proto: "topCenter"),
+    2: .same(proto: "topTrailing"),
+    3: .same(proto: "centerLeading"),
+    4: .same(proto: "center"),
+    5: .same(proto: "centerTrailing"),
+    6: .same(proto: "bottomLeading"),
+    7: .same(proto: "bottomCenter"),
+    8: .same(proto: "bottomTrailing"),
+  ]
+}
 
 extension Symbolic_Pb_PathNodeControlType: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [

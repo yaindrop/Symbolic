@@ -750,31 +750,23 @@ struct Symbolic_Pb_SymbolAction: Sendable {
     /// Clears the value of `symbolID`. Subsequent reads from it will return its default value.
     mutating func clearSymbolID() {self._symbolID = nil}
 
-    var origin: Symbolic_Pb_Point2 {
-      get {return _origin ?? Symbolic_Pb_Point2()}
-      set {_origin = newValue}
-    }
-    /// Returns true if `origin` has been explicitly set.
-    var hasOrigin: Bool {return self._origin != nil}
-    /// Clears the value of `origin`. Subsequent reads from it will return its default value.
-    mutating func clearOrigin() {self._origin = nil}
+    var align: Symbolic_Pb_PlaneInnerAlign = .topLeading
 
-    var size: Symbolic_Pb_Size2 {
-      get {return _size ?? Symbolic_Pb_Size2()}
-      set {_size = newValue}
+    var offset: Symbolic_Pb_Vector2 {
+      get {return _offset ?? Symbolic_Pb_Vector2()}
+      set {_offset = newValue}
     }
-    /// Returns true if `size` has been explicitly set.
-    var hasSize: Bool {return self._size != nil}
-    /// Clears the value of `size`. Subsequent reads from it will return its default value.
-    mutating func clearSize() {self._size = nil}
+    /// Returns true if `offset` has been explicitly set.
+    var hasOffset: Bool {return self._offset != nil}
+    /// Clears the value of `offset`. Subsequent reads from it will return its default value.
+    mutating func clearOffset() {self._offset = nil}
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     init() {}
 
     fileprivate var _symbolID: Symbolic_Pb_UUID? = nil
-    fileprivate var _origin: Symbolic_Pb_Point2? = nil
-    fileprivate var _size: Symbolic_Pb_Size2? = nil
+    fileprivate var _offset: Symbolic_Pb_Vector2? = nil
   }
 
   struct Delete: Sendable {
@@ -2159,8 +2151,8 @@ extension Symbolic_Pb_SymbolAction.Resize: SwiftProtobuf.Message, SwiftProtobuf.
   static let protoMessageName: String = Symbolic_Pb_SymbolAction.protoMessageName + ".Resize"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .standard(proto: "symbol_id"),
-    2: .same(proto: "origin"),
-    3: .same(proto: "size"),
+    2: .same(proto: "align"),
+    3: .same(proto: "offset"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2170,8 +2162,8 @@ extension Symbolic_Pb_SymbolAction.Resize: SwiftProtobuf.Message, SwiftProtobuf.
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._symbolID) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._origin) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._size) }()
+      case 2: try { try decoder.decodeSingularEnumField(value: &self.align) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._offset) }()
       default: break
       }
     }
@@ -2185,10 +2177,10 @@ extension Symbolic_Pb_SymbolAction.Resize: SwiftProtobuf.Message, SwiftProtobuf.
     try { if let v = self._symbolID {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
-    try { if let v = self._origin {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    try { if let v = self._size {
+    if self.align != .topLeading {
+      try visitor.visitSingularEnumField(value: self.align, fieldNumber: 2)
+    }
+    try { if let v = self._offset {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
     try unknownFields.traverse(visitor: &visitor)
@@ -2196,8 +2188,8 @@ extension Symbolic_Pb_SymbolAction.Resize: SwiftProtobuf.Message, SwiftProtobuf.
 
   static func ==(lhs: Symbolic_Pb_SymbolAction.Resize, rhs: Symbolic_Pb_SymbolAction.Resize) -> Bool {
     if lhs._symbolID != rhs._symbolID {return false}
-    if lhs._origin != rhs._origin {return false}
-    if lhs._size != rhs._size {return false}
+    if lhs.align != rhs.align {return false}
+    if lhs._offset != rhs._offset {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

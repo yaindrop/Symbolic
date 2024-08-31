@@ -39,6 +39,18 @@ message Color {
   double alpha = 4;
 }
 
+enum PlaneInnerAlign {
+  topLeading = 0;
+  topCenter = 1;
+  topTrailing = 2;
+  centerLeading = 3;
+  center = 4;
+  centerTrailing = 5;
+  bottomLeading = 6;
+  bottomCenter = 7;
+  bottomTrailing = 8;
+}
+
 // MARK: - path types
 
 message PathNode {

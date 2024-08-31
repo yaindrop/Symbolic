@@ -301,7 +301,7 @@ private extension FocusedPathView.NodeHandles {
                 p.addRect(.init(center: position, size: size))
             }
         }
-        .fill(.blue.opacity(0.1))
+        .fill(debugFocusedPath ? .blue.opacity(0.1) : .invisibleSolid)
         .multipleGesture(global.nodesGesture(context: gestureContext))
     }
 

@@ -130,8 +130,8 @@ message SymbolAction {
 
   message Resize {
     UUID symbol_id = 1;
-    Point2 origin = 2;
-    Size2 size = 3;
+    PlaneInnerAlign align = 2;
+    Vector2 offset = 3;
   }
 
   message Delete { repeated UUID symbol_ids = 1; }

@@ -120,7 +120,7 @@ private extension FocusedPathView.Stroke {
     @ViewBuilder var touchable: some View {
         SUPath { p in selector.path?.append(to: &p) }
             .transform(transformToView)
-            .stroke(.yellow.opacity(0.05), style: StrokeStyle(lineWidth: 24, lineCap: .round))
+            .stroke(debugFocusedPath ? .yellow.opacity(0.05) : .invisibleSolid, style: StrokeStyle(lineWidth: 24, lineCap: .round))
             .multipleGesture(global.segmentGesture(context: gestureContext))
     }
 }

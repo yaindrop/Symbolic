@@ -480,14 +480,14 @@ extension Symbolic_Pb_SymbolAction.Create: ProtobufParsable {
 extension SymbolAction.Resize: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_SymbolAction.Resize) {
         pb.symbolID = symbolId.pb
-        pb.origin = origin.pb
-        pb.size = size.pb
+        pb.align = align.pb
+        pb.offset = offset.pb
     }
 }
 
 extension Symbolic_Pb_SymbolAction.Resize: ProtobufParsable {
     func decoded() -> SymbolAction.Resize {
-        .init(symbolId: symbolID.decoded(), origin: origin.decoded(), size: size.decoded())
+        .init(symbolId: symbolID.decoded(), align: align.decoded(), offset: offset.decoded())
     }
 }
 

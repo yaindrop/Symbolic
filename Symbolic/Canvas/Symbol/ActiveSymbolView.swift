@@ -1,11 +1,14 @@
 import SwiftUI
 
+let debugActiveSymbol: Bool = true
+
 // MARK: - ActiveSymbolView
 
 struct ActiveSymbolView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.activeSymbol.activeSymbolIds }) var activeSymbolIds
+        @Selected({ global.activeSymbol.focusedSymbolId }) var focusedSymbolId
     }
 
     @SelectorWrapper var selector
@@ -24,6 +27,9 @@ private extension ActiveSymbolView {
             ZStack {
                 ForEach(Array(selector.activeSymbolIds)) {
                     Bounds(symbolId: $0)
+                }
+                if let focusedSymbolId = selector.focusedSymbolId {
+                    ResizeHandle(symbolId: focusedSymbolId)
                 }
                 SelectionBounds()
             }

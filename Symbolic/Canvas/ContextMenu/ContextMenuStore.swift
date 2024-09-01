@@ -110,7 +110,8 @@ struct ContextMenuView: View, TracedView, EquatableBy {
             SelectionMenu()
         case .focusedSymbol:
             FocusedSymbolMenu()
-        case .symbolSelection: EmptyView()
+        case .symbolSelection:
+            SymbolSelectionMenu()
         }
     }
 }

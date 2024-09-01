@@ -215,10 +215,10 @@ extension FocusedPathView {
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
             @Selected(configs: .syncNotify, { global.activeItem.focusedPath }) var path
-            @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
             @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
             @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ global.grid.gridStack }) var gridStack
+            @Selected({ global.activeSymbol.editingSymbol?.grids }) var grids
+            @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
         }
 
         @SelectorWrapper var selector
@@ -325,15 +325,15 @@ private extension FocusedPathView.NodeHandles {
 
     @ViewBuilder var snappedMarks: some View {
         SUPath { p in
-            guard let path = selector.path else { return }
+            guard let path = selector.path,
+                  let grids = selector.grids else { return }
             let activeNodeIds = selector.activeNodeIds,
-                selectingNodes = selector.selectingNodes,
-                gridStack = selector.gridStack
+                selectingNodes = selector.selectingNodes
             for nodeId in path.nodeIds {
                 guard !selectingNodes,
                       activeNodeIds.contains(nodeId),
                       let node = path.node(id: nodeId),
-                      let grid = gridStack.first(where: { $0.snapped(node.position) }) else { continue }
+                      let grid = grids.first(where: { $0.snapped(node.position) }) else { continue }
                 let position = node.position.applying(transformToView)
                 p.move(to: position - .init(9, 0))
                 p.addLine(to: position + .init(9, 0))

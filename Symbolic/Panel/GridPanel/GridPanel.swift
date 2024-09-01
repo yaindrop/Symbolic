@@ -5,9 +5,9 @@ import SwiftUI
 
 struct GridPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.grid.active }) var grid
-        @Selected(configs: .init(animation: .fast), { global.grid.gridStack }) var gridStack
-        @Selected(configs: .init(animation: .fast), { global.grid.activeIndex }) var activeIndex
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.activeGrid }) var activeGrid
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.editingSymbol?.grids }) var grids
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.activeGridIndex }) var activeGridIndex
     }
 
     @SelectorWrapper var selector
@@ -18,10 +18,10 @@ struct GridPanel: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onChange(of: index) {
-                    guard index != selector.activeIndex else { return }
-                    global.grid.setActive(index)
+                    guard index != selector.activeGridIndex else { return }
+//                    global.grid.setActive(index)
                 }
-                .bind(selector.activeIndex, to: $index)
+                .bind(selector.activeGridIndex, to: $index)
                 .environmentObject(ViewModel())
         }
     } }
@@ -43,12 +43,12 @@ extension GridPanel {
     }
 
     @ViewBuilder private var tabs: some View {
-        if selector.gridStack.count > 1 {
+        if let grids = selector.grids, grids.count > 1 {
             HStack {
                 Picker("", selection: $index) {
                     Text("Primary").tag(0)
                     Text("Secondary").tag(1)
-                    if selector.gridStack.count > 2 {
+                    if grids.count > 2 {
                         Text("Tertiary").tag(2)
                     }
                 }
@@ -58,8 +58,10 @@ extension GridPanel {
     }
 
     @ViewBuilder private var preview: some View {
-        PanelSection(name: "Preview") {
-            Preview(grid: selector.grid)
+        if let grid = selector.activeGrid {
+            PanelSection(name: "Preview") {
+                Preview(grid: grid)
+            }
         }
     }
 

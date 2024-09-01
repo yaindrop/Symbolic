@@ -70,7 +70,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
                 .frame(minWidth: 32)
                 .tint(.label)
 

@@ -41,7 +41,7 @@ private extension PathPanel.Properties {
                 }
                 ContextualDivider()
                 ContextualRow {
-                    Button("Zoom In", systemImage: "arrow.up.left.and.arrow.down.right") {
+                    Button("Zoom In", systemImage: "arrow.up.left.and.arrow.down.right.square") {
                         global.viewportUpdater.zoomTo(rect: path.boundingRect)
                     }
                     .contextualFont()

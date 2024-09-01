@@ -116,7 +116,7 @@ private extension Toolbar {
                 global.toolbar.setMode(.addPath(.init()))
             }
 
-            ToolbarButton(systemName: "arrow.up.left.and.arrow.down.right") {
+            ToolbarButton(systemName: "arrow.up.left.and.arrow.down.right.square") {
                 guard let symbolId = global.activeSymbol.focusedSymbolId,
                       let bounds = global.item.allPathsBounds(symbolId: symbolId) else { return }
                 global.viewportUpdater.zoomTo(rect: bounds)

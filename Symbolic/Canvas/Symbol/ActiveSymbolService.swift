@@ -13,6 +13,7 @@ enum SymbolActiveState: Equatable {
 
 class ActiveSymbolStore: Store {
     @Trackable var state: SymbolActiveState = .none
+    @Trackable var activeGridIndex: Int = 0
 }
 
 private extension ActiveSymbolStore {
@@ -37,6 +38,8 @@ struct ActiveSymbolService {
 
 extension ActiveSymbolService {
     var state: SymbolActiveState { store.state }
+
+    var activeGridIndex: Int { store.activeGridIndex }
 
     var activeSymbolIds: Set<UUID> {
         switch state {
@@ -91,7 +94,7 @@ extension ActiveSymbolService {
     var selectionOutset: Scalar { 12 }
 
     func pathHitTest(pathId: UUID, worldPosition: Point2, threshold: Scalar = 24) -> Bool {
-        guard let focusedSymbol,
+        guard editingSymbolId != nil,
               let path = path.get(id: pathId) else { return false }
         let symbolPosition = worldPosition.applying(worldToSymbol),
             width = (threshold * Vector2.unitX).applying(viewToSymbol).dx
@@ -102,6 +105,21 @@ extension ActiveSymbolService {
     func pathHitTest(worldPosition: Point2, threshold _: Scalar = 24) -> UUID? {
         guard let focusedSymbolId else { return nil }
         return item.allPathItems(symbolId: focusedSymbolId).first { pathHitTest(pathId: $0.id, worldPosition: worldPosition) }?.id
+    }
+
+    var activeGrid: Grid? {
+        guard let editingSymbol,
+              editingSymbol.grids.indices.contains(activeGridIndex) else { return nil }
+        return editingSymbol.grids[activeGridIndex]
+    }
+
+    func snap(_ point: Point2) -> Point2 {
+        activeGrid?.snap(point) ?? point
+    }
+
+    func snapped(_ point: Point2) -> Grid? {
+        guard let editingSymbol else { return nil }
+        return editingSymbol.grids.first { $0.snapped(point) }
     }
 }
 

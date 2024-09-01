@@ -115,11 +115,15 @@ extension Symbolic_Pb_Angle: ProtobufParsable {
 
 extension CGColor: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_Color) {
-        guard let components else { return }
-        pb.red = components[0]
-        pb.green = components[1]
-        pb.blue = components[2]
-        pb.alpha = components[3]
+        var red: Scalar = 0,
+            green: Scalar = 0,
+            blue: Scalar = 0,
+            alpha: Scalar = 0
+        UIColor(cgColor: self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        pb.red = red
+        pb.green = green
+        pb.blue = blue
+        pb.alpha = alpha
     }
 }
 

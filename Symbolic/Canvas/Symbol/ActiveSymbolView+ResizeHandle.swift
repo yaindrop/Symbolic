@@ -3,12 +3,13 @@ import SwiftUI
 // MARK: - global actions
 
 private extension GlobalStores {
-    func onDrag(symbolId: UUID, align: PlaneInnerAlign, _ v: DragGesture.Value, pending: Bool = false) {
+    func onDrag(align: PlaneInnerAlign, _ v: DragGesture.Value, pending: Bool = false) {
+        guard let symbolId = activeSymbol.focusedSymbolId else { return }
         let offset = v.offset.applying(viewport.viewToWorld)
         documentUpdater.update(symbol: .resize(.init(symbolId: symbolId, align: align, offset: offset)), pending: pending)
     }
 
-    func gesture(symbolId: UUID, align: PlaneInnerAlign) -> MultipleGesture {
+    func gesture(align: PlaneInnerAlign) -> MultipleGesture {
         .init(
             onPress: { _ in
                 canvasAction.start(continuous: .resizeSymbol)
@@ -18,8 +19,8 @@ private extension GlobalStores {
                 if cancelled { documentUpdater.cancel() }
             },
 
-            onDrag: { onDrag(symbolId: symbolId, align: align, $0, pending: true) },
-            onDragEnd: { onDrag(symbolId: symbolId, align: align, $0) }
+            onDrag: { onDrag(align: align, $0, pending: true) },
+            onDragEnd: { onDrag(align: align, $0) }
         )
     }
 }
@@ -27,23 +28,18 @@ private extension GlobalStores {
 // MARK: - ResizeHandle
 
 extension ActiveSymbolView {
-    struct ResizeHandle: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        @Environment(\.transformToView) var transformToView
+    struct ResizeHandle: View, TracedView, SelectorHolder {
+        @Environment(\.sizedViewport) var viewport
 
-        let symbolId: UUID
-
-        var equatableBy: some Equatable { symbolId }
-
-        struct SelectorProps: Equatable { let symbolId: UUID }
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.symbol.get(id: $0.symbolId)?.boundingRect }) var bounds
+            @Selected({ global.activeSymbol.focusedSymbol?.boundingRect }) var bounds
         }
 
         @SelectorWrapper var selector
 
         var body: some View { trace {
-            setupSelector(.init(symbolId: symbolId)) {
+            setupSelector {
                 content
             }
         } }
@@ -54,9 +50,9 @@ extension ActiveSymbolView {
 
 extension ActiveSymbolView.ResizeHandle {
     @ViewBuilder var content: some View {
-        let aligns: [PlaneInnerAlign] = [.topLeading, .topTrailing, .bottomLeading, .bottomTrailing]
         if let bounds = selector.bounds {
-            let bounds = bounds.applying(transformToView)
+            let aligns: [PlaneInnerAlign] = [.topLeading, .topTrailing, .bottomLeading, .bottomTrailing],
+                bounds = bounds.applying(viewport.worldToView)
             ForEach(aligns) {
                 shape(bounds: bounds, align: $0)
                 touchable(bounds: bounds, align: $0)
@@ -110,7 +106,7 @@ extension ActiveSymbolView.ResizeHandle {
         Rectangle()
             .fill(debugActiveSymbol ? .blue.opacity(0.1) : .invisibleSolid)
             .framePosition(rect: rect)
-            .multipleGesture(global.gesture(symbolId: symbolId, align: align))
+            .multipleGesture(global.gesture(align: align))
             .allowsHitTesting(visible(bounds: bounds))
     }
 }

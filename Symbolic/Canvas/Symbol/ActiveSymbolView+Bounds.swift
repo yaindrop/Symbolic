@@ -41,7 +41,7 @@ private extension GlobalStores {
 
 extension ActiveSymbolView {
     struct Bounds: View, TracedView, EquatableBy, ComputedSelectorHolder {
-        @Environment(\.transformToView) var transformToView
+        @Environment(\.sizedViewport) var viewport
 
         let symbolId: UUID
 
@@ -72,12 +72,12 @@ extension ActiveSymbolView.Bounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             if selector.editing {
-                let bounds = bounds.applying(transformToView).outset(by: 12)
+                let bounds = bounds.applying(viewport.worldToView).outset(by: 12)
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(.blue.opacity(0.8))
                     .framePosition(rect: bounds)
             } else {
-                let bounds = bounds.applying(transformToView)
+                let bounds = bounds.applying(viewport.worldToView)
                 RoundedRectangle(cornerRadius: 2)
                     .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
                     .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))

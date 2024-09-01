@@ -4,7 +4,7 @@ import SwiftUI
 
 extension ActiveSymbolView {
     struct SelectionBounds: View, TracedView, SelectorHolder {
-        @Environment(\.transformToView) var transformToView
+        @Environment(\.sizedViewport) var viewport
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
@@ -32,7 +32,7 @@ extension ActiveSymbolView.SelectionBounds {
 
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            let bounds = bounds.applying(transformToView).outset(by: selector.outset)
+            let bounds = bounds.applying(viewport.worldToView).outset(by: selector.outset)
             RoundedRectangle(cornerRadius: 8)
                 .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
                 .framePosition(rect: bounds)

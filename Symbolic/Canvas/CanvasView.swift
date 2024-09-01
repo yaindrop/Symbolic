@@ -193,7 +193,7 @@ private extension CanvasView {
 
     @ViewBuilder var staticObjects: some View { trace("staticObjects") {
         ZStack {
-            Background()
+//            Background()
 //            ItemsView()
             SymbolsView()
         }

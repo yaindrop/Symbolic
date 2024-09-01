@@ -23,17 +23,15 @@ struct ActiveSymbolView: View, TracedView, SelectorHolder {
 private extension ActiveSymbolView {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
-            let transform = $0.worldToView
             ZStack {
+                Grid()
                 ForEach(Array(selector.activeSymbolIds)) {
                     Bounds(symbolId: $0)
                 }
-                if let focusedSymbolId = selector.focusedSymbolId {
-                    ResizeHandle(symbolId: focusedSymbolId)
-                }
+                ResizeHandle()
                 SelectionBounds()
             }
-            .environment(\.transformToView, transform)
+            .environment(\.sizedViewport, $0)
         }
     }
 }

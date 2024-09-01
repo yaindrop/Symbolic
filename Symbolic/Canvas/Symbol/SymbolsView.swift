@@ -4,7 +4,7 @@ import SwiftUI
 
 struct SymbolsView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: SelectorConfigs { .init(syncNotify: true) }
+        override var configs: SelectorConfigs { .syncNotify }
         @Selected({ global.viewport.sizedInfo }) var viewport
         @Selected({ global.path.pathMap }) var pathMap
         @Selected({ global.symbol.symbolMap }) var symbolMap

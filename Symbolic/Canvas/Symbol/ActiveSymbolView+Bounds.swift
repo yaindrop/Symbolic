@@ -20,10 +20,10 @@ private extension GlobalStores {
     func gesture(symbolId: UUID) -> MultipleTouchGesture {
         .init(
             onPress: {
-                canvasAction.start(continuous: .moveSelection)
+                canvasAction.start(continuous: .moveSymbol)
             },
             onPressEnd: { cancelled in
-                canvasAction.end(continuous: .moveSelection)
+                canvasAction.end(continuous: .moveSymbol)
                 if cancelled { documentUpdater.cancel() }
             },
 
@@ -49,7 +49,7 @@ extension ActiveSymbolView {
 
         struct SelectorProps: Equatable { let symbolId: UUID }
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.symbol.get(id: $0.symbolId)?.boundingRect }) var bounds
             @Selected({ global.activeSymbol.selectedSymbolIds.contains($0.symbolId) }) var selected
             @Selected({ global.activeSymbol.focusedSymbolId == $0.symbolId }) var focused

@@ -4,7 +4,7 @@ import SwiftUI
 
 struct ActiveItemView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
+        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
         @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         @Selected({ !global.activeItem.activeItems.isEmpty }) var active
         @Selected({ global.activeItem.activePathIds }) var activePathIds

@@ -86,7 +86,7 @@ extension FocusedPathView {
         @Environment(\.transformToView) var transformToView
 
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.activeItem.focusedPath }) var path
         }
 

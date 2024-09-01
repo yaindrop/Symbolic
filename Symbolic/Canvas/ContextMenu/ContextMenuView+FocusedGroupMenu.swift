@@ -1,5 +1,27 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {
+    var focusedGroupBounds: CGRect? { activeItem.focusedGroup.map { item.boundingRect(of: $0.id) } }
+
+    func onZoom() {
+        guard let focusedGroupBounds else { return }
+        viewportUpdater.zoomTo(rect: focusedGroupBounds)
+    }
+
+    func onUngroup() {
+        guard let group = activeItem.focusedGroup else { return }
+        documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
+        activeItem.select(itemIds: group.members)
+    }
+
+    func onDelete() {
+//        guard let pathId = activeItem.focusedPathId else { return }
+//        documentUpdater.update(path: .delete(.init(pathIds: [pathId])))
+    }
+}
+
 // MARK: - FocusedGroupMenu
 
 extension ContextMenuView {
@@ -7,9 +29,9 @@ extension ContextMenuView {
         @Environment(\.sizedViewport) var viewport
 
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
+            @Selected({ global.focusedGroupBounds }) var bounds
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
-            @Selected({ global.activeItem.focusedGroup.map { global.item.boundingRect(of: $0.id) } }) var bounds
             @Selected({ global.activeItem.focusedGroup.map { global.activeItem.groupOutset(id: $0.id) } ?? 0 }) var outset
         }
 
@@ -36,11 +58,7 @@ extension ContextMenuView.FocusedGroupMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button {
-                if let bounds = selector.bounds {
-                    global.viewportUpdater.zoomTo(rect: bounds)
-                }
-            } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -53,7 +71,7 @@ extension ContextMenuView.FocusedGroupMenu {
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button { onUngroup() } label: { Image(systemName: "rectangle.3.group") }
+            Button { global.onUngroup() } label: { Image(systemName: "rectangle.3.group") }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -63,7 +81,7 @@ extension ContextMenuView.FocusedGroupMenu {
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)
         }
     }
@@ -80,13 +98,4 @@ extension ContextMenuView.FocusedGroupMenu {
         Button("Cut", systemImage: "scissors") {}
         Button("Duplicate", systemImage: "plus.square.on.square") {}
     }
-
-    func onUngroup() {
-        if let group = global.activeItem.focusedGroup {
-            global.documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
-            global.activeItem.select(itemIds: group.members)
-        }
-    }
-
-    func onDelete() {}
 }

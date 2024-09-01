@@ -24,6 +24,9 @@ enum CanvasAction: Equatable {
 
         case addAndMoveEndingNode
         case splitAndMovePathNode
+
+        case moveSymbol
+        case resizeSymbol
     }
 
     enum Instant: Equatable {
@@ -77,6 +80,9 @@ extension CanvasAction.Continuous {
 
         case .addAndMoveEndingNode: "Drag to move added node"
         case .splitAndMovePathNode: "Drag to move split node"
+
+        case .moveSymbol: "Move symbol"
+        case .resizeSymbol: "Resize symbol"
         }
     }
 }

@@ -34,7 +34,7 @@ extension FocusedPathView {
         @Environment(\.transformToView) var transformToView
 
         class Selector: SelectorBase {
-            @Selected(configs: .init(syncNotify: true), { global.activeItem.focusedPath }) var path
+            @Selected(configs: .syncNotify, { global.activeItem.focusedPath }) var path
             @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
         }
 

@@ -335,7 +335,7 @@ extension PanelStore {
         moving.align = moveTarget.align
         moving.offset = moveTarget.offset
         moving.ended = true
-        withStoreUpdating(configs: .init(syncNotify: true)) {
+        withStoreUpdating(configs: .syncNotify) {
             update(map: map.cloned { $0[id] = panel.cloned { $0.align = moveTarget.align } })
             update(moving: moving)
         }

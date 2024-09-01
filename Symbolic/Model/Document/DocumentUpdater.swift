@@ -40,23 +40,6 @@ extension DocumentUpdater {
         handle(.path(.update(.init(pathId: pathId, kind: kind))), pending: pending)
     }
 
-    func groupSelection() {
-        let groupId = UUID(),
-            members = activeItem.selectedItems.map { $0.id }
-        // TODO: fixme
-        guard !members.isEmpty else { return }
-        let inGroupId = itemStore.commonAncestorId(of: members),
-            inSymbolId = inGroupId == nil ? itemStore.symbolId(of: members[0]) : nil
-        update(item: .group(.init(groupId: groupId, members: members, inSymbolId: inSymbolId, inGroupId: inGroupId)))
-        activeItem.onTap(itemId: groupId)
-    }
-
-    func deleteSelection() {
-        let pathIds = activeItem.selectedItems.map { $0.id }
-        // TODO: fixme
-        global.documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
-    }
-
     func cancel() {
         store.pendingEvent.send(nil)
     }

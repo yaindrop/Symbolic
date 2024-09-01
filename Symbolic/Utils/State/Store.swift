@@ -85,10 +85,20 @@ struct SelectorConfigs {
     var animation: AnimationPreset? = nil
 }
 
+extension SelectorConfigs: TriviallyCloneable {
+    static var alwaysNotify: Self { .init(alwaysNotify: true) }
+    static var syncNotify: Self { .init(syncNotify: true) }
+}
+
 struct PartialSelectorConfigs {
     var alwaysNotify: Bool? = nil
     var syncNotify: Bool? = nil
     var animation: AnimationPreset?? = nil
+}
+
+extension PartialSelectorConfigs: TriviallyCloneable {
+    static var alwaysNotify: Self { .init(alwaysNotify: true) }
+    static var syncNotify: Self { .init(syncNotify: true) }
 }
 
 // MARK: - StoreSubscription

@@ -3,31 +3,29 @@ import SwiftUI
 // MARK: - global actions
 
 private extension GlobalStores {
-    var focusedPathBounds: CGRect? { activeItem.focusedPathId.map { item.boundingRect(of: $0) } }
+    var focusedSymbolBounds: CGRect? { activeSymbol.focusedSymbol?.boundingRect }
 
     func onZoom() {
-        guard let focusedPathBounds else { return }
-        viewportUpdater.zoomTo(rect: focusedPathBounds)
+        guard let focusedSymbolBounds else { return }
+        viewportUpdater.zoomTo(rect: focusedSymbolBounds)
     }
 
     func onDelete() {
-        guard let pathId = activeItem.focusedPathId else { return }
-        documentUpdater.update(path: .delete(.init(pathIds: [pathId])))
+        guard let symbolId = activeSymbol.focusedSymbolId else { return }
+        documentUpdater.update(symbol: .delete(.init(symbolIds: [symbolId])))
     }
 }
 
-// MARK: - FocusedPathMenu
+// MARK: - FocusedGroupMenu
 
 extension ContextMenuView {
-    struct FocusedPathMenu: View, TracedView, SelectorHolder {
+    struct FocusedSymbolMenu: View, TracedView, SelectorHolder {
         @Environment(\.sizedViewport) var viewport
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.focusedPathBounds }) var bounds
-            @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
-            @Selected({ global.focusedPath.activeNodeIds.isEmpty }) var visible
-            @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
+            @Selected({ global.focusedSymbolBounds }) var bounds
+            @Selected({ global.activeSymbol.editingSymbol == nil }) var visible
         }
 
         @SelectorWrapper var selector
@@ -42,11 +40,10 @@ extension ContextMenuView {
 
 // MARK: private
 
-extension ContextMenuView.FocusedPathMenu {
+extension ContextMenuView.FocusedSymbolMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds, selector.visible {
-            let transform = selector.symbolToWorld.concatenating(viewport.worldToView),
-                bounds = bounds.applying(transform)
+            let bounds = bounds.applying(viewport.worldToView)
             menu.contextMenu(bounds: bounds)
         }
     }
@@ -57,19 +54,12 @@ extension ContextMenuView.FocusedPathMenu {
                 .frame(minWidth: 32)
                 .tint(.label)
 
-            Button {
-                global.focusedPath.setSelecting(!selector.selectingNodes)
-            } label: { Image(systemName: "checklist").foregroundStyle(selector.selectingNodes ? .blue : .label) }
-                .frame(minWidth: 32)
-                .tint(.label)
-
             Divider()
 
-            Button {} label: { Image(systemName: "lock") }
+            Button {} label: { Image(systemName: "character.cursor.ibeam") }
                 .frame(minWidth: 32)
                 .tint(.label)
-            Menu { layerMenu } label: { Image(systemName: "square.3.layers.3d") }
-                .menuOrder(.fixed)
+            Button {} label: { Image(systemName: "lock") }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -82,13 +72,6 @@ extension ContextMenuView.FocusedPathMenu {
             Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)
         }
-    }
-
-    @ViewBuilder var layerMenu: some View {
-        Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
-        Button("Move above") {}
-        Button("Move below") {}
-        Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
     }
 
     @ViewBuilder var copyMenu: some View {

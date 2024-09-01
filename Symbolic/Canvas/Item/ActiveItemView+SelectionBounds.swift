@@ -7,7 +7,7 @@ extension ActiveItemView {
         @Environment(\.transformToView) var transformToView
 
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.activeItem.selectionBounds }) var bounds
             @Selected({ global.activeItem.selectionOutset }) var outset
         }

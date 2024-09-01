@@ -170,12 +170,6 @@ struct CanvasView: View, TracedView, SelectorHolder {
                     global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
                     global.panel.register(name: "Debug", align: .bottomTrailing) { DebugPanel() }
                     global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
-
-                    global.contextMenu.clear()
-                    global.contextMenu.register(.pathFocusedPart)
-                    global.contextMenu.register(.focusedPath)
-                    global.contextMenu.register(.focusedGroup)
-                    global.contextMenu.register(.selection)
                 }
                 .persistentSystemOverlays(.hidden)
         }

@@ -1,5 +1,32 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {
+    var selectionBounds: CGRect? { activeItem.selectionBounds }
+
+    func onZoom() {
+        guard let selectionBounds else { return }
+        viewportUpdater.zoomTo(rect: selectionBounds)
+    }
+
+    func onGroup() {
+        let groupId = UUID(),
+            members = activeItem.selectedItems.map { $0.id }
+        guard !members.isEmpty else { return }
+        let inGroupId = item.commonAncestorId(of: members),
+            inSymbolId = inGroupId == nil ? item.symbolId(of: members[0]) : nil
+        documentUpdater.update(item: .group(.init(groupId: groupId, members: members, inSymbolId: inSymbolId, inGroupId: inGroupId)))
+        activeItem.onTap(itemId: groupId)
+    }
+
+    func onDelete() {
+        let pathIds = activeItem.selectedItems.map { $0.id }
+        documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
+        activeItem.blur()
+    }
+}
+
 // MARK: - SelectionMenu
 
 extension ContextMenuView {
@@ -7,9 +34,9 @@ extension ContextMenuView {
         @Environment(\.sizedViewport) var viewport
 
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
+            @Selected({ global.selectionBounds }) var bounds
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
-            @Selected({ global.activeItem.selectionBounds }) var bounds
             @Selected({ global.activeItem.selectionOutset }) var outset
         }
 
@@ -36,11 +63,7 @@ extension ContextMenuView.SelectionMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button {
-                if let bounds = selector.bounds {
-                    global.viewportUpdater.zoomTo(rect: bounds)
-                }
-            } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -58,7 +81,7 @@ extension ContextMenuView.SelectionMenu {
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button { onGroup() } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
+            Button { global.onGroup() } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -72,16 +95,8 @@ extension ContextMenuView.SelectionMenu {
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)
         }
-    }
-
-    func onGroup() {
-        global.documentUpdater.groupSelection()
-    }
-
-    func onDelete() {
-        global.documentUpdater.deleteSelection()
     }
 }

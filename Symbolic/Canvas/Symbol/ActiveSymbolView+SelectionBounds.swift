@@ -7,7 +7,7 @@ extension ActiveSymbolView {
         @Environment(\.transformToView) var transformToView
 
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.activeSymbol.selectionBounds }) var bounds
             @Selected({ global.activeSymbol.selectionOutset }) var outset
         }

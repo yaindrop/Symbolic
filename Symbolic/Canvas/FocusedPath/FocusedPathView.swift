@@ -6,7 +6,7 @@ let debugFocusedPath: Bool = true
 
 struct FocusedPathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(syncNotify: true), { global.viewport.sizedInfo }) var viewport
+        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
         @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         @Selected({ global.activeItem.focusedPathId != nil }) var active
         @Selected({ global.focusedPath.selectingNodes }) var selectingNodes

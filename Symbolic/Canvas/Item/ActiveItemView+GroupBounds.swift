@@ -75,7 +75,7 @@ extension ActiveItemView {
 
         struct SelectorProps: Equatable { let groupId: UUID }
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.item.boundingRect(of: $0.groupId) }) var bounds
             @Selected({ global.activeItem.groupOutset(id: $0.groupId) }) var outset
             @Selected({ global.activeItem.focusedItemId == $0.groupId }) var focused

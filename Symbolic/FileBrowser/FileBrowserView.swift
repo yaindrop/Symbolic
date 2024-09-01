@@ -40,7 +40,7 @@ private extension FileBrowserView {
 
 private struct ToolbarModifier: ViewModifier, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(alwaysNotify: true), { global.viewport.viewSize }) var viewSize
+        @Selected(configs: .alwaysNotify, { global.viewport.viewSize }) var viewSize
         @Selected(configs: .init(animation: .fast), { global.fileBrowser.isSelectingFiles }) var isSelectingFiles
     }
 

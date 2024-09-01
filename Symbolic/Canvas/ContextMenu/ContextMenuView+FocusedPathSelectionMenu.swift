@@ -1,5 +1,32 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {
+    var activeNodesBounds: CGRect? { focusedPath.activeNodesBounds }
+
+    func onZoom() {
+        guard let activeNodesBounds else { return }
+        viewportUpdater.zoomTo(rect: activeNodesBounds)
+    }
+
+    func setNodeType(_ nodeType: PathNodeType) {
+        guard let pathId = activeItem.focusedPathId else { return }
+        let nodeIds = Array(focusedPath.activeNodeIds)
+        documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
+    }
+
+    func setSegmentType(_ segmentType: PathSegmentType) {
+        guard let pathId = activeItem.focusedPathId else { return }
+        let fromNodeIds = Array(focusedPath.activeSegmentIds)
+        documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
+    }
+
+    func onDelete() {
+        documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: .init(focusedPath.activeNodeIds))))
+    }
+}
+
 // MARK: - FocusedPathSelectionMenu
 
 extension ContextMenuView {
@@ -7,8 +34,8 @@ extension ContextMenuView {
         @Environment(\.sizedViewport) var viewport
 
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
-            @Selected({ global.focusedPath.activeNodesBounds }) var bounds
+            override var configs: SelectorConfigs { .syncNotify }
+            @Selected({ global.activeNodesBounds }) var bounds
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
             @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
@@ -43,11 +70,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button {
-                if let bounds = selector.bounds {
-                    global.viewportUpdater.zoomTo(rect: bounds)
-                }
-            } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
                 .frame(minWidth: 32)
                 .tint(.label)
 
@@ -79,7 +102,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button(role: .destructive) { onDelete() } label: { Image(systemName: "trash") }
+            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
                 .frame(minWidth: 32)
         }
     }
@@ -99,7 +122,7 @@ extension ContextMenuView.FocusedPathSelectionMenu {
             }
         }
         let selected = selector.activeNodeType == nodeType
-        Button(name, systemImage: selected ? "checkmark" : "") { setNodeType(nodeType) }
+        Button(name, systemImage: selected ? "checkmark" : "") { global.setNodeType(nodeType) }
             .disabled(selected)
     }
 
@@ -107,21 +130,5 @@ extension ContextMenuView.FocusedPathSelectionMenu {
         Button("Copy", systemImage: "doc.on.doc") {}
         Button("Cut", systemImage: "scissors") {}
         Button("Duplicate", systemImage: "plus.square.on.square") {}
-    }
-
-    func setNodeType(_ nodeType: PathNodeType) {
-        guard let pathId = global.activeItem.focusedPathId else { return }
-        let nodeIds = Array(global.focusedPath.activeNodeIds)
-        global.documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
-    }
-
-    func setSegmentType(_ segmentType: PathSegmentType) {
-        guard let pathId = global.activeItem.focusedPathId else { return }
-        let fromNodeIds = Array(global.focusedPath.activeSegmentIds)
-        global.documentUpdater.update(path: .update(.init(pathId: pathId, kind: .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
-    }
-
-    func onDelete() {
-        global.documentUpdater.update(focusedPath: .deleteNodes(.init(nodeIds: .init(global.focusedPath.activeNodeIds))))
     }
 }

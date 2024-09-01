@@ -11,10 +11,10 @@ private extension GlobalStores {
     func gesture(symbolId: UUID, align: PlaneInnerAlign) -> MultipleGesture {
         .init(
             onPress: { _ in
-                canvasAction.start(continuous: .moveSelection)
+                canvasAction.start(continuous: .resizeSymbol)
             },
             onPressEnd: { _, cancelled in
-                canvasAction.end(continuous: .moveSelection)
+                canvasAction.end(continuous: .resizeSymbol)
                 if cancelled { documentUpdater.cancel() }
             },
 
@@ -36,7 +36,7 @@ extension ActiveSymbolView {
 
         struct SelectorProps: Equatable { let symbolId: UUID }
         class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .init(syncNotify: true) }
+            override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.symbol.get(id: $0.symbolId)?.boundingRect }) var bounds
         }
 

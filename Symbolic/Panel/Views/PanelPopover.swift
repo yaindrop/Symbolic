@@ -51,7 +51,7 @@ private extension PanelPopoverSectionView {
 
 struct PanelPopover: View, SelectorHolder {
     class Selector: SelectorBase {
-        override var configs: SelectorConfigs { .init(syncNotify: true) }
+        override var configs: SelectorConfigs { .syncNotify }
         @Selected(configs: .init(animation: .faster), { global.panel.popoverActive && global.panel.moving == nil }) var visible
         @Selected({ global.viewport.viewSize }) var viewSize
         @Selected({ global.panel.popoverPanels }) var popoverPanels

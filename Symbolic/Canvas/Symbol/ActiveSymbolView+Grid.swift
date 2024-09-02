@@ -8,7 +8,8 @@ extension ActiveSymbolView {
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.activeSymbol.activeGrid }) var activeGrid
+            @Selected({ global.activeSymbol.editingSymbol }) var editingSymbol
+            @Selected({ global.activeSymbol.grid }) var grid
             @Selected({ global.activeSymbol.worldToSymbol }) var worldToSymbol
         }
 
@@ -26,10 +27,20 @@ extension ActiveSymbolView {
 
 extension ActiveSymbolView.Grid {
     @ViewBuilder var content: some View {
-        if let grid = selector.activeGrid {
+        if let editingSymbol = selector.editingSymbol, let grid = selector.grid {
             let origin = viewport.origin.applying(selector.worldToSymbol),
-                gridViewport = SizedViewportInfo(size: viewport.size, info: .init(origin: origin, scale: viewport.scale))
-            GridView(grid: grid, viewport: gridViewport, color: grid.tintColor, type: .background)
+                gridViewport = SizedViewportInfo(size: viewport.size, info: .init(origin: origin, scale: viewport.scale)),
+                bounds = editingSymbol.boundingRect.applying(viewport.worldToView).outset(by: ActiveSymbolService.editingBoundsOutset)
+            GridLines(grid: grid, viewport: gridViewport)
+                .mask {
+                    ZStack {
+                        Rectangle()
+                            .opacity(0.3)
+                        RoundedRectangle(cornerRadius: ActiveSymbolService.editingBoundsRadius)
+                            .path(in: bounds)
+                    }
+                }
+            GridLabels(grid: grid, viewport: gridViewport, hasSafeArea: true)
         }
     }
 }

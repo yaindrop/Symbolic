@@ -13,7 +13,7 @@ enum SymbolActiveState: Equatable {
 
 class ActiveSymbolStore: Store {
     @Trackable var state: SymbolActiveState = .none
-    @Trackable var activeGridIndex: Int = 0
+    @Trackable var gridIndex: Int = 0
 }
 
 private extension ActiveSymbolStore {
@@ -39,7 +39,7 @@ struct ActiveSymbolService {
 extension ActiveSymbolService {
     var state: SymbolActiveState { store.state }
 
-    var activeGridIndex: Int { store.activeGridIndex }
+    var gridIndex: Int { store.gridIndex }
 
     var activeSymbolIds: Set<UUID> {
         switch state {
@@ -50,6 +50,8 @@ extension ActiveSymbolService {
         }
     }
 
+    // MARK: focused
+
     var focusedSymbolId: UUID? {
         switch state {
         case let .focused(id): id
@@ -58,15 +60,23 @@ extension ActiveSymbolService {
         }
     }
 
-    var editingSymbolId: UUID? { if case let .editing(id) = state { id } else { nil } }
-
     var focusedSymbol: Symbol? { focusedSymbolId.map { symbol.get(id: $0) } }
-
-    var editingSymbol: Symbol? { editingSymbolId.map { symbol.get(id: $0) } }
 
     var focusedSymbolItem: Item.Symbol? { focusedSymbolId.map { item.symbol(id: $0) } }
 
+    // MARK: editing
+
+    var editingSymbolId: UUID? { if case let .editing(id) = state { id } else { nil } }
+
+    var editingSymbol: Symbol? { editingSymbolId.map { symbol.get(id: $0) } }
+
     var editingSymbolItem: Item.Symbol? { editingSymbolId.map { item.symbol(id: $0) } }
+
+    static var editingBoundsOutset: Scalar { 12 }
+
+    static var editingBoundsRadius: Scalar { 6 }
+
+    // MARK: transform
 
     var symbolToWorld: CGAffineTransform { focusedSymbol?.symbolToWorld ?? .identity }
 
@@ -75,6 +85,8 @@ extension ActiveSymbolService {
     var symbolToView: CGAffineTransform { symbolToWorld.concatenating(viewport.worldToView) }
 
     var viewToSymbol: CGAffineTransform { viewport.viewToWorld.concatenating(worldToSymbol) }
+
+    // MARK: selection
 
     var selectedSymbolIds: Set<UUID> {
         switch state {
@@ -91,7 +103,9 @@ extension ActiveSymbolService {
         .init(union: selectedSymbolIds.compactMap { symbol.get(id: $0.id)?.boundingRect })
     }
 
-    var selectionOutset: Scalar { 12 }
+    static var selectionBoundsOutset: Scalar { 12 }
+
+    // MARK: hit test
 
     func pathHitTest(pathId: UUID, worldPosition: Point2, threshold: Scalar = 24) -> Bool {
         guard editingSymbolId != nil,
@@ -107,14 +121,18 @@ extension ActiveSymbolService {
         return item.allPathItems(symbolId: focusedSymbolId).first { pathHitTest(pathId: $0.id, worldPosition: worldPosition) }?.id
     }
 
-    var activeGrid: Grid? {
-        guard let editingSymbol,
-              editingSymbol.grids.indices.contains(activeGridIndex) else { return nil }
-        return editingSymbol.grids[activeGridIndex]
+    // MARK: grid
+
+    var grids: [Grid] { editingSymbol?.grids ?? [] }
+
+    var grid: Grid? {
+        let grids = grids
+        guard grids.indices.contains(gridIndex) else { return nil }
+        return grids[gridIndex]
     }
 
     func snap(_ point: Point2) -> Point2 {
-        activeGrid?.snap(point) ?? point
+        grid?.snap(point) ?? point
     }
 
     func snapped(_ point: Point2) -> Grid? {

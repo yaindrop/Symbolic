@@ -5,9 +5,9 @@ import SwiftUI
 
 struct GridPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.activeGrid }) var activeGrid
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.editingSymbol?.grids }) var grids
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.activeGridIndex }) var activeGridIndex
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.grids }) var grids
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.grid }) var grid
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.gridIndex }) var gridIndex
     }
 
     @SelectorWrapper var selector
@@ -18,10 +18,10 @@ struct GridPanel: View, TracedView, SelectorHolder {
         setupSelector {
             content
                 .onChange(of: index) {
-                    guard index != selector.activeGridIndex else { return }
+                    guard index != selector.gridIndex else { return }
 //                    global.grid.setActive(index)
                 }
-                .bind(selector.activeGridIndex, to: $index)
+                .bind(selector.gridIndex, to: $index)
                 .environmentObject(ViewModel())
         }
     } }
@@ -43,7 +43,8 @@ extension GridPanel {
     }
 
     @ViewBuilder private var tabs: some View {
-        if let grids = selector.grids, grids.count > 1 {
+        let grids = selector.grids
+        if grids.count > 1 {
             HStack {
                 Picker("", selection: $index) {
                     Text("Primary").tag(0)
@@ -58,7 +59,7 @@ extension GridPanel {
     }
 
     @ViewBuilder private var preview: some View {
-        if let grid = selector.activeGrid {
+        if let grid = selector.grid {
             PanelSection(name: "Preview") {
                 Preview(grid: grid)
             }
@@ -116,16 +117,20 @@ private extension GridPanel.Preview {
 
     @ViewBuilder var gridView: some View {
         AnimatableReader(viewport) { viewport in
-            switch grid.kind {
-            case let .cartesian(grid):
-                AnimatableReader(grid) {
-                    GridView(grid: .init(kind: .cartesian($0)), viewport: viewport, color: self.grid.tintColor, type: .preview)
+            ZStack {
+                switch grid.kind {
+                case let .cartesian(grid):
+                    AnimatableReader(grid) {
+                        GridLines(grid: .init(kind: .cartesian($0)), viewport: viewport)
+                        GridLabels(grid: .init(kind: .cartesian($0)), viewport: viewport, hasSafeArea: false)
+                    }
+                case let .isometric(grid):
+                    AnimatableReader(grid) {
+                        GridLines(grid: .init(kind: .isometric($0)), viewport: viewport)
+                        GridLabels(grid: .init(kind: .isometric($0)), viewport: viewport, hasSafeArea: false)
+                    }
+                default: EmptyView()
                 }
-            case let .isometric(grid):
-                AnimatableReader(grid) {
-                    GridView(grid: .init(kind: .isometric($0)), viewport: viewport, color: self.grid.tintColor, type: .preview)
-                }
-            default: EmptyView()
             }
         }
     }

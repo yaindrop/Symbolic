@@ -9,7 +9,6 @@ extension ActiveItemView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.activeItem.selectionBounds }) var bounds
-            @Selected({ global.activeItem.selectionOutset }) var outset
         }
 
         @SelectorWrapper var selector
@@ -32,7 +31,7 @@ extension ActiveItemView.SelectionBounds {
 
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            let bounds = bounds.applying(transformToView).outset(by: selector.outset)
+            let bounds = bounds.applying(transformToView).outset(by: ActiveItemService.selectionBoundsOutset)
             RoundedRectangle(cornerRadius: 8)
                 .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
                 .framePosition(rect: bounds)

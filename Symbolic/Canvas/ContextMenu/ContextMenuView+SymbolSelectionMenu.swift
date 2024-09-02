@@ -26,7 +26,6 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.selectionBounds }) var bounds
-            @Selected({ global.activeSymbol.selectionOutset }) var outset
         }
 
         @SelectorWrapper var selector
@@ -44,7 +43,7 @@ extension ContextMenuView {
 extension ContextMenuView.SymbolSelectionMenu {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            let bounds = bounds.applying(viewport.worldToView).outset(by: selector.outset)
+            let bounds = bounds.applying(viewport.worldToView).outset(by: ActiveSymbolService.selectionBoundsOutset)
             menu.contextMenu(bounds: bounds)
         }
     }

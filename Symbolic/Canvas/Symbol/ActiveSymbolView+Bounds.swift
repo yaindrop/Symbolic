@@ -72,8 +72,8 @@ extension ActiveSymbolView.Bounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             if selector.editing {
-                let bounds = bounds.applying(viewport.worldToView).outset(by: 12)
-                RoundedRectangle(cornerRadius: 6)
+                let bounds = bounds.applying(viewport.worldToView).outset(by: ActiveSymbolService.editingBoundsOutset)
+                RoundedRectangle(cornerRadius: ActiveSymbolService.editingBoundsRadius)
                     .stroke(.blue.opacity(0.8))
                     .framePosition(rect: bounds)
             } else {

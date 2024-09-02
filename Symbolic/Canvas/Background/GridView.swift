@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - ParallelLineSet
+
 struct ParallelLineSet {
     var interval: Scalar
     var angle: Angle
@@ -55,37 +57,104 @@ struct ConcentricCircleSet {
     var interval: Scalar
 }
 
-// MARK: - GridView
+extension Grid.Cartesian {
+    var verticalLineSet: ParallelLineSet { .vertical(interval: interval) }
 
-enum GridViewType {
-    case background
-    case preview
+    var horizontalLineSet: ParallelLineSet { .horizontal(interval: interval) }
+
+    func lineSets(target: Scalar? = nil) -> [ParallelLineSet] {
+        var interval = interval
+        if let target {
+            interval = adjusted(from: interval, target: target)
+        }
+        return [.vertical(interval: interval), .horizontal(interval: interval)]
+    }
 }
+
+extension Grid.Isometric {
+    var intercept: Scalar { interval * abs(tan(angle0.radians) + tan(-angle1.radians)) }
+
+    var interval0: Scalar { intercept * cos(angle0.radians) }
+
+    var interval1: Scalar { intercept * cos(angle1.radians) }
+
+    var verticalLineSet: ParallelLineSet { .vertical(interval: interval) }
+
+    var perspectiveLineSet0: ParallelLineSet { .init(interval: interval0, angle: angle0) }
+
+    var perspectiveLineSet1: ParallelLineSet { .init(interval: interval0, angle: angle0) }
+
+    func lineSets(target: Scalar? = nil) -> [ParallelLineSet] {
+        var interval = interval, perspectiveInterval0 = interval0, perspectiveInterval1 = interval1
+        if let target {
+            interval = adjusted(from: interval, target: target)
+            perspectiveInterval0 = adjusted(from: interval0, target: target)
+            perspectiveInterval1 = adjusted(from: interval1, target: target)
+        }
+        if intercept.nearlyEqual(0, epsilon: 0.1) {
+            return [.init(interval: interval, angle: angle0), .vertical(interval: interval)]
+        } else {
+            return [.init(interval: perspectiveInterval0, angle: angle0), .init(interval: perspectiveInterval1, angle: angle1), .vertical(interval: interval)]
+        }
+    }
+}
+
+// MARK: - GridLineType
 
 enum GridLineType: CaseIterable {
     case normal
     case principal
     case axis
+
+    init(index: Int) {
+        if index == 0 {
+            self = .axis
+        } else if index % 2 == 0 {
+            self = .principal
+        } else {
+            self = .normal
+        }
+    }
+
+    var lineWidth: Scalar {
+        switch self {
+        case .normal: 0.5
+        case .principal: 1
+        case .axis: 2
+        }
+    }
+
+    var opacity: Scalar {
+        switch self {
+        case .normal: 0.3
+        case .principal: 0.5
+        case .axis: 0.8
+        }
+    }
 }
 
-struct GridView: View, TracedView {
+// MARK: - GridLines
+
+struct GridLines: View, TracedView {
     let grid: Grid
     let viewport: SizedViewportInfo
-    let color: CGColor
-    let type: GridViewType
 
     var body: some View { trace {
         content
     }}
 }
 
-extension GridView {
+extension GridLines {
     @ViewBuilder var content: some View {
-        let lineSets = lineSets
-        ZStack {
-            lines(lineSets: lineSets)
-            labels(lineSets: lineSets)
+        let lineSets = lineSets,
+            color = Color(cgColor: grid.tintColor)
+        Canvas { ctx, _ in
+            for type in GridLineType.allCases {
+                let lines = path(type: type, lineSets: lineSets)
+                ctx.stroke(lines, with: .color(color.opacity(type.opacity)), lineWidth: type.lineWidth)
+            }
         }
+        .allowsHitTesting(false)
     }
 
     var targetInterval: Scalar { 24 }
@@ -102,16 +171,6 @@ extension GridView {
         }
     }
 
-    func lineType(index: Int) -> GridLineType {
-        if index == 0 {
-            .axis
-        } else if index % 2 == 0 {
-            .principal
-        } else {
-            .normal
-        }
-    }
-
     func path(type: GridLineType, lineSets: [ParallelLineSet]) -> SUPath {
         .init { path in
             func draw(segment: LineSegment) {
@@ -120,7 +179,7 @@ extension GridView {
             }
             func draw(lineSet: ParallelLineSet) {
                 for i in lineSet.range(in: worldRect) {
-                    guard lineType(index: i) == type else { continue }
+                    guard GridLineType(index: i) == type else { continue }
                     let line = lineSet.line(at: i)
                     let segment = line.segment(in: worldRect)
                     guard let segment else { continue }
@@ -132,41 +191,58 @@ extension GridView {
             }
         }
     }
+}
 
-    @ViewBuilder func lines(lineSets: [ParallelLineSet]) -> some View {
-        ForEach(GridLineType.allCases, id: \.self) { type in
-            let lines = path(type: type, lineSets: lineSets),
-                color = Color(cgColor: color)
-            switch type {
-            case .normal: lines.stroke(color.opacity(0.3), style: .init(lineWidth: 0.5))
-            case .principal: lines.stroke(color.opacity(0.5), style: .init(lineWidth: 1))
-            case .axis: lines.stroke(color.opacity(0.8), style: .init(lineWidth: 2))
-            }
-        }
-    }
+// MARK: - GridLabels
 
-    @ViewBuilder func labels(lineSets: [ParallelLineSet]) -> some View {
-        let verticalLineSet = lineSets.first { $0.angle.isRight }
-        let horizontalLineSet = lineSets.first { $0.angle.isFull }
+struct GridLabels: View, TracedView {
+    let grid: Grid
+    let viewport: SizedViewportInfo
+    let hasSafeArea: Bool
+
+    var body: some View { trace {
+        content
+    }}
+}
+
+extension GridLabels {
+    @ViewBuilder var content: some View {
+        let lineSets = lineSets,
+            verticalLineSet = lineSets.first { $0.angle.isRight },
+            horizontalLineSet = lineSets.first { $0.angle.isFull }
         Group {
             if let verticalLineSet {
                 let verticalLines = verticalLineSet.range(in: worldRect)
-                    .filter { lineType(index: $0) != .normal }
+                    .filter { GridLineType(index: $0) != .normal }
                     .compactMap { verticalLineSet.line(at: $0).vertical }
                 ForEach(verticalLines, id: \.x) {
-                    GridVerticalLabel(line: $0, viewport: viewport, hasSafeArea: type == .background)
+                    GridVerticalLabel(line: $0, viewport: viewport, hasSafeArea: hasSafeArea)
                 }
             }
             if let horizontalLineSet {
                 let horizontalLines = horizontalLineSet.range(in: worldRect)
-                    .filter { lineType(index: $0) != .normal }
+                    .filter { GridLineType(index: $0) != .normal }
                     .compactMap { horizontalLineSet.line(at: $0).slopeIntercept }
                 ForEach(horizontalLines, id: \.b) {
                     GridHorizontalLabel(line: $0, viewport: viewport)
                 }
             }
         }
-        .foregroundStyle(Color(cgColor: color))
+        .foregroundStyle(Color(cgColor: grid.tintColor))
+    }
+
+    var targetInterval: Scalar { 24 }
+
+    var targetIntervalInWorld: Scalar { Vector2(targetInterval, 0).applying(viewport.viewToWorld).dx }
+
+    var worldRect: CGRect { viewport.worldRect }
+
+    var lineSets: [ParallelLineSet] {
+        switch grid.kind {
+        case let .cartesian(grid): grid.lineSets(target: targetIntervalInWorld)
+        case let .isometric(grid): grid.lineSets(target: targetIntervalInWorld)
+        case .radial: []
+        }
     }
 }
 
@@ -211,8 +287,7 @@ private extension GridVerticalLabel {
             .font(.caption2)
             .sizeReader { size = $0 }
             .rotationEffect(rotated ? .degrees(-45) : .zero)
-            .position(.init(xInView, viewport.size.height))
-            .offset(.init(offset))
+            .position(.init(xInView, viewport.size.height) + offset)
     }
 }
 
@@ -246,7 +321,6 @@ private extension GridHorizontalLabel {
         Text(text)
             .font(.caption2)
             .sizeReader { size = $0 }
-            .position(.init(0, yInView))
-            .offset(.init(offset))
+            .position(.init(0, yInView) + offset)
     }
 }

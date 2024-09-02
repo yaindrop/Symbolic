@@ -6,7 +6,7 @@ struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .syncNotify }
         @Selected({ global.viewport.sizedInfo }) var viewport
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.activeGrid }) var grid
+        @Selected(configs: .init(animation: .fast), { global.activeSymbol.grid }) var grid
     }
 
     @SelectorWrapper var selector
@@ -27,11 +27,13 @@ private extension Background {
                 switch grid.kind {
                 case let .cartesian(kind):
                     AnimatableReader(kind) { kind in
-                        GridView(grid: .init(kind: .cartesian(kind)), viewport: viewport, color: grid.tintColor, type: .background)
+                        GridLines(grid: .init(kind: .cartesian(kind)), viewport: viewport)
+                        GridLabels(grid: .init(kind: .cartesian(kind)), viewport: viewport, hasSafeArea: true)
                     }
                 case let .isometric(kind):
                     AnimatableReader(kind) { kind in
-                        GridView(grid: .init(kind: .isometric(kind)), viewport: viewport, color: grid.tintColor, type: .background)
+                        GridLines(grid: .init(kind: .isometric(kind)), viewport: viewport)
+                        GridLabels(grid: .init(kind: .isometric(kind)), viewport: viewport, hasSafeArea: true)
                     }
                 default: EmptyView()
                 }

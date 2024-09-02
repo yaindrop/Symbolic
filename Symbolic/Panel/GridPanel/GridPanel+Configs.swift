@@ -5,8 +5,8 @@ import SwiftUI
 extension GridPanel {
     struct Configs: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected(configs: .init(animation: .fast), { global.grid.active }) var grid
-            @Selected(configs: .init(animation: .fast), { global.grid.gridStack }) var gridStack
+            @Selected(configs: .init(animation: .fast), { global.activeSymbol.grids }) var gridStack
+            @Selected(configs: .init(animation: .fast), { global.activeSymbol.grid }) var grid
         }
 
         @SelectorWrapper var selector
@@ -17,25 +17,27 @@ extension GridPanel {
 
         var body: some View { trace {
             setupSelector {
-                content
-                    .onChange(of: tintColor) {
-                        guard tintColor != selector.grid.tintColor else { return }
-                        var grid = selector.grid
-                        grid.tintColor = tintColor
-                        global.grid.update(grid: grid)
-                    }
-                    .onChange(of: gridCase) {
-                        guard gridCase != selector.grid.case else { return }
-                        var grid = selector.grid
-                        switch gridCase {
-                        case .cartesian: grid.kind = .cartesian(.init(interval: 8))
-                        case .isometric: grid.kind = .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))
-                        case .radial: break
+                if let grid = selector.grid {
+                    content
+                        .onChange(of: tintColor) {
+                            guard tintColor != grid.tintColor else { return }
+                            var grid = grid
+                            grid.tintColor = tintColor
+                            //                        global.grid.update(grid: grid)
                         }
-                        global.grid.update(grid: grid)
-                    }
-                    .bind(selector.grid.tintColor, to: $tintColor)
-                    .bind(selector.grid.case, to: $gridCase)
+                        .onChange(of: gridCase) {
+                            guard gridCase != grid.case else { return }
+                            var grid = grid
+                            switch gridCase {
+                            case .cartesian: grid.kind = .cartesian(.init(interval: 8))
+                            case .isometric: grid.kind = .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))
+                            case .radial: break
+                            }
+                            //                        global.grid.update(grid: grid)
+                        }
+                        .bind(grid.tintColor, to: $tintColor)
+                        .bind(grid.case, to: $gridCase)
+                }
             }
         } }
     }
@@ -69,17 +71,19 @@ private extension GridPanel.Configs {
     }
 
     @ViewBuilder var kindConfigs: some View {
-        switch selector.grid.kind {
-        case let .cartesian(grid): Cartesian(grid: grid)
-        case let .isometric(grid): Isometric(grid: grid)
-        case .radial: EmptyView()
+        if let grid = selector.grid {
+            switch grid.kind {
+            case let .cartesian(grid): Cartesian(grid: grid)
+            case let .isometric(grid): Isometric(grid: grid)
+            case .radial: EmptyView()
+            }
         }
     }
 
     var editRow: some View {
         ContextualRow {
             Button(role: .destructive) {
-                global.grid.delete()
+//                global.grid.delete()
             } label: {
                 Image(systemName: "trash")
             }
@@ -88,7 +92,7 @@ private extension GridPanel.Configs {
             .disabled(selector.gridStack.count == 1)
             Spacer()
             Button {
-                global.grid.add()
+//                global.grid.add()
             } label: {
                 Image(systemName: "plus")
             }
@@ -126,9 +130,9 @@ private extension GridPanel.Configs {
 
 private extension GridPanel.Configs.Cartesian {
     func updateGrid() {
-        var grid = global.grid.active
-        grid.kind = .cartesian(.init(interval: interval))
-        global.grid.update(grid: grid)
+//        var grid = global.grid.active
+//        grid.kind = .cartesian(.init(interval: interval))
+//        global.grid.update(grid: grid)
     }
 
     @ViewBuilder var content: some View {
@@ -182,9 +186,9 @@ private extension GridPanel.Configs {
 
 private extension GridPanel.Configs.Isometric {
     func updateGrid() {
-        var grid = global.grid.active
-        grid.kind = .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)))
-        global.grid.update(grid: grid)
+//        var grid = global.grid.active
+//        grid.kind = .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)))
+//        global.grid.update(grid: grid)
     }
 
     @ViewBuilder var content: some View {

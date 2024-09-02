@@ -9,7 +9,6 @@ extension ActiveSymbolView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.activeSymbol.selectionBounds }) var bounds
-            @Selected({ global.activeSymbol.selectionOutset }) var outset
         }
 
         @SelectorWrapper var selector
@@ -32,7 +31,7 @@ extension ActiveSymbolView.SelectionBounds {
 
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
-            let bounds = bounds.applying(viewport.worldToView).outset(by: selector.outset)
+            let bounds = bounds.applying(viewport.worldToView).outset(by: ActiveSymbolService.selectionBoundsOutset)
             RoundedRectangle(cornerRadius: 8)
                 .stroke(.blue.opacity(0.5), style: .init(lineWidth: lineWidth, dash: [dashSize], dashPhase: dashPhase))
                 .framePosition(rect: bounds)

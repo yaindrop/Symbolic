@@ -60,7 +60,7 @@ extension ActiveItemService {
         activeItems.compactMap { $0.group }
     }
 
-    // MARK: selected
+    // MARK: selection
 
     var selectedItemIds: Set<UUID> {
         guard focusedItemId == nil else { return [] }
@@ -87,7 +87,7 @@ extension ActiveItemService {
         .init(union: selectedItemIds.compactMap { item.boundingRect(of: $0.id) })
     }
 
-    var selectionOutset: Scalar { 12 }
+    static var selectionBoundsOutset: Scalar { 12 }
 
     // MARK: focused
 

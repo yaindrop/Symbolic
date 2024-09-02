@@ -32,7 +32,11 @@ private extension GlobalStores {
                 let editingSymbolId = activeSymbol.editingSymbolId,
                     hitSymbolId = symbol.symbolHitTest(worldPosition: worldPosition)
                 guard let editingSymbolId else {
-                    activeSymbol.setFocus(symbolId: hitSymbolId)
+                    if let hitSymbolId, activeSymbol.focusedSymbolId == hitSymbolId {
+                        activeSymbol.setEditing(symbolId: hitSymbolId)
+                    } else {
+                        activeSymbol.setFocus(symbolId: hitSymbolId)
+                    }
                     return
                 }
                 let hitPathId = activeSymbol.pathHitTest(worldPosition: worldPosition)

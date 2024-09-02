@@ -6,6 +6,12 @@ let debugCanvasOverlay: Bool = false
 // MARK: - global actions
 
 private extension GlobalStores {
+    func commitViewportUpdate() {
+        canvasAction.end(continuous: .panViewport)
+        canvasAction.end(continuous: .pinchViewport)
+        viewportUpdater.onCommit()
+    }
+
     var canvasGesture: MultipleTouchGesture {
         .init(
             onPress: {
@@ -100,10 +106,26 @@ private extension GlobalStores {
                 draggingSelect.onDrag($0)
                 draggingCreate.onDrag($0)
             },
-            onPan: { viewportUpdater.onPan($0) },
-            onPanEnd: { _ in viewportUpdater.onCommit() },
-            onPinch: { viewportUpdater.onPinch($0) },
-            onPinchEnd: { _ in viewportUpdater.onCommit() }
+            onPan: {
+                if viewportUpdater.blocked {
+                    commitViewportUpdate()
+                } else {
+                    canvasAction.end(continuous: .pinchViewport)
+                    canvasAction.start(continuous: .panViewport)
+                    viewportUpdater.onPan($0)
+                }
+            },
+            onPanEnd: { _ in commitViewportUpdate() },
+            onPinch: {
+                if viewportUpdater.blocked {
+                    commitViewportUpdate()
+                } else {
+                    canvasAction.end(continuous: .panViewport)
+                    canvasAction.start(continuous: .pinchViewport)
+                    viewportUpdater.onPinch($0)
+                }
+            },
+            onPinchEnd: { _ in commitViewportUpdate() }
         )
     }
 
@@ -157,7 +179,7 @@ private extension GlobalStores {
 
 struct CanvasView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.viewportUpdater.store.updating }) var viewportUpdating
+        @Selected({ global.viewportUpdater.updating }) var viewportUpdating
     }
 
     @SelectorWrapper var selector

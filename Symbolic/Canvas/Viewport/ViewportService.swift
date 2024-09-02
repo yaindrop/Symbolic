@@ -44,7 +44,7 @@ extension ViewportService {
         store.update(viewSize: viewSize)
     }
 
-    func setInfo(origin: Point2, scale: Scalar) {
-        store.update(info: .init(origin: origin, scale: scale))
+    func setInfo(_ info: ViewportInfo) {
+        store.update(info: info)
     }
 }

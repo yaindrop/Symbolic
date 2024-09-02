@@ -58,7 +58,7 @@ extension GlobalStores {
     var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path, viewport: viewport) }
 
     var viewport: ViewportService { .init(store: viewportStore) }
-    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, panel: panel) }
+    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, activeSymbol: activeSymbol, panel: panel) }
 
     var focusedPath: FocusedPathService { .init(store: focusedPathStore, activeItem: activeItem) }
 

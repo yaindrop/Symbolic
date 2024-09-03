@@ -58,14 +58,9 @@ extension ViewportUpdater {
             scale = referenceInfo.scale,
             origin = referenceInfo.origin - info.offset / scale
         var sizedInfo = SizedViewportInfo(size: viewport.viewSize, info: .init(origin: origin, scale: scale))
-        if let symbol = activeSymbol.editingSymbol {
-            let offset = sizedInfo.clampingOffset(by: symbol.boundingRect)
-            sizedInfo.info.origin += offset
-            sizedInfo.info.origin.x -= (offset.dx > 0 ? 1 : -1) * 50 * log(abs(offset.dx) / 50.0 + 1.0)
-            sizedInfo.info.origin.y -= (offset.dy > 0 ? 1 : -1) * 50 * log(abs(offset.dy) / 50.0 + 1.0)
-        }
+        overscroll(info: &sizedInfo, exceeding: true)
         withStoreUpdating {
-            store.update(updating: true)
+            overscroll(info: &sizedInfo, exceeding: true)
             viewport.setInfo(sizedInfo.info)
         }
     }
@@ -78,13 +73,7 @@ extension ViewportUpdater {
             scale = referenceInfo.scale * info.scale,
             origin = referenceInfo.origin - Vector2(transformedOrigin) / scale
         var sizedInfo = SizedViewportInfo(size: viewport.viewSize, info: .init(origin: origin, scale: scale))
-        if let symbol = activeSymbol.editingSymbol {
-            let offset = sizedInfo.clampingOffset(by: symbol.boundingRect)
-            sizedInfo.info.origin += offset
-            sizedInfo.info.origin -= offset / 3
-            sizedInfo.info.origin.x -= (offset.dx > 0 ? 1 : -1) * 50 * log(abs(offset.dx) / 50.0 + 1.0)
-            sizedInfo.info.origin.y -= (offset.dy > 0 ? 1 : -1) * 50 * log(abs(offset.dy) / 50.0 + 1.0)
-        }
+        overscroll(info: &sizedInfo)
         withStoreUpdating {
             store.update(updating: true)
             viewport.setInfo(sizedInfo.info)
@@ -94,9 +83,7 @@ extension ViewportUpdater {
     func onCommit() {
         let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
         var sizedInfo = viewport.sizedInfo
-        if let symbol = activeSymbol.editingSymbol {
-            sizedInfo = sizedInfo.clamped(by: symbol.boundingRect)
-        }
+        overscroll(info: &sizedInfo)
         withStoreUpdating(configs: .init(animation: .fast)) {
             store.update(updating: false)
             viewport.setInfo(sizedInfo.info)
@@ -114,9 +101,30 @@ extension ViewportUpdater {
             newWorldRect = worldRect.applying(transform),
             origin = newWorldRect.origin,
             scale = viewport.viewSize.width / newWorldRect.width
+        var sizedInfo = SizedViewportInfo(size: viewport.viewSize, info: .init(origin: origin, scale: scale))
+        overscroll(info: &sizedInfo)
         withStoreUpdating(configs: .init(animation: .fast)) {
             viewport.setInfo(.init(origin: origin, scale: scale))
             store.update(referenceInfo: viewport.info)
         }
+    }
+
+    private func overscroll(info: inout SizedViewportInfo, exceeding: Bool = false) {
+        guard let symbol = activeSymbol.editingSymbol else { return }
+        let offset = info.clampingOffset(by: symbol.boundingRect)
+        guard !offset.isZero else { return }
+        if exceeding {
+            let overscrollOffset = Vector2(overscroll(value: offset.dx, scale: info.scale), overscroll(value: offset.dy, scale: info.scale))
+            info.info.origin += offset - overscrollOffset
+        } else {
+            info.info.origin += offset
+        }
+    }
+
+    private func overscroll(value: Scalar, scale: Scalar) -> Scalar {
+        let k = 32.0 / scale,
+            sign = value > 0 ? 1.0 : -1.0,
+            magnitude = abs(value)
+        return sign * k * log(1 + magnitude / k)
     }
 }

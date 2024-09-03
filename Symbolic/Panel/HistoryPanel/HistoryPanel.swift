@@ -51,6 +51,8 @@ private extension DocumentAction {
                 "Create symbol \(action.symbolId.shortDescription)"
             case let .resize(action):
                 "Resize symbol \(action.symbolId.shortDescription) with align \(action.align) and offset \(action.offset.shortDescription)"
+            case let .setGrid(action):
+                "Set grid of symbol \(action.symbolId.shortDescription) at index \(action.index) and grid \(action.grid.debugDescription)"
 
             case let .delete(action):
                 "Delete symbol \(action.symbolIds.map { $0.shortDescription }.joined(separator: ", "))"

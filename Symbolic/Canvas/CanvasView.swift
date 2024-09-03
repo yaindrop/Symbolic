@@ -40,6 +40,7 @@ private extension GlobalStores {
                 guard let editingSymbolId else {
                     if let hitSymbolId, activeSymbol.focusedSymbolId == hitSymbolId {
                         activeSymbol.setEditing(symbolId: hitSymbolId)
+                        viewportUpdater.zoomToEditingSymbol()
                     } else {
                         activeSymbol.setFocus(symbolId: hitSymbolId)
                     }
@@ -170,6 +171,7 @@ private extension GlobalStores {
             $0.$state.willNotify
                 .sink { _ in
                     activeItem.blur()
+                    activeSymbol.setGridIndex(0)
                 }
         }
     }

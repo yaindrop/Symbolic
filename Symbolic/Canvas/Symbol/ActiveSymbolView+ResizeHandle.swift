@@ -17,6 +17,7 @@ private extension GlobalStores {
             onPressEnd: { _, cancelled in
                 canvasAction.end(continuous: .resizeSymbol)
                 if cancelled { documentUpdater.cancel() }
+                viewportUpdater.zoomToEditingSymbol()
             },
 
             onDrag: { onDrag(align: align, $0, pending: true) },

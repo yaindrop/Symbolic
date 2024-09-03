@@ -117,6 +117,7 @@ message SymbolAction {
   oneof kind {
     Create create = 101;
     Resize resize = 102;
+    SetGrid set_grid = 103;
 
     Delete delete = 201;
     Move move = 202;
@@ -132,6 +133,12 @@ message SymbolAction {
     UUID symbol_id = 1;
     PlaneInnerAlign align = 2;
     Vector2 offset = 3;
+  }
+
+  message SetGrid {
+    UUID symbol_id = 1;
+    uint32 index = 2;
+    optional Grid grid = 3;
   }
 
   message Delete { repeated UUID symbol_ids = 1; }

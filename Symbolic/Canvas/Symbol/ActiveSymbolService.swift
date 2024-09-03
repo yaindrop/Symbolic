@@ -22,6 +22,12 @@ private extension ActiveSymbolStore {
             update { $0(\._state, state) }
         }
     }
+
+    func update(gridIndex: Int) {
+        withStoreUpdating(configs: .init(animation: .faster)) {
+            update { $0(\._gridIndex, gridIndex) }
+        }
+    }
 }
 
 // MARK: - ActiveSymbolService
@@ -63,6 +69,8 @@ extension ActiveSymbolService {
     var focusedSymbol: Symbol? { focusedSymbolId.map { symbol.get(id: $0) } }
 
     var focusedSymbolItem: Item.Symbol? { focusedSymbolId.map { item.symbol(id: $0) } }
+
+    var focusedSymbolBounds: CGRect? { focusedSymbol?.boundingRect }
 
     // MARK: editing
 
@@ -163,5 +171,9 @@ extension ActiveSymbolService {
     func select(symbolIds: [UUID]) {
         let _r = subtracer.range(type: .intent, "select \(symbolIds)"); defer { _r() }
         store.update(state: .active(.init(symbolIds)))
+    }
+
+    func setGridIndex(_ index: Int) {
+        store.update(gridIndex: index)
     }
 }

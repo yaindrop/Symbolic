@@ -669,6 +669,14 @@ struct Symbolic_Pb_SymbolAction: Sendable {
     set {kind = .resize(newValue)}
   }
 
+  var setGrid: Symbolic_Pb_SymbolAction.SetGrid {
+    get {
+      if case .setGrid(let v)? = kind {return v}
+      return Symbolic_Pb_SymbolAction.SetGrid()
+    }
+    set {kind = .setGrid(newValue)}
+  }
+
   var delete: Symbolic_Pb_SymbolAction.Delete {
     get {
       if case .delete(let v)? = kind {return v}
@@ -690,6 +698,7 @@ struct Symbolic_Pb_SymbolAction: Sendable {
   enum OneOf_Kind: Equatable, Sendable {
     case create(Symbolic_Pb_SymbolAction.Create)
     case resize(Symbolic_Pb_SymbolAction.Resize)
+    case setGrid(Symbolic_Pb_SymbolAction.SetGrid)
     case delete(Symbolic_Pb_SymbolAction.Delete)
     case move(Symbolic_Pb_SymbolAction.Move)
 
@@ -767,6 +776,39 @@ struct Symbolic_Pb_SymbolAction: Sendable {
 
     fileprivate var _symbolID: Symbolic_Pb_UUID? = nil
     fileprivate var _offset: Symbolic_Pb_Vector2? = nil
+  }
+
+  struct SetGrid: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    var symbolID: Symbolic_Pb_UUID {
+      get {return _symbolID ?? Symbolic_Pb_UUID()}
+      set {_symbolID = newValue}
+    }
+    /// Returns true if `symbolID` has been explicitly set.
+    var hasSymbolID: Bool {return self._symbolID != nil}
+    /// Clears the value of `symbolID`. Subsequent reads from it will return its default value.
+    mutating func clearSymbolID() {self._symbolID = nil}
+
+    var index: UInt32 = 0
+
+    var grid: Symbolic_Pb_Grid {
+      get {return _grid ?? Symbolic_Pb_Grid()}
+      set {_grid = newValue}
+    }
+    /// Returns true if `grid` has been explicitly set.
+    var hasGrid: Bool {return self._grid != nil}
+    /// Clears the value of `grid`. Subsequent reads from it will return its default value.
+    mutating func clearGrid() {self._grid = nil}
+
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    fileprivate var _symbolID: Symbolic_Pb_UUID? = nil
+    fileprivate var _grid: Symbolic_Pb_Grid? = nil
   }
 
   struct Delete: Sendable {
@@ -1998,6 +2040,7 @@ extension Symbolic_Pb_SymbolAction: SwiftProtobuf.Message, SwiftProtobuf._Messag
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     101: .same(proto: "create"),
     102: .same(proto: "resize"),
+    103: .standard(proto: "set_grid"),
     201: .same(proto: "delete"),
     202: .same(proto: "move"),
   ]
@@ -2032,6 +2075,19 @@ extension Symbolic_Pb_SymbolAction: SwiftProtobuf.Message, SwiftProtobuf._Messag
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
           self.kind = .resize(v)
+        }
+      }()
+      case 103: try {
+        var v: Symbolic_Pb_SymbolAction.SetGrid?
+        var hadOneofValue = false
+        if let current = self.kind {
+          hadOneofValue = true
+          if case .setGrid(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.kind = .setGrid(v)
         }
       }()
       case 201: try {
@@ -2078,6 +2134,10 @@ extension Symbolic_Pb_SymbolAction: SwiftProtobuf.Message, SwiftProtobuf._Messag
     case .resize?: try {
       guard case .resize(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 102)
+    }()
+    case .setGrid?: try {
+      guard case .setGrid(let v)? = self.kind else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 103)
     }()
     case .delete?: try {
       guard case .delete(let v)? = self.kind else { preconditionFailure() }
@@ -2190,6 +2250,54 @@ extension Symbolic_Pb_SymbolAction.Resize: SwiftProtobuf.Message, SwiftProtobuf.
     if lhs._symbolID != rhs._symbolID {return false}
     if lhs.align != rhs.align {return false}
     if lhs._offset != rhs._offset {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Symbolic_Pb_SymbolAction.SetGrid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Symbolic_Pb_SymbolAction.protoMessageName + ".SetGrid"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "symbol_id"),
+    2: .same(proto: "index"),
+    3: .same(proto: "grid"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._symbolID) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.index) }()
+      case 3: try { try decoder.decodeSingularMessageField(value: &self._grid) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._symbolID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if self.index != 0 {
+      try visitor.visitSingularUInt32Field(value: self.index, fieldNumber: 2)
+    }
+    try { if let v = self._grid {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Symbolic_Pb_SymbolAction.SetGrid, rhs: Symbolic_Pb_SymbolAction.SetGrid) -> Bool {
+    if lhs._symbolID != rhs._symbolID {return false}
+    if lhs.index != rhs.index {return false}
+    if lhs._grid != rhs._grid {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

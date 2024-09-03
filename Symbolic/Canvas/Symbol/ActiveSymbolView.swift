@@ -6,9 +6,9 @@ let debugActiveSymbol: Bool = true
 
 struct ActiveSymbolView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
         @Selected({ global.activeSymbol.activeSymbolIds }) var activeSymbolIds
         @Selected({ global.activeSymbol.focusedSymbolId }) var focusedSymbolId
+        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
     }
 
     @SelectorWrapper var selector

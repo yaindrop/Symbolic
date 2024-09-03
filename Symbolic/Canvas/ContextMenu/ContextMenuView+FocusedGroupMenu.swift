@@ -3,11 +3,11 @@ import SwiftUI
 // MARK: - global actions
 
 private extension GlobalStores {
-    var focusedGroupBounds: CGRect? { activeItem.focusedGroup.map { item.boundingRect(of: $0.id) } }
+    var bounds: CGRect? { activeItem.focusedGroupBounds }
 
     func onZoom() {
-        guard let focusedGroupBounds else { return }
-        viewportUpdater.zoomTo(rect: focusedGroupBounds)
+        guard let bounds else { return }
+        viewportUpdater.zoomTo(rect: bounds)
     }
 
     func onUngroup() {
@@ -30,7 +30,7 @@ extension ContextMenuView {
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.focusedGroupBounds }) var bounds
+            @Selected({ global.bounds }) var bounds
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
             @Selected({ global.activeItem.focusedGroup.map { global.activeItem.groupOutset(id: $0.id) } ?? 0 }) var outset
         }

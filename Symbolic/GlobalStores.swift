@@ -19,20 +19,18 @@ struct GlobalStores {
     private let itemStore = ItemStore()
     private let pendingItemStore = PendingItemStore()
 
-    private let viewportStore = ViewportStore()
-    private let viewportUpdateStore = ViewportUpdateStore()
-
     private let activeSymbolStore = ActiveSymbolStore()
 
     private let activeItemStore = ActiveItemStore()
 
     private let focusedPathStore = FocusedPathStore()
 
+    private let viewportStore = ViewportStore()
+    private let viewportUpdateStore = ViewportUpdateStore()
+
     private let draggingSelectStore = DraggingSelectStore()
 
     private let draggingCreateStore = DraggingCreateStore()
-
-    let grid = GridStore()
 
     let panel = PanelStore()
 
@@ -49,7 +47,7 @@ struct GlobalStores {
 
 extension GlobalStores {
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, viewport: viewport, activeItem: activeItem, grid: grid) }
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, viewport: viewport, activeSymbol: activeSymbol, activeItem: activeItem) }
 
     var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
 
@@ -57,14 +55,14 @@ extension GlobalStores {
 
     var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path, viewport: viewport) }
 
-    var viewport: ViewportService { .init(store: viewportStore) }
-    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, activeSymbol: activeSymbol, panel: panel) }
-
     var focusedPath: FocusedPathService { .init(store: focusedPathStore, activeItem: activeItem) }
 
     var activeSymbol: ActiveSymbolService { .init(store: activeSymbolStore, path: path, symbol: symbol, item: item, viewport: viewport) }
 
     var activeItem: ActiveItemService { .init(store: activeItemStore, toolbar: toolbar, path: path, item: item) }
+
+    var viewport: ViewportService { .init(store: viewportStore) }
+    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, activeSymbol: activeSymbol, panel: panel) }
 
     var draggingSelect: DraggingSelectService { .init(store: draggingSelectStore, path: path, symbol: symbol, item: item, viewport: viewport, activeSymbol: activeSymbol) }
 

@@ -111,6 +111,14 @@ extension ActiveItemService {
         focusedItemId.map { item.group(id: $0) }
     }
 
+    var focusedPathBounds: CGRect? {
+        focusedPathId.map { item.boundingRect(of: $0) }
+    }
+
+    var focusedGroupBounds: CGRect? {
+        focusedGroup.map { item.boundingRect(of: $0.id) }
+    }
+
     // MARK: group
 
     func activeDescendants(groupId: UUID) -> [Item] {

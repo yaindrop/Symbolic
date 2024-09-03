@@ -19,7 +19,7 @@ struct GridPanel: View, TracedView, SelectorHolder {
             content
                 .onChange(of: index) {
                     guard index != selector.gridIndex else { return }
-//                    global.grid.setActive(index)
+                    global.activeSymbol.setGridIndex(index)
                 }
                 .bind(selector.gridIndex, to: $index)
                 .environmentObject(ViewModel())

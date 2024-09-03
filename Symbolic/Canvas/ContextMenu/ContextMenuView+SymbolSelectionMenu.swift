@@ -3,11 +3,11 @@ import SwiftUI
 // MARK: - global actions
 
 private extension GlobalStores {
-    var selectionBounds: CGRect? { activeSymbol.selectionBounds }
+    var bounds: CGRect? { activeSymbol.selectionBounds }
 
     func onZoom() {
-        guard let selectionBounds else { return }
-        viewportUpdater.zoomTo(rect: selectionBounds)
+        guard let bounds else { return }
+        viewportUpdater.zoomTo(rect: bounds)
     }
 
     func onDelete() {
@@ -25,7 +25,7 @@ extension ContextMenuView {
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.selectionBounds }) var bounds
+            @Selected({ global.bounds }) var bounds
         }
 
         @SelectorWrapper var selector

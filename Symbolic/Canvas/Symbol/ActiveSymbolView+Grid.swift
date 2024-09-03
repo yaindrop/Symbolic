@@ -35,7 +35,7 @@ extension ActiveSymbolView.Grid {
                 .mask {
                     ZStack {
                         Rectangle()
-                            .opacity(0.3)
+                            .opacity(0.2)
                         RoundedRectangle(cornerRadius: ActiveSymbolService.editingBoundsRadius)
                             .path(in: bounds)
                     }

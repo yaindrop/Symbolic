@@ -16,8 +16,8 @@ struct DocumentUpdater {
     let symbolStore: SymbolStore
     let itemStore: ItemStore
     let viewport: ViewportService
+    let activeSymbol: ActiveSymbolService
     let activeItem: ActiveItemService
-    let grid: GridStore
 }
 
 // MARK: actions
@@ -156,7 +156,7 @@ private extension DocumentUpdater {
         } else {
             return
         }
-        let snappedOffset = endingNode.position.offset(to: grid.snap(endingNode.position + offset))
+        let snappedOffset = endingNode.position.offset(to: activeSymbol.snap(endingNode.position + offset))
         guard !snappedOffset.isZero else { return }
         events.append(.path(.init(pathId: pathId, .createNode(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: .init(position: endingNode.position + snappedOffset))))))
     }
@@ -173,7 +173,7 @@ private extension DocumentUpdater {
               var toNode = path.node(id: toNodeId) else { return }
         let position = segment.position(paramT: paramT)
         let (before, after) = segment.split(paramT: paramT)
-        let snappedOffset = position.offset(to: grid.snap(position + offset))
+        let snappedOffset = position.offset(to: activeSymbol.snap(position + offset))
 
         let newNode = PathNode(position: position + snappedOffset, cubicIn: before.toCubicIn, cubicOut: after.fromCubicOut)
         fromNode.cubicOut = before.fromCubicOut
@@ -227,7 +227,7 @@ private extension DocumentUpdater {
         guard let path = pathStore.get(id: pathId),
               let firstId = nodeIds.first,
               let firstNode = path.node(id: firstId) else { return }
-        let snappedOffset = firstNode.position.offset(to: grid.snap(firstNode.position + offset))
+        let snappedOffset = firstNode.position.offset(to: activeSymbol.snap(firstNode.position + offset))
         guard !snappedOffset.isZero else { return }
 
         var kinds: [PathEvent.Kind] = []
@@ -252,17 +252,17 @@ private extension DocumentUpdater {
             snappedQuadraticOffset: Vector2 = .zero
         switch controlType {
         case .cubicIn:
-            let snappedCubicIn = grid.snap(node.positionIn + offset)
+            let snappedCubicIn = activeSymbol.snap(node.positionIn + offset)
             snappedCubicInOffset = node.positionIn.offset(to: snappedCubicIn)
             guard !snappedCubicInOffset.isZero else { return }
         case .cubicOut:
-            let snappedCubicOut = grid.snap(node.positionOut + offset)
+            let snappedCubicOut = activeSymbol.snap(node.positionOut + offset)
             snappedCubicOutOffset = node.positionOut.offset(to: snappedCubicOut)
             guard !snappedCubicOutOffset.isZero else { return }
         case .quadraticOut:
             guard let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic else { return }
-            let snappedQuadratic = grid.snap(quadratic + offset)
+            let snappedQuadratic = activeSymbol.snap(quadratic + offset)
             snappedQuadraticOffset = quadratic.offset(to: snappedQuadratic)
             guard !snappedQuadraticOffset.isZero else { return }
         }
@@ -332,6 +332,7 @@ private extension DocumentUpdater {
         switch action {
         case let .create(action): collect(events: &events, of: action)
         case let .resize(action): collect(events: &events, of: action)
+        case let .setGrid(action): collect(events: &events, of: action)
 
         case let .delete(action): collect(events: &events, of: action)
         case let .move(action): collect(events: &events, of: action)
@@ -372,6 +373,13 @@ private extension DocumentUpdater {
         size.width = max(size.width, 16)
         size.height = max(size.height, 16)
         events.append(.symbol(.init(symbolId: symbolId, .setBounds(.init(origin: origin, size: size)))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.SetGrid) {
+        let symbolId = action.symbolId,
+            index = action.index,
+            grid = action.grid
+        events.append(.symbol(.init(symbolId: symbolId, .setGrid(.init(index: index, grid: grid)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Delete) {

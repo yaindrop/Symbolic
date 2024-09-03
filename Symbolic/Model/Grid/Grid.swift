@@ -35,6 +35,12 @@ extension Grid {
         case .radial: .radial
         }
     }
+
+    var cartesian: Cartesian? { if case let .cartesian(kind) = kind { kind } else { nil }}
+
+    var isometric: Isometric? { if case let .isometric(kind) = kind { kind } else { nil }}
+
+    var radial: Radial? { if case let .radial(kind) = kind { kind } else { nil }}
 }
 
 func adjusted(from interval: Scalar, target: Scalar) -> Scalar {

@@ -5,6 +5,7 @@ import SwiftUI
 private extension GlobalStores {
     func onTap(symbolId: UUID) {
         activeSymbol.setEditing(symbolId: symbolId)
+        viewportUpdater.zoomToEditingSymbol()
     }
 
     func onDrag(symbolId: UUID, _ v: PanInfo, pending: Bool = false) {

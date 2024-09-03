@@ -3,11 +3,11 @@ import SwiftUI
 // MARK: - global actions
 
 private extension GlobalStores {
-    var activeNodesBounds: CGRect? { focusedPath.activeNodesBounds }
+    var bounds: CGRect? { focusedPath.activeNodesBounds }
 
     func onZoom() {
-        guard let activeNodesBounds else { return }
-        viewportUpdater.zoomTo(rect: activeNodesBounds)
+        guard let bounds else { return }
+        viewportUpdater.zoomTo(rect: bounds)
     }
 
     func setNodeType(_ nodeType: PathNodeType) {
@@ -35,7 +35,7 @@ extension ContextMenuView {
 
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.activeNodesBounds }) var bounds
+            @Selected({ global.bounds }) var bounds
             @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
             @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes

@@ -491,6 +491,20 @@ extension Symbolic_Pb_SymbolAction.Resize: ProtobufParsable {
     }
 }
 
+extension SymbolAction.SetGrid: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_SymbolAction.SetGrid) {
+        pb.symbolID = symbolId.pb
+        pb.index = .init(index)
+        grid.map { pb.grid = $0.pb }
+    }
+}
+
+extension Symbolic_Pb_SymbolAction.SetGrid: ProtobufParsable {
+    func decoded() throws -> SymbolAction.SetGrid {
+        try .init(symbolId: symbolID.decoded(), index: .init(index), grid: hasGrid ? grid.decoded() : nil)
+    }
+}
+
 extension SymbolAction.Delete: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_SymbolAction.Delete) {
         pb.symbolIds = symbolIds.map { $0.pb }
@@ -522,6 +536,7 @@ extension SymbolAction: ProtobufSerializable {
             switch self {
             case let .create(kind): .create(kind.pb)
             case let .resize(kind): .resize(kind.pb)
+            case let .setGrid(kind): .setGrid(kind.pb)
             case let .delete(kind): .delete(kind.pb)
             case let .move(kind): .move(kind.pb)
             }
@@ -534,6 +549,7 @@ extension Symbolic_Pb_SymbolAction: ProtobufParsable {
         switch kind {
         case let .create(kind): .create(kind.decoded())
         case let .resize(kind): .resize(kind.decoded())
+        case let .setGrid(kind): try .setGrid(kind.decoded())
         case let .delete(kind): .delete(kind.decoded())
         case let .move(kind): .move(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf

@@ -59,12 +59,14 @@ extension PathAction.Update {
 enum SymbolAction: Equatable {
     struct Create: Equatable { let symbolId: UUID, origin: Point2, size: CGSize }
     struct Resize: Equatable { let symbolId: UUID, align: PlaneInnerAlign, offset: Vector2 }
+    struct SetGrid: Equatable { let symbolId: UUID, index: Int, grid: Grid? }
 
     struct Delete: Equatable { let symbolIds: [UUID] }
     struct Move: Equatable { let symbolIds: [UUID], offset: Vector2 }
 
     case create(Create)
     case resize(Resize)
+    case setGrid(SetGrid)
 
     case delete(Delete)
     case move(Move)

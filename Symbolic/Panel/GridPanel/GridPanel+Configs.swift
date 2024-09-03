@@ -1,5 +1,56 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {
+    func updateGrid(grid: Grid?, pending: Bool = false) {
+        guard let symbolId = activeSymbol.editingSymbolId,
+              grid != activeSymbol.grid else { return }
+        let index = activeSymbol.gridIndex
+        documentUpdater.update(symbol: .setGrid(.init(symbolId: symbolId, index: index, grid: grid)), pending: pending)
+    }
+
+    func addGrid() {
+        guard let symbol = activeSymbol.editingSymbol,
+              symbol.grids.count < 3 else { return }
+        let grid = Grid(kind: .cartesian(.init(interval: 8)))
+        documentUpdater.update(symbol: .setGrid(.init(symbolId: symbol.id, index: symbol.grids.count, grid: grid)))
+    }
+
+    func deleteGrid() {
+        updateGrid(grid: nil)
+    }
+
+    func updateGrid(tintColor: CGColor, pending: Bool = false) {
+        guard var grid = activeSymbol.grid else { return }
+        grid.tintColor = tintColor
+        updateGrid(grid: grid, pending: pending)
+    }
+
+    func updateGrid(gridCase: Grid.Case) {
+        guard var grid = activeSymbol.grid,
+              gridCase != grid.case else { return }
+        switch gridCase {
+        case .cartesian: grid.kind = .cartesian(.init(interval: 8))
+        case .isometric: grid.kind = .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))
+        case .radial: break
+        }
+        updateGrid(grid: grid)
+    }
+
+    func updateGrid(cartesian: Grid.Cartesian, pending: Bool = false) {
+        guard var grid = activeSymbol.grid else { return }
+        grid.kind = .cartesian(cartesian)
+        updateGrid(grid: grid, pending: pending)
+    }
+
+    func updateGrid(isometric: Grid.Isometric, pending: Bool = false) {
+        guard var grid = activeSymbol.grid else { return }
+        grid.kind = .isometric(isometric)
+        updateGrid(grid: grid, pending: pending)
+    }
+}
+
 // MARK: - Configs
 
 extension GridPanel {
@@ -19,22 +70,8 @@ extension GridPanel {
             setupSelector {
                 if let grid = selector.grid {
                     content
-                        .onChange(of: tintColor) {
-                            guard tintColor != grid.tintColor else { return }
-                            var grid = grid
-                            grid.tintColor = tintColor
-                            //                        global.grid.update(grid: grid)
-                        }
-                        .onChange(of: gridCase) {
-                            guard gridCase != grid.case else { return }
-                            var grid = grid
-                            switch gridCase {
-                            case .cartesian: grid.kind = .cartesian(.init(interval: 8))
-                            case .isometric: grid.kind = .isometric(.init(interval: 8, angle0: .degrees(30), angle1: .degrees(-30)))
-                            case .radial: break
-                            }
-                            //                        global.grid.update(grid: grid)
-                        }
+                        .onChange(of: tintColor) { global.updateGrid(tintColor: tintColor) }
+                        .onChange(of: gridCase) { global.updateGrid(gridCase: gridCase) }
                         .bind(grid.tintColor, to: $tintColor)
                         .bind(grid.case, to: $gridCase)
                 }
@@ -73,8 +110,8 @@ private extension GridPanel.Configs {
     @ViewBuilder var kindConfigs: some View {
         if let grid = selector.grid {
             switch grid.kind {
-            case let .cartesian(grid): Cartesian(grid: grid)
-            case let .isometric(grid): Isometric(grid: grid)
+            case .cartesian: Cartesian(grid: grid)
+            case .isometric: Isometric(grid: grid)
             case .radial: EmptyView()
             }
         }
@@ -82,18 +119,14 @@ private extension GridPanel.Configs {
 
     var editRow: some View {
         ContextualRow {
-            Button(role: .destructive) {
-//                global.grid.delete()
-            } label: {
+            Button(role: .destructive) { global.deleteGrid() } label: {
                 Image(systemName: "trash")
             }
             .buttonBorderShape(.capsule)
             .buttonStyle(.bordered)
             .disabled(selector.gridStack.count == 1)
             Spacer()
-            Button {
-//                global.grid.add()
-            } label: {
+            Button { global.addGrid() } label: {
                 Image(systemName: "plus")
             }
             .buttonBorderShape(.capsule)
@@ -107,21 +140,20 @@ private extension GridPanel.Configs {
 
 private extension GridPanel.Configs {
     struct Cartesian: View, TracedView {
-        let grid: Grid.Cartesian
+        let grid: Grid
 
         @EnvironmentObject private var viewModel: GridPanel.ViewModel
 
         @State private var interval: Scalar
 
-        init(grid: Grid.Cartesian) {
+        init(grid: Grid) {
             self.grid = grid
-            interval = grid.interval
+            interval = grid.cartesian?.interval ?? 0
         }
 
         var body: some View { trace {
             content
-                .onChange(of: interval) { updateGrid() }
-                .bind(grid.interval, to: $interval)
+                .onChange(of: updated) { global.updateGrid(cartesian: updated, pending: true) }
         } }
     }
 }
@@ -129,15 +161,11 @@ private extension GridPanel.Configs {
 // MARK: private
 
 private extension GridPanel.Configs.Cartesian {
-    func updateGrid() {
-//        var grid = global.grid.active
-//        grid.kind = .cartesian(.init(interval: interval))
-//        global.grid.update(grid: grid)
-    }
-
     @ViewBuilder var content: some View {
         intervalRow
     }
+
+    var updated: Grid.Cartesian { .init(interval: interval) }
 
     var intervalRow: some View {
         ContextualRow(label: "Interval") {
@@ -145,9 +173,15 @@ private extension GridPanel.Configs.Cartesian {
                 value: $interval,
                 in: 2 ... 64,
                 step: 1,
-                onEditingChanged: { _ in viewModel.intervalCommit.send() }
+                onEditingChanged: { editing in
+                    viewModel.intervalCommit.send()
+                    if !editing {
+                        global.updateGrid(cartesian: updated)
+                    }
+                }
             )
-            Text("\(Int(grid.interval))")
+            let interval = grid.isometric?.interval ?? 0
+            Text("\(Int(interval))")
                 .contextualFont()
         }
     }
@@ -157,7 +191,7 @@ private extension GridPanel.Configs.Cartesian {
 
 private extension GridPanel.Configs {
     struct Isometric: View, TracedView {
-        let grid: Grid.Isometric
+        let grid: Grid
 
         @EnvironmentObject private var viewModel: GridPanel.ViewModel
 
@@ -165,19 +199,16 @@ private extension GridPanel.Configs {
         @State private var angle0: Scalar
         @State private var angle1: Scalar
 
-        init(grid: Grid.Isometric) {
+        init(grid: Grid) {
             self.grid = grid
-            interval = grid.interval
-            angle0 = grid.angle0.degrees
-            angle1 = grid.angle1.degrees
+            interval = grid.isometric?.interval ?? 0
+            angle0 = grid.isometric?.angle0.degrees ?? 0
+            angle1 = grid.isometric?.angle1.degrees ?? 0
         }
 
         var body: some View { trace {
             content
-                .onChange(of: EquatableTuple(interval, angle0, angle1)) { updateGrid() }
-                .bind(grid.interval, to: $interval)
-                .bind(grid.angle0, to: $angle0) { $0.degrees }
-                .bind(grid.angle1, to: $angle1) { $0.degrees }
+                .onChange(of: updated) { global.updateGrid(isometric: updated, pending: true) }
         } }
     }
 }
@@ -185,12 +216,6 @@ private extension GridPanel.Configs {
 // MARK: private
 
 private extension GridPanel.Configs.Isometric {
-    func updateGrid() {
-//        var grid = global.grid.active
-//        grid.kind = .isometric(.init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)))
-//        global.grid.update(grid: grid)
-    }
-
     @ViewBuilder var content: some View {
         intervalRow
         ContextualDivider()
@@ -199,15 +224,23 @@ private extension GridPanel.Configs.Isometric {
         angle1Row
     }
 
+    var updated: Grid.Isometric { .init(interval: interval, angle0: .degrees(angle0), angle1: .degrees(angle1)) }
+
     var intervalRow: some View {
         ContextualRow(label: "Interval") {
             Slider(
                 value: $interval,
                 in: 2 ... 64,
                 step: 1,
-                onEditingChanged: { _ in viewModel.intervalCommit.send() }
+                onEditingChanged: { editing in
+                    viewModel.intervalCommit.send()
+                    if !editing {
+                        global.updateGrid(isometric: updated)
+                    }
+                }
             )
-            Text("\(Int(grid.interval))")
+            let interval = grid.isometric?.interval ?? 0
+            Text("\(Int(interval))")
                 .contextualFont()
         }
     }
@@ -219,7 +252,8 @@ private extension GridPanel.Configs.Isometric {
                 in: -90 ... 90,
                 step: 5
             )
-            Text("\(grid.angle0.shortDescription)")
+            let angle0 = grid.isometric?.angle0 ?? .zero
+            Text("\(angle0.shortDescription)")
                 .contextualFont()
         }
     }
@@ -231,7 +265,8 @@ private extension GridPanel.Configs.Isometric {
                 in: -90 ... 90,
                 step: 5
             )
-            Text("\(grid.angle1.shortDescription)")
+            let angle1 = grid.isometric?.angle1 ?? .zero
+            Text("\(angle1.shortDescription)")
                 .contextualFont()
         }
     }

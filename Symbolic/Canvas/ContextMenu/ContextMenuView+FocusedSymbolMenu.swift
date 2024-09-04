@@ -10,6 +10,11 @@ private extension GlobalStores {
         viewportUpdater.zoomTo(rect: bounds)
     }
 
+    func onLock() {
+        guard let item = activeSymbol.focusedSymbolItem else { return }
+        documentUpdater.update(item: .setLocked(.init(itemIds: [item.id], locked: !item.locked)))
+    }
+
     func onDelete() {
         guard let symbolId = activeSymbol.focusedSymbolId else { return }
         documentUpdater.update(symbol: .delete(.init(symbolIds: [symbolId])))
@@ -25,6 +30,7 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.bounds }) var bounds
+            @Selected({ global.activeSymbol.focusedSymbolItem?.locked == true }) var locked
             @Selected({ global.activeSymbol.editingSymbol == nil }) var visible
         }
 
@@ -50,33 +56,13 @@ extension ContextMenuView.FocusedSymbolMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.ZoomButton { global.onZoom() }
             Divider()
-
-            Button {} label: { Image(systemName: "character.cursor.ibeam") }
-                .frame(minWidth: 32)
-                .tint(.label)
-            Button {} label: { Image(systemName: "lock") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.RenameButton {}
+            ContextMenuView.LockButton(locked: selector.locked) { global.onLock() }
             Divider()
-
-            Menu { copyMenu } label: { Image(systemName: "doc.on.doc") }
-                .menuOrder(.fixed)
-                .frame(minWidth: 32)
-                .tint(.label)
-            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
-                .frame(minWidth: 32)
+            ContextMenuView.CopyMenu {} cutAction: {} duplicateAction: {}
+            ContextMenuView.DeleteButton { global.onDelete() }
         }
-    }
-
-    @ViewBuilder var copyMenu: some View {
-        Button("Copy", systemImage: "doc.on.doc") {}
-        Button("Cut", systemImage: "scissors") {}
-        Button("Duplicate", systemImage: "plus.square.on.square") {}
     }
 }

@@ -102,18 +102,6 @@ extension Symbolic_Pb_PathEvent.Move: ProtobufParsable {
     }
 }
 
-extension PathEvent.SetName: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_PathEvent.SetName) {
-        name.map { pb.name = $0 }
-    }
-}
-
-extension Symbolic_Pb_PathEvent.SetName: ProtobufParsable {
-    func decoded() -> PathEvent.SetName {
-        .init(name: hasName ? name : nil)
-    }
-}
-
 extension PathEvent.SetNodeType: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_PathEvent.SetNodeType) {
         pb.nodeIds = nodeIds.map { $0.pb }
@@ -154,7 +142,6 @@ extension PathEvent.Kind: ProtobufSerializable {
             case let .delete(kind): .delete(kind.pb)
             case let .move(kind): .move(kind.pb)
 
-            case let .setName(kind): .setName(kind.pb)
             case let .setNodeType(kind): .setNodeType(kind.pb)
             case let .setSegmentType(kind): .setSegmentType(kind.pb)
             }
@@ -175,7 +162,6 @@ extension Symbolic_Pb_PathEvent.Kind: ProtobufParsable {
         case let .delete(kind): .delete(kind.decoded())
         case let .move(kind): .move(kind.decoded())
 
-        case let .setName(kind): .setName(kind.decoded())
         case let .setNodeType(kind): .setNodeType(kind.decoded())
         case let .setSegmentType(kind): .setSegmentType(kind.decoded())
         default: throw ProtobufParseError.invalidEmptyOneOf
@@ -318,31 +304,75 @@ extension Symbolic_Pb_SymbolEvent: ProtobufParsable {
 
 extension ItemEvent.SetGroup: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_ItemEvent.SetGroup) {
-        pb.groupID = groupId.pb
         pb.members = members.map { $0.pb }
     }
 }
 
 extension Symbolic_Pb_ItemEvent.SetGroup: ProtobufParsable {
     func decoded() -> ItemEvent.SetGroup {
-        .init(groupId: groupID.decoded(), members: members.map { $0.decoded() })
+        .init(members: members.map { $0.decoded() })
+    }
+}
+
+extension ItemEvent.SetName: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.SetName) {
+        name.map { pb.name = $0 }
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.SetName: ProtobufParsable {
+    func decoded() -> ItemEvent.SetName {
+        .init(name: hasName ? name : nil)
+    }
+}
+
+extension ItemEvent.SetLocked: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.SetLocked) {
+        pb.locked = locked
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.SetLocked: ProtobufParsable {
+    func decoded() -> ItemEvent.SetLocked {
+        .init(locked: locked)
+    }
+}
+
+extension ItemEvent.Kind: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_ItemEvent.Kind) {
+        pb.kind = {
+            switch self {
+            case let .setGroup(kind): .setGroup(kind.pb)
+
+            case let .setName(kind): .setName(kind.pb)
+            case let .setLocked(kind): .setLocked(kind.pb)
+            }
+        }()
+    }
+}
+
+extension Symbolic_Pb_ItemEvent.Kind: ProtobufParsable {
+    func decoded() throws -> ItemEvent.Kind {
+        switch kind {
+        case let .setGroup(kind): .setGroup(kind.decoded())
+
+        case let .setName(kind): .setName(kind.decoded())
+        case let .setLocked(kind): .setLocked(kind.decoded())
+        default: throw ProtobufParseError.invalidEmptyOneOf
+        }
     }
 }
 
 extension ItemEvent: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_ItemEvent) {
-        switch self {
-        case let .setGroup(kind): pb.kind = .setGroup(kind.pb)
-        }
+        pb.itemIds = itemIds.map { $0.pb }
+        pb.kinds = kinds.map { $0.pb }
     }
 }
 
 extension Symbolic_Pb_ItemEvent: ProtobufParsable {
     func decoded() throws -> ItemEvent {
-        switch kind {
-        case let .setGroup(kind): .setGroup(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
-        }
+        try .init(itemIds: itemIds.map { $0.decoded() }, kinds: kinds.map { try $0.decoded() })
     }
 }
 

@@ -42,8 +42,6 @@ message PathEvent {
 
   message Move { Vector2 offset = 1; }
 
-  message SetName { optional string name = 1; }
-
   message SetNodeType {
     repeated UUID node_ids = 1;
     optional PathNodeType node_type = 2;
@@ -66,9 +64,8 @@ message PathEvent {
       Delete delete = 201;
       Move move = 202;
 
-      SetName set_name = 301;
-      SetNodeType set_node_type = 302;
-      SetSegmentType set_segment_type = 303;
+      SetNodeType set_node_type = 301;
+      SetSegmentType set_segment_type = 302;
     }
   }
 }
@@ -117,11 +114,22 @@ message SymbolEvent {
 // MARK: - ItemEvent
 
 message ItemEvent {
-  oneof kind { SetGroup set_group = 101; }
+  repeated UUID item_ids = 1;
+  repeated Kind kinds = 2;
 
-  message SetGroup {
-    UUID group_id = 1;
-    repeated UUID members = 2;
+  message SetGroup { repeated UUID members = 1; }
+
+  message SetName { optional string name = 1; }
+
+  message SetLocked { bool locked = 1; }
+
+  message Kind {
+    oneof kind {
+      SetGroup set_group = 101;
+
+      SetName set_name = 201;
+      SetLocked set_locked = 202;
+    }
   }
 }
 

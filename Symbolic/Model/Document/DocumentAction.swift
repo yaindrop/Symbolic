@@ -32,7 +32,6 @@ extension PathAction.Update {
     struct Merge: Equatable { var endingNodeId: UUID, mergedPathId: UUID, mergedEndingNodeId: UUID }
     struct Split: Equatable { var nodeId: UUID, newPathId: UUID, newNodeId: UUID? }
 
-    struct SetName: Equatable { var name: String? }
     struct SetNodeType: Equatable { var nodeIds: [UUID], nodeType: PathNodeType? }
     struct SetSegmentType: Equatable { var fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
@@ -50,7 +49,6 @@ extension PathAction.Update {
         case merge(Merge)
         case split(Split)
 
-        case setName(SetName)
         case setNodeType(SetNodeType)
         case setSegmentType(SetSegmentType)
     }
@@ -79,9 +77,15 @@ enum ItemAction: Equatable {
     struct Ungroup: Equatable { var groupIds: [UUID] }
     struct Reorder: Equatable { var itemId: UUID, toItemId: UUID, isAfter: Bool }
 
+    struct SetName: Equatable { var itemId: UUID, name: String? }
+    struct SetLocked: Equatable { var itemIds: [UUID], locked: Bool }
+
     case group(Group)
     case ungroup(Ungroup)
     case reorder(Reorder)
+
+    case setName(SetName)
+    case setLocked(SetLocked)
 }
 
 // MARK: - DocumentAction

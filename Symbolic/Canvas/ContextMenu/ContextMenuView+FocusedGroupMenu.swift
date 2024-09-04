@@ -10,8 +10,13 @@ private extension GlobalStores {
         viewportUpdater.zoomTo(rect: bounds)
     }
 
+    func onLock() {
+        guard let item = activeItem.focusedGroupItem else { return }
+        documentUpdater.update(item: .setLocked(.init(itemIds: [item.id], locked: !item.locked)))
+    }
+
     func onUngroup() {
-        guard let group = activeItem.focusedGroup else { return }
+        guard let group = activeItem.focusedGroupItem?.group else { return }
         documentUpdater.update(item: .ungroup(.init(groupIds: [group.id])))
         activeItem.select(itemIds: group.members)
     }
@@ -32,7 +37,8 @@ extension ContextMenuView {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.bounds }) var bounds
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
-            @Selected({ global.activeItem.focusedGroup.map { global.activeItem.groupOutset(id: $0.id) } ?? 0 }) var outset
+            @Selected({ global.activeItem.focusedGroupOutset }) var outset
+            @Selected({ global.activeItem.focusedGroupItem?.locked ?? false }) var locked
         }
 
         @SelectorWrapper var selector
@@ -58,31 +64,17 @@ extension ContextMenuView.FocusedGroupMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.ZoomButton { global.onZoom() }
             Divider()
-
-            Button {} label: { Image(systemName: "lock") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            ContextMenuView.LockButton(locked: selector.locked) { global.onLock() }
             Menu { layerMenu } label: { Image(systemName: "square.3.layers.3d") }
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button { global.onUngroup() } label: { Image(systemName: "rectangle.3.group") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.GroupButton(grouped: true) { global.onUngroup() }
             Divider()
-
-            Menu { copyMenu } label: { Image(systemName: "doc.on.doc") }
-                .menuOrder(.fixed)
-                .frame(minWidth: 32)
-                .tint(.label)
-            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
-                .frame(minWidth: 32)
+            ContextMenuView.CopyMenu {} cutAction: {} duplicateAction: {}
+            ContextMenuView.DeleteButton { global.onDelete() }
         }
     }
 
@@ -91,11 +83,5 @@ extension ContextMenuView.FocusedGroupMenu {
         Button("Move above") {}
         Button("Move below") {}
         Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
-    }
-
-    @ViewBuilder var copyMenu: some View {
-        Button("Copy", systemImage: "doc.on.doc") {}
-        Button("Cut", systemImage: "scissors") {}
-        Button("Duplicate", systemImage: "plus.square.on.square") {}
     }
 }

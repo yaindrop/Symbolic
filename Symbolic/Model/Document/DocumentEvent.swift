@@ -17,7 +17,6 @@ struct PathEvent: Equatable {
     struct Delete: Equatable {}
     struct Move: Equatable { let offset: Vector2 }
 
-    struct SetName: Equatable { let name: String? }
     struct SetNodeType: Equatable { let nodeIds: [UUID], nodeType: PathNodeType? }
     struct SetSegmentType: Equatable { let fromNodeIds: [UUID], segmentType: PathSegmentType? }
 
@@ -32,7 +31,6 @@ struct PathEvent: Equatable {
         case delete(Delete)
         case move(Move)
 
-        case setName(SetName)
         case setNodeType(SetNodeType)
         case setSegmentType(SetSegmentType)
     }
@@ -88,10 +86,30 @@ extension SymbolEvent {
 
 // MARK: - ItemEvent
 
-enum ItemEvent: Equatable {
-    struct SetGroup: Equatable { let groupId: UUID, members: [UUID] }
+struct ItemEvent: Equatable {
+    let itemIds: [UUID], kinds: [Kind]
 
-    case setGroup(SetGroup)
+    struct SetGroup: Equatable { let members: [UUID] }
+
+    struct SetName: Equatable { let name: String? }
+    struct SetLocked: Equatable { let locked: Bool }
+
+    enum Kind: Equatable {
+        case setGroup(SetGroup)
+
+        case setName(SetName)
+        case setLocked(SetLocked)
+    }
+}
+
+extension ItemEvent {
+    init(itemId: UUID, _ kind: ItemEvent.Kind) {
+        self = .init(itemIds: [itemId], kinds: [kind])
+    }
+
+    init(itemIds: [UUID], _ kind: ItemEvent.Kind) {
+        self = .init(itemIds: itemIds, kinds: [kind])
+    }
 }
 
 // MARK: - DocumentEvent

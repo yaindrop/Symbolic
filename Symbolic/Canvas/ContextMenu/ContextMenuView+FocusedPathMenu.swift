@@ -10,6 +10,11 @@ private extension GlobalStores {
         viewportUpdater.zoomTo(rect: bounds)
     }
 
+    func onLock() {
+        guard let item = activeItem.focusedPathItem else { return }
+        documentUpdater.update(item: .setLocked(.init(itemIds: [item.id], locked: !item.locked)))
+    }
+
     func onDelete() {
         guard let pathId = activeItem.focusedPathId else { return }
         documentUpdater.update(path: .delete(.init(pathIds: [pathId])))
@@ -28,6 +33,7 @@ extension ContextMenuView {
             @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
             @Selected({ global.focusedPath.activeNodeIds.isEmpty }) var visible
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
+            @Selected({ global.activeItem.focusedPathItem?.locked ?? false }) var locked
         }
 
         @SelectorWrapper var selector
@@ -53,34 +59,20 @@ extension ContextMenuView.FocusedPathMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
-            Button {
+            ContextMenuView.ZoomButton { global.onZoom() }
+            ContextMenuView.SelectButton(selecting: selector.selectingNodes) {
                 global.focusedPath.setSelecting(!selector.selectingNodes)
-            } label: { Image(systemName: "checklist").foregroundStyle(selector.selectingNodes ? .blue : .label) }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            }
             Divider()
 
-            Button {} label: { Image(systemName: "lock") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            ContextMenuView.LockButton(locked: selector.locked) { global.onLock() }
             Menu { layerMenu } label: { Image(systemName: "square.3.layers.3d") }
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-
             Divider()
-
-            Menu { copyMenu } label: { Image(systemName: "doc.on.doc") }
-                .menuOrder(.fixed)
-                .frame(minWidth: 32)
-                .tint(.label)
-            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
-                .frame(minWidth: 32)
+            ContextMenuView.CopyMenu {} cutAction: {} duplicateAction: {}
+            ContextMenuView.DeleteButton { global.onDelete() }
         }
     }
 
@@ -89,11 +81,5 @@ extension ContextMenuView.FocusedPathMenu {
         Button("Move above") {}
         Button("Move below") {}
         Button("Back", systemImage: "square.3.layers.3d.bottom.filled") {}
-    }
-
-    @ViewBuilder var copyMenu: some View {
-        Button("Copy", systemImage: "doc.on.doc") {}
-        Button("Cut", systemImage: "scissors") {}
-        Button("Duplicate", systemImage: "plus.square.on.square") {}
     }
 }

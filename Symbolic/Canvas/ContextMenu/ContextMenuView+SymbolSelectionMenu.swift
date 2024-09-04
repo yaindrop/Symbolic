@@ -10,10 +10,15 @@ private extension GlobalStores {
         viewportUpdater.zoomTo(rect: bounds)
     }
 
+    func onLock() {
+        let symbolIds = activeSymbol.selectedSymbolIds
+        documentUpdater.update(item: .setLocked(.init(itemIds: .init(symbolIds), locked: !activeSymbol.selectionLocked)))
+    }
+
     func onDelete() {
-        let pathIds = activeItem.selectedItems.map { $0.id }
-        documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
-        activeItem.blur()
+        let symbolIds = activeSymbol.selectedSymbolIds
+        documentUpdater.update(symbol: .delete(.init(symbolIds: .init(symbolIds))))
+        activeSymbol.select(symbolIds: [])
     }
 }
 
@@ -26,6 +31,7 @@ extension ContextMenuView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.bounds }) var bounds
+            @Selected({ global.activeSymbol.selectionLocked }) var locked
         }
 
         @SelectorWrapper var selector
@@ -50,28 +56,12 @@ extension ContextMenuView.SymbolSelectionMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.ZoomButton { global.onZoom() }
             Divider()
-
-            Button {} label: { Image(systemName: "lock") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.LockButton(locked: selector.locked) { global.onLock() }
             Divider()
-
-            Menu {
-                Button("Copy", systemImage: "doc.on.doc") {}
-                Button("Cut", systemImage: "scissors") {}
-                Button("Duplicate", systemImage: "plus.square.on.square") {}
-            } label: { Image(systemName: "doc.on.doc") }
-                .menuOrder(.fixed)
-                .frame(minWidth: 32)
-                .tint(.label)
-            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
-                .frame(minWidth: 32)
+            ContextMenuView.CopyMenu {} cutAction: {} duplicateAction: {}
+            ContextMenuView.DeleteButton { global.onDelete() }
         }
     }
 }

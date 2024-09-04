@@ -10,9 +10,8 @@ struct AnimatedValueModifier<Value: Equatable>: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .animation(animation, value: value)
-            .onAppear { value = to }
-            .onDisappear { value = from }
+            .onAppear { withAnimation(animation) { value = to } }
+            .onDisappear { withAnimation(animation) { value = from } }
     }
 
     init(_ value: Binding<Value>, from: Value, to: Value, _ animation: Animation) {

@@ -78,7 +78,6 @@ extension PathSegmentType: CustomStringConvertible {
 
 struct PathProperty: Identifiable, Equatable, TriviallyCloneable {
     let id: UUID
-    var name: String?
 
     var nodeTypeMap: [UUID: PathNodeType] = [:]
     var segmentTypeMap: [UUID: PathSegmentType] = [:]
@@ -95,11 +94,6 @@ extension PathProperty {
 }
 
 extension PathProperty {
-    mutating func update(_ event: PathEvent.SetName) {
-        let _r = tracer.range("PathProperty set name"); defer { _r() }
-        name = event.name
-    }
-
     mutating func update(_ event: PathEvent.SetNodeType) {
         let _r = tracer.range("PathProperty set node type"); defer { _r() }
         for nodeId in event.nodeIds {

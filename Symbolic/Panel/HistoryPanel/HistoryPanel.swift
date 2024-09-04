@@ -31,8 +31,6 @@ private extension DocumentAction {
                 case let .split(action):
                     "In path \(update.pathId.shortDescription) split at node \(action.nodeId.shortDescription) with new node \(action.newNodeId?.shortDescription ?? "nil")"
 
-                case let .setName(action):
-                    "Set path \(update.pathId.shortDescription) name \(action.name ?? "nil")"
                 case let .setNodeType(action):
                     "Set path \(update.pathId.shortDescription) node \(action.nodeIds.map { $0.shortDescription }.joined(separator: ", ")) type \(action.nodeType?.description ?? "nil")"
                 case let .setSegmentType(action):
@@ -68,6 +66,11 @@ private extension DocumentAction {
                 "Ungroup \(action.groupIds.map { $0.shortDescription }.joined(separator: ", "))"
             case let .reorder(action):
                 "Reorder \(action.itemId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toItemId.shortDescription)"
+
+            case let .setName(action):
+                "Set item \(action.itemId.shortDescription) name \(action.name ?? "nil")"
+            case let .setLocked(action):
+                "Set item \(action.itemIds.map { $0.shortDescription }.joined(separator: ", ")) locked \(action.locked)"
             }
         }
     }

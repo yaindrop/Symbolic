@@ -342,12 +342,10 @@ private extension ItemService {
         let _r = subtracer.range("remove members \(itemIds)"); defer { _r() }
         var itemMap = itemMap
         for itemId in itemIds {
-            if var group = parent(of: itemId) {
-                group.members.removeAll { $0 == itemId }
-                itemMap[group.id] = .init(kind: .group(group))
-            } else if var symbol = symbol(of: itemId) {
-                symbol.members.removeAll { $0 == itemId }
-                itemMap[symbol.id] = .init(kind: .symbol(symbol))
+            if let groupId = parentId(of: itemId) {
+                itemMap[groupId]?.group?.members.removeAll { $0 == itemId }
+            } else if let symbolId = symbolId(of: itemId) {
+                itemMap[symbolId]?.symbol?.members.removeAll { $0 == itemId }
             }
         }
         activeStore.update(itemMap: itemMap)
@@ -446,9 +444,9 @@ private extension ItemService {
     func load(symbolIds: [UUID], _ event: SymbolEvent.SetMembers) {
         let members = event.members
         guard let symbolId = symbolIds.first,
-              var symbol = symbol(id: symbolId) else { return }
-        symbol.members = members
-        update(item: .init(kind: .symbol(symbol)))
+              var item = get(id: symbolId) else { return }
+        item.symbol?.members = members
+        update(item: item)
     }
 
     func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
@@ -458,22 +456,42 @@ private extension ItemService {
     // MARK: load item event
 
     func load(event: ItemEvent) {
-        switch event {
-        case let .setGroup(event): load(event: event)
+        let itemIds = event.itemIds
+        for kind in event.kinds {
+            switch kind {
+            case let .setGroup(event): load(itemIds: itemIds, event: event)
+            case let .setName(event): load(itemIds: itemIds, event: event)
+            case let .setLocked(event): load(itemIds: itemIds, event: event)
+            }
         }
     }
 
-    func load(event: ItemEvent.SetGroup) {
-        let groupId = event.groupId,
-            members = event.members
+    func load(itemIds: [UUID], event: ItemEvent.SetGroup) {
+        let members = event.members
+        guard let groupId = itemIds.first else { return }
         if members.isEmpty {
             remove(itemIds: [groupId])
-            return
-        }
-        let item: Item = .init(kind: .group(.init(id: groupId, members: members)))
-        if get(id: groupId) == nil {
-            add(item: item)
+        } else if var item = get(id: groupId) {
+            item.group?.members = members
+            update(item: item)
         } else {
+            add(item: .init(kind: .group(.init(id: groupId, members: members))))
+        }
+    }
+
+    func load(itemIds: [UUID], event: ItemEvent.SetName) {
+        let name = event.name
+        guard let itemIds = itemIds.first,
+              var item = get(id: itemIds) else { return }
+        item.name = name
+        update(item: item)
+    }
+
+    func load(itemIds: [UUID], event: ItemEvent.SetLocked) {
+        let locked = event.locked
+        for itemId in itemIds {
+            guard var item = get(id: itemId) else { return }
+            item.locked = locked
             update(item: item)
         }
     }

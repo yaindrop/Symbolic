@@ -123,7 +123,6 @@ private extension DocumentUpdater {
         case let .merge(action): collect(events: &events, pathId: pathId, of: action)
         case let .split(action): collect(events: &events, pathId: pathId, of: action)
 
-        case let .setName(action): collect(events: &events, pathId: pathId, of: action)
         case let .setNodeType(action): collect(events: &events, pathId: pathId, of: action)
         case let .setSegmentType(action): collect(events: &events, pathId: pathId, of: action)
         }
@@ -307,11 +306,6 @@ private extension DocumentUpdater {
         events.append(.path(.init(pathId: pathId, .split(.init(nodeId: nodeId, newPathId: newPathId, newNodeId: newNodeId)))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetName) {
-        let name = action.name
-        events.append(.path(.init(pathId: pathId, .setName(.init(name: name)))))
-    }
-
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetNodeType) {
         let nodeIds = action.nodeIds,
             nodeType = action.nodeType
@@ -402,6 +396,9 @@ private extension DocumentUpdater {
         case let .group(action): collect(events: &events, of: action)
         case let .ungroup(action): collect(events: &events, of: action)
         case let .reorder(action): collect(events: &events, of: action)
+
+        case let .setName(action): collect(events: &events, of: action)
+        case let .setLocked(action): collect(events: &events, of: action)
         }
     }
 
@@ -451,7 +448,7 @@ private extension DocumentUpdater {
             if inGroupId == group.id {
                 group.members.append(group.id)
             }
-            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+            events.append(.item(.init(itemId: group.id, .setGroup(.init(members: group.members)))))
         }
 
         adjustRootMembers()
@@ -459,7 +456,7 @@ private extension DocumentUpdater {
             adjustMembers(in: group)
         }
 
-        events.append(.item(.setGroup(.init(groupId: groupId, members: members))))
+        events.append(.item(.init(itemId: groupId, .setGroup(.init(members: members)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], of action: ItemAction.Ungroup) {
@@ -488,11 +485,11 @@ private extension DocumentUpdater {
             var group = group
             guard hasUngrouped(in: group.members) else { return }
             expandUngrouped(in: &group.members)
-            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+            events.append(.item(.init(itemId: group.id, .setGroup(.init(members: group.members)))))
         }
 
         for groupId in groupIds {
-            events.append(.item(.setGroup(.init(groupId: groupId, members: []))))
+            events.append(.item(.init(itemId: groupId, .setGroup(.init(members: [])))))
         }
 
         adjustRootMembers()
@@ -515,7 +512,7 @@ private extension DocumentUpdater {
                 group.members.removeAll { $0 == itemId }
                 let index = group.members.firstIndex(of: toItemId) ?? 0
                 group.members.insert(itemId, at: isAfter ? group.members.index(after: index) : index)
-                events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+                events.append(.item(.init(itemId: group.id, .setGroup(.init(members: group.members)))))
             } else {
                 var symbol = symbol
                 symbol.members.removeAll { $0 == itemId }
@@ -528,7 +525,7 @@ private extension DocumentUpdater {
         guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
         if let parentId, var group = itemStore.group(id: parentId) {
             group.members.removeAll { $0 == itemId }
-            events.append(.item(.setGroup(.init(groupId: group.id, members: group.members))))
+            events.append(.item(.init(itemId: group.id, .setGroup(.init(members: group.members)))))
         } else {
             var symbol = symbol
             symbol.members.removeAll { $0 == itemId }
@@ -537,12 +534,24 @@ private extension DocumentUpdater {
         if let toParentId, var toGroup = itemStore.group(id: toParentId) {
             let index = toGroup.members.firstIndex(of: toItemId) ?? 0
             toGroup.members.insert(itemId, at: isAfter ? toGroup.members.index(after: index) : index)
-            events.append(.item(.setGroup(.init(groupId: toGroup.id, members: toGroup.members))))
+            events.append(.item(.init(itemId: toGroup.id, .setGroup(.init(members: toGroup.members)))))
         } else {
             var symbol = symbol
             let index = symbol.members.firstIndex(of: toItemId) ?? 0
             symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
             events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
         }
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.SetName) {
+        let itemId = action.itemId,
+            name = action.name
+        events.append(.item(.init(itemId: itemId, .setName(.init(name: name)))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: ItemAction.SetLocked) {
+        let itemIds = action.itemIds,
+            locked = action.locked
+        events.append(.item(.init(itemIds: itemIds, .setLocked(.init(locked: locked)))))
     }
 }

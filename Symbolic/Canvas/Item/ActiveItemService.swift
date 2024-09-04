@@ -89,6 +89,10 @@ extension ActiveItemService {
 
     static var selectionBoundsOutset: Scalar { 12 }
 
+    var selectionLocked: Bool {
+        selectedItemIds.compactMap { item.get(id: $0) }.allSatisfy { $0.locked }
+    }
+
     // MARK: focused
 
     var focusedItem: Item? {
@@ -96,7 +100,17 @@ extension ActiveItemService {
     }
 
     var focusedPathId: UUID? {
-        focusedItem.map { $0.path?.id }
+        focusedItem?.path?.id
+    }
+
+    var focusedPathItem: Item? {
+        guard let focusedItem,
+              focusedItem.path != nil else { return nil }
+        return focusedItem
+    }
+
+    var focusedPathBounds: CGRect? {
+        focusedPathId.map { item.boundingRect(of: $0) }
     }
 
     var focusedPath: Path? {
@@ -104,19 +118,25 @@ extension ActiveItemService {
     }
 
     var focusedPathProperty: PathProperty? {
-        focusedItemId.map { path.property(id: $0) }
+        focusedPathId.map { path.property(id: $0) }
     }
 
-    var focusedGroup: Item.Group? {
-        focusedItemId.map { item.group(id: $0) }
+    var focusedGroupId: UUID? {
+        focusedItem?.group?.id
     }
 
-    var focusedPathBounds: CGRect? {
-        focusedPathId.map { item.boundingRect(of: $0) }
+    var focusedGroupItem: Item? {
+        guard let focusedItem,
+              focusedItem.group != nil else { return nil }
+        return focusedItem
     }
 
     var focusedGroupBounds: CGRect? {
-        focusedGroup.map { item.boundingRect(of: $0.id) }
+        focusedGroupId.map { item.boundingRect(of: $0) }
+    }
+
+    var focusedGroupOutset: Scalar {
+        focusedGroupId.map { groupOutset(id: $0) } ?? 0
     }
 
     // MARK: group

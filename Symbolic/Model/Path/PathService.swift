@@ -185,7 +185,6 @@ private extension PathService {
             case let .split(event): load(pathIds: pathIds, event)
             case let .delete(event): load(pathIds: pathIds, event)
             case let .move(event): load(pathIds: pathIds, event)
-            case let .setName(event): load(pathIds: pathIds, event)
             case let .setNodeType(event): load(pathIds: pathIds, event)
             case let .setSegmentType(event): load(pathIds: pathIds, event)
             }
@@ -250,13 +249,6 @@ private extension PathService {
             path.update(event)
             update(pathId: pathId, path: path)
         }
-    }
-
-    func load(pathIds: [UUID], _ event: PathEvent.SetName) {
-        guard let pathId = pathIds.first,
-              var property = property(id: pathId) else { return }
-        property.update(event)
-        update(pathId: pathId, pathProperty: property)
     }
 
     func load(pathIds: [UUID], _ event: PathEvent.SetNodeType) {

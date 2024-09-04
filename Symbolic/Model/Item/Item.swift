@@ -23,20 +23,26 @@ struct Item: TriviallyCloneable, Equatable {
         case symbol(Symbol)
     }
 
-    let kind: Kind
+    var name: String?
+    var locked: Bool = false
+
+    var kind: Kind
 }
 
 extension Item {
     var path: Path? {
-        if case let .path(item) = kind { item } else { nil }
+        get { if case let .path(item) = kind { item } else { nil }}
+        set { newValue.map { kind = .path($0) } }
     }
 
     var group: Group? {
-        if case let .group(item) = kind { item } else { nil }
+        get { if case let .group(item) = kind { item } else { nil }}
+        set { newValue.map { kind = .group($0) } }
     }
 
     var symbol: Symbol? {
-        if case let .symbol(item) = kind { item } else { nil }
+        get { if case let .symbol(item) = kind { item } else { nil }}
+        set { newValue.map { kind = .symbol($0) } }
     }
 }
 
@@ -57,5 +63,17 @@ extension Item: CustomStringConvertible {
         case let .group(kind): "Item.Group(id: \(kind.id), members: \(kind.members))"
         case let .symbol(kind): "Item.Symbol(id: \(kind.id), members: \(kind.members))"
         }
+    }
+}
+
+extension Item {
+    mutating func update(_ event: ItemEvent.SetName) {
+        let _r = tracer.range("Item set name"); defer { _r() }
+        name = event.name
+    }
+
+    mutating func update(_ event: ItemEvent.SetLocked) {
+        let _r = tracer.range("Item set locked"); defer { _r() }
+        locked = event.locked
     }
 }

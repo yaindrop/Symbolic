@@ -10,6 +10,11 @@ private extension GlobalStores {
         viewportUpdater.zoomTo(rect: bounds)
     }
 
+    func onLock() {
+        let itemIds = activeItem.selectedItemIds
+        documentUpdater.update(item: .setLocked(.init(itemIds: .init(itemIds), locked: !activeItem.selectionLocked)))
+    }
+
     func onGroup() {
         let groupId = UUID(),
             members = activeItem.selectedItems.map { $0.id }
@@ -37,6 +42,7 @@ extension ContextMenuView {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.bounds }) var bounds
             @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
+            @Selected({ global.activeItem.selectionLocked }) var locked
         }
 
         @SelectorWrapper var selector
@@ -62,15 +68,9 @@ extension ContextMenuView.SelectionMenu {
 
     @ViewBuilder var menu: some View {
         HStack {
-            Button { global.onZoom() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.ZoomButton { global.onZoom() }
             Divider()
-
-            Button {} label: { Image(systemName: "lock") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            ContextMenuView.LockButton(locked: selector.locked) { global.onLock() }
             Menu {
                 Button("Front", systemImage: "square.3.layers.3d.top.filled") {}
                 Button("Move above") {}
@@ -80,22 +80,10 @@ extension ContextMenuView.SelectionMenu {
                 .menuOrder(.fixed)
                 .frame(minWidth: 32)
                 .tint(.label)
-            Button { global.onGroup() } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
-                .frame(minWidth: 32)
-                .tint(.label)
-
+            ContextMenuView.GroupButton(grouped: false) { global.onGroup() }
             Divider()
-
-            Menu {
-                Button("Copy", systemImage: "doc.on.doc") {}
-                Button("Cut", systemImage: "scissors") {}
-                Button("Duplicate", systemImage: "plus.square.on.square") {}
-            } label: { Image(systemName: "doc.on.doc") }
-                .menuOrder(.fixed)
-                .frame(minWidth: 32)
-                .tint(.label)
-            Button(role: .destructive) { global.onDelete() } label: { Image(systemName: "trash") }
-                .frame(minWidth: 32)
+            ContextMenuView.CopyMenu {} cutAction: {} duplicateAction: {}
+            ContextMenuView.DeleteButton { global.onDelete() }
         }
     }
 }

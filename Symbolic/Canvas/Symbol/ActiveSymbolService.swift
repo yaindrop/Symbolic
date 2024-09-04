@@ -68,7 +68,7 @@ extension ActiveSymbolService {
 
     var focusedSymbol: Symbol? { focusedSymbolId.map { symbol.get(id: $0) } }
 
-    var focusedSymbolItem: Item.Symbol? { focusedSymbolId.map { item.symbol(id: $0) } }
+    var focusedSymbolItem: Item? { focusedSymbolId.map { item.get(id: $0) } }
 
     var focusedSymbolBounds: CGRect? { focusedSymbol?.boundingRect }
 
@@ -78,7 +78,7 @@ extension ActiveSymbolService {
 
     var editingSymbol: Symbol? { editingSymbolId.map { symbol.get(id: $0) } }
 
-    var editingSymbolItem: Item.Symbol? { editingSymbolId.map { item.symbol(id: $0) } }
+    var editingSymbolItem: Item? { editingSymbolId.map { item.get(id: $0) } }
 
     static var editingBoundsOutset: Scalar { 12 }
 
@@ -112,6 +112,10 @@ extension ActiveSymbolService {
     }
 
     static var selectionBoundsOutset: Scalar { 12 }
+
+    var selectionLocked: Bool {
+        selectedSymbolIds.compactMap { item.get(id: $0) }.allSatisfy { $0.locked }
+    }
 
     // MARK: hit test
 

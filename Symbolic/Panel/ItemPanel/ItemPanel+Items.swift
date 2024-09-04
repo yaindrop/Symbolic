@@ -141,7 +141,7 @@ extension ItemPanel {
             @Selected({ global.path.pathMap }) var pathMap
             @Selected({ global.item.itemMap }) var itemMap
             @Selected({ global.item.itemDepthMap }) var itemDepthMap
-            @Selected({ global.activeSymbol.focusedSymbolItem?.members ?? [] }) var rootIds
+            @Selected({ global.activeSymbol.focusedSymbolItem?.symbol?.members ?? [] }) var rootIds
             @Selected({ global.activeItem.focusedItemId }) var focusedItemId
             @Selected({ global.activeItem.selectedItemIds }) var selectedItemIds
         }

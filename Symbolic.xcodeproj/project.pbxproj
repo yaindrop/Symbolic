@@ -93,6 +93,7 @@
 		576E359B2C84077F00B1BAAF /* ContextMenuView+FocusedSymbolMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359A2C84077F00B1BAAF /* ContextMenuView+FocusedSymbolMenu.swift */; };
 		576E359D2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359C2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift */; };
 		576E359F2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */; };
+		576E35A12C87E78E00B1BAAF /* ContextMenuView+Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */; };
 		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
 		578150472C57E2540057D798 /* PathSegmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathSegmentPopover.swift */; };
 		578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150482C5891AE0057D798 /* PathNodeThumbnail.swift */; };
@@ -264,6 +265,7 @@
 		576E359A2C84077F00B1BAAF /* ContextMenuView+FocusedSymbolMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+FocusedSymbolMenu.swift"; sourceTree = "<group>"; };
 		576E359C2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+SymbolSelectionMenu.swift"; sourceTree = "<group>"; };
 		576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveSymbolView+Grid.swift"; sourceTree = "<group>"; };
+		576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+Buttons.swift"; sourceTree = "<group>"; };
 		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		578150462C57E2540057D798 /* PathSegmentPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegmentPopover.swift; sourceTree = "<group>"; };
 		578150482C5891AE0057D798 /* PathNodeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodeThumbnail.swift; sourceTree = "<group>"; };
@@ -615,10 +617,10 @@
 				5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */,
 				574411572C7C2CC700F038AD /* ActiveSymbolView.swift */,
 				574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */,
+				576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */,
 				576E35982C834DC100B1BAAF /* ActiveSymbolView+ResizeHandle.swift */,
 				578A720C2C80D1AD0026337D /* ActiveSymbolView+SelectionBounds.swift */,
 				5790F9A72C7A25AF009E3606 /* SymbolsView.swift */,
-				576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */,
 			);
 			path = Symbol;
 			sourceTree = "<group>";
@@ -788,6 +790,7 @@
 			isa = PBXGroup;
 			children = (
 				571B9B312C14A71600AAD516 /* ContextMenuStore.swift */,
+				576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */,
 				571B9B2D2C14A65A00AAD516 /* ContextMenuView+FocusedGroupMenu.swift */,
 				571B9B2B2C14A62A00AAD516 /* ContextMenuView+FocusedPathMenu.swift */,
 				573204D52C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift */,
@@ -1083,6 +1086,7 @@
 				574411582C7C2CC700F038AD /* ActiveSymbolView.swift in Sources */,
 				578150572C6260510057D798 /* PathSelectionPopover.swift in Sources */,
 				57B847882C0C9DE100D0E7C3 /* EquatableBy.swift in Sources */,
+				576E35A12C87E78E00B1BAAF /* ContextMenuView+Buttons.swift in Sources */,
 				57416E472BE2851D00C73434 /* MultipleGesture.swift in Sources */,
 				574CC7D42BF4FFCB0042FEE3 /* PropertyWrappers.swift in Sources */,
 				5723BF7A2BC39844002209F2 /* SymbolicApp.swift in Sources */,

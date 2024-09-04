@@ -37,9 +37,8 @@ message PathAction {
       Merge merge = 108;
       Split split = 109;
 
-      SetName set_name = 201;
-      SetNodeType set_node_type = 202;
-      SetSegmentType set_segment_type = 203;
+      SetNodeType set_node_type = 201;
+      SetSegmentType set_segment_type = 202;
     }
 
     message AddEndingNode {
@@ -89,8 +88,6 @@ message PathAction {
       UUID new_path_id = 2;
       optional UUID new_node_id = 3;
     }
-
-    message SetName { optional string name = 1; }
 
     message SetNodeType {
       repeated UUID node_ids = 1;
@@ -167,10 +164,23 @@ message ItemAction {
     bool is_after = 3;
   }
 
+  message SetName {
+    UUID item_id = 1;
+    optional string name = 2;
+  }
+
+  message SetLocked {
+    repeated UUID item_ids = 1;
+    bool locked = 2;
+  }
+
   oneof kind {
     Group group = 101;
     Ungroup ungroup = 102;
     Reorder reorder = 103;
+
+    SetName set_name = 201;
+    SetLocked set_locked = 202;
   }
 }
 

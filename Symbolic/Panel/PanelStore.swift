@@ -3,11 +3,13 @@ import SwiftUI
 private let subtracer = tracer.tagged("PanelStore")
 
 typealias PanelMap = OrderedMap<UUID, PanelData>
+typealias AlignPanelMap = [PlaneInnerAlign: [UUID]]
+typealias PanelStyleMap = [UUID: PanelStyle]
 
 // MARK: - PanelStore
 
 class PanelStore: Store {
-    @Trackable var map = PanelMap()
+    @Trackable var panelMap = PanelMap()
 
     // floating
     @Trackable var moving: MovingPanelData?
@@ -20,12 +22,13 @@ class PanelStore: Store {
     @Trackable var popoverButtonFrame: CGRect = .zero
     @Trackable var popoverPanelIds: Set<UUID> = []
 
-    @Derived({ $0.deriveStyleMap }) var styleMap
+    @Derived({ $0.deriveAlignPanelMap }) var alignPanelMap
+    @Derived({ $0.derivePanelStyleMap }) var panelStyleMap
 }
 
 private extension PanelStore {
-    func update(map: PanelMap) {
-        update { $0(\._map, map) }
+    func update(panelMap: PanelMap) {
+        update { $0(\._panelMap, panelMap) }
     }
 
     func update(moving: MovingPanelData?) {
@@ -74,17 +77,25 @@ extension PanelStore {
 }
 
 extension PanelStore {
-    func get(id: UUID) -> PanelData? { map.get(id) }
-    func style(id: UUID) -> PanelStyle? { styleMap.get(id) }
+    func get(id: UUID) -> PanelData? { panelMap.get(id) }
 
-    var panelIds: [UUID] { map.keys }
-    var panels: [PanelData] { map.values }
-}
+    var panelIds: [UUID] { panelMap.keys }
 
-extension PanelStore {
-    var floatingPanelIds: [UUID] { panelIds.filter { !popoverPanelIds.contains($0) } }
+    var panels: [PanelData] { panelMap.values }
 
-    var floatingPanels: [PanelData] { floatingPanelIds.compactMap { get(id: $0) } }
+    var floatingPanelIds: [UUID] {
+        panelIds.filter { !popoverPanelIds.contains($0) }
+    }
+
+    var floatingPanels: [PanelData] {
+        floatingPanelIds.compactMap { get(id: $0) }
+    }
+
+    func align(of id: UUID) -> PlaneInnerAlign {
+        guard let panel = get(id: id) else { return .topLeading }
+        guard let moving, moving.id == panel.id else { return panel.align }
+        return moving.align
+    }
 
     func movingOffset(of id: UUID) -> Vector2 {
         guard let moving, moving.id == id else { return .zero }
@@ -134,40 +145,40 @@ extension PanelStore {
 // MARK: derived
 
 extension PanelStore {
-    private var deriveStyleMap: [UUID: PanelStyle] {
+    private var deriveAlignPanelMap: AlignPanelMap {
+        floatingPanels.reduce(into: AlignPanelMap()) { dict, panel in
+            let align = align(of: panel.id)
+            var peers = dict[align] ?? []
+            peers.append(panel.id)
+            dict[align] = peers
+        }
+    }
+
+    func panelId(align: PlaneInnerAlign) -> UUID? {
+        alignPanelMap.get(align)?.last
+    }
+
+    func peers(of id: UUID) -> [UUID] {
+        alignPanelMap.get(align(of: id)) ?? []
+    }
+
+    private var derivePanelStyleMap: PanelStyleMap {
         let alignMap = panels.reduce(into: [UUID: PlaneInnerAlign]()) { dict, panel in
-            dict[panel.id] = {
-                if let moving, moving.id == panel.id {
-                    moving.align
-                } else {
-                    panel.align
-                }
-            }()
+            dict[panel.id] = align(of: panel.id)
         }
 
-        let squeezedMap = panelIds.reduce(into: [UUID: Bool]()) { dict, id in
-            dict[id] = {
-                let floatingPanelIds = floatingPanelIds, floatingPanels = floatingPanels
-
-                guard floatingPanelIds.contains(id) else { return false }
-                guard let align = alignMap[id] else { return false }
-                let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
-
-                let front = floatingPanels.last { alignMap[$0.id] == align }
-                guard let front else { return false }
-
-                let index = floatingPanelIds.firstIndex { $0 == front.id }
-                guard let index else { return false }
-
-                let neighbor = floatingPanels.last { alignMap[$0.id] == neighborAlign }
-                guard let neighbor else { return false }
-
-                let neighborIndex = floatingPanelIds.firstIndex { $0 == neighbor.id }
-                guard let neighborIndex, neighborIndex > index else { return false }
-
-                guard let frontFrame = panelFrameMap.get(front.id), let neighborFrame = panelFrameMap.get(neighbor.id) else { return false }
-                return frontFrame.height + neighborFrame.height + floatingSafeArea * 2 > rootFrame.height
-            }()
+        let floatingPanelIds = floatingPanelIds
+        let squeezedIds = alignPanelMap.keys.reduce(into: Set<UUID>()) { set, align in
+            let neighborAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
+            guard let panelId = self.panelId(align: align),
+                  let neighborId = self.panelId(align: neighborAlign) else { return }
+            guard let index = floatingPanelIds.firstIndex(of: panelId),
+                  let neighborIndex = floatingPanelIds.firstIndex(of: neighborId),
+                  index < neighborIndex else { return }
+            guard let frame = panelFrameMap.get(panelId),
+                  let neighborFrame = panelFrameMap.get(neighborId),
+                  frame.height + neighborFrame.height + floatingSafeArea * 2 > rootFrame.height else { return }
+            set.insert(panelId)
         }
 
         let appearanceMap = panelIds.reduce(into: [UUID: PanelAppearance]()) { dict, id in
@@ -177,7 +188,7 @@ extension PanelStore {
                 }
                 guard let align = alignMap[id] else { return .floatingPrimary }
                 let peers = floatingPanels.filter { alignMap[$0.id] == align }
-                let squeezed = squeezedMap[id] ?? false
+                let squeezed = squeezedIds.contains(id)
                 if peers.last?.id == id {
                     return squeezed ? .floatingSecondary : .floatingPrimary
                 } else {
@@ -189,7 +200,7 @@ extension PanelStore {
         let paddingMap = panelIds.reduce(into: [UUID: CGSize]()) { dict, id in
             dict[id] = {
                 guard moving?.id != id else { return floatingPadding }
-                let squeezed = squeezedMap[id] ?? false
+                let squeezed = squeezedIds.contains(id)
                 guard !squeezed else { return floatingPaddingLarge }
                 let align = alignMap[id]
                 let peers = floatingPanels.filter { alignMap[$0.id] == align }
@@ -201,16 +212,18 @@ extension PanelStore {
             dict[panel.id] = min(panel.maxHeight, floatingMaxHeight)
         }
 
-        return panelIds.reduce(into: [UUID: PanelStyle]()) { dict, id in
+        return panelIds.reduce(into: PanelStyleMap()) { dict, id in
             dict[id] = .init(
                 appearance: appearanceMap[id] ?? .floatingPrimary,
-                squeezed: squeezedMap[id] ?? false,
+                squeezed: squeezedIds.contains(id),
                 padding: paddingMap[id] ?? .zero,
                 align: alignMap[id] ?? .topLeading,
                 maxHeight: maxHeightMap[id] ?? floatingMaxHeight
             )
         }
     }
+
+    func style(id: UUID) -> PanelStyle? { panelStyleMap.get(id) }
 }
 
 // MARK: actions
@@ -218,30 +231,30 @@ extension PanelStore {
 extension PanelStore {
     func register(name: String, align: PlaneInnerAlign = .topLeading, @ViewBuilder _ panel: @escaping () -> any View) {
         let panel = PanelData(name: name, view: AnyView(panel()), align: align)
-        update(map: map.cloned { $0[panel.id] = panel })
+        update(panelMap: panelMap.cloned { $0[panel.id] = panel })
     }
 
     func deregister(id: UUID) {
-        update(map: map.cloned { $0.removeValue(forKey: id) })
+        update(panelMap: panelMap.cloned { $0.removeValue(forKey: id) })
     }
 
     func clear() {
-        update(map: [:])
+        update(panelMap: [:])
     }
 }
 
 private extension PanelStore {
     func focus(on id: UUID) {
-        update(map: map.cloned { $0[id] = $0.removeValue(forKey: id) })
+        update(panelMap: panelMap.cloned { $0[id] = $0.removeValue(forKey: id) })
     }
 
     func spin(on id: UUID) {
-        guard let style = styleMap.get(id) else { return }
-        let peers = panelIds.filter { styleMap.get($0)?.align == style.align }
+        guard let style = panelStyleMap.get(id) else { return }
+        let peers = panelIds.filter { panelStyleMap.get($0)?.align == style.align }
         guard let primaryId = peers.last,
               let primary = get(id: primaryId),
               let panel = get(id: id) else { return }
-        update(map: map.cloned {
+        update(panelMap: panelMap.cloned {
             $0.removeValue(forKey: primaryId)
             $0.removeValue(forKey: id)
             $0.insert((primaryId, primary), at: 0)
@@ -262,7 +275,7 @@ extension PanelStore {
     func setFloating(id: UUID) {
         withStoreUpdating {
             update(popoverPanelIds: popoverPanelIds.cloned { $0.remove(id) })
-            update(map: map.cloned { $0[id]?.align = .topTrailing })
+            update(panelMap: panelMap.cloned { $0[id]?.align = .topTrailing })
             update(popoverActive: false)
         }
     }
@@ -285,7 +298,7 @@ extension PanelStore {
     }
 
     func onPress(of id: UUID) {
-        guard let style = styleMap.get(id),
+        guard let style = panelStyleMap.get(id),
               style.appearance == .floatingSecondary else { return }
         if style.squeezed {
             focus(on: id)
@@ -336,7 +349,7 @@ extension PanelStore {
         moving.offset = moveTarget.offset
         moving.ended = true
         withStoreUpdating(configs: .syncNotify) {
-            update(map: map.cloned { $0[id] = panel.cloned { $0.align = moveTarget.align } })
+            update(panelMap: panelMap.cloned { $0[id] = panel.cloned { $0.align = moveTarget.align } })
             update(moving: moving)
         }
     }
@@ -410,7 +423,7 @@ extension PanelStore {
         let maxHeight = max(floatingMinHeight, maxHeight)
         withStoreUpdating {
             focus(on: id)
-            update(map: map.cloned { $0[panel.id] = panel.cloned { $0.maxHeight = maxHeight } })
+            update(panelMap: panelMap.cloned { $0[panel.id] = panel.cloned { $0.maxHeight = maxHeight } })
         }
     }
 

@@ -47,6 +47,7 @@ private extension FloatingPanelView {
         .overlay { secondaryOverlay }
         .clipRounded(radius: 18)
         .overlay { HeightControl() }
+        .overlay { Switcher() }
     }
 
     var titleBackgroundOpacity: Scalar { min(scrollViewModel.offset, 12) / 12.0 }
@@ -169,6 +170,39 @@ private extension FloatingPanelView.HeightControl {
     }
 }
 
+// MARK: - Switcher
+
+private extension FloatingPanelView {
+    struct Switcher: View, TracedView, ComputedSelectorHolder {
+        @Environment(\.panelId) var panelId
+        @Environment(\.panelAppearance) var appearance
+
+        struct SelectorProps: Equatable { let panelId: UUID }
+        class Selector: SelectorBase {
+            @Selected({ global.panel.resizable(of: $0.panelId) }) var resizable
+            @Selected({ global.panel.resizing == $0.panelId }) var resizing
+            @Selected(configs: .init(animation: .fast), { global.panel.style(id: $0.panelId)?.align ?? .topLeading }) var align
+        }
+
+        @SelectorWrapper var selector
+
+        var body: some View { trace {
+            setupSelector(.init(panelId: panelId)) {
+                content
+            }
+        } }
+    }
+}
+
+private extension FloatingPanelView.Switcher {
+    var content: some View {
+        Rectangle()
+            .fill(.blue.opacity(0.3))
+            .frame(size: .init(squared: 32))
+            .innerAligned(.bottomTrailing)
+    }
+}
+
 // MARK: - FloatingPanelWrapper
 
 struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHolder {
@@ -244,18 +278,19 @@ private extension FloatingPanelWrapper {
     }
 
     @ViewBuilder var content: some View {
-        FloatingPanelView()
-            .environment(\.panelId, panelId)
-            .environment(\.panelAppearance, selector.appearance)
-            .offset(.init(selector.movingOffset))
-            .scaleEffect(scale, anchor: selector.align.unitPoint)
-            .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)
-            .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
-            .padding(size: selector.padding)
-            .offset(.init(secondaryOffset))
-            .background { Color.blue.opacity(debugCanvasOverlay ? 0.1 : 0).allowsHitTesting(false) }
-            .innerAligned(selector.align)
-            .opacity(selector.appearance == .floatingHidden ? 0 : 1)
+        if selector.appearance != .floatingHidden {
+            FloatingPanelView()
+                .environment(\.panelId, panelId)
+                .environment(\.panelAppearance, selector.appearance)
+                .offset(.init(selector.movingOffset))
+                .scaleEffect(scale, anchor: selector.align.unitPoint)
+                .rotation3DEffect(rotation, axis: (x: 0, y: 1, z: 0), anchor: selector.align.unitPoint)
+                .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
+                .padding(size: selector.padding)
+                .offset(.init(secondaryOffset))
+                .background { Color.blue.opacity(debugCanvasOverlay ? 0.1 : 0).allowsHitTesting(false) }
+                .innerAligned(selector.align)
+        }
     }
 }
 

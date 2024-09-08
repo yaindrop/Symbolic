@@ -311,6 +311,20 @@ extension CGRect {
     }
 }
 
+extension Point2 {
+    func alignedPoint(at align: PlaneInnerAlign, gap: CGSize) -> Point2 {
+        CGRect(origin: self, size: .zero).alignedPoint(at: align, gap: gap)
+    }
+
+    func alignedBox(at align: PlaneInnerAlign, size: CGSize) -> CGRect {
+        CGRect(origin: self, size: .zero).alignedBox(at: align, size: size)
+    }
+
+    func alignedBox(at align: PlaneInnerAlign, size: CGSize, gap: CGSize) -> CGRect {
+        CGRect(origin: self, size: .zero).alignedBox(at: align, size: size, gap: gap)
+    }
+}
+
 // MARK: - AxisAlignModifier
 
 struct AxisAlignModifier: ViewModifier {

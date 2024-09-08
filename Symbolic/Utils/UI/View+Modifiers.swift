@@ -105,6 +105,14 @@ extension View {
     }
 }
 
+// MARK: - offset
+
+extension View {
+    func offset(_ v: Vector2) -> some View {
+        offset(.init(v))
+    }
+}
+
 // MARK: - frame
 
 extension View {

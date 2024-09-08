@@ -49,7 +49,7 @@ private extension PanelSection {
 // MARK: - Background
 
 private struct PanelSectionBackground: View, TracedView {
-    @Environment(\.panelAppearance) var panelAppearance
+    @Environment(\.panelFloatingStyle) var floatingStyle
 
     var body: some View { trace {
         content
@@ -59,10 +59,10 @@ private struct PanelSectionBackground: View, TracedView {
 private extension PanelSectionBackground {
     var content: some View {
         Rectangle()
-            .if(panelAppearance == .floatingSecondary) {
-                $0.fill(.background.secondary.opacity(0.8))
-            } else: {
+            .if(floatingStyle.isPrimary) {
                 $0.fill(.ultraThinMaterial)
+            } else: {
+                $0.fill(.background.secondary.opacity(0.8))
             }
     }
 }

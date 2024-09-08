@@ -166,7 +166,7 @@ private extension NodeRow {
 // MARK: - NodeDetailView
 
 private struct NodeDetailView: View, TracedView {
-    @Environment(\.panelAppearance) var panelAppearance
+    @Environment(\.panelFloatingStyle) var floatingStyle
     let context: Context, nodeId: UUID
 
     @State private var activePopover: ActivePopover?
@@ -196,8 +196,8 @@ private extension NodeDetailView {
         .background(.ultraThickMaterial)
         .clipRounded(radius: 12)
         .geometryReader { frame = $0.frame(in: .global) }
-        .onChange(of: panelAppearance) { _, appearance in
-            if appearance != .floatingPrimary, appearance != .popoverSection {
+        .onChange(of: floatingStyle) { _, appearance in
+            if !appearance.isPrimary {
                 activePopover = nil
             }
         }

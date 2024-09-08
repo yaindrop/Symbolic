@@ -24,15 +24,6 @@ extension Array {
         return suffix(count - size) + .init(repeating: nil, count: size)
     }
 
-    func intersection(_ other: Self) -> Set<Element> where Element: Hashable {
-        Set(self).intersection(other)
-    }
-
-    func subtracting(_ other: Self) -> Self where Element: Hashable {
-        let intersection = self.intersection(other)
-        return filter { intersection.contains($0) }
-    }
-
     func completeMap<T>(_ transform: (Element) throws -> T?) rethrows -> [T]? {
         let mapped = try compactMap(transform)
         guard mapped.count == count else { return nil }
@@ -45,5 +36,18 @@ extension Array {
 
     func allSame() -> Element? where Element: Equatable {
         allSatisfy { $0 == first } ? first : nil
+    }
+}
+
+extension Array where Element: Hashable {
+    func toSet() -> Set<Element> { .init(self) }
+
+    func intersection(_ other: Self) -> Set<Element> {
+        Set(self).intersection(other)
+    }
+
+    func subtracting(_ other: Self) -> Self {
+        let intersection = self.intersection(other)
+        return filter { intersection.contains($0) }
     }
 }

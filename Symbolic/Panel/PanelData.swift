@@ -1,10 +1,43 @@
 import SwiftUI
 
-enum PanelAppearance: Equatable {
-    case floatingPrimary
-    case floatingSecondary
-    case floatingHidden
-    case popoverSection
+enum PanelFloatingStyle: Equatable {
+    case primary(align: PlaneInnerAlign)
+    case minimized(align: PlaneInnerAlign, offset: Vector2)
+}
+
+extension PanelFloatingStyle {
+    var isPrimary: Bool { if case .primary = self { true } else { false } }
+
+    var align: PlaneInnerAlign {
+        switch self {
+        case let .primary(align): align
+        case let .minimized(align, _): align
+        }
+    }
+
+    var rotation3D: (angle: Angle, axis: (x: Scalar, y: Scalar, z: Scalar), anchor: UnitPoint) {
+        guard !isPrimary else { return (.zero, (0, 1, 0), .zero) }
+        let angle: Scalar = 15
+        return (
+            angle: .degrees((align.isLeading ? 1 : -1) * angle),
+            axis: (0, 1, 0),
+            anchor: align.isLeading ? .leading : .trailing
+        )
+    }
+
+    var scale: (Scalar, anchor: UnitPoint) {
+        switch self {
+        case .primary: (1, align.unitPoint)
+        case .minimized: (0.4, align.unitPoint)
+        }
+    }
+
+    var offset: Vector2 {
+        switch self {
+        case .primary: .zero
+        case let .minimized(_, offset): offset
+        }
+    }
 }
 
 // MARK: - PanelData
@@ -26,20 +59,9 @@ extension PanelData: EquatableBy {
 
 extension PanelData: TriviallyCloneable {}
 
-// MARK: - PanelStyle
+// MARK: - PanelMovingData
 
-struct PanelStyle: Equatable {
-    var appearance: PanelAppearance
-    var squeezed: Bool
-
-    var padding: CGSize
-    var align: PlaneInnerAlign
-    var maxHeight: Scalar
-}
-
-// MARK: - MovingPanelData
-
-struct MovingPanelData: Equatable {
+struct PanelMovingData: Equatable {
     let id: UUID
     var globalDragPosition: Point2
     var offset: Vector2
@@ -47,7 +69,7 @@ struct MovingPanelData: Equatable {
     var ended: Bool = false
 }
 
-extension MovingPanelData: TriviallyCloneable {}
+extension PanelMovingData: TriviallyCloneable {}
 
 // MARK: - environments
 
@@ -84,13 +106,13 @@ extension EnvironmentValues {
     }
 }
 
-private struct PanelAppearanceKey: EnvironmentKey {
-    static let defaultValue: PanelAppearance = .floatingPrimary
+private struct PanelFloatingStyleKey: EnvironmentKey {
+    static let defaultValue: PanelFloatingStyle = .primary(align: .topLeading)
 }
 
 extension EnvironmentValues {
-    var panelAppearance: PanelAppearance {
-        get { self[PanelAppearanceKey.self] }
-        set { self[PanelAppearanceKey.self] = newValue }
+    var panelFloatingStyle: PanelFloatingStyle {
+        get { self[PanelFloatingStyleKey.self] }
+        set { self[PanelFloatingStyleKey.self] = newValue }
     }
 }

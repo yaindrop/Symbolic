@@ -3,17 +3,13 @@ import SwiftUI
 // MARK: - PanelFloatingStyle
 
 enum PanelFloatingStyle: Equatable {
-    case primary
-    case minimized
+    case primary(minimized: Bool)
     case secondary(opacity: Scalar)
-    case switching(offset: Vector2)
+    case switching(offset: Vector2, highlighted: Bool)
 }
 
 extension PanelFloatingStyle {
-    var isPrimary: Bool { if case .primary = self { true } else { false } }
-    var isMinimized: Bool { if case .minimized = self { true } else { false } }
-    var isSecondary: Bool { if case .secondary = self { true } else { false } }
-    var isSwitching: Bool { if case .switching = self { true } else { false } }
+    var isPrimary: Bool { if case let .primary(minimized) = self { !minimized } else { false } }
 }
 
 // MARK: - PanelData
@@ -92,7 +88,7 @@ extension EnvironmentValues {
 }
 
 private struct PanelFloatingStyleKey: EnvironmentKey {
-    static let defaultValue: PanelFloatingStyle = .primary
+    static let defaultValue: PanelFloatingStyle = .primary(minimized: false)
 }
 
 extension EnvironmentValues {

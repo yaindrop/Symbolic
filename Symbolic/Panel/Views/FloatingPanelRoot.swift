@@ -262,7 +262,7 @@ private extension FloatingPanelWrapper {
     }
 
     var floatingStyle: PanelFloatingStyle {
-        selector.floatingStyle ?? .primary
+        selector.floatingStyle ?? .primary(minimized: false)
     }
 
     var align: PlaneInnerAlign {
@@ -271,7 +271,8 @@ private extension FloatingPanelWrapper {
 
     var rotation3DAngle: Angle {
         switch floatingStyle {
-        case .secondary, .switching: .degrees((align.isLeading ? 1 : -1) * 15)
+        case .secondary: .degrees((align.isLeading ? 1 : -1) * 15)
+        case let .switching(_, highlighted): .degrees((align.isLeading ? -1 : 1) * (highlighted ? 5 : 15))
         default: .zero
         }
     }
@@ -283,15 +284,16 @@ private extension FloatingPanelWrapper {
     var rotation3DAnchor: UnitPoint {
         switch floatingStyle {
         case .secondary: align.unitPoint
-        case .switching: align.isLeading ? .leading : .trailing
+        case .switching: align.isLeading ? .trailing : .leading
         default: .leading
         }
     }
 
     var scale: Scalar {
         switch floatingStyle {
-        case .primary: 1
-        case .minimized, .secondary, .switching: 0.4
+        case let .primary(minimized): minimized ? 0.4 : 1
+        case .secondary: 0.4
+        case let .switching(_, highlighted): highlighted ? 0.6 : 0.4
         }
     }
 
@@ -301,14 +303,15 @@ private extension FloatingPanelWrapper {
 
     var offset: Vector2 {
         switch floatingStyle {
-        case .primary, .minimized, .secondary: .zero
-        case let .switching(offset): offset
+        case .primary, .secondary: .zero
+        case let .switching(offset, _): offset
         }
     }
 
     var opacity: Scalar {
         switch floatingStyle {
         case let .secondary(opacity): opacity
+        case let .switching(_, highlighted): highlighted ? 1 : 0.8
         default: 1
         }
     }

@@ -150,18 +150,19 @@ private extension FloatingPanelView.ResizeHandle {
 
     var bar: some View {
         RoundedRectangle(cornerSize: .init(squared: 2))
-            .fill(floatingStyle.isPrimary ? Color.label.opacity(selector.resizing ? 1 : 0.5) : Color.clear)
+            .fill(selector.resizing ? Color.blue : Color.label.opacity(0.3))
             .frame(width: 32, height: 4)
             .padding(4)
-            .invisibleSoildOverlay(disabled: !floatingStyle.isPrimary)
+            .invisibleSoildOverlay()
             .multipleGesture(selector.resizable ? global.panel.resizingGesture(of: panelId) : nil)
             .animation(.fast, value: selector.resizing)
+            .opacity(floatingStyle.isPrimary ? 1 : 0)
     }
 
     var indicator: some View {
         GeometryReader {
             RoundedRectangle(cornerSize: .init(squared: 24))
-                .stroke(lineWidth: 2)
+                .stroke(.blue, lineWidth: 2)
                 .frame(size: $0.frame(in: .global).outset(by: 8).size)
                 .offset(-.init(squared: 8))
         }
@@ -179,8 +180,7 @@ private extension FloatingPanelView {
 
         struct SelectorProps: Equatable { let panelId: UUID }
         class Selector: SelectorBase {
-            @Selected({ global.panel.resizable(of: $0.panelId) }) var resizable
-            @Selected({ global.panel.resizing == $0.panelId }) var resizing
+            @Selected({ global.panel.switching?.id == $0.panelId }) var switching
             @Selected(configs: .init(animation: .fast), { global.panel.align(of: $0.panelId) }) var align
         }
 
@@ -195,11 +195,25 @@ private extension FloatingPanelView {
 }
 
 private extension FloatingPanelView.SwitchHandle {
-    var content: some View {
-        Rectangle()
-            .fill(.blue.opacity(0.3))
-            .frame(size: .init(squared: 32))
-            .innerAligned(.bottomTrailing)
+    @ViewBuilder var content: some View {
+        let align = selector.align.flipped(axis: .vertical)
+        Circle()
+            .fill(selector.switching ? Color.blue : Color.label.opacity(0.3))
+            .mask {
+                ZStack {
+                    Rectangle()
+                    Image(systemName: "ellipsis")
+                        .font(.footnote)
+                        .blendMode(.destinationOut)
+                }
+            }
+            .frame(size: .init(squared: 24))
+            .padding(6)
+            .invisibleSoildOverlay()
+            .multipleGesture(global.panel.switchingGesture(of: panelId))
+            .animation(.fast, value: selector.switching)
+            .innerAligned(align)
+            .opacity(floatingStyle.isPrimary ? 1 : 0)
     }
 }
 
@@ -212,8 +226,9 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected({ global.panel.moving(of: $0.panelId) }) var moving
         @Selected(configs: .init(animation: .fast), { global.panel.floatingStyle(of: $0.panelId) }) var floatingStyle
+        @Selected({ global.panel.moving(of: $0.panelId) }) var moving
+        @Selected({ global.panel.floatingPadding }) var padding
     }
 
     @SelectorWrapper var selector
@@ -235,18 +250,18 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
 private extension FloatingPanelWrapper {
     @ViewBuilder var content: some View {
         if let style = selector.floatingStyle {
-            let scale = style.scale,
-                rotation = style.rotation3D
             FloatingPanelView()
                 .environment(\.panelId, panelId)
                 .environment(\.panelFloatingStyle, style)
                 .offset(selector.moving?.offset ?? .zero)
-                .rotation3DEffect(rotation.angle, axis: rotation.axis, anchor: rotation.anchor)
-                .scaleEffect(scale.0, anchor: scale.anchor)
+                .rotation3DEffect(style.rotation3DAngle, axis: style.rotation3DAxis, anchor: style.rotation3DAnchor)
+                .scaleEffect(style.scale, anchor: style.scaleAnchor)
                 .offset(style.offset)
                 .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
                 .background { Color.blue.opacity(debugCanvasOverlay ? 0.1 : 0).allowsHitTesting(false) }
+                .padding(size: selector.padding)
                 .innerAligned(style.align)
+                .opacity(style.opacity)
         }
     }
 }

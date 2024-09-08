@@ -15,6 +15,7 @@ class PanelStore: Store {
     // floating
     @Trackable var moving: PanelMovingData?
     @Trackable var resizing: UUID?
+    @Trackable var switching: PanelSwitchingData?
     @Trackable var rootFrame: CGRect = .zero
     @Trackable var panelFrameMap = PanelFrameMap()
 
@@ -38,6 +39,10 @@ private extension PanelStore {
 
     func update(resizing: UUID?) {
         update { $0(\._resizing, resizing) }
+    }
+
+    func update(switching: PanelSwitchingData?) {
+        update { $0(\._switching, switching) }
     }
 
     func update(rootFrame: CGRect) {
@@ -70,11 +75,11 @@ extension PanelStore {
 
     var floatingMaxHeight: Scalar { rootFrame.height - floatingSafeArea * 2 }
 
-    var floatingPadding: CGSize { .zero }
-
-    var floatingPaddingLarge: CGSize { .zero }
+    var floatingPadding: CGSize { .init(squared: 12) }
 
     var floatingSafeArea: Scalar { 36 }
+
+    var floatingMinimizedGap: Scalar { 64 }
 }
 
 extension PanelStore {
@@ -128,7 +133,7 @@ extension PanelStore {
 
     var freeSpace: CGRect {
         let floatingPanels = floatingPanels
-        var minX = rootFrame.minX + floatingPaddingLarge.width, maxX = rootFrame.maxX - floatingPaddingLarge.width
+        var minX = rootFrame.minX + floatingPadding.width, maxX = rootFrame.maxX - floatingPadding.width
         if floatingPanels.contains(where: { $0.align.isLeading }) {
             minX += floatingWidth
         }
@@ -177,7 +182,7 @@ extension PanelStore {
         peers(of: id).last
     }
 
-    func squeezed(of id: UUID) -> Bool {
+    func minimized(of id: UUID) -> Bool {
         let align = align(of: id)
         guard primaryId(at: align) == id else { return false }
         let oppositeAlign = PlaneInnerAlign(horizontal: align.horizontal, vertical: align.vertical.flipped)
@@ -190,20 +195,35 @@ extension PanelStore {
         return frame.height + oppositeFrame.height + floatingSafeArea * 2 > rootFrame.height
     }
 
+    func switchingGap(of id: UUID) -> CGSize {
+        let align = align(of: id),
+            peers = peers(of: id)
+        guard let index = peers.firstIndex(of: id),
+              let primaryId = primaryId(at: align),
+              let primaryFrame = frame(of: primaryId) else { return .zero }
+        return .init(floatingMinimizedGap * Scalar(index), primaryFrame.height + floatingPadding.height)
+    }
+
     private var derivePanelFloatingStyleMap: PanelFloatingStyleMap {
         floatingPanelIds.reduce(into: PanelFloatingStyleMap()) { dict, id in
             dict[id] = {
-                let align = align(of: id),
-                    peers = peers(of: id)
-                if peers.last == id && !squeezed(of: id) {
+                let primaryId = primaryId(of: id),
+                    align = align(of: id),
+                    minimized = minimized(of: id)
+                if primaryId == id && !minimized {
                     return .primary(align: align)
+                } else if minimized {
+                    return .minimized(align: align)
+                } else if let switching, switching.id == primaryId {
+                    let gap = switchingGap(of: id),
+                        offset = Point2.zero.alignedPoint(at: align, gap: gap)
+                    return .switching(align: align, offset: .init(offset))
+                } else {
+                    let primaryMoving = primaryId == moving?.id,
+                        isSecondary = peers(of: id).dropLast().last == id,
+                        opacity = primaryMoving && isSecondary ? 0.5 : 0
+                    return .secondary(align: align, opacity: opacity)
                 }
-                guard let index = peers.firstIndex(of: id),
-                      let primaryId = primaryId(at: align),
-                      let primaryFrame = self.frame(of: primaryId) else { return .primary(align: align) }
-                let padding = CGSize(64 * Scalar(index), primaryFrame.height) + .init(12, 12),
-                    offset = Point2.zero.alignedPoint(at: align, gap: padding)
-                return .minimized(align: align, offset: .init(offset))
             }()
         }
     }
@@ -398,7 +418,7 @@ extension PanelStore {
         )
     }
 
-    func onDragResize(of id: UUID, _ v: DragGesture.Value) {
+    private func onDragResize(of id: UUID, _ v: DragGesture.Value) {
         let align = align(of: id),
             frame = frame(of: id) ?? .zero,
             oppositeY = align.isTop ? frame.minY : frame.maxY,
@@ -406,7 +426,7 @@ extension PanelStore {
         onResize(of: id, maxHeight: maxHeight)
     }
 
-    func onResize(of id: UUID, maxHeight: Scalar) {
+    private func onResize(of id: UUID, maxHeight: Scalar) {
         guard let panel = get(id: id) else { return }
         let maxHeight = max(floatingMinHeight, maxHeight)
         withStoreUpdating {
@@ -415,6 +435,7 @@ extension PanelStore {
         }
     }
 
+    // callback from resized view
     func setFrame(of id: UUID, _ frame: CGRect) {
         let _r = subtracer.range("set panel \(id) frame \(frame)"); defer { _r() }
         update(panelFrameMap: panelFrameMap.cloned { $0[id] = frame })
@@ -423,5 +444,28 @@ extension PanelStore {
     func setRootFrame(_ frame: CGRect) {
         let _r = subtracer.range("set root frame \(frame)"); defer { _r() }
         update(rootFrame: frame)
+    }
+}
+
+// MARK: resizing
+
+extension PanelStore {
+    func switchingGesture(of id: UUID) -> MultipleGesture {
+        .init(
+            configs: .init(coordinateSpace: .global),
+            onPress: { self.onDragSwitch(of: id, $0) },
+            onPressEnd: { _, _ in self.update(switching: nil) },
+            onDrag: { self.onDragSwitch(of: id, $0) },
+            onDragEnd: { self.onDragSwitchEnd(of: id, $0) }
+        )
+    }
+
+    private func onDragSwitch(of id: UUID, _ v: DragGesture.Value) {
+        update(switching: .init(id: id, offset: v.offset))
+    }
+
+    private func onDragSwitchEnd(of id: UUID, _ v: DragGesture.Value) {
+        print("dbg onDragSwitchEnd", id, v.offset)
+        update(switching: nil)
     }
 }

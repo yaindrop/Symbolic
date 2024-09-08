@@ -1,41 +1,70 @@
 import SwiftUI
 
+// MARK: - PanelFloatingStyle
+
 enum PanelFloatingStyle: Equatable {
     case primary(align: PlaneInnerAlign)
-    case minimized(align: PlaneInnerAlign, offset: Vector2)
+    case minimized(align: PlaneInnerAlign)
+    case secondary(align: PlaneInnerAlign, opacity: Scalar)
+    case switching(align: PlaneInnerAlign, offset: Vector2)
 }
 
 extension PanelFloatingStyle {
     var isPrimary: Bool { if case .primary = self { true } else { false } }
+    var isMinimized: Bool { if case .minimized = self { true } else { false } }
+    var isSecondary: Bool { if case .secondary = self { true } else { false } }
+    var isSwitching: Bool { if case .switching = self { true } else { false } }
 
     var align: PlaneInnerAlign {
         switch self {
-        case let .primary(align): align
-        case let .minimized(align, _): align
+        case let .primary(align),
+             let .minimized(align),
+             let .secondary(align, _),
+             let .switching(align, _): align
         }
     }
 
-    var rotation3D: (angle: Angle, axis: (x: Scalar, y: Scalar, z: Scalar), anchor: UnitPoint) {
-        guard !isPrimary else { return (.zero, (0, 1, 0), .zero) }
-        let angle: Scalar = 15
-        return (
-            angle: .degrees((align.isLeading ? 1 : -1) * angle),
-            axis: (0, 1, 0),
-            anchor: align.isLeading ? .leading : .trailing
-        )
-    }
-
-    var scale: (Scalar, anchor: UnitPoint) {
+    var rotation3DAngle: Angle {
         switch self {
-        case .primary: (1, align.unitPoint)
-        case .minimized: (0.4, align.unitPoint)
+        case .secondary, .switching: .degrees((align.isLeading ? 1 : -1) * 15)
+        default: .zero
         }
+    }
+
+    var rotation3DAxis: (x: Scalar, y: Scalar, z: Scalar) {
+        (0, 1, 0)
+    }
+
+    var rotation3DAnchor: UnitPoint {
+        switch self {
+        case .secondary: align.unitPoint
+        case .switching: align.isLeading ? .leading : .trailing
+        default: .leading
+        }
+    }
+
+    var scale: Scalar {
+        switch self {
+        case .primary: 1
+        case .minimized, .secondary, .switching: 0.4
+        }
+    }
+
+    var scaleAnchor: UnitPoint {
+        align.unitPoint
     }
 
     var offset: Vector2 {
         switch self {
-        case .primary: .zero
-        case let .minimized(_, offset): offset
+        case .primary, .minimized, .secondary: .zero
+        case let .switching(_, offset): offset
+        }
+    }
+
+    var opacity: Scalar {
+        switch self {
+        case let .secondary(_, opacity): opacity
+        default: 1
         }
     }
 }
@@ -70,6 +99,15 @@ struct PanelMovingData: Equatable {
 }
 
 extension PanelMovingData: TriviallyCloneable {}
+
+// MARK: - PanelSwitchingData
+
+struct PanelSwitchingData: Equatable {
+    let id: UUID
+    var offset: Vector2
+}
+
+extension PanelSwitchingData: TriviallyCloneable {}
 
 // MARK: - environments
 

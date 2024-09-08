@@ -201,7 +201,7 @@ extension FocusedPathService {
 
     func setSelecting(_ value: Bool) {
         let _r = subtracer.range(type: .intent, "set selecting \(value)"); defer { _r() }
-        withStoreUpdating(configs: .init(animation: .fast)) {
+        withStoreUpdating(.animation(.fast)) {
             if value {
                 store.update(state: .active([]))
             } else {

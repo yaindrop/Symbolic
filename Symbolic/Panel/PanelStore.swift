@@ -195,6 +195,12 @@ extension PanelStore {
         return frame.height + oppositeFrame.height + floatingSafeArea * 2 > rootFrame.height
     }
 
+    func switchable(of id: UUID) -> Bool {
+        guard primaryId(of: id) == id else { return false }
+        let peers = peers(of: id)
+        return peers.count > 1
+    }
+
     func switchingGap(of id: UUID) -> CGSize {
         let align = align(of: id),
             peers = peers(of: id)
@@ -211,18 +217,18 @@ extension PanelStore {
                     align = align(of: id),
                     minimized = minimized(of: id)
                 if primaryId == id && !minimized {
-                    return .primary(align: align)
+                    return .primary
                 } else if minimized {
-                    return .minimized(align: align)
+                    return .minimized
                 } else if let switching, switching.id == primaryId {
                     let gap = switchingGap(of: id),
                         offset = Point2.zero.alignedPoint(at: align, gap: gap)
-                    return .switching(align: align, offset: .init(offset))
+                    return .switching(offset: .init(offset))
                 } else {
                     let primaryMoving = primaryId == moving?.id,
                         isSecondary = peers(of: id).dropLast().last == id,
                         opacity = primaryMoving && isSecondary ? 0.5 : 0
-                    return .secondary(align: align, opacity: opacity)
+                    return .secondary(opacity: opacity)
                 }
             }()
         }
@@ -355,15 +361,18 @@ extension PanelStore {
         moving.align = moveTarget.align
         moving.offset = moveTarget.offset
         moving.ended = true
-        withStoreUpdating(configs: .syncNotify) {
+        withStoreUpdating(.syncNotify) {
             update(panelMap: panelMap.cloned { $0[id] = panel.cloned { $0.align = moveTarget.align } })
             update(moving: moving)
         }
     }
 
     func resetMoving(of id: UUID) {
-        guard moving?.id == id else { return }
-        withStoreUpdating(configs: .init(animation: .custom(.spring(duration: 0.5)))) {
+        guard let moving,
+              moving.id == id,
+              moving.ended else { return }
+        let _r = subtracer.range(type: .intent, "reset moving of by \(id)"); defer { _r() }
+        withStoreUpdating(.animation(.custom(.spring(duration: 0.5)))) {
             update(moving: nil)
         }
     }

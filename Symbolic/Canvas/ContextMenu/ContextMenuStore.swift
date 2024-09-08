@@ -27,7 +27,7 @@ enum ContextMenuType: SelfIdentifiable, CaseIterable {
 
 struct ContextMenuRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
+        @Selected({ global.viewport.sizedInfo }, .syncNotify) var viewport
         @Selected({ global.contextMenu.hidden }) var hidden
     }
 

@@ -8,7 +8,7 @@ struct FileEntryCard: View, TracedView, ComputedSelectorHolder {
     struct SelectorProps: Equatable { let entry: FileEntry }
     class Selector: SelectorBase {
         @Selected({ global.fileBrowser.isSelectingFiles }) var isSelectingFiles
-        @Selected(configs: .init(animation: .fast), { global.fileBrowser.selectedFiles.contains($0.entry) }) var selected
+        @Selected({ global.fileBrowser.selectedFiles.contains($0.entry) }, .animation(.fast)) var selected
     }
 
     @SelectorWrapper var selector

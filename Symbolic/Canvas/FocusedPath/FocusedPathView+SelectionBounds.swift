@@ -7,7 +7,7 @@ extension FocusedPathView {
         @Environment(\.transformToView) var transformToView
 
         class Selector: SelectorBase {
-            @Selected(configs: .syncNotify, { global.activeItem.focusedPath }) var path
+            @Selected({ global.activeItem.focusedPath }, .syncNotify) var path
             @Selected({ global.focusedPath.activeNodeIndexPairs }) var nodeIndexPairs
         }
 

@@ -84,7 +84,7 @@ extension ViewportUpdater {
         let _r = subtracer.range(type: .intent, "commit"); defer { _r() }
         var sizedInfo = viewport.sizedInfo
         applyOverscroll(to: &sizedInfo)
-        withStoreUpdating(configs: .init(animation: .fast)) {
+        withStoreUpdating(.animation(.fast)) {
             store.update(updating: false)
             viewport.setInfo(sizedInfo.info)
             store.update(referenceInfo: viewport.info)
@@ -103,7 +103,7 @@ extension ViewportUpdater {
             scale = viewport.viewSize.width / newWorldRect.width
         var sizedInfo = SizedViewportInfo(size: viewport.viewSize, info: .init(origin: origin, scale: scale))
         applyOverscroll(to: &sizedInfo)
-        withStoreUpdating(configs: .init(animation: .fast)) {
+        withStoreUpdating(.animation(.fast)) {
             viewport.setInfo(sizedInfo.info)
             store.update(referenceInfo: viewport.info)
         }

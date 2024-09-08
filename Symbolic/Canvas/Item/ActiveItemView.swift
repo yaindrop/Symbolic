@@ -8,7 +8,7 @@ struct ActiveItemView: View, TracedView, SelectorHolder {
         @Selected({ !global.activeItem.activeItems.isEmpty }) var active
         @Selected({ global.activeItem.activePathIds }) var activePathIds
         @Selected({ global.activeItem.activeGroups }) var activeGroups
-        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
+        @Selected({ global.viewport.sizedInfo }, .syncNotify) var viewport
     }
 
     @SelectorWrapper var selector

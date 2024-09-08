@@ -5,7 +5,7 @@ import SwiftUI
 struct Background: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .syncNotify }
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.grid }) var grid
+        @Selected({ global.activeSymbol.grid }, .animation(.fast)) var grid
         @Selected({ global.viewport.sizedInfo }) var viewport
     }
 

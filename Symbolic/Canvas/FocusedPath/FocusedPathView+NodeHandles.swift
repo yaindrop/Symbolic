@@ -214,9 +214,9 @@ extension FocusedPathView {
 
         struct SelectorProps: Equatable { let pathId: UUID, nodeId: UUID }
         class Selector: SelectorBase {
-            @Selected(configs: .syncNotify, { global.activeItem.focusedPath }) var path
+            @Selected({ global.activeItem.focusedPath }, .syncNotify) var path
             @Selected({ global.focusedPath.activeNodeIds }) var activeNodeIds
-            @Selected(configs: .init(animation: .faster), { global.focusedPath.selectingNodes }) var selectingNodes
+            @Selected({ global.focusedPath.selectingNodes }, .animation(.faster)) var selectingNodes
             @Selected({ global.activeSymbol.editingSymbol?.grids }) var grids
             @Selected({ global.activeItem.focusedPathProperty }) var pathProperty
         }

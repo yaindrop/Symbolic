@@ -5,9 +5,9 @@ import SwiftUI
 
 struct GridPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.grids }) var grids
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.grid }) var grid
-        @Selected(configs: .init(animation: .fast), { global.activeSymbol.gridIndex }) var gridIndex
+        @Selected({ global.activeSymbol.grids }, .animation(.fast)) var grids
+        @Selected({ global.activeSymbol.grid }, .animation(.fast)) var grid
+        @Selected({ global.activeSymbol.gridIndex }, .animation(.fast)) var gridIndex
     }
 
     @SelectorWrapper var selector
@@ -81,7 +81,7 @@ private extension GridPanel {
 
         let grid: Grid
 
-        @DelayedState(configs: .init(duration: 0.5)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
+        @DelayedState(.init(duration: 0.5)) private var viewport: SizedViewportInfo = .init(size: .zero, info: .init())
 
         @State private var size: CGSize = .zero
 

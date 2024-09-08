@@ -8,7 +8,7 @@ struct ActiveSymbolView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.activeSymbol.activeSymbolIds }) var activeSymbolIds
         @Selected({ global.activeSymbol.focusedSymbolId }) var focusedSymbolId
-        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
+        @Selected({ global.viewport.sizedInfo }, .syncNotify) var viewport
     }
 
     @SelectorWrapper var selector

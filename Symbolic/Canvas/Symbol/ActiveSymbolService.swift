@@ -18,13 +18,13 @@ class ActiveSymbolStore: Store {
 
 private extension ActiveSymbolStore {
     func update(state: SymbolActiveState) {
-        withStoreUpdating(configs: .init(animation: .faster)) {
+        withStoreUpdating(.animation(.faster)) {
             update { $0(\._state, state) }
         }
     }
 
     func update(gridIndex: Int) {
-        withStoreUpdating(configs: .init(animation: .faster)) {
+        withStoreUpdating(.animation(.faster)) {
             update { $0(\._gridIndex, gridIndex) }
         }
     }

@@ -122,7 +122,7 @@ private extension FloatingPanelView {
         class Selector: SelectorBase {
             @Selected({ global.panel.resizable(of: $0.panelId) }) var resizable
             @Selected({ global.panel.resizing == $0.panelId }) var resizing
-            @Selected(configs: .init(animation: .fast), { global.panel.align(of: $0.panelId) }) var align
+            @Selected({ global.panel.align(of: $0.panelId) }, .animation(.fast)) var align
         }
 
         @SelectorWrapper var selector
@@ -180,8 +180,9 @@ private extension FloatingPanelView {
 
         struct SelectorProps: Equatable { let panelId: UUID }
         class Selector: SelectorBase {
+            @Selected({ global.panel.switchable(of: $0.panelId) }) var switchable
             @Selected({ global.panel.switching?.id == $0.panelId }) var switching
-            @Selected(configs: .init(animation: .fast), { global.panel.align(of: $0.panelId) }) var align
+            @Selected({ global.panel.align(of: $0.panelId) }, .animation(.fast)) var align
         }
 
         @SelectorWrapper var selector
@@ -213,7 +214,7 @@ private extension FloatingPanelView.SwitchHandle {
             .multipleGesture(global.panel.switchingGesture(of: panelId))
             .animation(.fast, value: selector.switching)
             .innerAligned(align)
-            .opacity(floatingStyle.isPrimary ? 1 : 0)
+            .opacity(selector.switchable ? 1 : 0)
     }
 }
 
@@ -226,7 +227,8 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
 
     struct SelectorProps: Equatable { let panelId: UUID }
     class Selector: SelectorBase {
-        @Selected(configs: .init(animation: .fast), { global.panel.floatingStyle(of: $0.panelId) }) var floatingStyle
+        @Selected({ global.panel.floatingStyle(of: $0.panelId) }, .animation(.fast)) var floatingStyle
+        @Selected({ global.panel.align(of: $0.panelId) }) var align
         @Selected({ global.panel.moving(of: $0.panelId) }) var moving
         @Selected({ global.panel.floatingPadding }) var padding
     }
@@ -236,11 +238,7 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
     var body: some View { trace {
         setupSelector(.init(panelId: panelId)) {
             content
-                .onChange(of: selector.moving?.ended ?? false) { _, ended in
-                    if ended {
-                        global.panel.resetMoving(of: panelId)
-                    }
-                }
+                .onChange(of: selector.moving?.ended) { global.panel.resetMoving(of: panelId) }
         }
     } }
 }
@@ -249,19 +247,69 @@ struct FloatingPanelWrapper: View, TracedView, EquatableBy, ComputedSelectorHold
 
 private extension FloatingPanelWrapper {
     @ViewBuilder var content: some View {
-        if let style = selector.floatingStyle {
-            FloatingPanelView()
-                .environment(\.panelId, panelId)
-                .environment(\.panelFloatingStyle, style)
-                .offset(selector.moving?.offset ?? .zero)
-                .rotation3DEffect(style.rotation3DAngle, axis: style.rotation3DAxis, anchor: style.rotation3DAnchor)
-                .scaleEffect(style.scale, anchor: style.scaleAnchor)
-                .offset(style.offset)
-                .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
-                .background { Color.blue.opacity(debugCanvasOverlay ? 0.1 : 0).allowsHitTesting(false) }
-                .padding(size: selector.padding)
-                .innerAligned(style.align)
-                .opacity(style.opacity)
+        FloatingPanelView()
+            .environment(\.panelId, panelId)
+            .environment(\.panelFloatingStyle, floatingStyle)
+            .offset(selector.moving?.offset ?? .zero)
+            .rotation3DEffect(rotation3DAngle, axis: rotation3DAxis, anchor: rotation3DAnchor)
+            .scaleEffect(scale, anchor: scaleAnchor)
+            .offset(offset)
+            .geometryReader { global.panel.setFrame(of: panelId, $0.frame(in: .global)) }
+            .background { Color.blue.opacity(debugCanvasOverlay ? 0.1 : 0).allowsHitTesting(false) }
+            .padding(size: selector.padding)
+            .innerAligned(align)
+            .opacity(opacity)
+    }
+
+    var floatingStyle: PanelFloatingStyle {
+        selector.floatingStyle ?? .primary
+    }
+
+    var align: PlaneInnerAlign {
+        selector.align
+    }
+
+    var rotation3DAngle: Angle {
+        switch floatingStyle {
+        case .secondary, .switching: .degrees((align.isLeading ? 1 : -1) * 15)
+        default: .zero
+        }
+    }
+
+    var rotation3DAxis: (x: Scalar, y: Scalar, z: Scalar) {
+        (0, 1, 0)
+    }
+
+    var rotation3DAnchor: UnitPoint {
+        switch floatingStyle {
+        case .secondary: align.unitPoint
+        case .switching: align.isLeading ? .leading : .trailing
+        default: .leading
+        }
+    }
+
+    var scale: Scalar {
+        switch floatingStyle {
+        case .primary: 1
+        case .minimized, .secondary, .switching: 0.4
+        }
+    }
+
+    var scaleAnchor: UnitPoint {
+        align.unitPoint
+    }
+
+    var offset: Vector2 {
+        switch floatingStyle {
+        case .primary, .minimized, .secondary: .zero
+        case let .switching(offset): offset
+        }
+    }
+
+    var opacity: Scalar {
+        switch floatingStyle {
+        case let .secondary(opacity): opacity
+        default: 1
         }
     }
 }

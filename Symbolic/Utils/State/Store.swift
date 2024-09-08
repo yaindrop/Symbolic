@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - tracer
 
-private let subtracer = tracer.tagged("store", enabled: true)
+private let subtracer = tracer.tagged("store", enabled: false)
 
 private extension Tracer {
     // MARK: manager
@@ -88,6 +88,7 @@ struct SelectorConfigs {
 extension SelectorConfigs: TriviallyCloneable {
     static var alwaysNotify: Self { .init(alwaysNotify: true) }
     static var syncNotify: Self { .init(syncNotify: true) }
+    static func animation(_ animation: AnimationPreset?) -> Self { .init(animation: animation) }
 }
 
 struct PartialSelectorConfigs {
@@ -99,6 +100,7 @@ struct PartialSelectorConfigs {
 extension PartialSelectorConfigs: TriviallyCloneable {
     static var alwaysNotify: Self { .init(alwaysNotify: true) }
     static var syncNotify: Self { .init(syncNotify: true) }
+    static func animation(_ animation: AnimationPreset?) -> Self { .init(animation: animation) }
 }
 
 // MARK: - StoreSubscription
@@ -412,7 +414,7 @@ extension _StoreProtocol {
     }
 }
 
-func withStoreUpdating(configs: PartialSelectorConfigs = .init(), _ apply: () -> Void) {
+func withStoreUpdating(_ configs: PartialSelectorConfigs = .init(), _ apply: () -> Void) {
     manager.withUpdating(configs: configs, apply)
 }
 
@@ -633,12 +635,12 @@ struct _Selected<Instance: _SelectorProtocol, Value: Equatable> {
         @available(*, unavailable) set {}
     }
 
-    init(configs: PartialSelectorConfigs = .init(), _ selector: @escaping (Instance.Props) -> Value) {
+    init(_ selector: @escaping (Instance.Props) -> Value, _ configs: PartialSelectorConfigs = .init()) {
         self.configs = configs
         self.selector = selector
     }
 
-    init(configs: PartialSelectorConfigs = .init(), _ selector: @escaping () -> Value) {
+    init(_ selector: @escaping () -> Value, _ configs: PartialSelectorConfigs = .init()) {
         self.configs = configs
         self.selector = { _ in selector() }
     }

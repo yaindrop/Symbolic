@@ -89,3 +89,16 @@ struct AnimatableReader<Value: Animatable, Content: View>: View, Animatable, Tra
 extension AnimatablePair {
     var tuple: (First, Second) { (first, second) }
 }
+
+extension View {
+    func animatableReader<Value: Animatable & Equatable>(_ value: Value, onValue: @escaping (Value) -> Void) -> some View {
+        background {
+            AnimatableReader(value) { value in
+                Color.clear
+                    .onChange(of: value, initial: true) {
+                        onValue(value)
+                    }
+            }
+        }
+    }
+}

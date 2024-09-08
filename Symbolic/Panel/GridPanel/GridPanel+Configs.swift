@@ -56,8 +56,8 @@ private extension GlobalStores {
 extension GridPanel {
     struct Configs: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected(configs: .init(animation: .fast), { global.activeSymbol.grids }) var gridStack
-            @Selected(configs: .init(animation: .fast), { global.activeSymbol.grid }) var grid
+            @Selected({ global.activeSymbol.grids }, .animation(.fast)) var gridStack
+            @Selected({ global.activeSymbol.grid }, .animation(.fast)) var grid
         }
 
         @SelectorWrapper var selector

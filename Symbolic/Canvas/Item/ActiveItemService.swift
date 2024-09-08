@@ -16,7 +16,7 @@ class ActiveItemStore: Store {
 
 private extension ActiveItemStore {
     func update(state: ItemActiveState) {
-        withStoreUpdating(configs: .init(animation: .faster)) {
+        withStoreUpdating(.animation(.faster)) {
             update { $0(\._state, state) }
         }
     }

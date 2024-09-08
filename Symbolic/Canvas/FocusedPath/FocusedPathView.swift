@@ -9,7 +9,7 @@ struct FocusedPathView: View, TracedView, SelectorHolder {
         @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
         @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         @Selected({ global.activeItem.focusedPathId != nil }) var active
-        @Selected(configs: .syncNotify, { global.viewport.sizedInfo }) var viewport
+        @Selected({ global.viewport.sizedInfo }, .syncNotify) var viewport
     }
 
     @SelectorWrapper var selector

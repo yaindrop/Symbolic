@@ -5,7 +5,7 @@ import SwiftUI
 extension ItemPanel {
     struct Selection: View, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected(configs: .init(animation: .fast), { global.activeItem.activeItemIds }) var activeItemIds
+            @Selected({ global.activeItem.activeItemIds }, .animation(.fast)) var activeItemIds
         }
 
         @SelectorWrapper var selector

@@ -122,7 +122,7 @@ struct DelayedState<Value>: DynamicProperty {
 
     func delayEnd() { storage.delayEnd() }
 
-    init(wrappedValue: Value, configs: Configs) {
+    init(wrappedValue: Value, _ configs: Configs) {
         _storage = .init(wrappedValue: .init(value: wrappedValue, configs: configs))
     }
 }
@@ -168,7 +168,7 @@ struct AutoResetState<Value>: DynamicProperty {
         nonmutating set { storage.on(newValue: newValue) }
     }
 
-    init(configs: Configs) {
+    init(_ configs: Configs) {
         _storage = .init(wrappedValue: .init(configs: configs))
     }
 }

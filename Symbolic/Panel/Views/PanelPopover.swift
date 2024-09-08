@@ -54,7 +54,7 @@ struct PanelPopover: View, SelectorHolder {
         override var configs: SelectorConfigs { .syncNotify }
         @Selected({ global.viewport.viewSize }) var viewSize
         @Selected({ global.panel.popoverPanels }) var popoverPanels
-        @Selected(configs: .init(animation: .faster), { global.panel.popoverActive && global.panel.moving == nil }) var visible
+        @Selected({ global.panel.popoverActive && global.panel.moving == nil }, .animation(.faster)) var visible
     }
 
     @SelectorWrapper var selector

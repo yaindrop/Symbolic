@@ -274,7 +274,7 @@ private extension Numpad {
     struct Display: View {
         @EnvironmentObject var model: Model
 
-        @AutoResetState(configs: .init(duration: 2)) private var activeWarning: Warning?
+        @AutoResetState(.init(duration: 2)) private var activeWarning: Warning?
         @State private var shaking: Bool = false
 
         var body: some View {

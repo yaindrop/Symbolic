@@ -125,15 +125,29 @@ extension PanelStore {
         return resizing == id
     }
 
-    // frame
-
-    func frame(of id: UUID) -> CGRect? {
-        panelFrameMap.get(id)
+    func switchable(of id: UUID) -> Bool {
+        guard primaryId(of: id) == id else { return false }
+        let peers = peers(of: id)
+        return peers.count > 1
     }
+
+    func floatingStyle(of id: UUID) -> PanelFloatingStyle? {
+        panelFloatingStyleMap.get(id)
+    }
+
+    var displayingFloatingPanelIds: [UUID] {
+        guard let switching else { return floatingPanelIds }
+        let peers = peers(of: switching.id),
+            peerSet = Set(peers)
+        return floatingPanelIds.filter { !peerSet.contains($0) } + peers
+    }
+
+    // frame
 
     var freeSpace: CGRect {
         let floatingPanels = floatingPanels
-        var minX = rootFrame.minX + floatingPadding.width, maxX = rootFrame.maxX - floatingPadding.width
+        var minX = rootFrame.minX + floatingPadding.width,
+            maxX = rootFrame.maxX - floatingPadding.width
         if floatingPanels.contains(where: { $0.align.isLeading }) {
             minX += floatingWidth
         }
@@ -158,12 +172,16 @@ extension PanelStore {
 
 // MARK: derived
 
-extension PanelStore {
-    private var deriveAlignPanelMap: AlignPanelMap {
+private extension PanelStore {
+    var deriveAlignPanelMap: AlignPanelMap {
         floatingPanels.reduce(into: AlignPanelMap()) { dict, panel in
             let align = align(of: panel.id)
             dict[align] = (dict[align] ?? []) + [panel.id]
         }
+    }
+
+    func frame(of id: UUID) -> CGRect? {
+        panelFrameMap.get(id)
     }
 
     func panelIds(at align: PlaneInnerAlign) -> [UUID] {
@@ -193,12 +211,6 @@ extension PanelStore {
         guard let frame = frame(of: id),
               let oppositeFrame = self.frame(of: oppositeId) else { return false }
         return frame.height + oppositeFrame.height + floatingSafeArea * 2 > rootFrame.height
-    }
-
-    func switchable(of id: UUID) -> Bool {
-        guard primaryId(of: id) == id else { return false }
-        let peers = peers(of: id)
-        return peers.count > 1
     }
 
     var switchingOffset: Scalar {
@@ -249,10 +261,6 @@ extension PanelStore {
                 }
             }()
         }
-    }
-
-    func floatingStyle(of id: UUID) -> PanelFloatingStyle? {
-        panelFloatingStyleMap.get(id)
     }
 }
 

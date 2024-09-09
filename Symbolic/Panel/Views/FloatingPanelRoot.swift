@@ -203,8 +203,8 @@ private extension FloatingPanelView.SwitchHandle {
             .mask {
                 ZStack {
                     Rectangle()
-                    Image(systemName: "ellipsis")
-                        .font(.footnote)
+                    Image(systemName: "rectangle.2.swap")
+                        .font(.caption)
                         .blendMode(.destinationOut)
                 }
             }
@@ -321,7 +321,7 @@ private extension FloatingPanelWrapper {
 
 struct FloatingPanelRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
-        @Selected({ global.panel.floatingPanelIds }) var floatingPanelIds
+        @Selected({ global.panel.displayingFloatingPanelIds }) var displayingFloatingPanelIds
     }
 
     @SelectorWrapper var selector
@@ -338,7 +338,7 @@ struct FloatingPanelRoot: View, TracedView, SelectorHolder {
 private extension FloatingPanelRoot {
     var content: some View {
         ZStack {
-            ForEach(selector.floatingPanelIds) { FloatingPanelWrapper(panelId: $0) }
+            ForEach(selector.displayingFloatingPanelIds) { FloatingPanelWrapper(panelId: $0) }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .geometryReader { global.panel.setRootFrame($0.frame(in: .global)) }

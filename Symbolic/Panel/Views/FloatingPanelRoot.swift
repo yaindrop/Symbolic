@@ -43,7 +43,7 @@ private extension FloatingPanelView {
                 .zIndex(1)
         }
         .frame(width: selector.width)
-        .background { background }
+        .background { PanelBackground() }
         .overlay { secondaryOverlay }
         .clipRounded(radius: 18)
         .overlay { ResizeHandle() }
@@ -61,7 +61,7 @@ private extension FloatingPanelView {
             .invisibleSoildOverlay()
             .multipleGesture(selector.movable ? global.panel.movingGesture(of: panelId) : nil)
             .padding(.vertical, 12)
-            .background(.ultraThinMaterial.opacity(titleBackgroundOpacity))
+            .background { PanelBackground().opacity(titleBackgroundOpacity) }
             .sizeReader { titleSize = $0 }
         Divider()
             .opacity(titleBackgroundOpacity)
@@ -83,24 +83,6 @@ private extension FloatingPanelView {
         .frame(maxWidth: .infinity, maxHeight: max(0, selector.maxHeight - titleSize.height))
         .fixedSize(horizontal: false, vertical: true)
         .geometryReader { scrollFrame = $0.frame(in: .global) }
-    }
-
-    var background: some View {
-        Rectangle()
-            .if(floatingStyle.isPrimary) {
-                $0.fill(.ultraThinMaterial)
-            } else: {
-                $0.fill(.background.secondary.opacity(0.8))
-            }
-    }
-
-    var titleBackground: some View {
-        Rectangle()
-            .if(floatingStyle.isPrimary) {
-                $0.fill(.ultraThinMaterial.opacity(titleBackgroundOpacity))
-            } else: {
-                $0.fill(.clear)
-            }
     }
 
     var secondaryOverlay: some View {
@@ -272,7 +254,7 @@ private extension FloatingPanelWrapper {
     var rotation3DAngle: Angle {
         switch floatingStyle {
         case .secondary: .degrees((align.isLeading ? 1 : -1) * 15)
-        case let .switching(_, highlighted): .degrees((align.isLeading ? -1 : 1) * (highlighted ? 5 : 15))
+        case let .switching(_, selected): .degrees((align.isLeading ? -1 : 1) * (selected ? 5 : 15))
         default: .zero
         }
     }
@@ -293,7 +275,7 @@ private extension FloatingPanelWrapper {
         switch floatingStyle {
         case let .primary(minimized): minimized ? 0.4 : 1
         case .secondary: 0.4
-        case let .switching(_, highlighted): highlighted ? 0.6 : 0.4
+        case let .switching(_, selected): selected ? 0.6 : 0.4
         }
     }
 
@@ -311,7 +293,7 @@ private extension FloatingPanelWrapper {
     var opacity: Scalar {
         switch floatingStyle {
         case let .secondary(opacity): opacity
-        case let .switching(_, highlighted): highlighted ? 1 : 0.8
+        case let .switching(_, selected): selected ? 1 : 0.8
         default: 1
         }
     }

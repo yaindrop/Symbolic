@@ -111,7 +111,7 @@ extension ViewportUpdater {
 
     private var overscrollOutset: Scalar { 96 }
 
-    private var overscrollBounceDistance: Scalar { 32 }
+    private var overscrollBounceDistance: Scalar { 24 }
 
     private func applyOverscroll(to info: inout SizedViewportInfo, bouncing: Bool = false) {
         guard let symbol = activeSymbol.editingSymbol else { return }

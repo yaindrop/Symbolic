@@ -21,7 +21,7 @@ private extension PanelSection {
                 sectionContent()
                     .environment(\.contextualViewData, contextualViewData)
             }
-            .background { PanelSectionBackground() }
+            .background { PanelBackground() }
             .clipRounded(radius: 12)
         }
     }
@@ -46,24 +46,18 @@ private extension PanelSection {
     }
 }
 
-// MARK: - PanelSectionBackground
+// MARK: - PanelBackground
 
-private struct PanelSectionBackground: View, TracedView {
-    @Environment(\.panelFloatingStyle) var floatingStyle
-
+struct PanelBackground: View, TracedView {
     var body: some View { trace {
         content
     } }
 }
 
-private extension PanelSectionBackground {
+private extension PanelBackground {
     var content: some View {
         Rectangle()
-            .if(floatingStyle.isPrimary) {
-                $0.fill(.ultraThinMaterial)
-            } else: {
-                $0.fill(.background.secondary.opacity(0.8))
-            }
+            .fill(.ultraThinMaterial)
     }
 }
 
@@ -85,7 +79,7 @@ private extension PanelPlaceholder {
             .font(.callout)
             .foregroundStyle(Color.label.opacity(0.5))
             .frame(maxWidth: .infinity, idealHeight: 72)
-            .background(.ultraThinMaterial)
+            .background { PanelBackground() }
             .clipRounded(radius: 12)
     }
 }

@@ -135,7 +135,7 @@ extension ActiveSymbolService {
 
     // MARK: grid
 
-    var grids: [Grid] { editingSymbol?.grids ?? [] }
+    var grids: [Grid] { focusedSymbol?.grids ?? [] }
 
     var grid: Grid? {
         let grids = grids

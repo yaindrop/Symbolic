@@ -5,7 +5,7 @@ import SwiftUI
 extension ItemPanel {
     struct Selection: View, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.activeItem.activeItemIds }, .animation(.fast)) var activeItemIds
+            @Selected({ global.activeItem.selectedItemIds }, .animation(.fast)) var selectedItemIds
         }
 
         @SelectorWrapper var selector
@@ -25,9 +25,9 @@ extension ItemPanel {
 private extension ItemPanel.Selection {
     @ViewBuilder var content: some View {
         PanelSection(name: "Selection") {
-            if !selector.activeItemIds.isEmpty {
+            if !selector.selectedItemIds.isEmpty {
                 ContextualRow {
-                    Text("\(selector.activeItemIds.count) items selected")
+                    Text("\(selector.selectedItemIds.count) items selected")
                     Spacer()
                     Button { showPopover.toggle() } label: {
                         Image(systemName: "ellipsis.circle")

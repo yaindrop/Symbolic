@@ -1,5 +1,19 @@
 import SwiftUI
 
+// MARK: - global actions
+
+extension GlobalStores {
+    func zoomToFit() {
+        if let symbolId = activeSymbol.focusedSymbolId, let bounds = item.allPathsBounds(symbolId: symbolId) {
+            viewportUpdater.zoomTo(rect: bounds)
+        } else if let bounds = symbol.allSymbolsBounds {
+            viewportUpdater.zoomTo(rect: bounds)
+        } else {
+            viewportUpdater.zoomTo(rect: .init(origin: .zero, size: .init(squared: 256)))
+        }
+    }
+}
+
 // MARK: - Toolbar
 
 struct Toolbar: View, SelectorHolder {
@@ -117,9 +131,7 @@ private extension Toolbar {
             }
 
             ToolbarButton(systemName: "arrow.up.left.and.arrow.down.right.square") {
-                guard let symbolId = global.activeSymbol.focusedSymbolId,
-                      let bounds = global.item.allPathsBounds(symbolId: symbolId) else { return }
-                global.viewportUpdater.zoomTo(rect: bounds)
+                global.zoomToFit()
             }
         }
     }

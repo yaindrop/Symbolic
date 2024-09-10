@@ -68,9 +68,10 @@ extension ViewportUpdater {
     func onPinch(_ info: PinchInfo) {
         let _r = subtracer.range(type: .intent, "pinch \(info)"); defer { _r() }
         let referenceInfo = store.referenceInfo,
-            pinchTransform = CGAffineTransform(translation: info.center.offset).centered(at: info.center.origin) { $0.scaledBy(info.scale) },
+            clampedScale = scaleRange.clamp(referenceInfo.scale * info.scale) / referenceInfo.scale,
+            pinchTransform = CGAffineTransform(translation: info.center.offset).centered(at: info.center.origin) { $0.scaledBy(clampedScale) },
             transformedOrigin = Point2.zero.applying(pinchTransform), // in view reference frame
-            scale = referenceInfo.scale * info.scale,
+            scale = referenceInfo.scale * clampedScale,
             origin = referenceInfo.origin - Vector2(transformedOrigin) / scale
         var sizedInfo = SizedViewportInfo(size: viewport.viewSize, info: .init(origin: origin, scale: scale))
         applyOverscroll(to: &sizedInfo)
@@ -99,21 +100,25 @@ extension ViewportUpdater {
             targetRect = CGRect(center: freeSpace.center, size: freeSpace.size * ratio).applying(viewport.viewToWorld),
             transform = CGAffineTransform(fit: rect, to: targetRect).inverted(),
             newWorldRect = worldRect.applying(transform),
-            origin = newWorldRect.origin,
-            scale = viewport.viewSize.width / newWorldRect.width
-        var sizedInfo = SizedViewportInfo(size: viewport.viewSize, info: .init(origin: origin, scale: scale))
+            center = newWorldRect.center,
+            scale = scaleRange.clamp(viewport.viewSize.width / newWorldRect.width)
+        var sizedInfo = SizedViewportInfo(size: viewport.viewSize, center: center, scale: scale)
         applyOverscroll(to: &sizedInfo)
         withStoreUpdating(.animation(.fast)) {
             viewport.setInfo(sizedInfo.info)
             store.update(referenceInfo: viewport.info)
         }
     }
+}
 
-    private var overscrollOutset: Scalar { 96 }
+private extension ViewportUpdater {
+    var scaleRange: ClosedRange<Scalar> { 0.04 ... 25 }
 
-    private var overscrollBounceDistance: Scalar { 24 }
+    var overscrollOutset: Scalar { 96 }
 
-    private func applyOverscroll(to info: inout SizedViewportInfo, bouncing: Bool = false) {
+    var overscrollBounceDistance: Scalar { 24 }
+
+    func applyOverscroll(to info: inout SizedViewportInfo, bouncing: Bool = false) {
         guard let symbol = activeSymbol.editingSymbol else { return }
         let rect = symbol.boundingRect.outset(by: overscrollOutset / info.scale),
             offset = info.clampingOffset(by: rect)
@@ -129,7 +134,7 @@ extension ViewportUpdater {
         }
     }
 
-    private func overscroll(value: Scalar, scale: Scalar) -> Scalar {
+    func overscroll(value: Scalar, scale: Scalar) -> Scalar {
         let k = overscrollBounceDistance / scale,
             sign = value > 0 ? 1.0 : -1.0,
             magnitude = abs(value)

@@ -58,6 +58,12 @@ extension SymbolService: SymbolStoreProtocol {
 
     var symbolMap: SymbolMap { activeStore.symbolMap }
 
+    var symbols: [Symbol] { .init(symbolMap.values) }
+
+    var allSymbolsBounds: CGRect? {
+        .init(union: symbols.map { $0.boundingRect })
+    }
+
     func symbolHitTest(worldPosition: Point2) -> UUID? {
         symbolMap.values.first { $0.boundingRect.contains(worldPosition) }?.id
     }

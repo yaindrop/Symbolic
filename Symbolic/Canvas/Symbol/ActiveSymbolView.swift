@@ -24,7 +24,6 @@ private extension ActiveSymbolView {
     @ViewBuilder var content: some View {
         AnimatableReader(selector.viewport) {
             ZStack {
-                Grid()
                 ForEach(Array(selector.activeSymbolIds)) {
                     Bounds(symbolId: $0)
                 }

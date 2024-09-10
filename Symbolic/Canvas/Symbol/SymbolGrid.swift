@@ -1,31 +1,29 @@
 import SwiftUI
 
-// MARK: - Grid
+// MARK: - SymbolGrid
 
-extension ActiveSymbolView {
-    struct Grid: View, TracedView, SelectorHolder {
-        @Environment(\.sizedViewport) var viewport
+struct SymbolGrid: View, TracedView, SelectorHolder {
+    @Environment(\.sizedViewport) var viewport
 
-        class Selector: SelectorBase {
-            override var configs: SelectorConfigs { .syncNotify }
-            @Selected({ global.activeSymbol.editingSymbol }) var editingSymbol
-            @Selected({ global.activeSymbol.grid }) var grid
-            @Selected({ global.activeSymbol.worldToSymbol }) var worldToSymbol
-        }
-
-        @SelectorWrapper var selector
-
-        var body: some View { trace {
-            setupSelector {
-                content
-            }
-        } }
+    class Selector: SelectorBase {
+        override var configs: SelectorConfigs { .syncNotify }
+        @Selected({ global.activeSymbol.editingSymbol }) var editingSymbol
+        @Selected({ global.activeSymbol.grid }) var grid
+        @Selected({ global.activeSymbol.worldToSymbol }) var worldToSymbol
     }
+
+    @SelectorWrapper var selector
+
+    var body: some View { trace {
+        setupSelector {
+            content
+        }
+    } }
 }
 
 // MARK: private
 
-extension ActiveSymbolView.Grid {
+extension SymbolGrid {
     @ViewBuilder var content: some View {
         if let editingSymbol = selector.editingSymbol, let grid = selector.grid {
             let origin = viewport.origin.applying(selector.worldToSymbol),

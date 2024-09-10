@@ -45,6 +45,7 @@
 		5724878A2BDF84070096DDE4 /* VectorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487892BDF84070096DDE4 /* VectorPicker.swift */; };
 		572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */; };
 		572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487912BDFA7B80096DDE4 /* DocumentAction.swift */; };
+		572506AD2C90967900857FF4 /* WorldGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506AC2C90967900857FF4 /* WorldGrid.swift */; };
 		572552832BF0572D002147AE /* OrderedMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552822BF0572D002147AE /* OrderedMap.swift */; };
 		572552852BF0F2F8002147AE /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552842BF0F2F8002147AE /* Logging.swift */; };
 		572552872BF0F563002147AE /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552862BF0F563002147AE /* Tracer.swift */; };
@@ -92,7 +93,7 @@
 		576E35992C834DC100B1BAAF /* ActiveSymbolView+ResizeHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E35982C834DC100B1BAAF /* ActiveSymbolView+ResizeHandle.swift */; };
 		576E359B2C84077F00B1BAAF /* ContextMenuView+FocusedSymbolMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359A2C84077F00B1BAAF /* ContextMenuView+FocusedSymbolMenu.swift */; };
 		576E359D2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359C2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift */; };
-		576E359F2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */; };
+		576E359F2C84AC9700B1BAAF /* SymbolGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */; };
 		576E35A12C87E78E00B1BAAF /* ContextMenuView+Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */; };
 		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
 		578150472C57E2540057D798 /* PathSegmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathSegmentPopover.swift */; };
@@ -217,6 +218,7 @@
 		572487892BDF84070096DDE4 /* VectorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorPicker.swift; sourceTree = "<group>"; };
 		5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanel.swift; sourceTree = "<group>"; };
 		572487912BDFA7B80096DDE4 /* DocumentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAction.swift; sourceTree = "<group>"; };
+		572506AC2C90967900857FF4 /* WorldGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldGrid.swift; sourceTree = "<group>"; };
 		572552822BF0572D002147AE /* OrderedMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedMap.swift; sourceTree = "<group>"; };
 		572552842BF0F2F8002147AE /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		572552862BF0F563002147AE /* Tracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracer.swift; sourceTree = "<group>"; };
@@ -264,7 +266,7 @@
 		576E35982C834DC100B1BAAF /* ActiveSymbolView+ResizeHandle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveSymbolView+ResizeHandle.swift"; sourceTree = "<group>"; };
 		576E359A2C84077F00B1BAAF /* ContextMenuView+FocusedSymbolMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+FocusedSymbolMenu.swift"; sourceTree = "<group>"; };
 		576E359C2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+SymbolSelectionMenu.swift"; sourceTree = "<group>"; };
-		576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActiveSymbolView+Grid.swift"; sourceTree = "<group>"; };
+		576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolGrid.swift; sourceTree = "<group>"; };
 		576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+Buttons.swift"; sourceTree = "<group>"; };
 		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		578150462C57E2540057D798 /* PathSegmentPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegmentPopover.swift; sourceTree = "<group>"; };
@@ -617,9 +619,9 @@
 				5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */,
 				574411572C7C2CC700F038AD /* ActiveSymbolView.swift */,
 				574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */,
-				576E359E2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift */,
 				576E35982C834DC100B1BAAF /* ActiveSymbolView+ResizeHandle.swift */,
 				578A720C2C80D1AD0026337D /* ActiveSymbolView+SelectionBounds.swift */,
+				576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */,
 				5790F9A72C7A25AF009E3606 /* SymbolsView.swift */,
 			);
 			path = Symbol;
@@ -774,6 +776,7 @@
 			children = (
 				5774B15F2BFD864300C53CDD /* Background.swift */,
 				57B703FE2C38F18500B60F36 /* GridView.swift */,
+				572506AC2C90967900857FF4 /* WorldGrid.swift */,
 			);
 			path = Background;
 			sourceTree = "<group>";
@@ -1053,13 +1056,14 @@
 				578150472C57E2540057D798 /* PathSegmentPopover.swift in Sources */,
 				578535292C3ED3AC00EEDF1A /* GridPanel+Configs.swift in Sources */,
 				571B9B342C14A74F00AAD516 /* ActiveItemView+GroupBounds.swift in Sources */,
-				576E359F2C84AC9700B1BAAF /* ActiveSymbolView+Grid.swift in Sources */,
+				576E359F2C84AC9700B1BAAF /* SymbolGrid.swift in Sources */,
 				572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */,
 				57B703F72C37768200B60F36 /* GridPanel.swift in Sources */,
 				572CA9DC2C319EBB003760B7 /* FileBrowserStore.swift in Sources */,
 				5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */,
 				574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */,
 				574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */,
+				572506AD2C90967900857FF4 /* WorldGrid.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* ViewportService.swift in Sources */,
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
 				57FC33032C4E157300DF7DBF /* PortalRoot.swift in Sources */,

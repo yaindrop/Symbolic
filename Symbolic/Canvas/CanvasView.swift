@@ -221,8 +221,7 @@ private extension CanvasView {
 
     @ViewBuilder var staticObjects: some View { trace("staticObjects") {
         ZStack {
-//            Background()
-//            ItemsView()
+            Background()
             SymbolsView()
         }
         .multipleTouchGesture(global.canvasGesture)

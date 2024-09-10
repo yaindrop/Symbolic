@@ -5,7 +5,7 @@ import SwiftUI
 enum PanelFloatingStyle: Equatable {
     case primary(minimized: Bool)
     case secondary(opacity: Scalar)
-    case switching(offset: Vector2, highlighted: Bool)
+    case switching(offset: Vector2, selected: Bool)
 }
 
 extension PanelFloatingStyle {

@@ -70,6 +70,8 @@ extension Vector2 {
 
     init(_ x: Scalar, _ y: Scalar) { self.init(dx: x, dy: y) }
 
+    init(x: Scalar = 0, y: Scalar = 0) { self.init(dx: x, dy: y) }
+
     init(_ point: Point2) { self.init(point.x, point.y) }
 
     init(_ size: CGSize) { self.init(size.width, size.height) }

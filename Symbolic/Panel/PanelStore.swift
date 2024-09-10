@@ -16,6 +16,7 @@ class PanelStore: Store {
     @Trackable var moving: PanelMovingData?
     @Trackable var resizing: UUID?
     @Trackable var switching: PanelSwitchingData?
+
     @Trackable var rootFrame: CGRect = .zero
     @Trackable var panelFrameMap = PanelFrameMap()
 
@@ -93,6 +94,13 @@ extension PanelStore {
         panelIds.filter { !popoverPanelIds.contains($0) }
     }
 
+    var displayingFloatingPanelIds: [UUID] {
+        guard let switching else { return floatingPanelIds }
+        let peers = peers(of: switching.id),
+            peerSet = Set(peers)
+        return floatingPanelIds.filter { !peerSet.contains($0) } + peers
+    }
+
     var floatingPanels: [PanelData] {
         floatingPanelIds.compactMap { get(id: $0) }
     }
@@ -133,13 +141,6 @@ extension PanelStore {
 
     func floatingStyle(of id: UUID) -> PanelFloatingStyle? {
         panelFloatingStyleMap.get(id)
-    }
-
-    var displayingFloatingPanelIds: [UUID] {
-        guard let switching else { return floatingPanelIds }
-        let peers = peers(of: switching.id),
-            peerSet = Set(peers)
-        return floatingPanelIds.filter { !peerSet.contains($0) } + peers
     }
 
     // frame
@@ -232,6 +233,14 @@ private extension PanelStore {
         return .init(floatingMinimizedGap * Scalar(order - 1), primaryFrame.height + floatingPadding.height)
     }
 
+    var switchingSelectedId: UUID? {
+        guard let switching else { return nil }
+        let peers = Array(peers(of: switching.id).reversed())
+        guard !peers.isEmpty else { return nil }
+        let order = min(switchingOrder, peers.count - 1)
+        return peers[order]
+    }
+
     func switchingStyleGap(of id: UUID) -> CGSize {
         var gap = switchingGap(of: id)
         if switchingOffset < gap.width {
@@ -248,11 +257,10 @@ private extension PanelStore {
                 if primaryId == id {
                     return .primary(minimized: minimized(of: id))
                 } else if let switching, switching.id == primaryId {
-                    let order = switchingOrder,
-                        highlighted = order == switchingOrder(of: id),
-                        gap = switchingStyleGap(of: id) + (highlighted ? Vector2(0, floatingMinimizedGap / 2) : .zero),
+                    let selected = switchingSelectedId == id,
+                        gap = switchingStyleGap(of: id) + (selected ? Vector2(0, floatingMinimizedGap / 2) : .zero),
                         offset = Point2.zero.alignedPoint(at: align, gap: gap)
-                    return .switching(offset: .init(offset), highlighted: highlighted)
+                    return .switching(offset: .init(offset), selected: selected)
                 } else {
                     let primaryMoving = primaryId == moving?.id,
                         isSecondary = peers(of: id).dropLast().last == id,
@@ -481,7 +489,7 @@ extension PanelStore {
     }
 }
 
-// MARK: resizing
+// MARK: switching
 
 extension PanelStore {
     func switchingGesture(of id: UUID) -> MultipleGesture {
@@ -499,14 +507,12 @@ extension PanelStore {
         update(switching: .init(id: id, offset: v.offset))
     }
 
-    private func onDragSwitchEnd(of id: UUID, _: DragGesture.Value) {
-        let order = switchingOrder
+    private func onDragSwitchEnd(of _: UUID, _: DragGesture.Value) {
         withStoreUpdating {
-            let peers = Array(self.peers(of: id).reversed())
-            if order != 0, peers.indices.contains(order), let panel = get(id: peers[order]) {
+            if let id = switchingSelectedId, let panel = get(id: id) {
                 update(panelMap: panelMap.cloned {
-                    $0.removeValue(forKey: panel.id)
-                    $0[panel.id] = panel
+                    $0.removeValue(forKey: id)
+                    $0[id] = panel
                 })
             }
             update(switching: nil)

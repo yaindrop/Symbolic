@@ -6,7 +6,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
     @Environment(\.panelScrollProxy) private var panelScrollProxy
 
     class Selector: SelectorBase {
-        @Selected({ global.activeItem.focusedPath }) var focusedPath
+        @Selected({ global.activeItem.focusedPathId }) var focusedPathId
         @Selected({ global.focusedPath.focusedNodeId }) var focusedNodeId
         @Selected({ global.focusedPath.focusedSegmentId }) var focusedSegmentId
     }
@@ -24,7 +24,7 @@ struct PathPanel: View, TracedView, SelectorHolder {
 
 private extension PathPanel {
     @ViewBuilder var content: some View {
-        if selector.focusedPath != nil {
+        if selector.focusedPathId != nil {
             Properties()
             Selection()
             Nodes()
@@ -37,16 +37,7 @@ private extension PathPanel {
                     withAnimation(.easeInOut(duration: 0.2)) { panelScrollProxy?.scrollTo(id, anchor: .center) }
                 }
         } else {
-            placeholder
+            PanelPlaceholder(text: "No path is focused")
         }
-    }
-
-    @ViewBuilder var placeholder: some View {
-        Text("No path is focused")
-            .font(.callout)
-            .foregroundStyle(Color.label.opacity(0.5))
-            .frame(maxWidth: .infinity, idealHeight: 72)
-            .background(.ultraThinMaterial)
-            .clipRounded(radius: 12)
     }
 }

@@ -5,6 +5,7 @@ import SwiftUI
 
 struct GridPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
+        @Selected({ global.activeSymbol.focusedSymbolId }) var focusedSymbolId
         @Selected({ global.activeSymbol.grids }, .animation(.fast)) var grids
         @Selected({ global.activeSymbol.grid }, .animation(.fast)) var grid
         @Selected({ global.activeSymbol.gridIndex }, .animation(.fast)) var gridIndex
@@ -37,9 +38,13 @@ extension GridPanel {
 
 extension GridPanel {
     @ViewBuilder private var content: some View {
-        tabs
-        preview
-        configs
+        if selector.focusedSymbolId != nil {
+            tabs
+            preview
+            configs
+        } else {
+            PanelPlaceholder(text: "No symbol is focused")
+        }
     }
 
     @ViewBuilder private var tabs: some View {

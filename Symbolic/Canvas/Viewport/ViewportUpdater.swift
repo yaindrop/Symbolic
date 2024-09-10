@@ -115,12 +115,17 @@ extension ViewportUpdater {
 
     private func applyOverscroll(to info: inout SizedViewportInfo, bouncing: Bool = false) {
         guard let symbol = activeSymbol.editingSymbol else { return }
-        let offset = info.clampingOffset(by: symbol.boundingRect.outset(by: overscrollOutset / info.scale))
+        let rect = symbol.boundingRect.outset(by: overscrollOutset / info.scale),
+            offset = info.clampingOffset(by: rect)
         guard !offset.isZero else { return }
         info.info.origin += offset
         if bouncing {
-            let bouncingOffset = Vector2(overscroll(value: offset.dx, scale: info.scale), overscroll(value: offset.dy, scale: info.scale))
-            info.info.origin -= bouncingOffset
+            if rect.width > info.worldRect.width {
+                info.info.origin -= Vector2(x: overscroll(value: offset.dx, scale: info.scale))
+            }
+            if rect.height > info.worldRect.height {
+                info.info.origin -= Vector2(y: overscroll(value: offset.dy, scale: info.scale))
+            }
         }
     }
 

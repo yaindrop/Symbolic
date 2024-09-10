@@ -46,7 +46,7 @@ private extension PanelSection {
     }
 }
 
-// MARK: - Background
+// MARK: - PanelSectionBackground
 
 private struct PanelSectionBackground: View, TracedView {
     @Environment(\.panelFloatingStyle) var floatingStyle
@@ -64,5 +64,28 @@ private extension PanelSectionBackground {
             } else: {
                 $0.fill(.background.secondary.opacity(0.8))
             }
+    }
+}
+
+// MARK: - PanelPlaceholder
+
+struct PanelPlaceholder: View, TracedView {
+    let text: String
+
+    var body: some View { trace {
+        content
+    } }
+}
+
+// MARK: private
+
+private extension PanelPlaceholder {
+    var content: some View {
+        Text(text)
+            .font(.callout)
+            .foregroundStyle(Color.label.opacity(0.5))
+            .frame(maxWidth: .infinity, idealHeight: 72)
+            .background(.ultraThinMaterial)
+            .clipRounded(radius: 12)
     }
 }

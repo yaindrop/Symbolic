@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - tracer
 
-private let subtracer = tracer.tagged("store", enabled: false)
+private let subtracer = tracer.tagged("store", enabled: true)
 
 private extension Tracer {
     // MARK: manager
@@ -39,7 +39,7 @@ private extension Tracer {
     }
 
     struct StoreUpdate<S, K>: ReflectedStringMessage {
-        let keyPath: KeyPath<S, K>
+        let trackableId: Int, keyPath: KeyPath<S, K>
     }
 
     struct StoreUpdateNotify<S, K, T>: ReflectedStringMessage {
@@ -183,10 +183,10 @@ extension StoreManager {
         withAssigned(self, \.updating, updating) {
             apply()
             var subscriptionIds: Set<Int> = []
-            while updating.subscriptionIds != subscriptionIds {
+            repeat {
                 subscriptionIds = updating.subscriptionIds
                 updating.willNotify.send()
-            }
+            } while updating.subscriptionIds != subscriptionIds
         }
 
         withNotifying(updating)
@@ -352,7 +352,7 @@ private extension _StoreProtocol {
             wrapper.id = id
         }
         guard forced || wrapper.value != newValue else { return }
-        let _r = subtracer.range(.init(Tracer.StoreUpdate(keyPath: keyPath))); defer { _r() }
+        let _r = subtracer.range(.init(Tracer.StoreUpdate(trackableId: id, keyPath: keyPath))); defer { _r() }
         wrapper.value = newValue
         wrapper.didSet.send(newValue)
 

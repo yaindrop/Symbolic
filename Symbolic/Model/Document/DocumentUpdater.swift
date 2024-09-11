@@ -135,8 +135,16 @@ private extension DocumentUpdater {
 
     func collect(events: inout [DocumentEvent.Single], of action: PathAction.Move) {
         let pathIds = action.pathIds,
-            offset = action.offset
-        events.append(.path(.init(pathIds: pathIds, .move(.init(offset: offset)))))
+            offset = action.offset,
+            paths = pathIds.compactMap { pathStore.get(id: $0) }
+        guard !paths.isEmpty else { return }
+        let anchor = paths.reduce(into: paths.first!.boundingRect.minPoint) { anchor, path in
+            let rect = path.boundingRect
+            anchor = .init(min(anchor.x, rect.minX), min(anchor.y, rect.minY))
+        }
+        let snappedOffset = activeSymbol.snappedOffset(anchor, offset: offset)
+        guard !snappedOffset.isZero else { return }
+        events.append(.path(.init(pathIds: pathIds, .move(.init(offset: snappedOffset)))))
     }
 
     // MARK: single path update actions
@@ -155,9 +163,10 @@ private extension DocumentUpdater {
         } else {
             return
         }
-        let snappedOffset = endingNode.position.offset(to: activeSymbol.snap(endingNode.position + offset))
+        let snappedOffset = activeSymbol.snappedOffset(endingNode.position, offset: offset)
         guard !snappedOffset.isZero else { return }
-        events.append(.path(.init(pathId: pathId, .createNode(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: .init(position: endingNode.position + snappedOffset))))))
+        let node = PathNode(position: endingNode.position + snappedOffset)
+        events.append(.path(.init(pathId: pathId, .createNode(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: node)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SplitSegment) {
@@ -172,7 +181,7 @@ private extension DocumentUpdater {
               var toNode = path.node(id: toNodeId) else { return }
         let position = segment.position(paramT: paramT)
         let (before, after) = segment.split(paramT: paramT)
-        let snappedOffset = position.offset(to: activeSymbol.snap(position + offset))
+        let snappedOffset = activeSymbol.snappedOffset(position, offset: offset)
 
         let newNode = PathNode(position: position + snappedOffset, cubicIn: before.toCubicIn, cubicOut: after.fromCubicOut)
         fromNode.cubicOut = before.fromCubicOut
@@ -226,7 +235,7 @@ private extension DocumentUpdater {
         guard let path = pathStore.get(id: pathId),
               let firstId = nodeIds.first,
               let firstNode = path.node(id: firstId) else { return }
-        let snappedOffset = firstNode.position.offset(to: activeSymbol.snap(firstNode.position + offset))
+        let snappedOffset = activeSymbol.snappedOffset(firstNode.position, offset: offset)
         guard !snappedOffset.isZero else { return }
 
         var kinds: [PathEvent.Kind] = []
@@ -244,52 +253,41 @@ private extension DocumentUpdater {
             offset = action.offset,
             controlType = action.controlType
         guard let path = pathStore.get(id: pathId),
-              let node = path.node(id: nodeId) else { return }
+              let node = path.node(id: nodeId),
+              let property = pathStore.property(id: pathId) else { return }
 
-        var snappedCubicInOffset: Vector2 = .zero,
-            snappedCubicOutOffset: Vector2 = .zero,
-            snappedQuadraticOffset: Vector2 = .zero
+        let nodeType = property.nodeType(id: nodeId)
+        var kinds: [PathEvent.Kind] = []
+
         switch controlType {
         case .cubicIn:
-            let snappedCubicIn = activeSymbol.snap(node.positionIn + offset)
-            snappedCubicInOffset = node.positionIn.offset(to: snappedCubicIn)
-            guard !snappedCubicInOffset.isZero else { return }
+            let snappedOffset = activeSymbol.snappedOffset(node.positionIn, offset: offset)
+            guard !snappedOffset.isZero else { return }
+            let cubicIn = node.cubicIn + snappedOffset,
+                cubicOut = nodeType.map(current: node.cubicOut, opposite: cubicIn)
+            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: cubicIn, cubicOut: cubicOut))))
         case .cubicOut:
-            let snappedCubicOut = activeSymbol.snap(node.positionOut + offset)
-            snappedCubicOutOffset = node.positionOut.offset(to: snappedCubicOut)
-            guard !snappedCubicOutOffset.isZero else { return }
+            let snappedOffset = activeSymbol.snappedOffset(node.positionOut, offset: offset)
+            guard !snappedOffset.isZero else { return }
+            let cubicOut = node.cubicOut + snappedOffset,
+                cubicIn = nodeType.map(current: node.cubicIn, opposite: cubicOut)
+            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: cubicIn, cubicOut: cubicOut))))
         case .quadraticOut:
             guard let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic else { return }
-            let snappedQuadratic = activeSymbol.snap(quadratic + offset)
-            snappedQuadraticOffset = quadratic.offset(to: snappedQuadratic)
-            guard !snappedQuadraticOffset.isZero else { return }
-        }
-
-        var kinds: [PathEvent.Kind] = []
-        defer { events.append(.path(.init(pathId: pathId, kinds))) }
-
-        guard let property = pathStore.property(id: pathId) else { return }
-        let nodeType = property.nodeType(id: nodeId)
-        switch controlType {
-        case .cubicIn:
-            let newCubicIn = node.cubicIn + snappedCubicInOffset,
-                newCubicOut = nodeType.map(current: node.cubicOut, opposite: newCubicIn)
-            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
-        case .cubicOut:
-            let newCubicOut = node.cubicOut + snappedCubicOutOffset,
-                newCubicIn = nodeType.map(current: node.cubicIn, opposite: newCubicOut)
-            kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: newCubicIn, cubicOut: newCubicOut))))
-        case .quadraticOut:
-            guard let segment = path.segment(fromId: nodeId),
+            let snappedOffset = activeSymbol.snappedOffset(quadratic, offset: offset)
+            guard !snappedOffset.isZero,
+                  let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic,
                   let nextId = path.nodeId(after: nodeId),
                   let next = path.node(id: nextId) else { return }
-            let newQuadratic = quadratic + snappedQuadraticOffset,
+            let newQuadratic = quadratic + snappedOffset,
                 newSegment = PathSegment(from: segment.from, to: segment.to, quadratic: newQuadratic)
             kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: node.cubicIn, cubicOut: newSegment.fromCubicOut))))
             kinds.append(.updateNode(.init(nodeId: nextId, node: .init(position: next.position, cubicIn: newSegment.toCubicIn, cubicOut: next.cubicOut))))
         }
+
+        events.append(.path(.init(pathId: pathId, kinds)))
     }
 
     func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.Merge) {

@@ -77,6 +77,10 @@ extension Snappable {
     func snapped(_ point: Point2) -> Bool {
         point == snap(point)
     }
+
+    func snappedOffset(_ point: Point2, offset: Vector2) -> Vector2 {
+        point.offset(to: snap(point + offset))
+    }
 }
 
 extension Grid.Cartesian: Snappable {

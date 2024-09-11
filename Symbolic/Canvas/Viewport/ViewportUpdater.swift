@@ -92,7 +92,7 @@ extension ViewportUpdater {
         }
     }
 
-    func zoomTo(rect: CGRect, ratio: Scalar = 0.8) {
+    func zoomTo(worldRect rect: CGRect, ratio: Scalar = 0.8) {
         assert(rect.size.width > 0 && rect.height > 0)
         let freeSpace = panel.freeSpace
         let _r = subtracer.range(type: .intent, "zoomTo \(rect) in \(freeSpace)"); defer { _r() }
@@ -145,6 +145,6 @@ private extension ViewportUpdater {
 extension ViewportUpdater {
     func zoomToEditingSymbol() {
         guard let symbol = activeSymbol.editingSymbol else { return }
-        zoomTo(rect: symbol.boundingRect)
+        zoomTo(worldRect: symbol.boundingRect)
     }
 }

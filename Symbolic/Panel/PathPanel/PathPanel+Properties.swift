@@ -42,7 +42,7 @@ private extension PathPanel.Properties {
                 ContextualDivider()
                 ContextualRow {
                     Button("Zoom In", systemImage: "arrow.up.left.and.arrow.down.right.square") {
-                        global.viewportUpdater.zoomTo(rect: path.boundingRect)
+                        global.viewportUpdater.zoomTo(worldRect: path.boundingRect.applying(global.activeSymbol.symbolToWorld))
                     }
                     .contextualFont()
                     Spacer()

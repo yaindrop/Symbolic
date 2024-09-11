@@ -5,11 +5,11 @@ import SwiftUI
 extension GlobalStores {
     func zoomToFit() {
         if let symbolId = activeSymbol.focusedSymbolId, let bounds = item.allPathsBounds(symbolId: symbolId) {
-            viewportUpdater.zoomTo(rect: bounds)
+            viewportUpdater.zoomTo(worldRect: bounds.applying(activeSymbol.symbolToWorld))
         } else if let bounds = symbol.allSymbolsBounds {
-            viewportUpdater.zoomTo(rect: bounds)
+            viewportUpdater.zoomTo(worldRect: bounds)
         } else {
-            viewportUpdater.zoomTo(rect: .init(origin: .zero, size: .init(squared: 256)))
+            viewportUpdater.zoomTo(worldRect: .init(origin: .zero, size: .init(squared: 256)))
         }
     }
 }

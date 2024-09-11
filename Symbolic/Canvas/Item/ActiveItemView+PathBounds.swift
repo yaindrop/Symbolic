@@ -58,7 +58,6 @@ extension ActiveItemView {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.item.boundingRect(of: $0.pathId) }) var bounds
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
-            @Selected({ global.activeItem.selectedItemIds.contains($0.pathId) }) var selected
         }
 
         @SelectorWrapper var selector
@@ -77,11 +76,19 @@ extension ActiveItemView.PathBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             let bounds = bounds.applying(transformToView)
-            RoundedRectangle(cornerRadius: 2)
-                .fill(.blue.opacity(selector.focused ? 0.2 : 0.1))
-                .stroke(.blue.opacity(selector.focused ? 0.8 : 0.5))
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(.blue.opacity(fillOpacity))
+                .stroke(.blue.opacity(strokeOpacity), style: .init(lineWidth: lineWidth))
                 .multipleTouchGesture(global.gesture(pathId: pathId))
                 .framePosition(rect: bounds)
         }
     }
+
+    var cornerRadius: Scalar { 2 }
+
+    var fillOpacity: Scalar { selector.focused ? 0.2 : 0.1 }
+
+    var strokeOpacity: Scalar { selector.focused ? 0.8 : 0.5 }
+
+    var lineWidth: Scalar { 1 }
 }

@@ -288,7 +288,7 @@ private extension GroupRow {
             Button("Focus") {
                 global.activeItem.focus(itemId: group.id)
                 guard let bounds = global.item.boundingRect(of: group.id) else { return }
-                global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
+                global.viewportUpdater.zoomTo(worldRect: bounds.applying(global.activeSymbol.symbolToWorld), ratio: 0.5)
             }
         } label: {
             Image(systemName: "ellipsis")
@@ -390,7 +390,7 @@ private extension PathRow {
             Button("Focus") {
                 global.activeItem.focus(itemId: pathId)
                 guard let bounds = global.item.boundingRect(of: pathId) else { return }
-                global.viewportUpdater.zoomTo(rect: bounds, ratio: 0.5)
+                global.viewportUpdater.zoomTo(worldRect: bounds.applying(global.activeSymbol.symbolToWorld), ratio: 0.5)
             }
         } label: {
             Image(systemName: "ellipsis")

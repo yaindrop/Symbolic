@@ -147,6 +147,10 @@ extension ActiveSymbolService {
         grid?.snap(point) ?? point
     }
 
+    func snappedOffset(_ point: Point2, offset: Vector2) -> Vector2 {
+        grid?.snappedOffset(point, offset: offset) ?? offset
+    }
+
     func snapped(_ point: Point2) -> Grid? {
         guard let editingSymbol else { return nil }
         return editingSymbol.grids.first { $0.snapped(point) }

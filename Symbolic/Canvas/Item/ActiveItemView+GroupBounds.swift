@@ -98,11 +98,20 @@ private extension ActiveItemView.GroupBounds {
     @ViewBuilder var content: some View {
         if let bounds = selector.bounds {
             let bounds = bounds.applying(transformToView).outset(by: selector.outset)
-            RoundedRectangle(cornerRadius: 8)
-                .fill(.blue.opacity(selector.selected ? 0.1 : 0.03))
-                .stroke(.blue.opacity(selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3), style: .init(lineWidth: 2))
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(.blue.opacity(fillOpacity))
+                .stroke(.blue.opacity(strokeOpacity), style: .init(lineWidth: lineWidth))
                 .multipleTouchGesture(global.gesture(group: group))
                 .framePosition(rect: bounds)
+                .allowsHitTesting(selector.focused)
         }
     }
+
+    var cornerRadius: Scalar { 8 }
+
+    var fillOpacity: Scalar { selector.selected ? 0.1 : 0.03 }
+
+    var strokeOpacity: Scalar { selector.focused ? 0.8 : selector.selected ? 0.5 : 0.3 }
+
+    var lineWidth: Scalar { 2 }
 }

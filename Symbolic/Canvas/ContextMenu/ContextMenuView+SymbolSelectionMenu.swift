@@ -7,7 +7,7 @@ private extension GlobalStores {
 
     func onZoom() {
         guard let bounds else { return }
-        viewportUpdater.zoomTo(rect: bounds)
+        viewportUpdater.zoomTo(worldRect: bounds)
     }
 
     func onLock() {

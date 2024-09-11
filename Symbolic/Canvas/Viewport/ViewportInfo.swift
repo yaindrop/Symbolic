@@ -55,34 +55,6 @@ extension SizedViewportInfo {
 
     var worldRect: CGRect { .init(origin: info.origin, size: size / info.scale) }
     var center: Point2 { worldRect.center }
-
-    func clampingOffset(by rect: CGRect) -> Vector2 {
-        let worldRect = worldRect
-        var offset = Vector2.zero
-        if worldRect.width < rect.width {
-            if worldRect.minX < rect.minX {
-                offset.dx = rect.minX - worldRect.minX
-            } else if worldRect.maxX > rect.maxX {
-                offset.dx = rect.maxX - worldRect.maxX
-            }
-        } else {
-            offset.dx = rect.midX - worldRect.midX
-        }
-        if worldRect.height < rect.height {
-            if worldRect.minY < rect.minY {
-                offset.dy = rect.minY - worldRect.minY
-            } else if worldRect.maxY > rect.maxY {
-                offset.dy = rect.maxY - worldRect.maxY
-            }
-        } else {
-            offset.dy = rect.midY - worldRect.midY
-        }
-        return offset
-    }
-
-    func clamped(by rect: CGRect) -> Self {
-        .init(size: size, center: center + clampingOffset(by: rect), scale: scale)
-    }
 }
 
 extension SizedViewportInfo: Animatable {

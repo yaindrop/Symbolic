@@ -49,6 +49,29 @@ extension CGRect {
         return self + clampingOffset(by: rect)
     }
 
+    func fittingOffset(to rect: CGRect) -> Vector2 {
+        var offset = Vector2.zero
+        if width < rect.width {
+            if minX < rect.minX {
+                offset.dx = rect.minX - minX
+            } else if maxX > rect.maxX {
+                offset.dx = rect.maxX - maxX
+            }
+        } else {
+            offset.dx = rect.midX - midX
+        }
+        if height < rect.height {
+            if minY < rect.minY {
+                offset.dy = rect.minY - minY
+            } else if maxY > rect.maxY {
+                offset.dy = rect.maxY - maxY
+            }
+        } else {
+            offset.dy = rect.midY - midY
+        }
+        return offset
+    }
+
     func inset(by size: Scalar) -> Self {
         let dx = min(width / 2, size)
         let dy = min(height / 2, size)

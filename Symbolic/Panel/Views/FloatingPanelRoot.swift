@@ -304,6 +304,7 @@ private extension FloatingPanelWrapper {
 struct FloatingPanelRoot: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.panel.displayingFloatingPanelIds }) var displayingFloatingPanelIds
+        @Selected({ global.panel.freeSpace }) var freeSpace
     }
 
     @SelectorWrapper var selector
@@ -311,6 +312,7 @@ struct FloatingPanelRoot: View, TracedView, SelectorHolder {
     var body: some View { trace {
         setupSelector {
             content
+                .onChange(of: selector.freeSpace) { global.viewportUpdater.applyRestriction() }
         }
     } }
 }

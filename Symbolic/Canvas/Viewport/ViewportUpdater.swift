@@ -92,12 +92,13 @@ extension ViewportUpdater {
         }
     }
 
-    func zoomTo(worldRect rect: CGRect, ratio: Scalar = 0.8) {
+    func zoomTo(worldRect rect: CGRect, ratio _: Scalar = 0.8) {
         assert(rect.size.width > 0 && rect.height > 0)
-        let freeSpace = panel.freeSpace
+        let freeSpace = panel.freeSpace,
+            freeWorldRect = freeSpace.applying(viewport.viewToWorld)
         let _r = subtracer.range(type: .intent, "zoomTo \(rect) in \(freeSpace)"); defer { _r() }
         let worldRect = viewport.worldRect,
-            targetRect = CGRect(center: freeSpace.center, size: freeSpace.size * ratio).applying(viewport.viewToWorld),
+            targetRect = CGRect(center: freeWorldRect.center, size: freeWorldRect.size * 0.8),
             transform = CGAffineTransform(fit: rect, to: targetRect).inverted(),
             newWorldRect = worldRect.applying(transform),
             center = newWorldRect.center,
@@ -120,15 +121,17 @@ private extension ViewportUpdater {
 
     func applyOverscroll(to info: inout SizedViewportInfo, bouncing: Bool = false) {
         guard let symbol = activeSymbol.editingSymbol else { return }
-        let rect = symbol.boundingRect.outset(by: overscrollOutset / info.scale),
-            offset = info.clampingOffset(by: rect)
+        let freeSpace = panel.freeSpace,
+            freeWorldRect = freeSpace.applying(info.viewToWorld),
+            rect = symbol.boundingRect.outset(by: overscrollOutset / info.scale),
+            offset = freeWorldRect.fittingOffset(to: rect)
         guard !offset.isZero else { return }
         info.info.origin += offset
         if bouncing {
-            if rect.width > info.worldRect.width {
+            if rect.width > freeWorldRect.width {
                 info.info.origin -= Vector2(x: overscroll(value: offset.dx, scale: info.scale))
             }
-            if rect.height > info.worldRect.height {
+            if rect.height > freeWorldRect.height {
                 info.info.origin -= Vector2(y: overscroll(value: offset.dy, scale: info.scale))
             }
         }
@@ -143,6 +146,16 @@ private extension ViewportUpdater {
 }
 
 extension ViewportUpdater {
+    func applyRestriction() {
+        var sizedInfo = SizedViewportInfo(size: viewport.viewSize, center: viewport.center, scale: scaleRange.clamp(viewport.info.scale))
+        applyOverscroll(to: &sizedInfo)
+        guard sizedInfo != viewport.sizedInfo else { return }
+        withStoreUpdating(.animation(.fast)) {
+            viewport.setInfo(sizedInfo.info)
+            store.update(referenceInfo: viewport.info)
+        }
+    }
+
     func zoomToEditingSymbol() {
         guard let symbol = activeSymbol.editingSymbol else { return }
         zoomTo(worldRect: symbol.boundingRect)

@@ -146,19 +146,14 @@ extension PanelStore {
     // frame
 
     var freeSpace: CGRect {
-        let floatingPanels = floatingPanels
-        var minX = rootFrame.minX + floatingPadding.width,
-            maxX = rootFrame.maxX - floatingPadding.width
-        if floatingPanels.contains(where: { $0.align.isLeading }) {
-            minX += floatingWidth
-        }
-        if floatingPanels.contains(where: { $0.align.isTrailing }) {
-            maxX -= floatingWidth
-        }
-        if maxX - minX > floatingWidth {
-            return .init(x: minX, y: rootFrame.minY, width: maxX - minX, height: rootFrame.height)
-        }
-        return rootFrame
+        let floatingPanels = floatingPanels,
+            hasLeading = floatingPanels.contains { $0.align.isLeading },
+            hasTrailing = floatingPanels.contains { $0.align.isTrailing },
+            width = floatingPadding.width + floatingWidth
+        let minX = rootFrame.minX + (hasLeading ? width : 0),
+            maxX = rootFrame.maxX - (hasTrailing ? width : 0)
+        guard maxX - minX > floatingWidth else { return rootFrame }
+        return .init(x: minX, y: rootFrame.minY, width: maxX - minX, height: rootFrame.height)
     }
 }
 

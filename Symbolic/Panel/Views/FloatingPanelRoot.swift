@@ -109,7 +109,7 @@ private extension FloatingPanelView {
 
         @SelectorWrapper var selector
 
-        var body: some View { trace {
+        var body: some View { trace("of \(panelId)") {
             setupSelector(.init(panelId: panelId)) {
                 content
             }
@@ -169,7 +169,7 @@ private extension FloatingPanelView {
 
         @SelectorWrapper var selector
 
-        var body: some View { trace {
+        var body: some View { trace("of \(panelId)") {
             setupSelector(.init(panelId: panelId)) {
                 content
             }

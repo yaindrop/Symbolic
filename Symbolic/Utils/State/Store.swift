@@ -16,6 +16,8 @@ private extension Tracer {
         let configs: PartialSelectorConfigs
     }
 
+    struct UpdatingReenter: ReflectedStringMessage {}
+
     struct NotifyingAppend: ReflectedStringMessage {
         let subscriptionIds: [Int]
     }
@@ -26,6 +28,10 @@ private extension Tracer {
 
     struct NotifyingAll: ReflectedStringMessage {
         let subscriptionIds: [Int]
+    }
+
+    struct Deriving<S, K>: ReflectedStringMessage {
+        let keyPath: KeyPath<S, K>
     }
 
     struct DerivingResult: ReflectedStringMessage {
@@ -67,6 +73,8 @@ private extension Tracer {
     struct SelectorTrackUpdate<T>: ReflectedStringMessage {
         let newValue: T
     }
+
+    struct SelectorTrackUnchanged: ReflectedStringMessage {}
 
     struct SelectorRetrack<S, K>: ReflectedStringMessage {
         let name: String, keyPath: KeyPath<S, K>
@@ -144,7 +152,7 @@ extension StoreManager {
             fatalError("Nested tracking of store properties is not supported.")
         }
         let id = subscriptionIdGen.generate()
-        let _r = subtracer.range(.init(Tracer.Tracking(subscriptionId: id))); defer { _r() }
+        let _r = subtracer.range(Tracer.Tracking(subscriptionId: id)); defer { _r() }
 
         let tracking = TrackingContext(subscriptionId: id)
         let result = withAssigned(self, \.tracking, tracking, apply)
@@ -173,11 +181,11 @@ extension StoreManager {
 
     func withUpdating(configs: PartialSelectorConfigs = .init(), _ apply: () -> Void) {
         if updating != nil {
-            let _r = subtracer.range("reenter updating"); defer { _r() }
+            let _r = subtracer.range(Tracer.UpdatingReenter()); defer { _r() }
             apply()
             return
         }
-        let _r = subtracer.range(.init(Tracer.Updating(configs: configs))); defer { _r() }
+        let _r = subtracer.range(Tracer.Updating(configs: configs)); defer { _r() }
 
         let updating = UpdatingContext(configs: configs)
         withAssigned(self, \.updating, updating) {
@@ -210,24 +218,23 @@ extension StoreManager {
     var notifyingId: Int? { notifying?.subscriptionId }
 
     func notify(subscriptionIds: Set<Int>) {
-        let _r = subtracer.range("notify"); defer { _r() }
         let activeSubscriptions = subscriptionIds.compactMap { idToSubscription.removeValue(forKey: $0) }
         updating.forSome {
-            subtracer.instant(.init(Tracer.NotifyingAppend(subscriptionIds: activeSubscriptions.map { $0.id })))
+            subtracer.instant(Tracer.NotifyingAppend(subscriptionIds: activeSubscriptions.map { $0.id }))
             $0.subscriptions += activeSubscriptions
         } else: {
             for subscription in activeSubscriptions {
-                let _r = subtracer.range(.init(Tracer.NotifyingCallback(subscriptionId: subscription.id))); defer { _r() }
+                let _r = subtracer.range(Tracer.NotifyingCallback(subscriptionId: subscription.id)); defer { _r() }
                 subscription.callback()
             }
         }
     }
 
     private func withNotifying(_ context: UpdatingContext) {
-        let _r = subtracer.range(.init(Tracer.NotifyingAll(subscriptionIds: context.subscriptions.map { $0.id }))); defer { _r() }
+        let _r = subtracer.range(Tracer.NotifyingAll(subscriptionIds: context.subscriptions.map { $0.id })); defer { _r() }
         withLast(self, \.notifyingStack, .init(configs: context.configs)) {
             for subscription in context.subscriptions {
-                let _r = subtracer.range(.init(Tracer.NotifyingCallback(subscriptionId: subscription.id))); defer { _r() }
+                let _r = subtracer.range(Tracer.NotifyingCallback(subscriptionId: subscription.id)); defer { _r() }
                 notifying?.subscriptionId = subscription.id
                 subscription.callback()
             }
@@ -268,11 +275,9 @@ private extension Store {
     }
 
     func withDeriving<T>(_ apply: () -> T) -> (newValue: T, DerivingContext) {
-        let _r = subtracer.range("deriving"); defer { _r() }
-
         let deriving = DerivingContext()
         let result = withLast(self, \.derivingStack, deriving, apply)
-        subtracer.instant(.init(Tracer.DerivingResult(trackableIds: deriving.trackableIds)))
+        subtracer.instant(Tracer.DerivingResult(trackableIds: deriving.trackableIds))
 
         return (result, deriving)
     }
@@ -304,13 +309,13 @@ private extension _StoreProtocol {
         if let trackingId = manager.trackingId {
             var ids = trackableIdToSubscriptionIds[id] ?? []
             if !ids.contains(trackingId) {
-                let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
+                let _r = subtracer.range(Tracer.StoreAccess(keyPath: keyPath)); defer { _r() }
                 ids.insert(trackingId)
                 trackableIdToSubscriptionIds[id] = ids
             }
         }
         if let deriving, !deriving.trackableIds.contains(id) {
-            let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
+            let _r = subtracer.range(Tracer.StoreAccess(keyPath: keyPath)); defer { _r() }
             deriving.trackableIds.insert(id)
             deriving.publishers.append(wrapper.$willNotify.eraseToVoidPublisher())
         }
@@ -320,7 +325,7 @@ private extension _StoreProtocol {
     // MARK: access derived
 
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
-        let _r = subtracer.range(.init(Tracer.StoreAccess(keyPath: keyPath))); defer { _r() }
+        let _r = subtracer.range(Tracer.StoreAccess(keyPath: keyPath)); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let value = wrapper.value ?? update(keyPath: keyPath)
 
@@ -352,7 +357,7 @@ private extension _StoreProtocol {
             wrapper.id = id
         }
         guard forced || wrapper.value != newValue else { return }
-        let _r = subtracer.range(.init(Tracer.StoreUpdate(trackableId: id, keyPath: keyPath))); defer { _r() }
+        let _r = subtracer.range(Tracer.StoreUpdate(trackableId: id, keyPath: keyPath)); defer { _r() }
         wrapper.value = newValue
         wrapper.didSet.send(newValue)
 
@@ -362,7 +367,7 @@ private extension _StoreProtocol {
 
         if wrapper.willNotifyCancellable == nil {
             wrapper.willNotifyCancellable = manager.updatingWillNotify?.sink {
-                let _r = subtracer.range(.init(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue))); defer { _r() }
+                let _r = subtracer.range(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue)); defer { _r() }
                 wrapper.willNotify.send(wrapper.value)
                 wrapper.willNotifyCancellable = nil
             }
@@ -373,8 +378,11 @@ private extension _StoreProtocol {
 
     @discardableResult func update<T>(keyPath: ReferenceWritableKeyPath<Self, Derived<T>>) -> T {
         @Ref(self, keyPath) var wrapper
-        let (newValue, context) = withDeriving { wrapper.derive(self) }
-        let _r = subtracer.range(.init(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue))); defer { _r() }
+        let (newValue, context) = withDeriving {
+            let _r = subtracer.range(Tracer.Deriving(keyPath: keyPath)); defer { _r() }
+            return wrapper.derive(self)
+        }
+        let _r = subtracer.range(Tracer.StoreUpdateNotify(keyPath: keyPath, newValue: newValue)); defer { _r() }
 
         wrapper.value = newValue
         wrapper.willNotify.send(newValue)
@@ -509,7 +517,7 @@ class _Selector<Props>: ObservableObject, CancellablesHolder {
 private extension _Selector {
     func setup(_ name: @autoclosure () -> String, _ props: Props) {
         let name = name()
-        let _r = subtracer.range(.init(Tracer.SelectorSetup(name: name))); defer { _r() }
+        let _r = subtracer.range(Tracer.SelectorSetup(name: name)); defer { _r() }
         self.name = name
         if self.props == nil {
             self.props = props
@@ -554,7 +562,7 @@ private extension _SelectorProtocol {
     // MARK: access selected
 
     func access<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
-        let _r = subtracer.range(.init(Tracer.SelectorAccess(name: name!, keyPath: keyPath))); defer { _r() }
+        let _r = subtracer.range(Tracer.SelectorAccess(name: name!, keyPath: keyPath)); defer { _r() }
         return self[keyPath: keyPath].value ?? track(keyPath: keyPath)
     }
 
@@ -572,7 +580,7 @@ private extension _SelectorProtocol {
     @discardableResult
     func track<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) -> T {
         let configs = self.configs(keyPath: keyPath)
-        let _r = subtracer.range(.init(Tracer.SelectorTrack(name: name!, keyPath: keyPath, configs: configs))); defer { _r() }
+        let _r = subtracer.range(Tracer.SelectorTrack(name: name!, keyPath: keyPath, configs: configs)); defer { _r() }
         @Ref(self, keyPath) var wrapper
         let (newValue, subscriptionId) = manager.withTracking { wrapper.selector(self.props!) } onNotify: { [weak self] in self?.track(keyPath: keyPath) }
         wrapper.subscriptionId = subscriptionId
@@ -580,7 +588,7 @@ private extension _SelectorProtocol {
         if wrapper.value == nil {
             wrapper.value = newValue
             setupRetrack { [weak self] in self?.retrack(keyPath: keyPath) }
-            subtracer.instant(.init(Tracer.SelectorTrackSetup(newValue: newValue)))
+            subtracer.instant(Tracer.SelectorTrackSetup(newValue: newValue))
         } else if wrapper.value != newValue || configs.alwaysNotify {
             wrapper.value = newValue
             let animation = configs.animation
@@ -591,20 +599,20 @@ private extension _SelectorProtocol {
                 let notifyingId = manager.notifyingId
                 asyncNotifyTask = Task(priority: .high) { @MainActor [weak self] in
                     guard let self, !Task.isCancelled else { return }
-                    let _r = subtracer.range(.init(Tracer.SelectorNotify(notifyingId: notifyingId))); defer { _r() }
+                    let _r = subtracer.range(Tracer.SelectorNotify(notifyingId: notifyingId)); defer { _r() }
                     asyncNotifyTask = nil
                     if let animation { withAnimation(animation.animation) { self.notify() } } else { self.notify() }
                 }
             }
-            subtracer.instant(.init(Tracer.SelectorTrackUpdate(newValue: newValue)))
+            subtracer.instant(Tracer.SelectorTrackUpdate(newValue: newValue))
         } else {
-            subtracer.instant("unchanged")
+            subtracer.instant(Tracer.SelectorTrackUnchanged())
         }
         return newValue
     }
 
     func retrack<T>(keyPath: ReferenceWritableKeyPath<Self, Selected<T>>) {
-        let _r = subtracer.range(.init(Tracer.SelectorRetrack(name: name!, keyPath: keyPath))); defer { _r() }
+        let _r = subtracer.range(Tracer.SelectorRetrack(name: name!, keyPath: keyPath)); defer { _r() }
         @Ref(self, keyPath) var wrapper
         if let subscriptionId = wrapper.subscriptionId {
             manager.expire(subscriptionId: subscriptionId)

@@ -178,16 +178,16 @@ class Tracer {
         instant(type: type, AnyMessage(stringLiteral: message()))
     }
 
-    func instant(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) {
-        onNode(.instant(.init(type: type, time: .now, message: message())))
+    func instant<M: Message>(type: NodeType = .normal, _ message: @autoclosure () -> M) {
+        onNode(.instant(.init(type: type, time: .now, message: AnyMessage(message()))))
     }
 
     func range(type: NodeType = .normal, _ message: @autoclosure () -> String) -> EndRange {
         range(type: type, AnyMessage(stringLiteral: message()))
     }
 
-    func range(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) -> EndRange {
-        rangeStack.append(.init(type: type, start: .now, message: message()))
+    func range<M: Message>(type: NodeType = .normal, _ message: @autoclosure () -> M) -> EndRange {
+        rangeStack.append(.init(type: type, start: .now, message: AnyMessage(message())))
         return .init(tracer: self)
     }
 
@@ -195,8 +195,8 @@ class Tracer {
         range(type: type, AnyMessage(stringLiteral: message()), work)
     }
 
-    func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage, _ work: () -> Result) -> Result {
-        let _r = range(type: type, message()); defer { _r() }
+    func range<M: Message, Result>(type: NodeType = .normal, _ message: @autoclosure () -> M, _ work: () -> Result) -> Result {
+        let _r = range(type: type, AnyMessage(message())); defer { _r() }
         return work()
     }
 
@@ -251,27 +251,27 @@ extension Tracer {
             instant(type: type, AnyMessage(stringLiteral: message()))
         }
 
-        func instant(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) {
+        func instant<M: Message>(type: NodeType = .normal, _ message: @autoclosure () -> M) {
             guard enabled, verbose || type != .verbose else { return }
-            tracer.instant(type: type, .init(TaggedMessage(tags: tags, wrapped: .init(message()))))
+            tracer.instant(type: type, TaggedMessage(tags: tags, wrapped: AnyMessage(message())))
         }
 
         func range(type: NodeType = .normal, _ message: @autoclosure () -> String) -> EndRange {
             range(type: type, AnyMessage(stringLiteral: message()))
         }
 
-        func range(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage) -> EndRange {
+        func range<M: Message>(type: NodeType = .normal, _ message: @autoclosure () -> M) -> EndRange {
             guard enabled, verbose || type != .verbose else { return .init() }
-            return tracer.range(type: type, .init(TaggedMessage(tags: tags, wrapped: .init(message()))))
+            return tracer.range(type: type, TaggedMessage(tags: tags, wrapped: AnyMessage(message())))
         }
 
         func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> String, _ work: () -> Result) -> Result {
             range(type: type, AnyMessage(stringLiteral: message()), work)
         }
 
-        func range<Result>(type: NodeType = .normal, _ message: @autoclosure () -> AnyMessage, _ work: () -> Result) -> Result {
+        func range<M: Message, Result>(type: NodeType = .normal, _ message: @autoclosure () -> M, _ work: () -> Result) -> Result {
             guard enabled, verbose || type != .verbose else { return work() }
-            return tracer.range(type: type, .init(TaggedMessage(tags: tags, wrapped: .init(message()))), work)
+            return tracer.range(type: type, TaggedMessage(tags: tags, wrapped: AnyMessage(message())), work)
         }
 
         func tagged(_ tag: String, enabled: Bool = true, verbose: Bool = false) -> SubTracer {
@@ -289,8 +289,8 @@ extension TracedView {
         trace(Tracer.AnyMessage(stringLiteral: message() ?? "body"), work)
     }
 
-    func trace<Content: View>(_ message: @autoclosure () -> Tracer.AnyMessage, @ViewBuilder _ work: () -> Content) -> Content {
-        tracer.range(type: .normal, .init(Tracer.TaggedMessage(tags: [String(describing: type(of: self))], wrapped: .init(message()))), work)
+    func trace<M: Tracer.Message, Content: View>(_ message: @autoclosure () -> M, @ViewBuilder _ work: () -> Content) -> Content {
+        tracer.range(type: .normal, Tracer.TaggedMessage(tags: [String(describing: type(of: self))], wrapped: Tracer.AnyMessage(message())), work)
     }
 }
 

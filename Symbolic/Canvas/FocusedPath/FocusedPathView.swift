@@ -7,6 +7,7 @@ let debugFocusedPath: Bool = true
 struct FocusedPathView: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.focusedPath.selectingNodes }) var selectingNodes
+        @Selected({ global.focusedPath.locked }) var locked
         @Selected({ global.activeSymbol.symbolToWorld }) var symbolToWorld
         @Selected({ global.activeItem.focusedPathId != nil }) var active
         @Selected({ global.viewport.sizedInfo }, .syncNotify) var viewport
@@ -38,6 +39,8 @@ private extension FocusedPathView {
                             .allowsHitTesting(false)
                     }
                 }
+                .opacity(selector.locked ? 0.5 : 1)
+                .allowsHitTesting(!selector.locked)
                 .environment(\.transformToView, transform)
             }
         }

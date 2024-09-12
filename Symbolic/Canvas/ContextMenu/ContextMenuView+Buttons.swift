@@ -5,9 +5,11 @@ extension ContextMenuView {
         let action: () -> Void
 
         var body: some View {
-            Button { action() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right.square") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            Button(action: action) {
+                Image(systemName: "arrow.up.left.and.arrow.down.right.square")
+            }
+            .frame(minWidth: 32)
+            .tint(.label)
         }
     }
 
@@ -15,9 +17,11 @@ extension ContextMenuView {
         let action: () -> Void
 
         var body: some View {
-            Button { action() } label: { Image(systemName: "character.cursor.ibeam") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            Button(action: action) {
+                Image(systemName: "character.cursor.ibeam")
+            }
+            .frame(minWidth: 32)
+            .tint(.label)
         }
     }
 
@@ -26,9 +30,12 @@ extension ContextMenuView {
         let action: () -> Void
 
         var body: some View {
-            Button { action() } label: { Image(systemName: locked ? "lock.open" : "lock") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            Button(action: action) {
+                Image(systemName: locked ? "lock.open" : "lock")
+                    .foregroundStyle(locked ? .blue : .label)
+            }
+            .frame(minWidth: 32)
+            .tint(.label)
         }
     }
 
@@ -37,9 +44,11 @@ extension ContextMenuView {
         let action: () -> Void
 
         var body: some View {
-            Button { action() } label: { Image(systemName: grouped ? "rectangle.3.group" : "square.on.square.squareshape.controlhandles") }
-                .frame(minWidth: 32)
-                .tint(.label)
+            Button(action: action) {
+                Image(systemName: grouped ? "rectangle.3.group" : "square.on.square.squareshape.controlhandles")
+            }
+            .frame(minWidth: 32)
+            .tint(.label)
         }
     }
 
@@ -48,9 +57,12 @@ extension ContextMenuView {
         let action: () -> Void
 
         var body: some View {
-            Button { action() } label: { Image(systemName: "checklist").foregroundStyle(selecting ? .blue : .label) }
-                .frame(minWidth: 32)
-                .tint(.label)
+            Button(action: action) {
+                Image(systemName: "checklist")
+                    .foregroundStyle(selecting ? .blue : .label)
+            }
+            .frame(minWidth: 32)
+            .tint(.label)
         }
     }
 
@@ -64,10 +76,12 @@ extension ContextMenuView {
                 Button("Copy", systemImage: "doc.on.doc") { copyAction() }
                 Button("Cut", systemImage: "scissors") { cutAction() }
                 Button("Duplicate", systemImage: "plus.square.on.square") { duplicateAction() }
-            } label: { Image(systemName: "doc.on.doc") }
-                .menuOrder(.fixed)
-                .frame(minWidth: 32)
-                .tint(.label)
+            } label: {
+                Image(systemName: "doc.on.doc")
+            }
+            .menuOrder(.fixed)
+            .frame(minWidth: 32)
+            .tint(.label)
         }
     }
 
@@ -75,8 +89,10 @@ extension ContextMenuView {
         let action: () -> Void
 
         var body: some View {
-            Button(role: .destructive) { action() } label: { Image(systemName: "trash") }
-                .frame(minWidth: 32)
+            Button(role: .destructive, action: action) {
+                Image(systemName: "trash")
+            }
+            .frame(minWidth: 32)
         }
     }
 }

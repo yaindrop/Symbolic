@@ -76,7 +76,7 @@ extension ActiveItemService {
     }
 
     var selectedPathIds: [UUID] {
-        selectedItems.compactMap { $0.path?.id }
+        selectedItemIds.flatMap { item.leafItems(rootId: $0).compactMap { $0.path?.id } }
     }
 
     func selected(id: UUID) -> Bool {
@@ -141,15 +141,15 @@ extension ActiveItemService {
 
     // MARK: group
 
-    func activeDescendants(groupId: UUID) -> [Item] {
-        item.expandedItems(rootId: groupId)
-            .filter { $0.id != groupId && activeItemIds.contains($0.id) }
+    func groupActiveDescendants(id: UUID) -> [Item] {
+        item.expandedItems(rootId: id)
+            .filter { $0.id != id && activeItemIds.contains($0.id) }
     }
 
     func groupOutset(id: UUID) -> Scalar {
         guard let group = item.group(id: id) else { return 0 }
         var outsetLevel = 1
-        let minHeight = activeDescendants(groupId: group.id).map { self.item.height(of: $0.id) }.filter { $0 > 0 }.min()
+        let minHeight = groupActiveDescendants(id: group.id).map { self.item.height(of: $0.id) }.filter { $0 > 0 }.min()
         if let minHeight {
             let height = item.height(of: group.id)
             outsetLevel += height - minHeight
@@ -167,8 +167,13 @@ extension ActiveItemService {
         let _r = subtracer.range(type: .intent, "tap \(itemId?.shortDescription ?? "outside")"); defer { _r() }
         if let itemId {
             let ancestors = item.ancestorIds(of: itemId)
-            if let index = ancestors.lastIndex(where: { !activeItemIds.contains($0) }) {
-                store.update(state: .focused(ancestors[index]))
+            let closestActiveId = ancestors.first { activeItemIds.contains($0) }
+            if let closestActiveId, item.locked(of: closestActiveId) {
+                return
+            }
+            let lastInactiveIndex = ancestors.lastIndex { !activeItemIds.contains($0) }
+            if let lastInactiveIndex {
+                store.update(state: .focused(ancestors[lastInactiveIndex]))
             } else {
                 store.update(state: .focused(itemId))
             }

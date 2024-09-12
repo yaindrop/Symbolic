@@ -77,9 +77,11 @@ extension ActiveItemView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.item.boundingRect(of: $0.groupId) }) var bounds
+            @Selected({ global.item.locked(of: $0.groupId) }) var locked
             @Selected({ global.activeItem.groupOutset(id: $0.groupId) }) var outset
             @Selected({ global.activeItem.focusedItemId == $0.groupId }) var focused
             @Selected({ global.activeItem.selectedItemIds.contains($0.groupId) }) var selected
+            @Selected({ !global.activeItem.groupActiveDescendants(id: $0.groupId).isEmpty }) var hasActiveDescendants
         }
 
         @SelectorWrapper var selector
@@ -103,7 +105,8 @@ private extension ActiveItemView.GroupBounds {
                 .stroke(.blue.opacity(strokeOpacity), style: .init(lineWidth: lineWidth))
                 .multipleTouchGesture(global.gesture(group: group))
                 .framePosition(rect: bounds)
-                .allowsHitTesting(selector.focused)
+                .opacity(selector.locked ? 0.5 : 1)
+                .allowsHitTesting(!selector.locked && !selector.hasActiveDescendants)
         }
     }
 

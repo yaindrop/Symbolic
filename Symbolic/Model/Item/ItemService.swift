@@ -266,6 +266,11 @@ extension ItemService: ItemStoreProtocol {
         }
         return nil
     }
+
+    func locked(of itemId: UUID) -> Bool {
+        guard let item = get(id: itemId) else { return false }
+        return item.locked
+    }
 }
 
 // MARK: load document

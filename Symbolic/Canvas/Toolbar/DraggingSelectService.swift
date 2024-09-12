@@ -70,12 +70,11 @@ extension DraggingSelectService {
         guard active, let info else { return }
         withStoreUpdating {
             store.update(to: info.current)
-            if let symbol = activeSymbol.editingSymbol, let symbolItem = item.symbol(id: symbol.id) {
-                let intersectedItemIds = symbolItem.members.filter {
-                    item.leafItems(rootId: $0.id)
-                        .contains { intersects(item: $0) }
-                }
-                store.itemIds.send(intersectedItemIds)
+            if let editingSymbolId = activeSymbol.editingSymbolId {
+                let selectedItemIds = item.rootItems(symbolId: editingSymbolId)
+                    .filter { !$0.locked && item.leafItems(rootId: $0.id).contains { intersects(item: $0) } }
+                    .map { $0.id }
+                store.itemIds.send(selectedItemIds)
             } else {
                 let intersectedSymbols = symbol.symbolMap.values.filter {
                     guard let boundingRect else { return false }

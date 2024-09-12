@@ -130,7 +130,9 @@ extension ActiveSymbolService {
 
     func pathHitTest(worldPosition: Point2, threshold _: Scalar = 24) -> UUID? {
         guard let focusedSymbolId else { return nil }
-        return item.allPathItems(symbolId: focusedSymbolId).first { pathHitTest(pathId: $0.id, worldPosition: worldPosition) }?.id
+        return item.allPathItems(symbolId: focusedSymbolId)
+            .map { $0.id }
+            .first { pathHitTest(pathId: $0, worldPosition: worldPosition) }
     }
 
     // MARK: grid

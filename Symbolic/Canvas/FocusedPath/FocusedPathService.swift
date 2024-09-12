@@ -25,6 +25,7 @@ private extension FocusedPathStore {
 
 struct FocusedPathService {
     let store: FocusedPathStore
+    let item: ItemService
     let activeItem: ActiveItemService
 }
 
@@ -106,6 +107,11 @@ extension FocusedPathService {
         let minY = min(bounds.minY, pathBounds.minY),
             maxY = max(bounds.maxY, pathBounds.maxY)
         return .init(origin: .init(bounds.minX, minY), size: .init(bounds.width, maxY - minY))
+    }
+
+    var locked: Bool {
+        guard let pathId = activeItem.focusedPathId else { return false }
+        return item.locked(of: pathId)
     }
 }
 

@@ -57,6 +57,7 @@ extension ActiveItemView {
         class Selector: SelectorBase {
             override var configs: SelectorConfigs { .syncNotify }
             @Selected({ global.item.boundingRect(of: $0.pathId) }) var bounds
+            @Selected({ global.item.locked(of: $0.pathId) }) var locked
             @Selected({ global.activeItem.focusedItemId == $0.pathId }) var focused
         }
 
@@ -81,6 +82,8 @@ extension ActiveItemView.PathBounds {
                 .stroke(.blue.opacity(strokeOpacity), style: .init(lineWidth: lineWidth))
                 .multipleTouchGesture(global.gesture(pathId: pathId))
                 .framePosition(rect: bounds)
+                .opacity(selector.locked ? 0.5 : 1)
+                .allowsHitTesting(!selector.locked)
         }
     }
 

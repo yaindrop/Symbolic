@@ -106,15 +106,7 @@ extension FocusedPathView {
 
 private extension FocusedPathView.Stroke {
     @ViewBuilder var content: some View {
-//            outline
         touchable
-    }
-
-    @ViewBuilder var outline: some View {
-        SUPath { p in selector.path?.append(to: &p) }
-            .stroke(Color(UIColor.label), style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-            .transformEffect(transformToView)
-            .allowsHitTesting(false)
     }
 
     @ViewBuilder var touchable: some View {

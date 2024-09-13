@@ -68,6 +68,7 @@ extension PinchInfo: CustomStringConvertible {
 
 class MultipleTouchModel: ObservableObject {
     struct Configs {
+        var enableTouchDebugView = false
         var inGlobalCoordinate = false
     }
 
@@ -165,6 +166,7 @@ class MultipleTouchView: TouchDebugView {
         self.model = model
         super.init(frame: frame)
         isMultipleTouchEnabled = true
+        enableTouchDebugView = model.configs.enableTouchDebugView
     }
 
     convenience init(model: MultipleTouchModel) {

@@ -6,17 +6,12 @@ private let subtracer = tracer.tagged("viewport")
 
 class ViewportUpdateStore: Store {
     @Trackable var updating: Bool = false
-    @Trackable var blocked: Bool = false
     @Trackable var referenceInfo: ViewportInfo = .init()
 }
 
 private extension ViewportUpdateStore {
     func update(updating: Bool) {
         update { $0(\._updating, updating) }
-    }
-
-    func update(blocked: Bool) {
-        update { $0(\._blocked, blocked) }
     }
 
     func update(referenceInfo: ViewportInfo) {
@@ -29,8 +24,11 @@ private extension ViewportUpdateStore {
 struct ViewportUpdater {
     let store: ViewportUpdateStore
     let viewport: ViewportService
+    let document: DocumentService
     let activeSymbol: ActiveSymbolService
     let panel: PanelStore
+    let draggingSelect: DraggingSelectService
+    let draggingCreate: DraggingCreateService
 }
 
 // MARK: selectors
@@ -38,20 +36,16 @@ struct ViewportUpdater {
 extension ViewportUpdater {
     var updating: Bool { store.updating }
 
-    var blocked: Bool { store.blocked }
-
     var referenceInfo: ViewportInfo { store.referenceInfo }
 
     var referenceSizedInfo: SizedViewportInfo { .init(size: viewport.viewSize, info: referenceInfo) }
+
+    var blocked: Bool { document.pendingEvent != nil || draggingSelect.active || draggingCreate.active }
 }
 
 // MARK: actions
 
 extension ViewportUpdater {
-    func setBlocked(_ blocked: Bool) {
-        store.update(blocked: blocked)
-    }
-
     func onPan(_ info: PanInfo) {
         let _r = subtracer.range(type: .intent, "pan \(info)"); defer { _r() }
         let referenceInfo = store.referenceInfo,

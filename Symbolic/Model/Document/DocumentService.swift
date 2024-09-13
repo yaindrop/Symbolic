@@ -30,6 +30,8 @@ struct DocumentService {
 extension DocumentService {
     var activeDocument: Document { store.activeDocument }
 
+    var pendingEvent: DocumentEvent? { store.pendingEvent }
+
     var undoable: Bool {
         guard let last = store.activeDocument.events.last else { return false }
         return last.action != nil

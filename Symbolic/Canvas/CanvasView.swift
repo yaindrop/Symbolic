@@ -14,6 +14,7 @@ private extension GlobalStores {
 
     var canvasGesture: MultipleTouchGesture {
         .init(
+            configs: .init(enableTouchDebugView: true),
             onPress: { _ in
                 switch toolbar.mode {
                 case .select: canvasAction.start(triggering: .select)
@@ -24,7 +25,6 @@ private extension GlobalStores {
                 canvasAction.end(triggering: .select)
                 canvasAction.end(triggering: .addPath)
                 if cancelled {
-                    viewportUpdater.setBlocked(false)
                     canvasAction.end(continuous: .draggingSelect)
                     canvasAction.end(continuous: .draggingCreate)
 
@@ -71,7 +71,6 @@ private extension GlobalStores {
                 let worldPosition = info.current.applying(viewport.viewToWorld)
                 let _r = tracer.range(type: .intent, "On long press \(worldPosition)"); defer { _r() }
 
-                viewportUpdater.setBlocked(true)
                 canvasAction.end(continuous: .panViewport)
 
                 canvasAction.end(triggering: .select)
@@ -92,7 +91,6 @@ private extension GlobalStores {
             },
             onLongPressEnd: { _ in
                 let _r = tracer.range(type: .intent, "On long press end"); defer { _r() }
-                viewportUpdater.setBlocked(false)
 
                 draggingSelect.onEnd()
                 canvasAction.end(continuous: .draggingSelect)

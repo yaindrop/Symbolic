@@ -12,6 +12,7 @@ struct TapInfo {
 
 struct MultipleTouchGesture {
     struct Configs {
+        var enableTouchDebugView = false
         var distanceThreshold: Scalar = 10 // tap or long press when smaller, drag when greater
         var durationThreshold: TimeInterval = 0.5 // tap when smaller, long press when greater
         var repeatedTapIntervalThreshold: TimeInterval = 0.5 // repeated tap when smaller, separated tap when greater
@@ -278,8 +279,14 @@ struct MultipleTouchGestureModifier: ViewModifier {
             }
     }
 
-    @StateObject private var multipleTouch = MultipleTouchModel(configs: .init(inGlobalCoordinate: true))
-    @State private var multipleTouchPress = MultipleTouchPressModel(configs: .init(durationThreshold: 0.2))
+    init(gesture: MultipleTouchGesture) {
+        self.gesture = gesture
+        _multipleTouch = .init(wrappedValue: .init(configs: .init(enableTouchDebugView: gesture.configs.enableTouchDebugView, inGlobalCoordinate: true)))
+        multipleTouchPress = .init(configs: .init(durationThreshold: 0.2))
+    }
+
+    @StateObject private var multipleTouch: MultipleTouchModel
+    @State private var multipleTouchPress: MultipleTouchPressModel
 
     private var pressDetector: MultipleTouchPressDetector { .init(multipleTouch: multipleTouch, model: multipleTouchPress) }
 }

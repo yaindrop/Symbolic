@@ -3,8 +3,11 @@ import UIKit
 // MARK: - TouchDebugView
 
 class TouchDebugView: UIView {
+    var enableTouchDebugView = false
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
+        guard enableTouchDebugView else { return }
         for touch in touches {
             createTouchSpotView(for: touch)
         }
@@ -12,6 +15,7 @@ class TouchDebugView: UIView {
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
+        guard enableTouchDebugView else { return }
         for touch in touches {
             removeTouchSpotView(for: touch)
         }
@@ -19,6 +23,7 @@ class TouchDebugView: UIView {
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesCancelled(touches, with: event)
+        guard enableTouchDebugView else { return }
         for touch in touches {
             removeTouchSpotView(for: touch)
         }
@@ -26,6 +31,7 @@ class TouchDebugView: UIView {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesMoved(touches, with: event)
+        guard enableTouchDebugView else { return }
         for touch in touches {
             updateTouchSpotView(for: touch)
         }

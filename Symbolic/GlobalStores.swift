@@ -26,11 +26,11 @@ struct GlobalStores {
     private let focusedPathStore = FocusedPathStore()
 
     private let viewportStore = ViewportStore()
-    private let viewportUpdateStore = ViewportUpdateStore()
 
     private let draggingSelectStore = DraggingSelectStore()
-
     private let draggingCreateStore = DraggingCreateStore()
+
+    private let viewportUpdateStore = ViewportUpdateStore()
 
     let panel = PanelStore()
 
@@ -62,11 +62,11 @@ extension GlobalStores {
     var activeItem: ActiveItemService { .init(store: activeItemStore, toolbar: toolbar, path: path, item: item) }
 
     var viewport: ViewportService { .init(store: viewportStore) }
-    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, activeSymbol: activeSymbol, panel: panel) }
 
     var draggingSelect: DraggingSelectService { .init(store: draggingSelectStore, path: path, symbol: symbol, item: item, viewport: viewport, activeSymbol: activeSymbol) }
-
     var draggingCreate: DraggingCreateService { .init(store: draggingCreateStore, viewport: viewport, activeSymbol: activeSymbol) }
+
+    var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, document: document, activeSymbol: activeSymbol, panel: panel, draggingSelect: draggingSelect, draggingCreate: draggingCreate) }
 }
 
 let global = GlobalStores()

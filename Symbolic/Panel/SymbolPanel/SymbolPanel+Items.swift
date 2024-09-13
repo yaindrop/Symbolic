@@ -135,7 +135,7 @@ private struct DraggingItemDropDelegate: DropDelegate {
 
 // MARK: - Items
 
-extension ItemPanel {
+extension SymbolPanel {
     struct Items: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
             @Selected({ global.path.pathMap }) var pathMap
@@ -161,13 +161,13 @@ extension ItemPanel {
 
 // MARK: private
 
-private extension ItemPanel.Items {
+private extension SymbolPanel.Items {
     var content: some View {
         PanelSection(name: "Items") {
             let rootIds = selector.rootIds
             ForEach(Array(zip(rootIds.indices, rootIds)), id: \.1) { index, itemId in
                 VStack(spacing: 0) {
-                    ItemPanel.ItemRow(context: context, itemId: itemId)
+                    SymbolPanel.ItemRow(context: context, itemId: itemId)
                     if itemId != rootIds.last {
                         ContextualDivider()
                     }
@@ -191,7 +191,7 @@ private extension ItemPanel.Items {
 
 // MARK: - ItemRow
 
-private extension ItemPanel {
+private extension SymbolPanel {
     struct ItemRow: View, TracedView {
         let context: Context, itemId: UUID
 
@@ -204,7 +204,7 @@ private extension ItemPanel {
 
 // MARK: private
 
-extension ItemPanel.ItemRow {
+extension SymbolPanel.ItemRow {
     @ViewBuilder private var content: some View {
         if let pathId = item?.path?.id {
             PathRow(context: context, pathId: pathId)
@@ -305,7 +305,7 @@ private extension GroupRow {
             let members = group.members
             ForEach(Array(zip(members.indices, members)), id: \.1) { index, itemId in
                 VStack(spacing: 0) {
-                    ItemPanel.ItemRow(context: context, itemId: itemId)
+                    SymbolPanel.ItemRow(context: context, itemId: itemId)
                     if itemId != members.last {
                         ContextualDivider()
                     }

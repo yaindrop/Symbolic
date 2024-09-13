@@ -43,7 +43,7 @@ private extension GlobalStores {
 
     func gesture(group: Item.Group) -> MultipleTouchGesture {
         .init(
-            onPress: {
+            onPress: { _ in
                 canvasAction.start(continuous: .moveSelection)
             },
             onPressEnd: { cancelled in

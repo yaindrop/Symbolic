@@ -14,7 +14,7 @@ private extension GlobalStores {
 
     var canvasGesture: MultipleTouchGesture {
         .init(
-            onPress: {
+            onPress: { _ in
                 switch toolbar.mode {
                 case .select: canvasAction.start(triggering: .select)
                 case .addPath: canvasAction.start(triggering: .addPath)
@@ -195,7 +195,7 @@ struct CanvasView: View, TracedView, SelectorHolder {
                     global.panel.clear()
                     global.panel.register(name: "Path", align: .bottomTrailing) { PathPanel() }
                     global.panel.register(name: "History", align: .bottomLeading) { HistoryPanel() }
-                    global.panel.register(name: "Items", align: .bottomLeading) { ItemPanel() }
+                    global.panel.register(name: "Symbol", align: .bottomLeading) { SymbolPanel() }
                     global.panel.register(name: "Debug", align: .bottomTrailing) { DebugPanel() }
                     global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
                 }

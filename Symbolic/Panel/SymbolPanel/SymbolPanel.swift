@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - ItemPanel
+// MARK: - SymbolPanel
 
-struct ItemPanel: View, TracedView, SelectorHolder {
+struct SymbolPanel: View, TracedView, SelectorHolder {
     class Selector: SelectorBase {
         @Selected({ global.activeSymbol.focusedSymbolId }) var focusedSymbolId
     }
@@ -18,9 +18,10 @@ struct ItemPanel: View, TracedView, SelectorHolder {
 
 // MARK: private
 
-extension ItemPanel {
+extension SymbolPanel {
     @ViewBuilder private var content: some View {
         if selector.focusedSymbolId != nil {
+            Properties()
             Selection()
             Items()
         } else {

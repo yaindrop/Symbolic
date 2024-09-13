@@ -21,7 +21,8 @@ struct MultipleTouchGesture {
 
     var configs: Configs = .init()
 
-    var onPress: (() -> Void)?
+    var pressed: Binding<CGPoint?>?
+    var onPress: ((CGPoint) -> Void)?
     var onPressEnd: ((_ cancelled: Bool) -> Void)?
 
     var onTap: ((TapInfo) -> Void)?
@@ -39,55 +40,25 @@ struct MultipleTouchGesture {
 // MARK: - MultipleTouchPressModel
 
 class MultipleTouchPressModel: CancellablesHolder {
+    @Passthrough<Point2> var press
+    @Passthrough<Bool> var pressEnd
+
+    @Passthrough<TapInfo> var tap
+    @Passthrough<PanInfo> var longPress
+    @Passthrough<PanInfo> var longPressEnd
+
+    @Passthrough<PanInfo> var drag
+    @Passthrough<PanInfo> var dragEnd
+
     var cancellables = Set<AnyCancellable>()
-
-    func onPress(_ callback: @escaping () -> Void) {
-        $press
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
-
-    func onPressEnd(_ callback: @escaping (_ cancelled: Bool) -> Void) {
-        $pressEnd
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
-
-    func onTap(_ callback: @escaping (TapInfo) -> Void) {
-        $tap
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
-
-    func onLongPress(_ callback: @escaping (PanInfo) -> Void) {
-        $longPress
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
-
-    func onLongPressEnd(_ callback: @escaping (PanInfo) -> Void) {
-        $longPress
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
-
-    func onDrag(_ callback: @escaping (PanInfo) -> Void) {
-        $drag
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
-
-    func onDragEnd(_ callback: @escaping (PanInfo) -> Void) {
-        $dragEnd
-            .sink(receiveValue: callback)
-            .store(in: self)
-    }
 
     init(configs: MultipleTouchGesture.Configs) {
         self.configs = configs
     }
 
     // MARK: fileprivate
+
+    fileprivate let configs: MultipleTouchGesture.Configs
 
     fileprivate struct Context {
         private(set) var lastValue: PanInfo?
@@ -102,19 +73,7 @@ class MultipleTouchPressModel: CancellablesHolder {
         }
     }
 
-    fileprivate let configs: MultipleTouchGesture.Configs
-
     fileprivate var context: Context?
-
-    @Passthrough<Void> fileprivate var press
-    @Passthrough<Bool> fileprivate var pressEnd
-
-    @Passthrough<TapInfo> fileprivate var tap
-    @Passthrough<PanInfo> fileprivate var longPress
-    @Passthrough<PanInfo> fileprivate var longPressEnd
-
-    @Passthrough<PanInfo> fileprivate var drag
-    @Passthrough<PanInfo> fileprivate var dragEnd
 
     fileprivate struct RepeatedTapInfo {
         let count: Int
@@ -135,10 +94,10 @@ struct MultipleTouchPressDetector {
 
     func subscribe() {
         model.holdCancellables {
-            multipleTouch.$startTime
-                .sink { time in
-                    guard time != nil else { return }
-                    self.onPressStart()
+            multipleTouch.$started
+                .sink { started in
+                    guard let started else { return }
+                    self.onPressStart(started)
                     self.onPressChange()
                 }
             multipleTouch.$panInfo
@@ -185,11 +144,11 @@ struct MultipleTouchPressDetector {
 
     // MARK: stages
 
-    private func onPressStart() {
+    private func onPressStart(_ v: MultipleTouchModel.StartedTouch) {
         let _r = subtracer.range(type: .intent, "press start"); defer { _r() }
         context = .init()
         setupLongPress()
-        model.press.send()
+        model.press.send(v.position)
     }
 
     private func onPressChange() {
@@ -289,10 +248,12 @@ struct MultipleTouchGestureModifier: ViewModifier {
                 }
             }
             .onReceive(multipleTouchPress.$press) {
-                gesture.onPress?()
+                gesture.pressed?.wrappedValue = $0
+                gesture.onPress?($0)
             }
             .onReceive(multipleTouchPress.$pressEnd) {
                 gesture.onPressEnd?($0)
+                gesture.pressed?.wrappedValue = nil
             }
             .onReceive(multipleTouchPress.$tap) {
                 gesture.onTap?($0)

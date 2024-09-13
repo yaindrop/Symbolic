@@ -1,6 +1,6 @@
 import SwiftUI
 
-let debugFocusedPath: Bool = true
+let debugFocusedPath: Bool = false
 
 // MARK: - FocusedPathView
 

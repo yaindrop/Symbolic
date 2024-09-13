@@ -46,6 +46,7 @@
 		572487902BDF8DE20096DDE4 /* HistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */; };
 		572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487912BDFA7B80096DDE4 /* DocumentAction.swift */; };
 		572506AD2C90967900857FF4 /* WorldGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506AC2C90967900857FF4 /* WorldGrid.swift */; };
+		572506AF2C93DC3C00857FF4 /* SymbolPanel+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506AE2C93DC3C00857FF4 /* SymbolPanel+Properties.swift */; };
 		572552832BF0572D002147AE /* OrderedMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552822BF0572D002147AE /* OrderedMap.swift */; };
 		572552852BF0F2F8002147AE /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552842BF0F2F8002147AE /* Logging.swift */; };
 		572552872BF0F563002147AE /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552862BF0F563002147AE /* Tracer.swift */; };
@@ -57,7 +58,7 @@
 		572CA9E02C31A0CA003760B7 /* RootStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572CA9DF2C31A0CA003760B7 /* RootStore.swift */; };
 		573204D62C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D52C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift */; };
 		573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */; };
-		573204DC2C15DDA2008E0DED /* ItemPanel+Items.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */; };
+		573204DC2C15DDA2008E0DED /* SymbolPanel+Items.swift in Sources */ = {isa = PBXBuildFile; fileRef = 573204DB2C15DDA2008E0DED /* SymbolPanel+Items.swift */; };
 		57416E3A2BE0BAB600C73434 /* Line.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E392BE0BAB600C73434 /* Line.swift */; };
 		57416E3F2BE12A9500C73434 /* PathNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E3E2BE12A9500C73434 /* PathNode.swift */; };
 		57416E432BE12D7100C73434 /* LineSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57416E422BE12D7100C73434 /* LineSegment.swift */; };
@@ -109,7 +110,7 @@
 		578A720F2C80D56D0026337D /* document_action.pb+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A720E2C80D56D0026337D /* document_action.pb+Extension.swift */; };
 		578A820C2C57AE4B00CDD11C /* CasePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820B2C57AE4A00CDD11C /* CasePicker.swift */; };
 		578A820E2C57B9AE00CDD11C /* PopoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578A820D2C57B9AE00CDD11C /* PopoverViews.swift */; };
-		5790F99C2C783FEA009E3606 /* ItemPanel+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */; };
+		5790F99C2C783FEA009E3606 /* SymbolPanel+Selection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F99B2C783FEA009E3606 /* SymbolPanel+Selection.swift */; };
 		5790F9A62C7A224F009E3606 /* ActiveSymbolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */; };
 		5790F9A82C7A25AF009E3606 /* SymbolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5790F9A72C7A25AF009E3606 /* SymbolsView.swift */; };
 		579B29BE2C6B4F07004E7DC8 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 579B29BD2C6B4F07004E7DC8 /* SwiftProtobuf */; };
@@ -145,7 +146,7 @@
 		57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */; };
 		57DD2A1D2C02DB5A0046931C /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A1C2C02DB5A0046931C /* Grid.swift */; };
 		57DD2A212C02DB850046931C /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A202C02DB850046931C /* Item.swift */; };
-		57DD2A282C0321110046931C /* ItemPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* ItemPanel.swift */; };
+		57DD2A282C0321110046931C /* SymbolPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DD2A272C0321110046931C /* SymbolPanel.swift */; };
 		57E082062C230526008CC67B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082052C230526008CC67B /* RootView.swift */; };
 		57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E0820D2C27A7F9008CC67B /* FileDirectoryView.swift */; };
 		57E082132C27A8EC008CC67B /* FileTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57E082122C27A8EC008CC67B /* FileTree.swift */; };
@@ -219,6 +220,7 @@
 		5724878F2BDF8DE20096DDE4 /* HistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPanel.swift; sourceTree = "<group>"; };
 		572487912BDFA7B80096DDE4 /* DocumentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAction.swift; sourceTree = "<group>"; };
 		572506AC2C90967900857FF4 /* WorldGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldGrid.swift; sourceTree = "<group>"; };
+		572506AE2C93DC3C00857FF4 /* SymbolPanel+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SymbolPanel+Properties.swift"; sourceTree = "<group>"; };
 		572552822BF0572D002147AE /* OrderedMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedMap.swift; sourceTree = "<group>"; };
 		572552842BF0F2F8002147AE /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		572552862BF0F563002147AE /* Tracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracer.swift; sourceTree = "<group>"; };
@@ -230,7 +232,7 @@
 		572CA9DF2C31A0CA003760B7 /* RootStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootStore.swift; sourceTree = "<group>"; };
 		573204D52C15381C008E0DED /* ContextMenuView+FocusedPathSelectionMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+FocusedPathSelectionMenu.swift"; sourceTree = "<group>"; };
 		573204D72C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+SelectionBounds.swift"; sourceTree = "<group>"; };
-		573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+Items.swift"; sourceTree = "<group>"; };
+		573204DB2C15DDA2008E0DED /* SymbolPanel+Items.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SymbolPanel+Items.swift"; sourceTree = "<group>"; };
 		57416E392BE0BAB600C73434 /* Line.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Line.swift; sourceTree = "<group>"; };
 		57416E3E2BE12A9500C73434 /* PathNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNode.swift; sourceTree = "<group>"; };
 		57416E422BE12D7100C73434 /* LineSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSegment.swift; sourceTree = "<group>"; };
@@ -282,7 +284,7 @@
 		578A720E2C80D56D0026337D /* document_action.pb+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "document_action.pb+Extension.swift"; sourceTree = "<group>"; };
 		578A820B2C57AE4A00CDD11C /* CasePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CasePicker.swift; sourceTree = "<group>"; };
 		578A820D2C57B9AE00CDD11C /* PopoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverViews.swift; sourceTree = "<group>"; };
-		5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ItemPanel+Selection.swift"; sourceTree = "<group>"; };
+		5790F99B2C783FEA009E3606 /* SymbolPanel+Selection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SymbolPanel+Selection.swift"; sourceTree = "<group>"; };
 		5790F9A52C7A224F009E3606 /* ActiveSymbolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveSymbolService.swift; sourceTree = "<group>"; };
 		5790F9A72C7A25AF009E3606 /* SymbolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolsView.swift; sourceTree = "<group>"; };
 		57B5F1132BC62CFB001E1B2E /* LinearAlgebra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearAlgebra.swift; sourceTree = "<group>"; };
@@ -317,7 +319,7 @@
 		57DD2A1A2C02DB250046931C /* CanvasActionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasActionStore.swift; sourceTree = "<group>"; };
 		57DD2A1C2C02DB5A0046931C /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
 		57DD2A202C02DB850046931C /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
-		57DD2A272C0321110046931C /* ItemPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPanel.swift; sourceTree = "<group>"; };
+		57DD2A272C0321110046931C /* SymbolPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolPanel.swift; sourceTree = "<group>"; };
 		57E082052C230526008CC67B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		57E082092C26C75A008CC67B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		57E0820D2C27A7F9008CC67B /* FileDirectoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDirectoryView.swift; sourceTree = "<group>"; };
@@ -365,7 +367,7 @@
 				57DD2A2D2C0435190046931C /* DebugPanel */,
 				57B703F52C37767900B60F36 /* GridPanel */,
 				57DD2A242C02DC320046931C /* HistoryPanel */,
-				57DD2A2C2C0434AA0046931C /* ItemPanel */,
+				57DD2A2C2C0434AA0046931C /* SymbolPanel */,
 				5700C2CC2BED169D00481FA7 /* PanelData.swift */,
 				5700C2C92BED162000481FA7 /* PanelStore.swift */,
 				5724877A2BDF7F5F0096DDE4 /* PathPanel */,
@@ -816,14 +818,15 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
-		57DD2A2C2C0434AA0046931C /* ItemPanel */ = {
+		57DD2A2C2C0434AA0046931C /* SymbolPanel */ = {
 			isa = PBXGroup;
 			children = (
-				57DD2A272C0321110046931C /* ItemPanel.swift */,
-				573204DB2C15DDA2008E0DED /* ItemPanel+Items.swift */,
-				5790F99B2C783FEA009E3606 /* ItemPanel+Selection.swift */,
+				57DD2A272C0321110046931C /* SymbolPanel.swift */,
+				573204DB2C15DDA2008E0DED /* SymbolPanel+Items.swift */,
+				5790F99B2C783FEA009E3606 /* SymbolPanel+Selection.swift */,
+				572506AE2C93DC3C00857FF4 /* SymbolPanel+Properties.swift */,
 			);
-			path = ItemPanel;
+			path = SymbolPanel;
 			sourceTree = "<group>";
 		};
 		57DD2A2D2C0435190046931C /* DebugPanel */ = {
@@ -1014,12 +1017,13 @@
 				571B9B322C14A71600AAD516 /* ContextMenuStore.swift in Sources */,
 				573204D82C159DDC008E0DED /* FocusedPathView+SelectionBounds.swift in Sources */,
 				571B9B452C14AA4500AAD516 /* String+Extension.swift in Sources */,
-				573204DC2C15DDA2008E0DED /* ItemPanel+Items.swift in Sources */,
+				573204DC2C15DDA2008E0DED /* SymbolPanel+Items.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
-				57DD2A282C0321110046931C /* ItemPanel.swift in Sources */,
+				57DD2A282C0321110046931C /* SymbolPanel.swift in Sources */,
 				572552872BF0F563002147AE /* Tracer.swift in Sources */,
 				5781504F2C5BC2BC0057D798 /* ContextualViews.swift in Sources */,
 				575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */,
+				572506AF2C93DC3C00857FF4 /* SymbolPanel+Properties.swift in Sources */,
 				57B5F1182BC62F65001E1B2E /* TouchDebugView.swift in Sources */,
 				571B9B382C14A79A00AAD516 /* ActiveItemView+SelectionBounds.swift in Sources */,
 				571B9B432C14AA1200AAD516 /* ClosedRange+Extension.swift in Sources */,
@@ -1111,7 +1115,7 @@
 				571B9B2A2C148B0800AAD516 /* FocusedPathService.swift in Sources */,
 				574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */,
 				57B703FB2C38418000B60F36 /* CustomState.swift in Sources */,
-				5790F99C2C783FEA009E3606 /* ItemPanel+Selection.swift in Sources */,
+				5790F99C2C783FEA009E3606 /* SymbolPanel+Selection.swift in Sources */,
 				574CC7DD2BF9A6710042FEE3 /* Toolbar.swift in Sources */,
 				578150552C625B6C0057D798 /* PathPanel+Selection.swift in Sources */,
 				571B9B3B2C14A93F00AAD516 /* Optional+Extension.swift in Sources */,

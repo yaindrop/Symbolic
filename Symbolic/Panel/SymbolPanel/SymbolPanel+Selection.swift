@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Selection
 
-extension ItemPanel {
+extension SymbolPanel {
     struct Selection: View, SelectorHolder {
         class Selector: SelectorBase {
             @Selected({ global.activeItem.selectedItemIds }, .animation(.fast)) var selectedItemIds
@@ -22,7 +22,7 @@ extension ItemPanel {
 
 // MARK: private
 
-private extension ItemPanel.Selection {
+private extension SymbolPanel.Selection {
     @ViewBuilder var content: some View {
         PanelSection(name: "Selection") {
             if !selector.selectedItemIds.isEmpty {

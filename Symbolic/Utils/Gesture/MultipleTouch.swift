@@ -71,32 +71,41 @@ class MultipleTouchModel: ObservableObject {
         var inGlobalCoordinate = false
     }
 
+    struct StartedTouch {
+        let time: Date
+        let position: Point2
+    }
+
     let configs: Configs
 
-    @Published private(set) var startTime: Date?
+    @Published private(set) var started: StartedTouch?
     @Published private(set) var touchesCount: Int = 0
 
     @Published fileprivate(set) var panInfo: PanInfo?
     @Published fileprivate(set) var pinchInfo: PinchInfo?
 
-    var active: Bool { startTime != nil }
+    var active: Bool { started != nil }
 
     init(configs: Configs = .init()) {
         self.configs = configs
     }
+}
 
-    fileprivate func onFirstTouchBegan() {
+// MARK: private
+
+private extension MultipleTouchModel {
+    func onFirstTouchBegan(position: Point2) {
         let _r = subtracer.range("onFirstTouchBegan"); defer { _r() }
-        startTime = .now
+        started = .init(time: .now, position: position)
     }
 
-    fileprivate func onAllTouchesEnded() {
+    func onAllTouchesEnded() {
         let _r = subtracer.range("onAllTouchesEnded"); defer { _r() }
         onTouchesChanged(count: 0)
-        startTime = nil
+        started = nil
     }
 
-    fileprivate func onTouchesChanged(count: Int) {
+    func onTouchesChanged(count: Int) {
         let _r = subtracer.range("onTouchesChanged count=\(count)"); defer { _r() }
         touchesCount = count
         if panInfo != nil {
@@ -113,8 +122,9 @@ class MultipleTouchModel: ObservableObject {
 class MultipleTouchView: TouchDebugView {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
+        guard let first = touches.first else { return }
         if activeTouches.isEmpty {
-            model.onFirstTouchBegan()
+            model.onFirstTouchBegan(position: location(of: first))
         }
         for touch in touches {
             // only allow 2 touches at most for now
@@ -166,13 +176,15 @@ class MultipleTouchView: TouchDebugView {
         fatalError("This class does not support NSCoding")
     }
 
-    // MARK: private
+    fileprivate var model: MultipleTouchModel
+    fileprivate var activeTouches = Set<UITouch>()
+}
 
-    private var model: MultipleTouchModel
+// MARK: private
 
-    private var activeTouches = Set<UITouch>()
-    private var panTouch: UITouch? { activeTouches.count == 1 ? activeTouches.first : nil }
-    private var pinchTouches: (UITouch, UITouch)? {
+private extension MultipleTouchView {
+    var panTouch: UITouch? { activeTouches.count == 1 ? activeTouches.first : nil }
+    var pinchTouches: (UITouch, UITouch)? {
         if activeTouches.count != 2 {
             return nil
         }
@@ -180,9 +192,9 @@ class MultipleTouchView: TouchDebugView {
         return (touches[0], touches[1])
     }
 
-    private func location(of touch: UITouch) -> Point2 { touch.location(in: model.configs.inGlobalCoordinate ? nil : self) }
+    func location(of touch: UITouch) -> Point2 { touch.location(in: model.configs.inGlobalCoordinate ? nil : self) }
 
-    private func onActiveTouchesChanged() {
+    func onActiveTouchesChanged() {
         model.onTouchesChanged(count: activeTouches.count)
         if let panTouch {
             model.panInfo = .init(origin: location(of: panTouch))
@@ -191,7 +203,7 @@ class MultipleTouchView: TouchDebugView {
         }
     }
 
-    private func onActiveTouchesMoved() {
+    func onActiveTouchesMoved() {
         if let info = model.panInfo, let panTouch {
             model.panInfo = .init(origin: info.origin, offset: Vector2(location(of: panTouch)) - Vector2(info.origin))
         } else if let info = model.pinchInfo, let pinchTouches {
@@ -215,14 +227,14 @@ struct MultipleTouchModifier: ViewModifier {
                 model.onAllTouchesEnded()
             }
     }
+}
 
-    // MARK: private
+// MARK: private
 
-    private struct Representable: UIViewRepresentable {
-        let model: MultipleTouchModel
+private struct Representable: UIViewRepresentable {
+    let model: MultipleTouchModel
 
-        func makeUIView(context _: Context) -> UIView { MultipleTouchView(model: model) }
+    func makeUIView(context _: Context) -> UIView { MultipleTouchView(model: model) }
 
-        func updateUIView(_: UIView, context _: Context) {}
-    }
+    func updateUIView(_: UIView, context _: Context) {}
 }

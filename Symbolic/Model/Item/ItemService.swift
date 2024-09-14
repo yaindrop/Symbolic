@@ -380,6 +380,7 @@ private extension ItemService {
         case let .path(event): load(event: event)
         case let .symbol(event): load(event: event)
         case let .item(event): load(event: event)
+        case .world: break
         }
     }
 

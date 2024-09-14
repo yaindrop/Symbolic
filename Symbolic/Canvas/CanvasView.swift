@@ -196,6 +196,7 @@ struct CanvasView: View, TracedView, SelectorHolder {
                     global.panel.register(name: "Symbol", align: .bottomLeading) { SymbolPanel() }
                     global.panel.register(name: "Debug", align: .bottomTrailing) { DebugPanel() }
                     global.panel.register(name: "Grid", align: .bottomTrailing) { GridPanel() }
+                    global.panel.register(name: "Document", align: .bottomTrailing) { DocumentPanel() }
                 }
                 .persistentSystemOverlays(.hidden)
         }
@@ -219,7 +220,7 @@ private extension CanvasView {
 
     @ViewBuilder var staticObjects: some View { trace("staticObjects") {
         ZStack {
-            Background()
+            GridRoot()
             SymbolsView()
         }
         .multipleTouchGesture(global.canvasGesture)

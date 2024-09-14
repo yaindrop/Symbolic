@@ -9,12 +9,6 @@ private struct Context {
     var selectedItemIds: Set<UUID>
 }
 
-// MARK: - Model
-
-private class Model: ObservableObject {
-    @Published var draggingItemHovering: DraggingItemHovering?
-}
-
 private struct SelectedIndicator: View {
     var body: some View {
         content
@@ -35,104 +29,6 @@ private struct SelectedIndicator: View {
     }
 }
 
-// MARK: - DraggingItem
-
-private struct DraggingItemHovering: Equatable, Hashable {
-    var itemId: UUID
-    var isAfter: Bool
-}
-
-private struct DraggingItemHoveringIndicator: View {
-    @EnvironmentObject var model: Model
-    var members: [UUID]
-    var index: Int
-
-    var body: some View {
-        content
-    }
-
-    @ViewBuilder var content: some View {
-        let showBeforeIndicator = showBeforeIndicator,
-            showAfterIndicator = showAfterIndicator
-        if showBeforeIndicator || showAfterIndicator {
-            VStack(spacing: 0) {
-                rect.opacity(showBeforeIndicator ? 1 : 0)
-                Spacer()
-                rect.opacity(showAfterIndicator ? 1 : 0)
-            }
-        }
-    }
-
-    var showBeforeIndicator: Bool {
-        guard index == 0 else { return false }
-        let itemId = members[index]
-        return model.draggingItemHovering == .init(itemId: itemId, isAfter: false)
-    }
-
-    var showAfterIndicator: Bool {
-        guard let hovering = model.draggingItemHovering else { return false }
-        let itemId = members[index]
-        return hovering == .init(itemId: itemId, isAfter: true) || members.indices.contains(index + 1) && hovering == .init(itemId: members[index + 1], isAfter: false)
-    }
-
-    @ViewBuilder var rect: some View {
-        Rectangle()
-            .fill(.blue)
-            .frame(maxWidth: .infinity, maxHeight: 2)
-            .padding(.leading, 12)
-            .allowsHitTesting(false)
-    }
-}
-
-private struct DraggingItemTransferable: Codable, Transferable {
-    let itemId: UUID
-
-    static var transferRepresentation: some TransferRepresentation {
-        CodableRepresentation(for: DraggingItemTransferable.self, contentType: .item)
-    }
-}
-
-private struct DraggingItemDropDelegate: DropDelegate {
-    @ObservedObject var model: Model
-    var itemId: UUID
-    var size: CGSize = .zero
-
-    func dropEntered(info: DropInfo) {
-        model.draggingItemHovering = .init(itemId: itemId, isAfter: isAfter(info: info))
-    }
-
-    func dropExited(info _: DropInfo) {
-        model.draggingItemHovering = nil
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        model.draggingItemHovering = .init(itemId: itemId, isAfter: isAfter(info: info))
-        return DropProposal(operation: .move)
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        model.draggingItemHovering = nil
-        let isAfter = isAfter(info: info)
-        loadTransferable(info: info) {
-            global.documentUpdater.update(item: .reorder(.init(itemId: $0.itemId, toItemId: itemId, isAfter: isAfter)))
-        }
-        return true
-    }
-
-    private func isAfter(info: DropInfo) -> Bool {
-        info.location.y > size.height / 2
-    }
-
-    private func loadTransferable(info: DropInfo, _ callback: @escaping (DraggingItemTransferable) -> Void) {
-        let providers = info.itemProviders(for: [.item])
-        guard let provider = providers.first else { return }
-        _ = provider.loadTransferable(type: DraggingItemTransferable.self) { result in
-            guard let transferable = try? result.get() else { return }
-            Task { @MainActor in callback(transferable) }
-        }
-    }
-}
-
 // MARK: - Items
 
 extension SymbolPanel {
@@ -148,12 +44,12 @@ extension SymbolPanel {
 
         @SelectorWrapper var selector
 
-        @StateObject fileprivate var model = Model()
+        @StateObject fileprivate var dndListModel = DndListModel()
 
         var body: some View { trace {
             setupSelector {
                 content
-                    .environmentObject(model)
+                    .environmentObject(dndListModel)
             }
         } }
     }
@@ -178,7 +74,7 @@ private extension SymbolPanel.Items {
                     }
                 }
                 .overlay {
-                    DraggingItemHoveringIndicator(members: rootIds, index: index)
+                    DndListHoveringIndicator(members: rootIds, index: index)
                 }
             }
         }
@@ -220,7 +116,7 @@ extension SymbolPanel.ItemRow {
 
 private struct GroupRow: View, TracedView {
     @Environment(\.contextualViewData) var contextualViewData
-    @EnvironmentObject var model: Model
+    @EnvironmentObject var dndListModel: DndListModel
 
     let context: Context, group: Item.Group
 
@@ -252,8 +148,10 @@ private extension GroupRow {
         }
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
-        .draggable(DraggingItemTransferable(itemId: group.id))
-        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(model: model, itemId: group.id, size: size))
+        .draggable(DndListTransferable(id: group.id))
+        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: group.id, size: size) { itemId, isAfter in
+            global.documentUpdater.update(item: .reorder(.init(itemId: itemId, toItemId: group.id, isAfter: isAfter)))
+        })
     }
 
     var rowHeight: Scalar { contextualViewData.rowHeight }
@@ -316,7 +214,7 @@ private extension GroupRow {
                     }
                 }
                 .overlay {
-                    DraggingItemHoveringIndicator(members: members, index: index)
+                    DndListHoveringIndicator(members: members, index: index)
                 }
             }
         }
@@ -329,7 +227,7 @@ private extension GroupRow {
 // MARK: - PathRow
 
 private struct PathRow: View, TracedView {
-    @EnvironmentObject var model: Model
+    @EnvironmentObject var dndListModel: DndListModel
     let context: Context, pathId: UUID
 
     @State private var size: CGSize = .zero
@@ -368,8 +266,10 @@ private extension PathRow {
         }
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
-        .draggable(DraggingItemTransferable(itemId: pathId))
-        .onDrop(of: [.item], delegate: DraggingItemDropDelegate(model: model, itemId: pathId, size: size))
+        .draggable(DndListTransferable(id: pathId))
+        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: pathId, size: size) { itemId, isAfter in
+            global.documentUpdater.update(item: .reorder(.init(itemId: itemId, toItemId: pathId, isAfter: isAfter)))
+        })
     }
 
     var path: Path? { context.pathMap[pathId] }

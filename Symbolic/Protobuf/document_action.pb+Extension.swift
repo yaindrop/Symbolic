@@ -207,7 +207,7 @@ extension Symbolic_Pb_PathAction.Update: ProtobufParsable {
             case let .split(kind): .split(kind.decoded())
             case let .setNodeType(kind): .setNodeType(kind.decoded())
             case let .setSegmentType(kind): .setSegmentType(kind.decoded())
-            default: throw ProtobufParseError.invalidEmptyOneOf
+            case .none: throw ProtobufParseError.invalidEmptyOneOf
             }
         }()
         return .init(pathId: pathID.decoded(), kind: kind)
@@ -259,7 +259,7 @@ extension Symbolic_Pb_PathAction: ProtobufParsable {
         case let .update(kind): try .update(kind.decoded())
         case let .delete(kind): .delete(kind.decoded())
         case let .move(kind): .move(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -355,7 +355,7 @@ extension Symbolic_Pb_SymbolAction: ProtobufParsable {
         case let .setGrid(kind): try .setGrid(kind.decoded())
         case let .delete(kind): .delete(kind.decoded())
         case let .move(kind): .move(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -453,7 +453,56 @@ extension Symbolic_Pb_ItemAction: ProtobufParsable {
         case let .group(kind): .group(kind.decoded())
         case let .ungroup(kind): .ungroup(kind.decoded())
         case let .reorder(kind): .reorder(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case let .setName(kind): .setName(kind.decoded())
+        case let .setLocked(kind): .setLocked(kind.decoded())
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
+        }
+    }
+}
+
+// MARK: - WorldAction
+
+extension WorldAction.SetGrid: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldAction.SetGrid) {
+        grid.map { pb.grid = $0.pb }
+    }
+}
+
+extension Symbolic_Pb_WorldAction.SetGrid: ProtobufParsable {
+    func decoded() throws -> WorldAction.SetGrid {
+        try .init(grid: grid.decoded())
+    }
+}
+
+extension WorldAction.SetSymbolIds: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldAction.SetSymbolIds) {
+        pb.symbolIds = symbolIds.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_WorldAction.SetSymbolIds: ProtobufParsable {
+    func decoded() -> WorldAction.SetSymbolIds {
+        .init(symbolIds: symbolIds.map { $0.decoded() })
+    }
+}
+
+extension WorldAction: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldAction) {
+        pb.kind = {
+            switch self {
+            case let .setGrid(kind): .setGrid(kind.pb)
+            case let .setSymbolIds(kind): .setSymbolIds(kind.pb)
+            }
+        }()
+    }
+}
+
+extension Symbolic_Pb_WorldAction: ProtobufParsable {
+    func decoded() throws -> WorldAction {
+        switch kind {
+        case let .setGrid(kind): try .setGrid(kind.decoded())
+        case let .setSymbolIds(kind): .setSymbolIds(kind.decoded())
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -467,6 +516,7 @@ extension DocumentAction: ProtobufSerializable {
             case let .path(kind): .pathAction(kind.pb)
             case let .symbol(kind): .symbolAction(kind.pb)
             case let .item(kind): .itemAction(kind.pb)
+            case let .world(kind): .worldAction(kind.pb)
             }
         }()
     }
@@ -478,7 +528,8 @@ extension Symbolic_Pb_DocumentAction: ProtobufParsable {
         case let .pathAction(kind): try .path(kind.decoded())
         case let .symbolAction(kind): try .symbol(kind.decoded())
         case let .itemAction(kind): try .item(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case let .worldAction(kind): try .world(kind.decoded())
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }

@@ -134,29 +134,29 @@ extension ActiveSymbolService {
             .map { $0.id }
             .first { pathHitTest(pathId: $0, worldPosition: worldPosition) }
     }
-
-    // MARK: grid
-
-    var grids: [Grid] { focusedSymbol?.grids ?? [] }
-
-    var grid: Grid? {
-        let grids = grids
-        guard grids.indices.contains(gridIndex) else { return nil }
-        return grids[gridIndex]
-    }
-
-    func snap(_ point: Point2) -> Point2 {
-        grid?.snap(point) ?? point
-    }
-
-    func snappedOffset(_ point: Point2, offset: Vector2) -> Vector2 {
-        grid?.snappedOffset(point, offset: offset) ?? offset
-    }
-
-    func snapped(_ point: Point2) -> Grid? {
-        guard let editingSymbol else { return nil }
-        return editingSymbol.grids.first { $0.snapped(point) }
-    }
+//
+//    // MARK: grid
+//
+//    var grids: [Grid] { focusedSymbol?.grids ?? [] }
+//
+//    var grid: Grid? {
+//        let grids = grids
+//        guard grids.indices.contains(gridIndex) else { return nil }
+//        return grids[gridIndex]
+//    }
+//
+//    func snap(_ point: Point2) -> Point2 {
+//        grid?.snap(point) ?? point
+//    }
+//
+//    func snappedOffset(_ point: Point2, offset: Vector2) -> Vector2 {
+//        grid?.snappedOffset(point, offset: offset) ?? offset
+//    }
+//
+//    func snapped(_ point: Point2) -> Grid? {
+//        guard let editingSymbol else { return nil }
+//        return editingSymbol.grids.first { $0.snapped(point) }
+//    }
 }
 
 // MARK: actions

@@ -338,7 +338,7 @@ extension Symbolic_Pb_Grid: ProtobufParsable {
             case let .cartesian(kind): .cartesian(kind.decoded())
             case let .isometric(kind): .isometric(kind.decoded())
             case let .radial(kind): .radial(kind.decoded())
-            default: throw ProtobufParseError.invalidEmptyOneOf
+            case .none: throw ProtobufParseError.invalidEmptyOneOf
             }
         }()
         return .init(tintColor: tintColor.decoded(), kind: kind)

@@ -47,6 +47,13 @@
 		572487922BDFA7B80096DDE4 /* DocumentAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572487912BDFA7B80096DDE4 /* DocumentAction.swift */; };
 		572506AD2C90967900857FF4 /* WorldGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506AC2C90967900857FF4 /* WorldGrid.swift */; };
 		572506AF2C93DC3C00857FF4 /* SymbolPanel+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506AE2C93DC3C00857FF4 /* SymbolPanel+Properties.swift */; };
+		572506B32C95329300857FF4 /* World.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506B22C95329300857FF4 /* World.swift */; };
+		572506B52C954AAE00857FF4 /* WorldService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506B42C954AAE00857FF4 /* WorldService.swift */; };
+		572506B72C955DEC00857FF4 /* GridService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506B62C955DEC00857FF4 /* GridService.swift */; };
+		572506BA2C95680300857FF4 /* DocumentPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506B92C95680300857FF4 /* DocumentPanel.swift */; };
+		572506BC2C95685100857FF4 /* DocumentPanel+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506BB2C95685100857FF4 /* DocumentPanel+Properties.swift */; };
+		572506BE2C9568FB00857FF4 /* DocumentPanel+Symbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506BD2C9568FB00857FF4 /* DocumentPanel+Symbols.swift */; };
+		572506C02C956BAB00857FF4 /* DndList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572506BF2C956BAB00857FF4 /* DndList.swift */; };
 		572552832BF0572D002147AE /* OrderedMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552822BF0572D002147AE /* OrderedMap.swift */; };
 		572552852BF0F2F8002147AE /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552842BF0F2F8002147AE /* Logging.swift */; };
 		572552872BF0F563002147AE /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572552862BF0F563002147AE /* Tracer.swift */; };
@@ -84,7 +91,6 @@
 		574CC7E22BFA39BD0042FEE3 /* Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E12BFA39BD0042FEE3 /* Animation.swift */; };
 		574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */; };
 		574CC7EA2BFA53310042FEE3 /* FocusedPathView+Stroke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7E92BFA53310042FEE3 /* FocusedPathView+Stroke.swift */; };
-		574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */; };
 		575C3CF42BD5EC700035B758 /* DebugPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF32BD5EC700035B758 /* DebugPanel.swift */; };
 		575C3CF62BD60C200035B758 /* PathPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF52BD60C200035B758 /* PathPanel.swift */; };
 		575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */; };
@@ -96,7 +102,6 @@
 		576E359D2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359C2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift */; };
 		576E359F2C84AC9700B1BAAF /* SymbolGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */; };
 		576E35A12C87E78E00B1BAAF /* ContextMenuView+Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */; };
-		5774B1602BFD864300C53CDD /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5774B15F2BFD864300C53CDD /* Background.swift */; };
 		578150472C57E2540057D798 /* PathSegmentPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150462C57E2540057D798 /* PathSegmentPopover.swift */; };
 		578150492C5891AE0057D798 /* PathNodeThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578150482C5891AE0057D798 /* PathNodeThumbnail.swift */; };
 		5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5781504A2C5929500057D798 /* PathNodePopover.swift */; };
@@ -221,6 +226,13 @@
 		572487912BDFA7B80096DDE4 /* DocumentAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentAction.swift; sourceTree = "<group>"; };
 		572506AC2C90967900857FF4 /* WorldGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldGrid.swift; sourceTree = "<group>"; };
 		572506AE2C93DC3C00857FF4 /* SymbolPanel+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SymbolPanel+Properties.swift"; sourceTree = "<group>"; };
+		572506B22C95329300857FF4 /* World.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = World.swift; sourceTree = "<group>"; };
+		572506B42C954AAE00857FF4 /* WorldService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldService.swift; sourceTree = "<group>"; };
+		572506B62C955DEC00857FF4 /* GridService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridService.swift; sourceTree = "<group>"; };
+		572506B92C95680300857FF4 /* DocumentPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPanel.swift; sourceTree = "<group>"; };
+		572506BB2C95685100857FF4 /* DocumentPanel+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DocumentPanel+Properties.swift"; sourceTree = "<group>"; };
+		572506BD2C9568FB00857FF4 /* DocumentPanel+Symbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DocumentPanel+Symbols.swift"; sourceTree = "<group>"; };
+		572506BF2C956BAB00857FF4 /* DndList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DndList.swift; sourceTree = "<group>"; };
 		572552822BF0572D002147AE /* OrderedMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedMap.swift; sourceTree = "<group>"; };
 		572552842BF0F2F8002147AE /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		572552862BF0F563002147AE /* Tracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracer.swift; sourceTree = "<group>"; };
@@ -258,7 +270,6 @@
 		574CC7E12BFA39BD0042FEE3 /* Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animation.swift; sourceTree = "<group>"; };
 		574CC7E32BFA3DF40042FEE3 /* Gesture+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gesture+Extension.swift"; sourceTree = "<group>"; };
 		574CC7E92BFA53310042FEE3 /* FocusedPathView+Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FocusedPathView+Stroke.swift"; sourceTree = "<group>"; };
-		574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridStore.swift; sourceTree = "<group>"; };
 		575C3CF32BD5EC700035B758 /* DebugPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPanel.swift; sourceTree = "<group>"; };
 		575C3CF52BD60C200035B758 /* PathPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathPanel.swift; sourceTree = "<group>"; };
 		575C3CF92BD9F11E0035B758 /* FocusedPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusedPathView.swift; sourceTree = "<group>"; };
@@ -270,7 +281,6 @@
 		576E359C2C84644000B1BAAF /* ContextMenuView+SymbolSelectionMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+SymbolSelectionMenu.swift"; sourceTree = "<group>"; };
 		576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolGrid.swift; sourceTree = "<group>"; };
 		576E35A02C87E78E00B1BAAF /* ContextMenuView+Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContextMenuView+Buttons.swift"; sourceTree = "<group>"; };
-		5774B15F2BFD864300C53CDD /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		578150462C57E2540057D798 /* PathSegmentPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathSegmentPopover.swift; sourceTree = "<group>"; };
 		578150482C5891AE0057D798 /* PathNodeThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodeThumbnail.swift; sourceTree = "<group>"; };
 		5781504A2C5929500057D798 /* PathNodePopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathNodePopover.swift; sourceTree = "<group>"; };
@@ -365,12 +375,13 @@
 			children = (
 				572487882BDF83D90096DDE4 /* DataInput */,
 				57DD2A2D2C0435190046931C /* DebugPanel */,
+				572506B82C9567EE00857FF4 /* DocumentPanel */,
 				57B703F52C37767900B60F36 /* GridPanel */,
 				57DD2A242C02DC320046931C /* HistoryPanel */,
-				57DD2A2C2C0434AA0046931C /* SymbolPanel */,
 				5700C2CC2BED169D00481FA7 /* PanelData.swift */,
 				5700C2C92BED162000481FA7 /* PanelStore.swift */,
 				5724877A2BDF7F5F0096DDE4 /* PathPanel */,
+				57DD2A2C2C0434AA0046931C /* SymbolPanel */,
 				5700C2CB2BED165000481FA7 /* Views */,
 			);
 			path = Panel;
@@ -380,6 +391,7 @@
 			isa = PBXGroup;
 			children = (
 				5781504E2C5BC2BC0057D798 /* ContextualViews.swift */,
+				572506BF2C956BAB00857FF4 /* DndList.swift */,
 				5700C2C72BEBC4A800481FA7 /* FloatingPanelRoot.swift */,
 				57241FA22C228A3400FB0E29 /* PanelPopover.swift */,
 				5700C2C52BEB5B0A00481FA7 /* PanelViews.swift */,
@@ -519,6 +531,27 @@
 			path = DataInput;
 			sourceTree = "<group>";
 		};
+		572506B02C9524DB00857FF4 /* Line */ = {
+			isa = PBXGroup;
+			children = (
+				57416E392BE0BAB600C73434 /* Line.swift */,
+				57416E422BE12D7100C73434 /* LineSegment.swift */,
+				57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */,
+				57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */,
+			);
+			path = Line;
+			sourceTree = "<group>";
+		};
+		572506B82C9567EE00857FF4 /* DocumentPanel */ = {
+			isa = PBXGroup;
+			children = (
+				572506B92C95680300857FF4 /* DocumentPanel.swift */,
+				572506BB2C95685100857FF4 /* DocumentPanel+Properties.swift */,
+				572506BD2C9568FB00857FF4 /* DocumentPanel+Symbols.swift */,
+			);
+			path = DocumentPanel;
+			sourceTree = "<group>";
+		};
 		572CA9D32C319B32003760B7 /* FileBrowser */ = {
 			isa = PBXGroup;
 			children = (
@@ -583,13 +616,14 @@
 			path = CanvasAction;
 			sourceTree = "<group>";
 		};
-		574CC7F02BFCCFBF0042FEE3 /* Grid */ = {
+		574CC7F02BFCCFBF0042FEE3 /* World */ = {
 			isa = PBXGroup;
 			children = (
 				57DD2A1C2C02DB5A0046931C /* Grid.swift */,
-				574CC7F12BFCCFCA0042FEE3 /* GridStore.swift */,
+				572506B22C95329300857FF4 /* World.swift */,
+				572506B42C954AAE00857FF4 /* WorldService.swift */,
 			);
-			path = Grid;
+			path = World;
 			sourceTree = "<group>";
 		};
 		576BE2632C048F5400353912 /* Item */ = {
@@ -623,7 +657,6 @@
 				574411592C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift */,
 				576E35982C834DC100B1BAAF /* ActiveSymbolView+ResizeHandle.swift */,
 				578A720C2C80D1AD0026337D /* ActiveSymbolView+SelectionBounds.swift */,
-				576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */,
 				5790F9A72C7A25AF009E3606 /* SymbolsView.swift */,
 			);
 			path = Symbol;
@@ -639,11 +672,11 @@
 		57B5F11D2BC68620001E1B2E /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				57DD2A232C02DC280046931C /* Background */,
-				574CC7DE2BFA0DB00042FEE3 /* CanvasAction */,
 				5723BFA52BC39865002209F2 /* CanvasView.swift */,
+				574CC7DE2BFA0DB00042FEE3 /* CanvasAction */,
 				57DD2A252C02DC440046931C /* ContextMenu */,
 				572487812BDF82180096DDE4 /* FocusedPath */,
+				57DD2A232C02DC280046931C /* Grid */,
 				576BE2632C048F5400353912 /* Item */,
 				5790F9A42C7A2235009E3606 /* Symbol */,
 				576BE2682C082D2A00353912 /* Toolbar */,
@@ -665,16 +698,12 @@
 		57B5F13C2BD4A2EC001E1B2E /* Path */ = {
 			isa = PBXGroup;
 			children = (
-				57416E392BE0BAB600C73434 /* Line.swift */,
-				57416E422BE12D7100C73434 /* LineSegment.swift */,
 				57B5F11E2BC777F0001E1B2E /* Path.swift */,
 				5744115D2C7F4FF300F038AD /* Path+PathEvent.swift */,
 				57B5F1292BCD02F3001E1B2E /* Path+SVG.swift */,
 				57416E3E2BE12A9500C73434 /* PathNode.swift */,
 				57B8478C2C0DB07700D0E7C3 /* PathProperty.swift */,
 				575C3CFB2BDA14590035B758 /* PathService.swift */,
-				57FC32FA2C4ACACF00DF7DBF /* Polyline.swift */,
-				57FC32F82C4A4E3A00DF7DBF /* Polyline+PathFitter.swift */,
 			);
 			path = Path;
 			sourceTree = "<group>";
@@ -773,14 +802,15 @@
 			path = Viewport;
 			sourceTree = "<group>";
 		};
-		57DD2A232C02DC280046931C /* Background */ = {
+		57DD2A232C02DC280046931C /* Grid */ = {
 			isa = PBXGroup;
 			children = (
-				5774B15F2BFD864300C53CDD /* Background.swift */,
+				572506B62C955DEC00857FF4 /* GridService.swift */,
 				57B703FE2C38F18500B60F36 /* GridView.swift */,
+				576E359E2C84AC9700B1BAAF /* SymbolGrid.swift */,
 				572506AC2C90967900857FF4 /* WorldGrid.swift */,
 			);
-			path = Background;
+			path = Grid;
 			sourceTree = "<group>";
 		};
 		57DD2A242C02DC320046931C /* HistoryPanel */ = {
@@ -810,10 +840,11 @@
 			isa = PBXGroup;
 			children = (
 				57B5F1472BD54260001E1B2E /* Document */,
-				574CC7F02BFCCFBF0042FEE3 /* Grid */,
 				57DD2A142C0236B80046931C /* Item */,
+				572506B02C9524DB00857FF4 /* Line */,
 				57B5F13C2BD4A2EC001E1B2E /* Path */,
 				574411612C7F67B700F038AD /* Symbol */,
+				574CC7F02BFCCFBF0042FEE3 /* World */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1007,6 +1038,7 @@
 				574CC7BA2BF3B2950042FEE3 /* GlobalStores.swift in Sources */,
 				578150512C5E6A930057D798 /* ActionWheel.swift in Sources */,
 				574CC7C02BF44CE30042FEE3 /* Color+UIColor.swift in Sources */,
+				572506BE2C9568FB00857FF4 /* DocumentPanel+Symbols.swift in Sources */,
 				57241FA32C228A3400FB0E29 /* PanelPopover.swift in Sources */,
 				572552852BF0F2F8002147AE /* Logging.swift in Sources */,
 				57C168FF2C6CB449007BFC81 /* document_event.pb+Extension.swift in Sources */,
@@ -1020,6 +1052,7 @@
 				573204DC2C15DDA2008E0DED /* SymbolPanel+Items.swift in Sources */,
 				57B5F1262BCCB3C2001E1B2E /* SVGPath.swift in Sources */,
 				57DD2A282C0321110046931C /* SymbolPanel.swift in Sources */,
+				572506B52C954AAE00857FF4 /* WorldService.swift in Sources */,
 				572552872BF0F563002147AE /* Tracer.swift in Sources */,
 				5781504F2C5BC2BC0057D798 /* ContextualViews.swift in Sources */,
 				575C3CFA2BD9F11E0035B758 /* FocusedPathView.swift in Sources */,
@@ -1052,6 +1085,7 @@
 				57416E432BE12D7100C73434 /* LineSegment.swift in Sources */,
 				57B5F1162BC62E87001E1B2E /* MultipleTouch.swift in Sources */,
 				578A720F2C80D56D0026337D /* document_action.pb+Extension.swift in Sources */,
+				572506BA2C95680300857FF4 /* DocumentPanel.swift in Sources */,
 				571B9B3D2C14A97D00AAD516 /* UUID+Extension.swift in Sources */,
 				572CA9DA2C319E6B003760B7 /* DeletedFileBrowserView.swift in Sources */,
 				575C3CFC2BDA14590035B758 /* PathService.swift in Sources */,
@@ -1066,7 +1100,6 @@
 				572CA9DC2C319EBB003760B7 /* FileBrowserStore.swift in Sources */,
 				5700C2CA2BED162000481FA7 /* PanelStore.swift in Sources */,
 				574CC7E42BFA3DF40042FEE3 /* Gesture+Extension.swift in Sources */,
-				574CC7F22BFCCFCA0042FEE3 /* GridStore.swift in Sources */,
 				572506AD2C90967900857FF4 /* WorldGrid.swift in Sources */,
 				57B5F11C2BC639B2001E1B2E /* ViewportService.swift in Sources */,
 				576BE2652C048F6900353912 /* ActiveItemView.swift in Sources */,
@@ -1084,6 +1117,7 @@
 				57B5F1442BD4A621001E1B2E /* MiscUtils.swift in Sources */,
 				572CA9D52C319B8B003760B7 /* FileBrowserView.swift in Sources */,
 				571B9B362C14A77500AAD516 /* ActiveItemView+PathBounds.swift in Sources */,
+				572506BC2C95685100857FF4 /* DocumentPanel+Properties.swift in Sources */,
 				574CC7D22BF4FE8F0042FEE3 /* Protocols.swift in Sources */,
 				574CC7EA2BFA53310042FEE3 /* FocusedPathView+Stroke.swift in Sources */,
 				57B5F1492BD54279001E1B2E /* DocumentEvent.swift in Sources */,
@@ -1105,6 +1139,7 @@
 				57E0820E2C27A7F9008CC67B /* FileDirectoryView.swift in Sources */,
 				571B9B3F2C14A99200AAD516 /* IncrementalIdGenerator.swift in Sources */,
 				572487762BDBAF860096DDE4 /* DocumentUpdater.swift in Sources */,
+				572506B72C955DEC00857FF4 /* GridService.swift in Sources */,
 				57FC33012C4E149600DF7DBF /* PortalData.swift in Sources */,
 				57B5F12C2BCE0FC0001E1B2E /* ArcParams.swift in Sources */,
 				57FC32FF2C4E147400DF7DBF /* PortalStore.swift in Sources */,
@@ -1129,15 +1164,16 @@
 				57B5F14B2BD54AA5001E1B2E /* Document.swift in Sources */,
 				5700C2C82BEBC4A800481FA7 /* FloatingPanelRoot.swift in Sources */,
 				57B703EE2C366A7500B60F36 /* ViewportInfo.swift in Sources */,
+				572506B32C95329300857FF4 /* World.swift in Sources */,
 				57C1690D2C6CFB2F007BFC81 /* document_action.pb.swift in Sources */,
 				57B5F1282BCCC1FB001E1B2E /* SVGParser.swift in Sources */,
 				57FC32F92C4A4E3A00DF7DBF /* Polyline+PathFitter.swift in Sources */,
 				57DD2A1B2C02DB250046931C /* CanvasActionStore.swift in Sources */,
 				574411632C7F6A3A00F038AD /* SymbolService.swift in Sources */,
+				572506C02C956BAB00857FF4 /* DndList.swift in Sources */,
 				5781504B2C5929500057D798 /* PathNodePopover.swift in Sources */,
 				5700C2CF2BEDB6EB00481FA7 /* DraggingSelectService.swift in Sources */,
 				572CA9D72C319BDC003760B7 /* FileRenameView.swift in Sources */,
-				5774B1602BFD864300C53CDD /* Background.swift in Sources */,
 				57B703F42C366B8100B60F36 /* ToolbarStore.swift in Sources */,
 				574CC7CE2BF4FD7E0042FEE3 /* Geometry.swift in Sources */,
 				5744115A2C7C2DD000F038AD /* ActiveSymbolView+Bounds.swift in Sources */,

@@ -133,6 +133,19 @@ message ItemEvent {
   }
 }
 
+// MARK: - WorldEvent
+
+message WorldEvent {
+  message SetSymbolIds { repeated UUID symbol_ids = 1; }
+
+  message SetGrid { optional Grid grid = 1; }
+
+  oneof kind {
+    SetSymbolIds set_symbol_ids = 101;
+    SetGrid set_grid = 102;
+  }
+}
+
 // MARK: - DocumentEvent
 
 message DocumentEvent {
@@ -150,6 +163,7 @@ message DocumentEvent {
       PathEvent path_event = 101;
       SymbolEvent symbol_event = 102;
       ItemEvent item_event = 103;
+      WorldEvent world_event = 104;
     }
   }
 

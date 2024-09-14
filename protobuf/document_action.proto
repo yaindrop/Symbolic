@@ -184,6 +184,19 @@ message ItemAction {
   }
 }
 
+// MARK: - WorldAction
+
+message WorldAction {
+  message SetSymbolIds { repeated UUID symbol_ids = 1; }
+
+  message SetGrid { optional Grid grid = 1; }
+
+  oneof kind {
+    SetSymbolIds set_symbol_ids = 101;
+    SetGrid set_grid = 102;
+  }
+}
+
 // MARK: - DocumentAction
 
 message DocumentAction {
@@ -191,5 +204,6 @@ message DocumentAction {
     PathAction path_action = 101;
     SymbolAction symbol_action = 102;
     ItemAction item_action = 103;
+    WorldAction world_action = 104;
   }
 }

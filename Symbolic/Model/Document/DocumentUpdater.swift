@@ -15,9 +15,9 @@ struct DocumentUpdater {
     let pathStore: PathStore
     let symbolStore: SymbolStore
     let itemStore: ItemStore
-    let viewport: ViewportService
-    let activeSymbol: ActiveSymbolService
     let activeItem: ActiveItemService
+    let viewport: ViewportService
+    let grid: GridService
 }
 
 // MARK: actions
@@ -33,6 +33,10 @@ extension DocumentUpdater {
 
     func update(item action: ItemAction, pending: Bool = false) {
         handle(.item(action), pending: pending)
+    }
+
+    func update(world action: WorldAction, pending: Bool = false) {
+        handle(.world(action), pending: pending)
     }
 
     func update(focusedPath kind: PathAction.Update.Kind, pending: Bool = false) {
@@ -55,6 +59,7 @@ private extension DocumentUpdater {
         case let .path(action): collect(events: &events, of: action)
         case let .symbol(action): collect(events: &events, of: action)
         case let .item(action): collect(events: &events, of: action)
+        case let .world(action): collect(events: &events, of: action)
         }
 
         guard let first = events.first else { return nil }
@@ -142,7 +147,7 @@ private extension DocumentUpdater {
             let rect = path.boundingRect
             anchor = .init(min(anchor.x, rect.minX), min(anchor.y, rect.minY))
         }
-        let snappedOffset = activeSymbol.snappedOffset(anchor, offset: offset)
+        let snappedOffset = grid.snappedOffset(anchor, offset: offset)
         guard !snappedOffset.isZero else { return }
         events.append(.path(.init(pathIds: pathIds, .move(.init(offset: snappedOffset)))))
     }
@@ -163,7 +168,7 @@ private extension DocumentUpdater {
         } else {
             return
         }
-        let snappedOffset = activeSymbol.snappedOffset(endingNode.position, offset: offset)
+        let snappedOffset = grid.snappedOffset(endingNode.position, offset: offset)
         guard !snappedOffset.isZero else { return }
         let node = PathNode(position: endingNode.position + snappedOffset)
         events.append(.path(.init(pathId: pathId, .createNode(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: node)))))
@@ -181,7 +186,7 @@ private extension DocumentUpdater {
               var toNode = path.node(id: toNodeId) else { return }
         let position = segment.position(paramT: paramT)
         let (before, after) = segment.split(paramT: paramT)
-        let snappedOffset = activeSymbol.snappedOffset(position, offset: offset)
+        let snappedOffset = grid.snappedOffset(position, offset: offset)
 
         let newNode = PathNode(position: position + snappedOffset, cubicIn: before.toCubicIn, cubicOut: after.fromCubicOut)
         fromNode.cubicOut = before.fromCubicOut
@@ -235,7 +240,7 @@ private extension DocumentUpdater {
         guard let path = pathStore.get(id: pathId),
               let firstId = nodeIds.first,
               let firstNode = path.node(id: firstId) else { return }
-        let snappedOffset = activeSymbol.snappedOffset(firstNode.position, offset: offset)
+        let snappedOffset = grid.snappedOffset(firstNode.position, offset: offset)
         guard !snappedOffset.isZero else { return }
 
         var kinds: [PathEvent.Kind] = []
@@ -261,13 +266,13 @@ private extension DocumentUpdater {
 
         switch controlType {
         case .cubicIn:
-            let snappedOffset = activeSymbol.snappedOffset(node.positionIn, offset: offset)
+            let snappedOffset = grid.snappedOffset(node.positionIn, offset: offset)
             guard !snappedOffset.isZero else { return }
             let cubicIn = node.cubicIn + snappedOffset,
                 cubicOut = nodeType.map(current: node.cubicOut, opposite: cubicIn)
             kinds.append(.updateNode(.init(nodeId: nodeId, node: .init(position: node.position, cubicIn: cubicIn, cubicOut: cubicOut))))
         case .cubicOut:
-            let snappedOffset = activeSymbol.snappedOffset(node.positionOut, offset: offset)
+            let snappedOffset = grid.snappedOffset(node.positionOut, offset: offset)
             guard !snappedOffset.isZero else { return }
             let cubicOut = node.cubicOut + snappedOffset,
                 cubicIn = nodeType.map(current: node.cubicIn, opposite: cubicOut)
@@ -275,7 +280,7 @@ private extension DocumentUpdater {
         case .quadraticOut:
             guard let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic else { return }
-            let snappedOffset = activeSymbol.snappedOffset(quadratic, offset: offset)
+            let snappedOffset = grid.snappedOffset(quadratic, offset: offset)
             guard !snappedOffset.isZero,
                   let segment = path.segment(fromId: nodeId),
                   let quadratic = segment.quadratic,
@@ -551,5 +556,26 @@ private extension DocumentUpdater {
         let itemIds = action.itemIds,
             locked = action.locked
         events.append(.item(.init(itemIds: itemIds, .setLocked(.init(locked: locked)))))
+    }
+}
+
+// MARK: events of world action
+
+private extension DocumentUpdater {
+    func collect(events: inout [DocumentEvent.Single], of action: WorldAction) {
+        switch action {
+        case let .setGrid(action): collect(events: &events, of: action)
+        case let .setSymbolIds(action): collect(events: &events, of: action)
+        }
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: WorldAction.SetGrid) {
+        let grid = action.grid
+        events.append(.world(.setGrid(.init(grid: grid))))
+    }
+
+    func collect(events: inout [DocumentEvent.Single], of action: WorldAction.SetSymbolIds) {
+        let symbolIds = action.symbolIds
+        events.append(.world(.setSymbolIds(.init(symbolIds: symbolIds))))
     }
 }

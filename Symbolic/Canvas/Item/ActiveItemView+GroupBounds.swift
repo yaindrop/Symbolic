@@ -57,8 +57,14 @@ private extension GlobalStores {
             onDrag: { onDrag(group: group, $0, pending: true) },
             onDragEnd: { onDrag(group: group, $0) },
 
-            onPinch: { viewportUpdater.onPinch($0) },
-            onPinchEnd: { _ in viewportUpdater.onCommit() }
+            onPinch: {
+                canvasAction.start(continuous: .pinchViewport)
+                viewportUpdater.onPinch($0)
+            },
+            onPinchEnd: { _ in
+                canvasAction.end(continuous: .pinchViewport)
+                viewportUpdater.onCommit()
+            }
         )
     }
 }

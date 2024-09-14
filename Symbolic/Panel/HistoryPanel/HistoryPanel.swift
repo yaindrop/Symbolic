@@ -72,6 +72,14 @@ private extension DocumentAction {
             case let .setLocked(action):
                 "Set item \(action.itemIds.map { $0.shortDescription }.joined(separator: ", ")) locked \(action.locked)"
             }
+
+        case let .world(action):
+            switch action {
+            case let .setGrid(action):
+                "World set grid \(action.grid.debugDescription)"
+            case let .setSymbolIds(action):
+                "World set symbol ids \(action.symbolIds.map { $0.shortDescription }.joined(separator: ", "))"
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ struct WorldGrid: View, TracedView, SelectorHolder {
 
     class Selector: SelectorBase {
         override var configs: SelectorConfigs { .syncNotify }
-        @Selected({ global.activeSymbol.grid }, .animation(.fast)) var grid
+        @Selected({ global.world.grid }, .animation(.fast)) var grid
     }
 
     @SelectorWrapper var selector

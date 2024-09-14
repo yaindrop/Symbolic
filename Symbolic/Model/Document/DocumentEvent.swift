@@ -112,6 +112,16 @@ extension ItemEvent {
     }
 }
 
+// MARK: - WorldEvent
+
+enum WorldEvent: Equatable {
+    struct SetSymbolIds: Equatable { let symbolIds: [UUID] }
+    struct SetGrid: Equatable { let grid: Grid? }
+
+    case setSymbolIds(SetSymbolIds)
+    case setGrid(SetGrid)
+}
+
 // MARK: - DocumentEvent
 
 struct DocumentEvent: Identifiable, Equatable {
@@ -124,6 +134,7 @@ struct DocumentEvent: Identifiable, Equatable {
         case path(PathEvent)
         case symbol(SymbolEvent)
         case item(ItemEvent)
+        case world(WorldEvent)
     }
 
     struct Compound: Equatable {

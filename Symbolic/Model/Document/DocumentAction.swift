@@ -88,10 +88,21 @@ enum ItemAction: Equatable {
     case setLocked(SetLocked)
 }
 
+// MARK: - WorldAction
+
+enum WorldAction: Equatable {
+    struct SetSymbolIds: Equatable { let symbolIds: [UUID] }
+    struct SetGrid: Equatable { let grid: Grid? }
+
+    case setSymbolIds(SetSymbolIds)
+    case setGrid(SetGrid)
+}
+
 // MARK: - DocumentAction
 
 enum DocumentAction: Equatable {
     case path(PathAction)
     case symbol(SymbolAction)
     case item(ItemAction)
+    case world(WorldAction)
 }

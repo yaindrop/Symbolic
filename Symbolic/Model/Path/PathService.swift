@@ -167,6 +167,7 @@ private extension PathService {
         case let .path(event): load(event: event)
         case .symbol: break
         case .item: break
+        case .world: break
         }
     }
 

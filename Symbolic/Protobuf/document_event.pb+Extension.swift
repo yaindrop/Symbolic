@@ -164,7 +164,7 @@ extension Symbolic_Pb_PathEvent.Kind: ProtobufParsable {
 
         case let .setNodeType(kind): .setNodeType(kind.decoded())
         case let .setSegmentType(kind): .setSegmentType(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -282,7 +282,7 @@ extension Symbolic_Pb_SymbolEvent.Kind: ProtobufParsable {
 
         case let .delete(kind): .delete(kind.decoded())
         case let .move(kind): .move(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -358,7 +358,7 @@ extension Symbolic_Pb_ItemEvent.Kind: ProtobufParsable {
 
         case let .setName(kind): .setName(kind.decoded())
         case let .setLocked(kind): .setLocked(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -376,6 +376,53 @@ extension Symbolic_Pb_ItemEvent: ProtobufParsable {
     }
 }
 
+// MARK: - WorldEvent
+
+extension WorldEvent.SetGrid: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldEvent.SetGrid) {
+        grid.map { pb.grid = $0.pb }
+    }
+}
+
+extension Symbolic_Pb_WorldEvent.SetGrid: ProtobufParsable {
+    func decoded() throws -> WorldEvent.SetGrid {
+        try .init(grid: grid.decoded())
+    }
+}
+
+extension WorldEvent.SetSymbolIds: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldEvent.SetSymbolIds) {
+        pb.symbolIds = symbolIds.map { $0.pb }
+    }
+}
+
+extension Symbolic_Pb_WorldEvent.SetSymbolIds: ProtobufParsable {
+    func decoded() -> WorldEvent.SetSymbolIds {
+        .init(symbolIds: symbolIds.map { $0.decoded() })
+    }
+}
+
+extension WorldEvent: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldEvent) {
+        pb.kind = {
+            switch self {
+            case let .setGrid(kind): .setGrid(kind.pb)
+            case let .setSymbolIds(kind): .setSymbolIds(kind.pb)
+            }
+        }()
+    }
+}
+
+extension Symbolic_Pb_WorldEvent: ProtobufParsable {
+    func decoded() throws -> WorldEvent {
+        switch kind {
+        case let .setGrid(kind): try .setGrid(kind.decoded())
+        case let .setSymbolIds(kind): .setSymbolIds(kind.decoded())
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
+        }
+    }
+}
+
 // MARK: - DocumentEvent
 
 extension DocumentEvent.Single: ProtobufSerializable {
@@ -385,6 +432,7 @@ extension DocumentEvent.Single: ProtobufSerializable {
             case let .path(kind): .pathEvent(kind.pb)
             case let .symbol(kind): .symbolEvent(kind.pb)
             case let .item(kind): .itemEvent(kind.pb)
+            case let .world(kind): .worldEvent(kind.pb)
             }
         }()
     }
@@ -396,7 +444,8 @@ extension Symbolic_Pb_DocumentEvent.Single: ProtobufParsable {
         case let .pathEvent(kind): try .path(kind.decoded())
         case let .symbolEvent(kind): try .symbol(kind.decoded())
         case let .itemEvent(kind): try .item(kind.decoded())
-        default: throw ProtobufParseError.invalidEmptyOneOf
+        case let .worldEvent(kind): try .world(kind.decoded())
+        case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }
 }
@@ -434,7 +483,7 @@ extension Symbolic_Pb_DocumentEvent: ProtobufParsable {
             switch self.kind {
             case let .single(kind): try .single(kind.decoded())
             case let .compound(kind): try .compound(kind.decoded())
-            default: throw ProtobufParseError.invalidEmptyOneOf
+            case .none: throw ProtobufParseError.invalidEmptyOneOf
             }
         }()
         return .init(id: id.decoded(), time: time.decoded(), action: action, kind: kind)

@@ -19,6 +19,9 @@ struct GlobalStores {
     private let itemStore = ItemStore()
     private let pendingItemStore = PendingItemStore()
 
+    private let worldStore = WorldStore()
+    private let pendingWorldStore = PendingWorldStore()
+
     private let activeSymbolStore = ActiveSymbolStore()
 
     private let activeItemStore = ActiveItemStore()
@@ -26,11 +29,10 @@ struct GlobalStores {
     private let focusedPathStore = FocusedPathStore()
 
     private let viewportStore = ViewportStore()
+    private let viewportUpdateStore = ViewportUpdateStore()
 
     private let draggingSelectStore = DraggingSelectStore()
     private let draggingCreateStore = DraggingCreateStore()
-
-    private let viewportUpdateStore = ViewportUpdateStore()
 
     let panel = PanelStore()
 
@@ -47,13 +49,14 @@ struct GlobalStores {
 
 extension GlobalStores {
     var document: DocumentService { .init(store: documentStore) }
-    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, viewport: viewport, activeSymbol: activeSymbol, activeItem: activeItem) }
 
     var path: PathService { .init(store: pathStore, pendingStore: pendingPathStore) }
 
     var symbol: SymbolService { .init(store: symbolStore, pendingStore: pendingSymbolStore) }
 
     var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path, viewport: viewport) }
+
+    var world: WorldService { .init(store: worldStore, pendingStore: pendingWorldStore) }
 
     var focusedPath: FocusedPathService { .init(store: focusedPathStore, item: item, activeItem: activeItem) }
 
@@ -67,6 +70,10 @@ extension GlobalStores {
     var draggingCreate: DraggingCreateService { .init(store: draggingCreateStore, viewport: viewport, activeSymbol: activeSymbol) }
 
     var viewportUpdater: ViewportUpdater { .init(store: viewportUpdateStore, viewport: viewport, document: document, activeSymbol: activeSymbol, panel: panel, draggingSelect: draggingSelect, draggingCreate: draggingCreate) }
+
+    var grid: GridService { .init(world: world, activeSymbol: activeSymbol) }
+
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, activeItem: activeItem, viewport: viewport, grid: grid) }
 }
 
 let global = GlobalStores()

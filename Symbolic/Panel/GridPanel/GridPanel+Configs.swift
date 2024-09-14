@@ -4,10 +4,13 @@ import SwiftUI
 
 private extension GlobalStores {
     func updateGrid(grid: Grid?, pending: Bool = false) {
-        guard let symbolId = activeSymbol.editingSymbolId,
-              grid != activeSymbol.grid else { return }
-        let index = activeSymbol.gridIndex
-        documentUpdater.update(symbol: .setGrid(.init(symbolId: symbolId, index: index, grid: grid)), pending: pending)
+        guard grid != self.grid.grid else { return }
+        if let symbolId = activeSymbol.editingSymbolId {
+            let index = activeSymbol.gridIndex
+            documentUpdater.update(symbol: .setGrid(.init(symbolId: symbolId, index: index, grid: grid)), pending: pending)
+        } else {
+            documentUpdater.update(world: .setGrid(.init(grid: grid)), pending: pending)
+        }
     }
 
     func addGrid() {
@@ -22,13 +25,13 @@ private extension GlobalStores {
     }
 
     func updateGrid(tintColor: CGColor, pending: Bool = false) {
-        guard var grid = activeSymbol.grid else { return }
+        guard var grid = grid.grid else { return }
         grid.tintColor = tintColor
         updateGrid(grid: grid, pending: pending)
     }
 
     func updateGrid(gridCase: Grid.Case) {
-        guard var grid = activeSymbol.grid,
+        guard var grid = grid.grid,
               gridCase != grid.case else { return }
         switch gridCase {
         case .cartesian: grid.kind = .cartesian(.init(interval: 8))
@@ -39,13 +42,13 @@ private extension GlobalStores {
     }
 
     func updateGrid(cartesian: Grid.Cartesian, pending: Bool = false) {
-        guard var grid = activeSymbol.grid else { return }
+        guard var grid = grid.grid else { return }
         grid.kind = .cartesian(cartesian)
         updateGrid(grid: grid, pending: pending)
     }
 
     func updateGrid(isometric: Grid.Isometric, pending: Bool = false) {
-        guard var grid = activeSymbol.grid else { return }
+        guard var grid = grid.grid else { return }
         grid.kind = .isometric(isometric)
         updateGrid(grid: grid, pending: pending)
     }
@@ -56,8 +59,8 @@ private extension GlobalStores {
 extension GridPanel {
     struct Configs: View, TracedView, SelectorHolder {
         class Selector: SelectorBase {
-            @Selected({ global.activeSymbol.grids }, .animation(.fast)) var gridStack
-            @Selected({ global.activeSymbol.grid }, .animation(.fast)) var grid
+            @Selected({ global.grid.grids }, .animation(.fast)) var gridStack
+            @Selected({ global.grid.grid }, .animation(.fast)) var grid
         }
 
         @SelectorWrapper var selector

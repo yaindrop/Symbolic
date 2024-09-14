@@ -4,7 +4,7 @@ private let subtracer = tracer.tagged("SymbolService")
 
 typealias SymbolMap = [UUID: Symbol]
 
-// MARK: - PathStoreProtocol
+// MARK: - SymbolStoreProtocol
 
 protocol SymbolStoreProtocol {
     var symbolMap: SymbolMap { get }
@@ -149,6 +149,7 @@ private extension SymbolService {
         case .path: break
         case let .symbol(event): load(event: event)
         case .item: break
+        case .world: break
         }
     }
 

@@ -34,6 +34,7 @@ struct Document {
         let pathEvents: [PathEvent] = paths.map { .init(pathId: .init(), .create(.init(path: $0))) }
         let pathIds: [UUID] = pathEvents.map { $0.pathIds.first! }
 
+        events.append(.init(kind: .single(.world(.setGrid(.init(grid: .init(kind: .cartesian(.init(interval: 8))))))), action: nil))
         events.append(.init(kind: .single(.symbol(.init(symbolId: symbolId, .create(.init(origin: .init(200, 300), size: .init(squared: 1000), grids: [.init(kind: .cartesian(.init(interval: 8)))]))))), action: nil))
         for pathEvent in pathEvents {
             events.append(.init(

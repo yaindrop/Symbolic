@@ -377,7 +377,7 @@ private extension DocumentUpdater {
         guard let symbolId = symbolIds.first,
               let symbol = symbolStore.get(id: symbolId) else { return }
         let anchor = symbol.boundingRect.minPoint
-        let snappedOffset = grid.snappedOffset(anchor, offset: offset)
+        let snappedOffset = worldStore.grid?.snappedOffset(anchor, offset: offset) ?? offset
         guard !snappedOffset.isZero else { return }
         events.append(.symbol(.init(symbolIds: symbolIds, .move(.init(offset: snappedOffset)))))
     }

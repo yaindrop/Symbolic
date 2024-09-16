@@ -26,7 +26,7 @@ private extension GlobalStores {
     }
 
     func onDelete() {
-        let pathIds = activeItem.selectedItems.map { $0.id }
+        let pathIds = activeItem.selectedPathIds
         documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
         activeItem.blur()
     }

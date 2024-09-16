@@ -31,14 +31,9 @@ private extension GlobalStores {
     }
 
     func onDrag(group: Item.Group, _ v: PanInfo, pending: Bool = false) {
-        let offset = v.offset.applying(activeSymbol.viewToSymbol)
-        if activeItem.selected(id: group.id) {
-            let pathIds = activeItem.selectedPathIds
-            documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
-        } else {
-            let pathIds = item.groupedPathIds(groupId: group.id)
-            documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
-        }
+        let offset = v.offset.applying(activeSymbol.viewToSymbol),
+            pathIds = activeItem.selected(id: group.id) ? activeItem.selectedPathIds : item.groupedPathIds(groupId: group.id)
+        documentUpdater.update(path: .move(.init(pathIds: pathIds, offset: offset)), pending: pending)
     }
 
     func gesture(group: Item.Group) -> MultipleTouchGesture {

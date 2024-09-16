@@ -22,8 +22,9 @@ private extension GlobalStores {
     }
 
     func onDelete() {
-//        guard let pathId = activeItem.focusedPathId else { return }
-//        documentUpdater.update(path: .delete(.init(pathIds: [pathId])))
+        guard let groupId = activeItem.focusedGroupId else { return }
+        let pathIds = item.groupedPathIds(groupId: groupId)
+        documentUpdater.update(path: .delete(.init(pathIds: pathIds)))
     }
 }
 

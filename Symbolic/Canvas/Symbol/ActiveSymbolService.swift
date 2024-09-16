@@ -98,15 +98,18 @@ extension ActiveSymbolService {
 
     // MARK: selection
 
-    var selectedSymbolIds: Set<UUID> {
+    var selectedSymbolIds: [UUID] {
         switch state {
-        case let .active(ids): ids
+        case let .active(ids): Array(ids)
         default: []
         }
     }
 
     func selected(id: UUID) -> Bool {
-        selectedSymbolIds.contains(id)
+        switch state {
+        case let .active(ids): ids.contains(id)
+        default: false
+        }
     }
 
     var selectionBounds: CGRect? {

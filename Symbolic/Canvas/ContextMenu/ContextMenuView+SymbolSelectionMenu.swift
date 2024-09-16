@@ -16,9 +16,9 @@ private extension GlobalStores {
     }
 
     func onDelete() {
-        let symbolIds = activeSymbol.selectedSymbolIds
-        documentUpdater.update(symbol: .delete(.init(symbolIds: .init(symbolIds))))
-        activeSymbol.select(symbolIds: [])
+//        let symbolIds = activeSymbol.selectedSymbolIds
+//        documentUpdater.update(symbol: .delete(.init(symbolIds: .init(symbolIds))))
+//        activeSymbol.select(symbolIds: [])
     }
 }
 

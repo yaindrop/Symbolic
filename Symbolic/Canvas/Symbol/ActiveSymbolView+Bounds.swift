@@ -9,13 +9,9 @@ private extension GlobalStores {
     }
 
     func onDrag(symbolId: UUID, _ v: PanInfo, pending: Bool = false) {
-        let offset = v.offset.applying(viewport.viewToWorld)
-        if activeSymbol.selected(id: symbolId) {
-            let symbolIds = Array(activeSymbol.selectedSymbolIds)
-            documentUpdater.update(symbol: .move(.init(symbolIds: symbolIds, offset: offset)), pending: pending)
-        } else {
-            documentUpdater.update(symbol: .move(.init(symbolIds: [symbolId], offset: offset)), pending: pending)
-        }
+        let offset = v.offset.applying(viewport.viewToWorld),
+            symbolIds = activeSymbol.selected(id: symbolId) ? activeSymbol.selectedSymbolIds : [symbolId]
+        documentUpdater.update(symbol: .move(.init(symbolIds: symbolIds, offset: offset)), pending: pending)
     }
 
     func gesture(symbolId: UUID) -> MultipleTouchGesture {

@@ -16,8 +16,8 @@ private extension GlobalStores {
     }
 
     func onDelete() {
-        guard let symbolId = activeSymbol.focusedSymbolId else { return }
-        documentUpdater.update(symbol: .delete(.init(symbolIds: [symbolId])))
+//        guard let symbolId = activeSymbol.focusedSymbolId else { return }
+//        documentUpdater.update(symbol: .delete(.init(symbolIds: [symbolId])))
     }
 }
 

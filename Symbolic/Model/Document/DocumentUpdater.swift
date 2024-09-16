@@ -15,6 +15,7 @@ struct DocumentUpdater {
     let pathStore: PathStore
     let symbolStore: SymbolStore
     let itemStore: ItemStore
+    let worldStore: WorldStore
     let activeItem: ActiveItemService
     let viewport: ViewportService
     let grid: GridService
@@ -109,7 +110,8 @@ private extension DocumentUpdater {
             path = action.path
         guard let symbol = itemStore.symbol(id: symbolId) else { return }
         events.append(.path(.init(pathId: pathId, .create(.init(path: path)))))
-        events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members + [pathId])))))
+        let members = symbol.members + [pathId]
+        events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: members)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], of action: PathAction.Update) {
@@ -507,42 +509,35 @@ private extension DocumentUpdater {
             isAfter = action.isAfter,
             parentId = itemStore.parentId(of: itemId),
             toParentId = itemStore.parentId(of: toItemId)
+        var idToGroupMembers = [UUID: [UUID]](),
+            symbolMembers: [UUID]?
         guard let symbol = itemStore.symbol(of: itemId),
-              itemStore.symbolId(of: toItemId) == symbol.id else { return } // not in the same symbol
-        if parentId == toParentId {
-            guard itemId != toItemId else { return } // not moved
-            if let parentId, var group = itemStore.group(id: parentId) {
-                group.members.removeAll { $0 == itemId }
-                let index = group.members.firstIndex(of: toItemId) ?? 0
-                group.members.insert(itemId, at: isAfter ? group.members.index(after: index) : index)
-                events.append(.item(.init(itemId: group.id, .setGroup(.init(members: group.members)))))
-            } else {
-                var symbol = symbol
-                symbol.members.removeAll { $0 == itemId }
-                let index = symbol.members.firstIndex(of: toItemId) ?? 0
-                symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
-                events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
-            }
-            return
-        }
-        guard itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
-        if let parentId, var group = itemStore.group(id: parentId) {
-            group.members.removeAll { $0 == itemId }
-            events.append(.item(.init(itemId: group.id, .setGroup(.init(members: group.members)))))
+              itemStore.symbolId(of: toItemId) == symbol.id, // not in the same symbol
+              itemStore.ancestorIds(of: toItemId).firstIndex(of: itemId) == nil else { return } // cyclic moving
+        if let parentId, var members = itemStore.group(id: parentId)?.members {
+            members.removeAll { $0 == itemId }
+            idToGroupMembers[parentId] = members
         } else {
-            var symbol = symbol
-            symbol.members.removeAll { $0 == itemId }
-            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
+            var members = symbol.members
+            members.removeAll { $0 == itemId }
+            symbolMembers = members
         }
-        if let toParentId, var toGroup = itemStore.group(id: toParentId) {
-            let index = toGroup.members.firstIndex(of: toItemId) ?? 0
-            toGroup.members.insert(itemId, at: isAfter ? toGroup.members.index(after: index) : index)
-            events.append(.item(.init(itemId: toGroup.id, .setGroup(.init(members: toGroup.members)))))
+        if let toParentId, let members = itemStore.group(id: toParentId)?.members {
+            var members = idToGroupMembers[toParentId] ?? members
+            let index = members.firstIndex(of: toItemId) ?? 0
+            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+            idToGroupMembers[toParentId] = members
         } else {
-            var symbol = symbol
-            let index = symbol.members.firstIndex(of: toItemId) ?? 0
-            symbol.members.insert(itemId, at: isAfter ? symbol.members.index(after: index) : index)
-            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbol.members)))))
+            var members = symbolMembers ?? symbol.members
+            let index = members.firstIndex(of: toItemId) ?? 0
+            members.insert(itemId, at: isAfter ? members.index(after: index) : index)
+            symbolMembers = members
+        }
+        for (groupId, members) in idToGroupMembers {
+            events.append(.item(.init(itemId: groupId, .setGroup(.init(members: members)))))
+        }
+        if let symbolMembers {
+            events.append(.symbol(.init(symbolId: symbol.id, .setMembers(.init(members: symbolMembers)))))
         }
     }
 
@@ -564,8 +559,8 @@ private extension DocumentUpdater {
 private extension DocumentUpdater {
     func collect(events: inout [DocumentEvent.Single], of action: WorldAction) {
         switch action {
+        case let .reorder(action): collect(events: &events, of: action)
         case let .setGrid(action): collect(events: &events, of: action)
-        case let .setSymbolIds(action): collect(events: &events, of: action)
         }
     }
 
@@ -574,8 +569,15 @@ private extension DocumentUpdater {
         events.append(.world(.setGrid(.init(grid: grid))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], of action: WorldAction.SetSymbolIds) {
-        let symbolIds = action.symbolIds
+    func collect(events: inout [DocumentEvent.Single], of action: WorldAction.Reorder) {
+        let symbolId = action.symbolId,
+            toSymbolId = action.toSymbolId,
+            isAfter = action.isAfter
+        guard symbolId != toSymbolId else { return } // not moved
+        var symbolIds = worldStore.symbolIds
+        symbolIds.removeAll { $0 == symbolId }
+        let index = symbolIds.firstIndex(of: toSymbolId) ?? 0
+        symbolIds.insert(symbolId, at: isAfter ? symbolIds.index(after: index) : index)
         events.append(.world(.setSymbolIds(.init(symbolIds: symbolIds))))
     }
 }

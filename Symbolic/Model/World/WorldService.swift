@@ -47,6 +47,7 @@ private extension PendingWorldStore {
 struct WorldService {
     let store: WorldStore
     let pendingStore: PendingWorldStore
+    let symbol: SymbolService
 }
 
 // MARK: selectors
@@ -101,10 +102,38 @@ private extension WorldService {
     func load(event: DocumentEvent.Single) {
         switch event {
         case .path: break
-        case .symbol: break
+        case let .symbol(event): load(event: event)
         case .item: break
         case let .world(event): load(event: event)
         }
+    }
+
+    // MARK: load symbol event
+
+    func load(event: SymbolEvent) {
+        let symbolIds = event.symbolIds
+        for kind in event.kinds {
+            switch kind {
+            case let .create(event): load(symbolIds: symbolIds, event)
+            case let .delete(event): load(symbolIds: symbolIds, event)
+            default: break
+            }
+        }
+    }
+
+    func load(symbolIds: [UUID], _: SymbolEvent.Create) {
+        guard let symbolId = symbolIds.first,
+              symbol.exists(id: symbolId) else { return }
+        var world = world
+        world.symbolIds.append(symbolId)
+        activeStore.update(world: world)
+    }
+
+    func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
+        let symbolIdSet = Set(symbolIds)
+        var world = world
+        world.symbolIds.removeAll { symbolIdSet.contains($0) }
+        activeStore.update(world: world)
     }
 
     // MARK: load world event
@@ -124,7 +153,7 @@ private extension WorldService {
     }
 
     func load(_ event: WorldEvent.SetSymbolIds) {
-        let grid = event.symbolIds
+        let symbolIds = event.symbolIds
         var world = world
         world.symbolIds = symbolIds
         activeStore.update(world: world)

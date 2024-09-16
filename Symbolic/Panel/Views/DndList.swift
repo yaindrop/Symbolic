@@ -23,8 +23,8 @@ struct DndListTransferable: Codable, Transferable {
 
 struct DndListHoveringIndicator: View {
     @EnvironmentObject var model: DndListModel
+    var id: UUID
     var members: [UUID]
-    var index: Int
 
     var body: some View {
         content
@@ -43,14 +43,13 @@ struct DndListHoveringIndicator: View {
     }
 
     var showBeforeIndicator: Bool {
-        guard index == 0 else { return false }
-        let id = members[index]
+        guard id == members.first else { return false }
         return model.hovering == .init(id: id, isAfter: false)
     }
 
     var showAfterIndicator: Bool {
-        guard let hovering = model.hovering else { return false }
-        let id = members[index]
+        guard let hovering = model.hovering,
+              let index = members.firstIndex(of: id) else { return false }
         return hovering == .init(id: id, isAfter: true) || members.indices.contains(index + 1) && hovering == .init(id: members[index + 1], isAfter: false)
     }
 

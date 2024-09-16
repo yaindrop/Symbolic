@@ -2,13 +2,15 @@ import SwiftUI
 
 private let subtracer = tracer.tagged("ActiveItemService")
 
-// MARK: - ActiveItemStore
+// MARK: - ItemActiveState
 
 enum ItemActiveState: Equatable {
     case none
     case active(Set<UUID>)
     case focused(UUID)
 }
+
+// MARK: - ActiveItemStore
 
 class ActiveItemStore: Store {
     @Trackable var state: ItemActiveState = .none

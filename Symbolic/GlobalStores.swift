@@ -54,9 +54,9 @@ extension GlobalStores {
 
     var symbol: SymbolService { .init(store: symbolStore, pendingStore: pendingSymbolStore) }
 
-    var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path, viewport: viewport) }
+    var item: ItemService { .init(store: itemStore, pendingStore: pendingItemStore, path: path, symbol: symbol, viewport: viewport) }
 
-    var world: WorldService { .init(store: worldStore, pendingStore: pendingWorldStore) }
+    var world: WorldService { .init(store: worldStore, pendingStore: pendingWorldStore, symbol: symbol) }
 
     var focusedPath: FocusedPathService { .init(store: focusedPathStore, item: item, activeItem: activeItem) }
 
@@ -73,7 +73,7 @@ extension GlobalStores {
 
     var grid: GridService { .init(world: world, activeSymbol: activeSymbol) }
 
-    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, activeItem: activeItem, viewport: viewport, grid: grid) }
+    var documentUpdater: DocumentUpdater { .init(store: documentUpdaterStore, pathStore: pathStore, symbolStore: symbolStore, itemStore: itemStore, worldStore: worldStore, activeItem: activeItem, viewport: viewport, grid: grid) }
 }
 
 let global = GlobalStores()

@@ -77,8 +77,8 @@ private extension DocumentAction {
             switch action {
             case let .setGrid(action):
                 "World set grid \(action.grid.debugDescription)"
-            case let .setSymbolIds(action):
-                "World set symbol ids \(action.symbolIds.map { $0.shortDescription }.joined(separator: ", "))"
+            case let .reorder(action):
+                "World reorder \(action.symbolId.shortDescription) to \(action.isAfter ? "after" : "before") \(action.toSymbolId.shortDescription)"
             }
         }
     }

@@ -1020,12 +1020,12 @@ struct Symbolic_Pb_WorldAction: Sendable {
 
   var kind: Symbolic_Pb_WorldAction.OneOf_Kind? = nil
 
-  var setSymbolIds: Symbolic_Pb_WorldAction.SetSymbolIds {
+  var reorder: Symbolic_Pb_WorldAction.Reorder {
     get {
-      if case .setSymbolIds(let v)? = kind {return v}
-      return Symbolic_Pb_WorldAction.SetSymbolIds()
+      if case .reorder(let v)? = kind {return v}
+      return Symbolic_Pb_WorldAction.Reorder()
     }
-    set {kind = .setSymbolIds(newValue)}
+    set {kind = .reorder(newValue)}
   }
 
   var setGrid: Symbolic_Pb_WorldAction.SetGrid {
@@ -1039,21 +1039,42 @@ struct Symbolic_Pb_WorldAction: Sendable {
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   enum OneOf_Kind: Equatable, Sendable {
-    case setSymbolIds(Symbolic_Pb_WorldAction.SetSymbolIds)
+    case reorder(Symbolic_Pb_WorldAction.Reorder)
     case setGrid(Symbolic_Pb_WorldAction.SetGrid)
 
   }
 
-  struct SetSymbolIds: Sendable {
+  struct Reorder: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    var symbolIds: [Symbolic_Pb_UUID] = []
+    var symbolID: Symbolic_Pb_UUID {
+      get {return _symbolID ?? Symbolic_Pb_UUID()}
+      set {_symbolID = newValue}
+    }
+    /// Returns true if `symbolID` has been explicitly set.
+    var hasSymbolID: Bool {return self._symbolID != nil}
+    /// Clears the value of `symbolID`. Subsequent reads from it will return its default value.
+    mutating func clearSymbolID() {self._symbolID = nil}
+
+    var toSymbolID: Symbolic_Pb_UUID {
+      get {return _toSymbolID ?? Symbolic_Pb_UUID()}
+      set {_toSymbolID = newValue}
+    }
+    /// Returns true if `toSymbolID` has been explicitly set.
+    var hasToSymbolID: Bool {return self._toSymbolID != nil}
+    /// Clears the value of `toSymbolID`. Subsequent reads from it will return its default value.
+    mutating func clearToSymbolID() {self._toSymbolID = nil}
+
+    var isAfter: Bool = false
 
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
     init() {}
+
+    fileprivate var _symbolID: Symbolic_Pb_UUID? = nil
+    fileprivate var _toSymbolID: Symbolic_Pb_UUID? = nil
   }
 
   struct SetGrid: Sendable {
@@ -2773,7 +2794,7 @@ extension Symbolic_Pb_ItemAction.SetLocked: SwiftProtobuf.Message, SwiftProtobuf
 extension Symbolic_Pb_WorldAction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WorldAction"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    101: .standard(proto: "set_symbol_ids"),
+    101: .same(proto: "reorder"),
     102: .standard(proto: "set_grid"),
   ]
 
@@ -2784,16 +2805,16 @@ extension Symbolic_Pb_WorldAction: SwiftProtobuf.Message, SwiftProtobuf._Message
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 101: try {
-        var v: Symbolic_Pb_WorldAction.SetSymbolIds?
+        var v: Symbolic_Pb_WorldAction.Reorder?
         var hadOneofValue = false
         if let current = self.kind {
           hadOneofValue = true
-          if case .setSymbolIds(let m) = current {v = m}
+          if case .reorder(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.kind = .setSymbolIds(v)
+          self.kind = .reorder(v)
         }
       }()
       case 102: try {
@@ -2820,8 +2841,8 @@ extension Symbolic_Pb_WorldAction: SwiftProtobuf.Message, SwiftProtobuf._Message
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
     switch self.kind {
-    case .setSymbolIds?: try {
-      guard case .setSymbolIds(let v)? = self.kind else { preconditionFailure() }
+    case .reorder?: try {
+      guard case .reorder(let v)? = self.kind else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 101)
     }()
     case .setGrid?: try {
@@ -2840,10 +2861,12 @@ extension Symbolic_Pb_WorldAction: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 }
 
-extension Symbolic_Pb_WorldAction.SetSymbolIds: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = Symbolic_Pb_WorldAction.protoMessageName + ".SetSymbolIds"
+extension Symbolic_Pb_WorldAction.Reorder: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = Symbolic_Pb_WorldAction.protoMessageName + ".Reorder"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "symbol_ids"),
+    1: .standard(proto: "symbol_id"),
+    2: .standard(proto: "to_symbol_id"),
+    3: .standard(proto: "is_after"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2852,21 +2875,35 @@ extension Symbolic_Pb_WorldAction.SetSymbolIds: SwiftProtobuf.Message, SwiftProt
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.symbolIds) }()
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._symbolID) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._toSymbolID) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.isAfter) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.symbolIds.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.symbolIds, fieldNumber: 1)
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._symbolID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._toSymbolID {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    if self.isAfter != false {
+      try visitor.visitSingularBoolField(value: self.isAfter, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: Symbolic_Pb_WorldAction.SetSymbolIds, rhs: Symbolic_Pb_WorldAction.SetSymbolIds) -> Bool {
-    if lhs.symbolIds != rhs.symbolIds {return false}
+  static func ==(lhs: Symbolic_Pb_WorldAction.Reorder, rhs: Symbolic_Pb_WorldAction.Reorder) -> Bool {
+    if lhs._symbolID != rhs._symbolID {return false}
+    if lhs._toSymbolID != rhs._toSymbolID {return false}
+    if lhs.isAfter != rhs.isAfter {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

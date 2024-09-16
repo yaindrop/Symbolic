@@ -462,6 +462,20 @@ extension Symbolic_Pb_ItemAction: ProtobufParsable {
 
 // MARK: - WorldAction
 
+extension WorldAction.Reorder: ProtobufSerializable {
+    func encode(pb: inout Symbolic_Pb_WorldAction.Reorder) {
+        pb.symbolID = symbolId.pb
+        pb.toSymbolID = toSymbolId.pb
+        pb.isAfter = isAfter
+    }
+}
+
+extension Symbolic_Pb_WorldAction.Reorder: ProtobufParsable {
+    func decoded() -> WorldAction.Reorder {
+        .init(symbolId: symbolID.decoded(), toSymbolId: toSymbolID.decoded(), isAfter: isAfter)
+    }
+}
+
 extension WorldAction.SetGrid: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_WorldAction.SetGrid) {
         grid.map { pb.grid = $0.pb }
@@ -474,24 +488,12 @@ extension Symbolic_Pb_WorldAction.SetGrid: ProtobufParsable {
     }
 }
 
-extension WorldAction.SetSymbolIds: ProtobufSerializable {
-    func encode(pb: inout Symbolic_Pb_WorldAction.SetSymbolIds) {
-        pb.symbolIds = symbolIds.map { $0.pb }
-    }
-}
-
-extension Symbolic_Pb_WorldAction.SetSymbolIds: ProtobufParsable {
-    func decoded() -> WorldAction.SetSymbolIds {
-        .init(symbolIds: symbolIds.map { $0.decoded() })
-    }
-}
-
 extension WorldAction: ProtobufSerializable {
     func encode(pb: inout Symbolic_Pb_WorldAction) {
         pb.kind = {
             switch self {
+            case let .reorder(kind): .reorder(kind.pb)
             case let .setGrid(kind): .setGrid(kind.pb)
-            case let .setSymbolIds(kind): .setSymbolIds(kind.pb)
             }
         }()
     }
@@ -500,8 +502,8 @@ extension WorldAction: ProtobufSerializable {
 extension Symbolic_Pb_WorldAction: ProtobufParsable {
     func decoded() throws -> WorldAction {
         switch kind {
+        case let .reorder(kind): .reorder(kind.decoded())
         case let .setGrid(kind): try .setGrid(kind.decoded())
-        case let .setSymbolIds(kind): .setSymbolIds(kind.decoded())
         case .none: throw ProtobufParseError.invalidEmptyOneOf
         }
     }

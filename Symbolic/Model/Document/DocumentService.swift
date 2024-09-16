@@ -53,12 +53,12 @@ extension DocumentService {
         let _r = subtracer.range("send event"); defer { _r() }
         if store.pendingEvent == nil {
             withStoreUpdating(.animation(.fast)) {
-                store.update(activeDocument: .init(events: activeDocument.events + [event]))
+                store.update(activeDocument: .init(id: activeDocument.id, events: activeDocument.events + [event]))
             }
         } else {
             withStoreUpdating(.animation(.fast)) {
                 store.update(pendingEvent: nil)
-                store.update(activeDocument: .init(events: activeDocument.events + [event]))
+                store.update(activeDocument: .init(id: activeDocument.id, events: activeDocument.events + [event]))
             }
         }
     }

@@ -155,20 +155,21 @@ extension View {
 // MARK: - bind
 
 extension View {
+    func bind<T, Value: Equatable>(_ value: Value, to instance: T, _ keyPath: ReferenceWritableKeyPath<T, Value>) -> some View {
+        onChange(of: value, initial: true) {
+            instance[keyPath: keyPath] = value
+        }
+    }
+
     func bind<Value: Equatable>(_ value: Value, to binding: Binding<Value>) -> some View {
         onChange(of: value, initial: true) {
-            if binding.wrappedValue != value {
-                binding.wrappedValue = value
-            }
+            binding.wrappedValue = value
         }
     }
 
     func bind<Value, T: Equatable>(_ value: Value, to binding: Binding<T>, mapper: @escaping (Value) -> T) -> some View {
-        onChange(of: mapper(value), initial: true) {
-            let value = mapper(value)
-            if binding.wrappedValue != value {
-                binding.wrappedValue = value
-            }
+        onChange(of: mapper(value), initial: true) { _, newValue in
+            binding.wrappedValue = newValue
         }
     }
 }

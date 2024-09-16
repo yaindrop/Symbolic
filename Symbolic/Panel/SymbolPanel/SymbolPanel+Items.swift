@@ -1,13 +1,4 @@
 import SwiftUI
-import UniformTypeIdentifiers
-
-private struct Context {
-    var itemMap: ItemMap
-    var pathMap: PathMap
-    var itemDepthMap: [UUID: Int]
-    var focusedItemId: UUID?
-    var selectedItemIds: Set<UUID>
-}
 
 private struct SelectedIndicator: View {
     var body: some View {
@@ -49,6 +40,7 @@ extension SymbolPanel {
         var body: some View { trace {
             setupSelector {
                 content
+                    .environmentObject(selector)
                     .environmentObject(dndListModel)
             }
         } }
@@ -61,27 +53,23 @@ private extension SymbolPanel.Items {
     var content: some View {
         PanelSection(name: "Items") {
             let rootIds = selector.rootIds
-            ForEach(Array(zip(rootIds.indices, rootIds)), id: \.1) { index, itemId in
+            ForEach(rootIds) { itemId in
                 VStack(spacing: 0) {
-                    SymbolPanel.ItemRow(context: context, itemId: itemId)
+                    SymbolPanel.ItemRow(itemId: itemId)
                     if itemId != rootIds.last {
                         ContextualDivider()
                     }
                 }
                 .overlay {
-                    if context.selectedItemIds.contains(itemId) {
+                    if selector.selectedItemIds.contains(itemId) {
                         SelectedIndicator()
                     }
                 }
                 .overlay {
-                    DndListHoveringIndicator(members: rootIds, index: index)
+                    DndListHoveringIndicator(id: itemId, members: rootIds)
                 }
             }
         }
-    }
-
-    var context: Context {
-        .init(itemMap: selector.itemMap, pathMap: selector.pathMap, itemDepthMap: selector.itemDepthMap, focusedItemId: selector.focusedItemId, selectedItemIds: selector.selectedItemIds)
     }
 }
 
@@ -89,7 +77,8 @@ private extension SymbolPanel.Items {
 
 private extension SymbolPanel {
     struct ItemRow: View, TracedView {
-        let context: Context, itemId: UUID
+        @EnvironmentObject var selector: SymbolPanel.Items.Selector
+        let itemId: UUID
 
         var body: some View { trace {
             content
@@ -103,22 +92,23 @@ private extension SymbolPanel {
 extension SymbolPanel.ItemRow {
     @ViewBuilder private var content: some View {
         if let pathId = item?.path?.id {
-            PathRow(context: context, pathId: pathId)
+            PathRow(pathId: pathId)
         } else if let group = item?.group {
-            GroupRow(context: context, group: group)
+            GroupRow(group: group)
         }
     }
 
-    var item: Item? { context.itemMap[itemId] }
+    var item: Item? { selector.itemMap.get(itemId) }
 }
 
 // MARK: - GroupRow
 
 private struct GroupRow: View, TracedView {
     @Environment(\.contextualViewData) var contextualViewData
+    @EnvironmentObject var selector: SymbolPanel.Items.Selector
     @EnvironmentObject var dndListModel: DndListModel
 
-    let context: Context, group: Item.Group
+    let group: Item.Group
 
     @State private var expanded = true
     @State private var size: CGSize = .zero
@@ -168,7 +158,7 @@ private extension GroupRow {
             Text(group.id.shortDescription)
         }
         .contextualFont()
-        .foregroundStyle(context.focusedItemId == group.id ? .blue : .label)
+        .foregroundStyle(selector.focusedItemId == group.id ? .blue : .label)
     }
 
     var expandButton: some View {
@@ -196,25 +186,25 @@ private extension GroupRow {
         .contextualFont()
     }
 
-    var depth: Int { context.itemDepthMap[group.id] ?? 0 }
+    var depth: Int { selector.itemDepthMap.get(group.id) ?? 0 }
 
     var members: some View {
         VStack(spacing: 0) {
             let members = group.members
-            ForEach(Array(zip(members.indices, members)), id: \.1) { index, itemId in
+            ForEach(members) { itemId in
                 VStack(spacing: 0) {
-                    SymbolPanel.ItemRow(context: context, itemId: itemId)
+                    SymbolPanel.ItemRow(itemId: itemId)
                     if itemId != members.last {
                         ContextualDivider()
                     }
                 }
                 .overlay {
-                    if context.selectedItemIds.contains(itemId) {
+                    if selector.selectedItemIds.contains(itemId) {
                         SelectedIndicator()
                     }
                 }
                 .overlay {
-                    DndListHoveringIndicator(members: members, index: index)
+                    DndListHoveringIndicator(id: itemId, members: members)
                 }
             }
         }
@@ -228,7 +218,8 @@ private extension GroupRow {
 
 private struct PathRow: View, TracedView {
     @EnvironmentObject var dndListModel: DndListModel
-    let context: Context, pathId: UUID
+    @EnvironmentObject var selector: SymbolPanel.Items.Selector
+    let pathId: UUID
 
     @State private var size: CGSize = .zero
 
@@ -272,7 +263,7 @@ private extension PathRow {
         })
     }
 
-    var path: Path? { context.pathMap[pathId] }
+    var path: Path? { selector.pathMap.get(pathId) }
 
     @ViewBuilder var name: some View {
         if let path {
@@ -281,7 +272,7 @@ private extension PathRow {
                 Text(pathId.shortDescription)
             }
             .contextualFont()
-            .foregroundStyle(context.focusedItemId == pathId ? .blue : .label)
+            .foregroundStyle(selector.focusedItemId == pathId ? .blue : .label)
         }
     }
 

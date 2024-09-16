@@ -2,7 +2,7 @@ import SwiftUI
 
 private let subtracer = tracer.tagged("ActiveSymbolService")
 
-// MARK: - ActiveSymbolStore
+// MARK: - SymbolActiveState
 
 enum SymbolActiveState: Equatable {
     case none
@@ -10,6 +10,8 @@ enum SymbolActiveState: Equatable {
     case focused(UUID)
     case editing(UUID)
 }
+
+// MARK: - ActiveSymbolStore
 
 class ActiveSymbolStore: Store {
     @Trackable var state: SymbolActiveState = .none

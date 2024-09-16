@@ -20,6 +20,6 @@ extension DocumentPanel {
     @ViewBuilder private var content: some View {
         Properties()
 //        Selection()
-//        Symbols()
+        Symbols()
     }
 }

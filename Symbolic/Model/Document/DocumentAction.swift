@@ -91,10 +91,10 @@ enum ItemAction: Equatable {
 // MARK: - WorldAction
 
 enum WorldAction: Equatable {
-    struct SetSymbolIds: Equatable { let symbolIds: [UUID] }
+    struct Reorder: Equatable { var symbolId: UUID, toSymbolId: UUID, isAfter: Bool }
     struct SetGrid: Equatable { let grid: Grid? }
 
-    case setSymbolIds(SetSymbolIds)
+    case reorder(Reorder)
     case setGrid(SetGrid)
 }
 

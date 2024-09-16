@@ -187,12 +187,16 @@ message ItemAction {
 // MARK: - WorldAction
 
 message WorldAction {
-  message SetSymbolIds { repeated UUID symbol_ids = 1; }
+  message Reorder {
+    UUID symbol_id = 1;
+    UUID to_symbol_id = 2;
+    bool is_after = 3;
+  }
 
   message SetGrid { optional Grid grid = 1; }
 
   oneof kind {
-    SetSymbolIds set_symbol_ids = 101;
+    Reorder reorder = 101;
     SetGrid set_grid = 102;
   }
 }

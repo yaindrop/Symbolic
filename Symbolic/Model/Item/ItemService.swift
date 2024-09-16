@@ -223,6 +223,7 @@ struct ItemService {
     let store: ItemStore
     let pendingStore: PendingItemStore
     let path: PathService
+    let symbol: SymbolService
     let viewport: ViewportService
 }
 
@@ -443,7 +444,7 @@ private extension ItemService {
 
     func load(symbolIds: [UUID], _: SymbolEvent.Create) {
         guard let symbolId = symbolIds.first,
-              symbol(id: symbolId) == nil else { return }
+              symbol.exists(id: symbolId) else { return }
         add(item: .init(kind: .symbol(.init(id: symbolId, members: []))))
     }
 

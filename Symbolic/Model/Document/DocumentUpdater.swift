@@ -117,21 +117,21 @@ private extension DocumentUpdater {
     func collect(events: inout [DocumentEvent.Single], of action: PathAction.Update) {
         let pathId = action.pathId
         switch action.kind {
-        case let .addEndingNode(action): collect(events: &events, pathId: pathId, of: action)
-        case let .splitSegment(action): collect(events: &events, pathId: pathId, of: action)
-        case let .deleteNodes(action): collect(events: &events, pathId: pathId, of: action)
+        case let .addEndingNode(action): collect(events: &events, of: pathId, action)
+        case let .splitSegment(action): collect(events: &events, of: pathId, action)
+        case let .deleteNodes(action): collect(events: &events, of: pathId, action)
 
-        case let .updateNode(action): collect(events: &events, pathId: pathId, of: action)
-        case let .updateSegment(action): collect(events: &events, pathId: pathId, of: action)
+        case let .updateNode(action): collect(events: &events, of: pathId, action)
+        case let .updateSegment(action): collect(events: &events, of: pathId, action)
 
-        case let .moveNodes(action): collect(events: &events, pathId: pathId, of: action)
-        case let .moveNodeControl(action): collect(events: &events, pathId: pathId, of: action)
+        case let .moveNodes(action): collect(events: &events, of: pathId, action)
+        case let .moveNodeControl(action): collect(events: &events, of: pathId, action)
 
-        case let .merge(action): collect(events: &events, pathId: pathId, of: action)
-        case let .split(action): collect(events: &events, pathId: pathId, of: action)
+        case let .merge(action): collect(events: &events, of: pathId, action)
+        case let .split(action): collect(events: &events, of: pathId, action)
 
-        case let .setNodeType(action): collect(events: &events, pathId: pathId, of: action)
-        case let .setSegmentType(action): collect(events: &events, pathId: pathId, of: action)
+        case let .setNodeType(action): collect(events: &events, of: pathId, action)
+        case let .setSegmentType(action): collect(events: &events, of: pathId, action)
         }
     }
 
@@ -156,7 +156,7 @@ private extension DocumentUpdater {
 
     // MARK: single path update actions
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.AddEndingNode) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.AddEndingNode) {
         let endingNodeId = action.endingNodeId,
             newNodeId = action.newNodeId,
             offset = action.offset
@@ -176,7 +176,7 @@ private extension DocumentUpdater {
         events.append(.path(.init(pathId: pathId, .createNode(.init(prevNodeId: prevNodeId, nodeId: newNodeId, node: node)))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SplitSegment) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.SplitSegment) {
         let fromNodeId = action.fromNodeId,
             paramT = action.paramT,
             newNodeId = action.newNodeId,
@@ -201,7 +201,7 @@ private extension DocumentUpdater {
         ])))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.DeleteNodes) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.DeleteNodes) {
         let nodeIds = action.nodeIds
         guard let path = pathStore.get(id: pathId) else { return }
         if path.nodes.count - nodeIds.count < 2 {
@@ -213,13 +213,13 @@ private extension DocumentUpdater {
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.UpdateNode) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.UpdateNode) {
         let nodeId = action.nodeId,
             node = action.node
         events.append(.path(.init(pathId: pathId, .updateNode(.init(nodeId: nodeId, node: node)))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.UpdateSegment) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.UpdateSegment) {
         let fromNodeId = action.fromNodeId,
             segment = action.segment
         guard let path = pathStore.get(id: pathId),
@@ -236,7 +236,7 @@ private extension DocumentUpdater {
         ])))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.MoveNodes) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.MoveNodes) {
         let nodeIds = action.nodeIds,
             offset = action.offset
         guard let path = pathStore.get(id: pathId),
@@ -255,7 +255,7 @@ private extension DocumentUpdater {
         }
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.MoveNodeControl) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.MoveNodeControl) {
         let nodeId = action.nodeId,
             offset = action.offset,
             controlType = action.controlType
@@ -297,27 +297,27 @@ private extension DocumentUpdater {
         events.append(.path(.init(pathId: pathId, kinds)))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.Merge) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.Merge) {
         let endingNodeId = action.endingNodeId,
             mergedPathId = action.mergedPathId,
             mergedEndingNodeId = action.mergedEndingNodeId
         events.append(.path(.init(pathId: pathId, .merge(.init(endingNodeId: endingNodeId, mergedPathId: mergedPathId, mergedEndingNodeId: mergedEndingNodeId)))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.Split) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.Split) {
         let nodeId = action.nodeId,
             newNodeId = action.newNodeId,
             newPathId = action.newPathId
         events.append(.path(.init(pathId: pathId, .split(.init(nodeId: nodeId, newPathId: newPathId, newNodeId: newNodeId)))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetNodeType) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.SetNodeType) {
         let nodeIds = action.nodeIds,
             nodeType = action.nodeType
         events.append(.path(.init(pathId: pathId, .setNodeType(.init(nodeIds: nodeIds, nodeType: nodeType)))))
     }
 
-    func collect(events: inout [DocumentEvent.Single], pathId: UUID, of action: PathAction.Update.SetSegmentType) {
+    func collect(events: inout [DocumentEvent.Single], of pathId: UUID, _ action: PathAction.Update.SetSegmentType) {
         let fromNodeIds = action.fromNodeIds,
             segmentType = action.segmentType
         events.append(.path(.init(pathId: pathId, .setSegmentType(.init(fromNodeIds: fromNodeIds, segmentType: segmentType)))))
@@ -350,28 +350,13 @@ private extension DocumentUpdater {
             align = action.align,
             offset = action.offset
         guard let symbol = symbolStore.get(id: symbolId) else { return }
-        var origin = symbol.origin,
-            size = symbol.size
-        switch align {
-        case .topLeading:
-            origin += offset
-            size -= offset
-        case .topTrailing:
-            origin.y += offset.dy
-            size.width += offset.dx
-            size.height -= offset.dy
-        case .bottomLeading:
-            origin.x += offset.dx
-            size.width -= offset.dx
-            size.height += offset.dy
-        case .bottomTrailing:
-            size += offset
-        default:
-            return
-        }
-        size.width = max(size.width, 16)
-        size.height = max(size.height, 16)
-        events.append(.symbol(.init(symbolId: symbolId, .setBounds(.init(origin: origin, size: size)))))
+        let anchor = symbol.boundingRect.alignedPoint(at: align),
+            snappedOffset = grid.snappedOffset(anchor, offset: offset)
+        guard !snappedOffset.isZero else { return }
+        var rect = symbol.boundingRect.adjustedBox(at: align, offset: snappedOffset)
+        rect.size.width = max(rect.width, 16)
+        rect.size.height = max(rect.height, 16)
+        events.append(.symbol(.init(symbolId: symbolId, .setBounds(.init(origin: rect.origin, size: rect.size)))))
     }
 
     func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.SetGrid) {

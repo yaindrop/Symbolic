@@ -282,6 +282,39 @@ extension CGRect {
         alignedPoint(at: align) + align.direction.elementWiseProduct(.init(gap))
     }
 
+    func adjustedBox(at align: PlaneInnerAlign, offset: Vector2) -> CGRect {
+        var origin = origin,
+            size = size
+        switch align {
+        case .topLeading:
+            origin += offset
+            size -= offset
+        case .topCenter:
+            origin.y += offset.dy
+            size.height -= offset.dy
+        case .topTrailing:
+            origin.y += offset.dy
+            size.width += offset.dx
+            size.height -= offset.dy
+        case .centerLeading:
+            origin.x += offset.dx
+            size.width -= offset.dx
+        case .center:
+            break
+        case .centerTrailing:
+            size.width += offset.dx
+        case .bottomLeading:
+            origin.x += offset.dx
+            size.width -= offset.dx
+            size.height += offset.dy
+        case .bottomCenter:
+            size.height += offset.dy
+        case .bottomTrailing:
+            size += offset
+        }
+        return .init(origin: origin, size: size)
+    }
+
     func alignedBox(at align: PlaneInnerAlign, size: CGSize) -> CGRect {
         .init(center: alignedPoint(at: align) + align.direction.elementWiseProduct(.init(size)) / 2, size: size)
     }

@@ -114,14 +114,16 @@ private extension WorldService {
         let symbolIds = event.symbolIds
         for kind in event.kinds {
             switch kind {
-            case let .create(event): load(symbolIds: symbolIds, event)
-            case let .delete(event): load(symbolIds: symbolIds, event)
-            default: break
+            case let .create(event): load(event: event, of: symbolIds)
+            case .setBounds, .setGrid, .setMembers: break
+
+            case let .delete(event): load(event: event, of: symbolIds)
+            case .move: break
             }
         }
     }
 
-    func load(symbolIds: [UUID], _: SymbolEvent.Create) {
+    func load(event _: SymbolEvent.Create, of symbolIds: [UUID]) {
         guard let symbolId = symbolIds.first,
               symbol.exists(id: symbolId) else { return }
         var world = world
@@ -129,7 +131,7 @@ private extension WorldService {
         activeStore.update(world: world)
     }
 
-    func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
+    func load(event _: SymbolEvent.Delete, of symbolIds: [UUID]) {
         let symbolIdSet = Set(symbolIds)
         var world = world
         world.symbolIds.removeAll { symbolIdSet.contains($0) }
@@ -140,19 +142,19 @@ private extension WorldService {
 
     func load(event: WorldEvent) {
         switch event {
-        case let .setGrid(event): load(event)
-        case let .setSymbolIds(event): load(event)
+        case let .setGrid(event): load(event: event)
+        case let .setSymbolIds(event): load(event: event)
         }
     }
 
-    func load(_ event: WorldEvent.SetGrid) {
+    func load(event: WorldEvent.SetGrid) {
         let grid = event.grid
         var world = world
         world.grid = grid
         activeStore.update(world: world)
     }
 
-    func load(_ event: WorldEvent.SetSymbolIds) {
+    func load(event: WorldEvent.SetSymbolIds) {
         let symbolIds = event.symbolIds
         var world = world
         world.symbolIds = symbolIds

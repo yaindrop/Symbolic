@@ -391,26 +391,22 @@ private extension ItemService {
         let pathIds = event.pathIds
         for kind in event.kinds {
             switch kind {
-            case let .create(event): load(pathIds: pathIds, event)
-            case let .merge(event): load(pathIds: pathIds, event)
-            case let .split(event): load(pathIds: pathIds, event)
-            case let .delete(event): load(pathIds: pathIds, event)
-            default: break
+            case let .create(event): load(event: event, of: pathIds)
+            case .createNode, .updateNode, .deleteNode: break
+            case let .merge(event): load(event: event, of: pathIds)
+            case let .split(event): load(event: event, of: pathIds)
+            case let .delete(event): load(event: event, of: pathIds)
+            case .move, .setNodeType, .setSegmentType: break
             }
         }
     }
 
-    func load(pathIds: [UUID], _: PathEvent.Create) {
+    func load(event _: PathEvent.Create, of pathIds: [UUID]) {
         guard let pathId = pathIds.first else { return }
         add(item: .init(kind: .path(.init(id: pathId))))
     }
 
-    func load(pathIds: [UUID], _: PathEvent.Delete) {
-        remove(itemIds: pathIds)
-        remove(members: pathIds)
-    }
-
-    func load(pathIds: [UUID], _ event: PathEvent.Merge) {
+    func load(event: PathEvent.Merge, of pathIds: [UUID]) {
         let mergedPathId = event.mergedPathId
         guard let pathId = pathIds.first,
               pathId != mergedPathId,
@@ -419,7 +415,7 @@ private extension ItemService {
         remove(members: [mergedPathId])
     }
 
-    func load(pathIds: [UUID], _ event: PathEvent.Split) {
+    func load(event: PathEvent.Split, of pathIds: [UUID]) {
         let newPathId = event.newPathId
         guard let pathId = pathIds.first,
               let newPathId,
@@ -428,27 +424,33 @@ private extension ItemService {
         add(member: newPathId, nextTo: pathId)
     }
 
+    func load(event _: PathEvent.Delete, of pathIds: [UUID]) {
+        remove(itemIds: pathIds)
+        remove(members: pathIds)
+    }
+
     // MARK: load symbol event
 
     func load(event: SymbolEvent) {
         let symbolIds = event.symbolIds
         for kind in event.kinds {
             switch kind {
-            case let .create(event): load(symbolIds: symbolIds, event)
-            case let .setMembers(event): load(symbolIds: symbolIds, event)
-            case let .delete(event): load(symbolIds: symbolIds, event)
-            default: break
+            case let .create(event): load(event: event, of: symbolIds)
+            case .setBounds, .setGrid: break
+            case let .setMembers(event): load(event: event, of: symbolIds)
+            case let .delete(event): load(event: event, of: symbolIds)
+            case .move: break
             }
         }
     }
 
-    func load(symbolIds: [UUID], _: SymbolEvent.Create) {
+    func load(event _: SymbolEvent.Create, of symbolIds: [UUID]) {
         guard let symbolId = symbolIds.first,
               symbol.exists(id: symbolId) else { return }
         add(item: .init(kind: .symbol(.init(id: symbolId, members: []))))
     }
 
-    func load(symbolIds: [UUID], _ event: SymbolEvent.SetMembers) {
+    func load(event: SymbolEvent.SetMembers, of symbolIds: [UUID]) {
         let members = event.members
         guard let symbolId = symbolIds.first,
               var item = get(id: symbolId) else { return }
@@ -456,7 +458,7 @@ private extension ItemService {
         update(item: item)
     }
 
-    func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
+    func load(event _: SymbolEvent.Delete, of symbolIds: [UUID]) {
         remove(itemIds: symbolIds)
     }
 
@@ -466,14 +468,14 @@ private extension ItemService {
         let itemIds = event.itemIds
         for kind in event.kinds {
             switch kind {
-            case let .setGroup(event): load(itemIds: itemIds, event: event)
-            case let .setName(event): load(itemIds: itemIds, event: event)
-            case let .setLocked(event): load(itemIds: itemIds, event: event)
+            case let .setGroup(event): load(event: event, of: itemIds)
+            case let .setName(event): load(event: event, of: itemIds)
+            case let .setLocked(event): load(event: event, of: itemIds)
             }
         }
     }
 
-    func load(itemIds: [UUID], event: ItemEvent.SetGroup) {
+    func load(event: ItemEvent.SetGroup, of itemIds: [UUID]) {
         let members = event.members
         guard let groupId = itemIds.first else { return }
         if members.isEmpty {
@@ -486,7 +488,7 @@ private extension ItemService {
         }
     }
 
-    func load(itemIds: [UUID], event: ItemEvent.SetName) {
+    func load(event: ItemEvent.SetName, of itemIds: [UUID]) {
         let name = event.name
         guard let itemIds = itemIds.first,
               var item = get(id: itemIds) else { return }
@@ -494,7 +496,7 @@ private extension ItemService {
         update(item: item)
     }
 
-    func load(itemIds: [UUID], event: ItemEvent.SetLocked) {
+    func load(event: ItemEvent.SetLocked, of itemIds: [UUID]) {
         let locked = event.locked
         for itemId in itemIds {
             guard var item = get(id: itemId) else { return }

@@ -160,41 +160,41 @@ private extension SymbolService {
             kinds = event.kinds
         for kind in kinds {
             switch kind {
-            case let .create(event): load(symbolIds: symbolIds, event)
-            case let .setBounds(event): load(symbolIds: symbolIds, event)
-            case let .setGrid(event): load(symbolIds: symbolIds, event)
+            case let .create(event): load(event: event, of: symbolIds)
+            case let .setBounds(event): load(event: event, of: symbolIds)
+            case let .setGrid(event): load(event: event, of: symbolIds)
             case .setMembers: break
 
-            case let .delete(event): load(symbolIds: symbolIds, event)
-            case let .move(event): load(symbolIds: symbolIds, event)
+            case let .delete(event): load(event: event, of: symbolIds)
+            case let .move(event): load(event: event, of: symbolIds)
             }
         }
     }
 
-    func load(symbolIds: [UUID], _ event: SymbolEvent.Create) {
+    func load(event: SymbolEvent.Create, of symbolIds: [UUID]) {
         guard let symbolId = symbolIds.first else { return }
         add(symbolId: symbolId, symbol: .init(id: symbolId, origin: event.origin, size: event.size, grids: event.grids))
     }
 
-    func load(symbolIds: [UUID], _ event: SymbolEvent.SetBounds) {
+    func load(event: SymbolEvent.SetBounds, of symbolIds: [UUID]) {
         guard let symbolId = symbolIds.first,
               var symbol = get(id: symbolId) else { return }
         symbol.update(event)
         update(symbolId: symbolId, symbol: symbol)
     }
 
-    func load(symbolIds: [UUID], _ event: SymbolEvent.SetGrid) {
+    func load(event: SymbolEvent.SetGrid, of symbolIds: [UUID]) {
         guard let symbolId = symbolIds.first,
               var symbol = get(id: symbolId) else { return }
         symbol.update(event)
         update(symbolId: symbolId, symbol: symbol)
     }
 
-    func load(symbolIds: [UUID], _: SymbolEvent.Delete) {
+    func load(event _: SymbolEvent.Delete, of symbolIds: [UUID]) {
         remove(symbolIds: symbolIds)
     }
 
-    func load(symbolIds: [UUID], _ event: SymbolEvent.Move) {
+    func load(event: SymbolEvent.Move, of symbolIds: [UUID]) {
         for symbolId in symbolIds {
             guard var symbol = get(id: symbolId) else { continue }
             symbol.update(event)

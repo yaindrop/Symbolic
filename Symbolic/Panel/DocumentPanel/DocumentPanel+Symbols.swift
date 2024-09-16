@@ -1,5 +1,19 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {
+    func focus(id: UUID) {
+        guard let bounds = item.boundingRect(of: id) else { return }
+        activeItem.focus(id: id)
+        viewportUpdater.zoomTo(worldRect: bounds.applying(activeSymbol.symbolToWorld), ratio: 0.5)
+    }
+
+    func reorder(symbolId: UUID, toSymbolId: UUID, isAfter: Bool) {
+        documentUpdater.update(world: .reorder(.init(symbolId: symbolId, toSymbolId: toSymbolId, isAfter: isAfter)))
+    }
+}
+
 private struct SelectedIndicator: View {
     var body: some View {
         content
@@ -58,9 +72,8 @@ private extension DocumentPanel.Symbols {
                     }
                 }
                 .overlay {
-                    if selector.selectedSymbolIds.contains(symbolId) {
-                        SelectedIndicator()
-                    }
+                    SelectedIndicator()
+                        .opacity(selector.selectedSymbolIds.contains(symbolId) ? 1 : 0)
                 }
                 .overlay {
                     DndListHoveringIndicator(id: symbolId, members: symbolIds)
@@ -114,8 +127,8 @@ private extension SymbolRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DndListTransferable(id: symbolId))
-        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: symbolId, size: size) { id, isAfter in
-            global.documentUpdater.update(world: .reorder(.init(symbolId: id, toSymbolId: symbolId, isAfter: isAfter)))
+        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: symbolId, size: size) {
+            global.reorder(symbolId: $0, toSymbolId: symbolId, isAfter: $1)
         })
     }
 
@@ -130,11 +143,7 @@ private extension SymbolRow {
 
     var menu: some View {
         Menu {
-            Button("Focus") {
-//                global.activeItem.focus(itemId: pathId)
-//                guard let bounds = global.item.boundingRect(of: pathId) else { return }
-//                global.viewportUpdater.zoomTo(worldRect: bounds.applying(global.activeSymbol.symbolToWorld), ratio: 0.5)
-            }
+            Button("Focus") { global.focus(id: symbolId) }
         } label: {
             Image(systemName: "ellipsis")
                 .frame(maxHeight: .infinity)

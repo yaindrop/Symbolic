@@ -165,10 +165,10 @@ extension ActiveItemService {
 extension ActiveItemService {
     // MARK: focus
 
-    func onTap(itemId: UUID?) {
-        let _r = subtracer.range(type: .intent, "tap \(itemId?.shortDescription ?? "outside")"); defer { _r() }
-        if let itemId {
-            let ancestors = item.ancestorIds(of: itemId)
+    func onTap(id: UUID?) {
+        let _r = subtracer.range(type: .intent, "tap \(id?.shortDescription ?? "outside")"); defer { _r() }
+        if let id {
+            let ancestors = item.ancestorIds(of: id)
             let closestActiveId = ancestors.first { activeItemIds.contains($0) }
             if let closestActiveId, item.locked(of: closestActiveId) {
                 return
@@ -177,7 +177,7 @@ extension ActiveItemService {
             if let lastInactiveIndex {
                 store.update(state: .focused(ancestors[lastInactiveIndex]))
             } else {
-                store.update(state: .focused(itemId))
+                store.update(state: .focused(id))
             }
         } else {
             if let focusedItemId, let parentId = item.parentId(of: focusedItemId) {
@@ -188,9 +188,9 @@ extension ActiveItemService {
         }
     }
 
-    func focus(itemId: UUID) {
-        let _r = subtracer.range(type: .intent, "focus \(itemId)"); defer { _r() }
-        store.update(state: .focused(itemId))
+    func focus(id: UUID) {
+        let _r = subtracer.range(type: .intent, "focus \(id)"); defer { _r() }
+        store.update(state: .focused(id))
     }
 
     func blur() {

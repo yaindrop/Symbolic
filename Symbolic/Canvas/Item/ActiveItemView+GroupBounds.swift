@@ -13,7 +13,7 @@ private extension GlobalStores {
             if toolbar.multiSelect {
                 activeItem.selectAdd(itemId: path.id)
             } else {
-                activeItem.onTap(itemId: path.id)
+                activeItem.onTap(id: path.id)
             }
         } else {
             if toolbar.multiSelect {
@@ -25,7 +25,7 @@ private extension GlobalStores {
                     activeItem.selectRemove(itemIds: activeDescendants.map { $0.id })
                 }
             } else {
-                activeItem.onTap(itemId: group.id)
+                activeItem.onTap(id: group.id)
             }
         }
     }

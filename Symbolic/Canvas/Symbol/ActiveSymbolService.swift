@@ -164,20 +164,19 @@ extension ActiveSymbolService {
 // MARK: actions
 
 extension ActiveSymbolService {
-    func setFocus(symbolId: UUID?) {
-        if let symbolId {
-            store.update(state: .focused(symbolId))
-        } else {
-            store.update(state: .none)
-        }
+    func focus(id: UUID) {
+        let _r = subtracer.range(type: .intent, "focus \(id)"); defer { _r() }
+        store.update(state: .focused(id))
     }
 
-    func setEditing(symbolId: UUID?) {
-        if let symbolId {
-            store.update(state: .editing(symbolId))
-        } else {
-            store.update(state: .none)
-        }
+    func edit(id: UUID) {
+        let _r = subtracer.range(type: .intent, "edit \(id)"); defer { _r() }
+        store.update(state: .editing(id))
+    }
+
+    func blur() {
+        let _r = subtracer.range(type: .intent, "blur"); defer { _r() }
+        store.update(state: .none)
     }
 
     func select(symbolIds: [UUID]) {

@@ -38,33 +38,37 @@ private extension GlobalStores {
                 let editingSymbolId = activeSymbol.editingSymbolId,
                     hitSymbolId = symbol.symbolHitTest(worldPosition: worldPosition)
                 guard let editingSymbolId else {
-                    if let hitSymbolId, activeSymbol.focusedSymbolId == hitSymbolId {
-                        activeSymbol.setEditing(symbolId: hitSymbolId)
-                        viewportUpdater.zoomToEditingSymbol()
+                    if let hitSymbolId {
+                        if activeSymbol.focusedSymbolId == hitSymbolId {
+                            activeSymbol.edit(id: hitSymbolId)
+                            viewportUpdater.zoomToEditingSymbol()
+                        } else {
+                            activeSymbol.focus(id: hitSymbolId)
+                        }
                     } else {
-                        activeSymbol.setFocus(symbolId: hitSymbolId)
+                        activeSymbol.blur()
                     }
                     return
                 }
                 let hitPathId = activeSymbol.pathHitTest(worldPosition: worldPosition)
                 if hitSymbolId != editingSymbolId, hitPathId == nil {
-                    activeSymbol.setFocus(symbolId: editingSymbolId)
+                    activeSymbol.focus(id: editingSymbolId)
                     return
                 }
                 if toolbar.multiSelect {
                     if let hitPathId {
                         activeItem.selectAdd(itemId: hitPathId)
                     } else {
-                        activeItem.onTap(itemId: nil)
+                        activeItem.onTap(id: nil)
                     }
                     return
                 }
                 if let hitPathId {
                     canvasAction.on(instant: .activatePath)
-                    activeItem.onTap(itemId: hitPathId)
+                    activeItem.onTap(id: hitPathId)
                 } else {
                     canvasAction.on(instant: .deactivatePath)
-                    activeItem.onTap(itemId: nil)
+                    activeItem.onTap(id: nil)
                 }
             },
             onLongPress: { info in
@@ -145,7 +149,7 @@ private extension GlobalStores {
                 .sink {
                     let newSymbolId = UUID()
                     documentUpdater.update(symbol: .create(.init(symbolId: newSymbolId, origin: $0.origin, size: $0.size)))
-                    activeSymbol.setFocus(symbolId: newSymbolId)
+                    activeSymbol.focus(id: newSymbolId)
                     canvasAction.on(instant: .addSymbol)
                 }
             $0.$path
@@ -153,7 +157,7 @@ private extension GlobalStores {
                     guard let editingSymbolId = activeSymbol.editingSymbolId else { return }
                     let newPathId = UUID()
                     documentUpdater.update(path: .create(.init(symbolId: editingSymbolId, pathId: newPathId, path: $0)))
-                    activeItem.focus(itemId: newPathId)
+                    activeItem.focus(id: newPathId)
                     canvasAction.on(instant: .addPath)
                 }
         }

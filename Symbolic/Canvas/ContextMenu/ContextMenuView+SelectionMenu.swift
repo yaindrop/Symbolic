@@ -22,7 +22,7 @@ private extension GlobalStores {
         let inGroupId = item.commonAncestorId(of: members),
             inSymbolId = inGroupId == nil ? item.symbolId(of: members[0]) : nil
         documentUpdater.update(item: .group(.init(groupId: groupId, members: members, inSymbolId: inSymbolId, inGroupId: inGroupId)))
-        activeItem.onTap(itemId: groupId)
+        activeItem.onTap(id: groupId)
     }
 
     func onDelete() {

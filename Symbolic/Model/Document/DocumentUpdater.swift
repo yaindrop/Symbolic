@@ -389,7 +389,12 @@ private extension DocumentUpdater {
     func collect(events: inout [DocumentEvent.Single], of action: SymbolAction.Move) {
         let symbolIds = action.symbolIds,
             offset = action.offset
-        events.append(.symbol(.init(symbolIds: symbolIds, .move(.init(offset: offset)))))
+        guard let symbolId = symbolIds.first,
+              let symbol = symbolStore.get(id: symbolId) else { return }
+        let anchor = symbol.boundingRect.minPoint
+        let snappedOffset = grid.snappedOffset(anchor, offset: offset)
+        guard !snappedOffset.isZero else { return }
+        events.append(.symbol(.init(symbolIds: symbolIds, .move(.init(offset: snappedOffset)))))
     }
 }
 

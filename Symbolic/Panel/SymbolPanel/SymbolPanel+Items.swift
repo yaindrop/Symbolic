@@ -1,5 +1,19 @@
 import SwiftUI
 
+// MARK: - global actions
+
+private extension GlobalStores {
+    func focus(id: UUID) {
+        guard let symbol = symbol.get(id: id) else { return }
+        activeSymbol.focus(id: id)
+        viewportUpdater.zoomTo(worldRect: symbol.boundingRect, ratio: 0.5)
+    }
+
+    func reorder(itemId: UUID, toItemId: UUID, isAfter: Bool) {
+        documentUpdater.update(item: .reorder(.init(itemId: itemId, toItemId: toItemId, isAfter: isAfter)))
+    }
+}
+
 private struct SelectedIndicator: View {
     var body: some View {
         content
@@ -61,9 +75,8 @@ private extension SymbolPanel.Items {
                     }
                 }
                 .overlay {
-                    if selector.selectedItemIds.contains(itemId) {
-                        SelectedIndicator()
-                    }
+                    SelectedIndicator()
+                        .opacity(selector.selectedItemIds.contains(itemId) ? 1 : 0)
                 }
                 .overlay {
                     DndListHoveringIndicator(id: itemId, members: rootIds)
@@ -139,8 +152,8 @@ private extension GroupRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DndListTransferable(id: group.id))
-        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: group.id, size: size) { itemId, isAfter in
-            global.documentUpdater.update(item: .reorder(.init(itemId: itemId, toItemId: group.id, isAfter: isAfter)))
+        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: group.id, size: size) {
+            global.reorder(itemId: $0, toItemId: group.id, isAfter: $1)
         })
     }
 
@@ -173,11 +186,7 @@ private extension GroupRow {
 
     var menu: some View {
         Menu {
-            Button("Focus") {
-                global.activeItem.focus(itemId: group.id)
-                guard let bounds = global.item.boundingRect(of: group.id) else { return }
-                global.viewportUpdater.zoomTo(worldRect: bounds.applying(global.activeSymbol.symbolToWorld), ratio: 0.5)
-            }
+            Button("Focus") { global.focus(id: group.id) }
         } label: {
             Image(systemName: "ellipsis")
                 .frame(maxHeight: .infinity)
@@ -199,9 +208,8 @@ private extension GroupRow {
                     }
                 }
                 .overlay {
-                    if selector.selectedItemIds.contains(itemId) {
-                        SelectedIndicator()
-                    }
+                    SelectedIndicator()
+                        .opacity(selector.selectedItemIds.contains(itemId) ? 1 : 0)
                 }
                 .overlay {
                     DndListHoveringIndicator(id: itemId, members: members)
@@ -258,8 +266,8 @@ private extension PathRow {
         .sizeReader { size = $0 }
         .invisibleSoildBackground()
         .draggable(DndListTransferable(id: pathId))
-        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: pathId, size: size) { itemId, isAfter in
-            global.documentUpdater.update(item: .reorder(.init(itemId: itemId, toItemId: pathId, isAfter: isAfter)))
+        .onDrop(of: [.item], delegate: DndListDropDelegate(model: dndListModel, id: pathId, size: size) {
+            global.reorder(itemId: $0, toItemId: pathId, isAfter: $1)
         })
     }
 
@@ -278,11 +286,7 @@ private extension PathRow {
 
     var menu: some View {
         Menu {
-            Button("Focus") {
-                global.activeItem.focus(itemId: pathId)
-                guard let bounds = global.item.boundingRect(of: pathId) else { return }
-                global.viewportUpdater.zoomTo(worldRect: bounds.applying(global.activeSymbol.symbolToWorld), ratio: 0.5)
-            }
+            Button("Focus") { global.focus(id: pathId) }
         } label: {
             Image(systemName: "ellipsis")
                 .frame(maxHeight: .infinity)

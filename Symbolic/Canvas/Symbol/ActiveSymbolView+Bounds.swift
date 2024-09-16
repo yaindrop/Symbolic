@@ -4,7 +4,7 @@ import SwiftUI
 
 private extension GlobalStores {
     func onTap(symbolId: UUID) {
-        activeSymbol.setEditing(symbolId: symbolId)
+        activeSymbol.edit(id: symbolId)
         viewportUpdater.zoomToEditingSymbol()
     }
 

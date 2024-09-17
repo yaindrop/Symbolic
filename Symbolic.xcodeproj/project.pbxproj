@@ -1522,7 +1522,7 @@
 			repositoryURL = "https://github.com/apple/swift-protobuf.git";
 			requirement = {
 				kind = exactVersion;
-				version = 1.27.1;
+				version = 1.28.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

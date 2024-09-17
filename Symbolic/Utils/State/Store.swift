@@ -679,7 +679,7 @@ extension SelectorHolder {
 
 protocol ComputedSelectorHolder {
     associatedtype SelectorProps: Equatable
-    associatedtype Selector: SelectorBase
+    associatedtype Selector: _Selector<SelectorProps>
     typealias SelectorBase = _Selector<SelectorProps>
     typealias SelectorWrapper = _SelectorWrapper<SelectorProps, Selector>
 
